@@ -1,12 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from engine.app.services.media_extractor import MediaExtractor
+from engine.app.providers.provider_manager import ProviderManager
+from engine.app.pipeline.location_pipeline import LocationPipeline
 
 app = FastAPI()
 
-
-extractor = MediaExtractor()
+extractor = ProviderManager()
+pipeline = LocationPipeline()
 
 
 class AnalyzeRequest(BaseModel):
@@ -23,9 +24,20 @@ def root():
 @app.post("/analyze")
 def analyze(request: AnalyzeRequest):
 
-    data = extractor.extract(request.url)
+    try:
+        metadata = extractor.extract(request.url)
 
-    return {
-        "success": True,
-        "data": data
-    }
+        location = pipeline.run(metadata["metadata"])
+
+        return {
+            "success": True,
+            "metadata": metadata,
+            "location_pipeline": location
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }

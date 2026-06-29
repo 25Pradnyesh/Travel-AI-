@@ -1,36 +1,249 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌍 Travel AI
 
-## Getting Started
+> AI-powered travel location extraction from Instagram Reels.
 
-First, run the development server:
+> **Save travel destinations from Instagram Reels directly to Google Maps.**
+
+> 🚧 **Status:** Experimental MVP — Active Development
+
+---
+
+## 🎥 Demo
+
+Coming Soon
+
+# ✨ Overview
+
+Travel AI helps travelers stop losing amazing destinations hidden inside Instagram Reels.
+
+Paste a public Instagram Reel URL and Travel AI will:
+
+- 📍 Identify the destination
+- 🧠 Infer the exact travel location using AI
+- 🗺️ Validate the result with Google Maps
+- 📂 Organize destinations into country-based collections
+- 💾 _(Coming Soon)_ Save directly into your Google Maps account
+
+---
+
+# 🚀 Current Features
+
+- ✅ Next.js Frontend
+- ✅ FastAPI AI Engine
+- ✅ Modular Provider Architecture
+- ✅ Initial Metadata Extraction
+- ✅ Adaptive Location Pipeline (Foundation)
+
+### Coming Soon
+
+- 🚧 OCR Pipeline
+- 🚧 Google Places Validation
+- 🚧 Google Maps Integration
+- 🚧 Android APK
+- 🚧 Instagram Bot
+- 🚧 Chrome Extension
+
+---
+
+# 🏗️ Architecture
+
+```text
+Instagram Reel URL
+        │
+        ▼
+ Next.js Frontend
+        │
+        ▼
+ FastAPI Engine
+        │
+        ▼
+ Provider Manager
+        │
+        ▼
+ Metadata Provider
+(yt-dlp / Future Providers)
+        │
+        ▼
+ AI Location Pipeline
+        │
+        ▼
+ Google Places
+        │
+        ▼
+ Structured Travel Location
+```
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+
+## Backend
+
+- FastAPI
+- Python
+
+## AI
+
+### Current
+
+- Rule-based Location Pipeline
+
+### Planned
+
+- Gemini
+- OCR
+- Vision AI
+
+## Database
+
+- PostgreSQL
+- Prisma _(Planned)_
+
+## Deployment
+
+- Vercel
+- Railway
+
+---
+
+# 📂 Project Structure
+
+travel-ai/
+│
+├── app/
+├── components/
+├── docs/
+├── engine/
+│ ├── app/
+│ │ ├── pipeline/
+│ │ ├── providers/
+│ │ ├── services/
+│ │ └── models/
+│ └── main.py
+│
+├── README.md
+└── package.json
+
+---
+
+# ⚙️ Getting Started
+
+## Clone the repository
+
+```bash
+git clone https://github.com/<your-username>/<repo-name>.git
+
+cd travel-ai
+```
+
+## Install dependencies
+
+```bash
+npm install
+```
+
+## Start the frontend
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Python Engine
 
-## Learn More
+Create a virtual environment:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+python -m venv engine/.venv
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Activate it:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**Windows**
 
-## Deploy on Vercel
+```bash
+.\engine\.venv\Scripts\Activate.ps1
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Install dependencies:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pip install -r engine/requirements.txt
+```
+
+Run FastAPI:
+
+```bash
+python -m uvicorn engine.main:app --reload
+```
+
+Open:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# 🗺️ Roadmap
+
+Phase 1 ✅
+
+- Next.js
+- FastAPI
+- Provider Manager
+
+Phase 2 🚧
+
+- AI Location Extraction
+- OCR
+- Google Places
+
+Phase 3
+
+- Maps Sync
+- Android App
+- Instagram Bot
+- Chrome Extension
+
+---
+
+## 🤝 Contributing
+
+Travel AI is currently under active development.
+
+Public contributions are temporarily closed while the MVP is being built.
+
+Feature requests and feedback are always welcome.
+
+---
+
+## 📄 License
+
+This project is currently proprietary and under active development.
+
+The source code is not licensed for reuse or redistribution at this stage.
+
+---
+
+**Built by Pradnyesh**
+
+## 👨‍💻 Author
+
+**Pradnyesh**
+
+Engineering Student • Builder • Hackathon Enthusiast
+
+If you like this project, consider giving it a ⭐.
