@@ -10,7 +10,7 @@
 
 ## 🎥 Demo
 
-Coming Soon
+> 🚧 Demo video and screenshots will be added as the MVP evolves.
 
 # ✨ Overview
 
@@ -115,21 +115,15 @@ Instagram Reel URL
 
 # 📂 Project Structure
 
+```text
 travel-ai/
-│
-├── app/
-├── components/
-├── docs/
-├── engine/
-│ ├── app/
-│ │ ├── pipeline/
-│ │ ├── providers/
-│ │ ├── services/
-│ │ └── models/
-│ └── main.py
-│
-├── README.md
-└── package.json
+├── app/              # Next.js frontend
+├── components/       # Shared UI
+├── engine/           # FastAPI + AI engine
+├── docs/             # Documentation
+├── public/           # Static assets
+└── README.md
+```
 
 ---
 
