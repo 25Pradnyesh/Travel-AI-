@@ -3,8 +3,13 @@ from pydantic import BaseModel
 
 from engine.app.providers.provider_manager import ProviderManager
 from engine.app.pipeline.location_pipeline import LocationPipeline
+from engine.app.api.test_routes import router as test_router
+
+print("✅ test_routes imported")
 
 app = FastAPI()
+
+app.include_router(test_router)
 
 extractor = ProviderManager()
 pipeline = LocationPipeline()
