@@ -309,10 +309,10 @@ The source code is not licensed for reuse or redistribution at this stage.
 
 **Pradnyesh**
 
-<<<<<<< HEAD
-• Builder
-=======
+# <<<<<<< HEAD
+
 **Builder**
->>>>>>> 4e5274e (docs: update README for finalized backend architecture)
+
+> > > > > > > 4e5274e (docs: update README for finalized backend architecture)
 
 If you like this project, consider giving it a ⭐.
