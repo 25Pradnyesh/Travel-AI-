@@ -4,7 +4,7 @@
 
 > **Save travel destinations from Instagram Reels directly to Google Maps.**
 
-> 🚧 **Status:** Experimental MVP — Active Development
+> 🚧 Status: Backend Architecture Complete • Core Engine Under Active Development
 
 ---
 
@@ -24,6 +24,12 @@ Paste a public Instagram Reel URL and Travel AI will:
 - 📂 Organize destinations into country-based collections
 - 💾 _(Coming Soon)_ Save directly into your Google Maps account
 
+## 🎯 Vision
+
+Travel AI aims to become the easiest way to collect, organize, and revisit travel destinations discovered across social media.
+
+The long-term goal is to support multiple platforms, AI-assisted trip planning, collaborative travel collections, and seamless Google Maps integration.
+
 ---
 
 # 🚀 Current Features
@@ -32,16 +38,28 @@ Paste a public Instagram Reel URL and Travel AI will:
 - ✅ FastAPI AI Engine
 - ✅ Modular Provider Architecture
 - ✅ Initial Metadata Extraction
-- ✅ Adaptive Location Pipeline (Foundation)
+- ✅ Modular Provider Architecture
+- ✅ Instagram Metadata Provider
+- ✅ Rule-based Location Pipeline
+- ✅ Candidate Ranking Engine
+- ✅ Google Places Service (Foundation)
+- ✅ FastAPI REST API
 
-### Coming Soon
+### Next Milestones
 
-- 🚧 OCR Pipeline
-- 🚧 Google Places Validation
-- 🚧 Google Maps Integration
-- 🚧 Android APK
-- 🚧 Instagram Bot
-- 🚧 Chrome Extension
+🚧 OCR Frame Extraction
+
+🚧 Google Places Verification
+
+🚧 Gemini-powered Reasoning
+
+🚧 Google Maps Synchronization
+
+🚧 Saved Collections
+
+🚧 Android App
+
+🚧 Chrome Extension
 
 ---
 
@@ -72,6 +90,16 @@ Instagram Reel URL
         ▼
  Structured Travel Location
 ```
+
+## 🧩 Architecture Principles
+
+Travel AI follows a modular architecture designed for long-term scalability.
+
+- Provider-based ingestion (Instagram today, YouTube/TikTok tomorrow)
+- Pipeline-driven processing
+- Independent services with single responsibilities
+- AI components isolated from business logic
+- Easily extensible for future providers and AI models
 
 ---
 
@@ -115,15 +143,48 @@ Instagram Reel URL
 
 # 📂 Project Structure
 
-```text
 travel-ai/
-├── app/              # Next.js frontend
-├── components/       # Shared UI
-├── engine/           # FastAPI + AI engine
-├── docs/             # Documentation
-├── public/           # Static assets
-└── README.md
-```
+
+app/ # Next.js frontend
+
+components/
+
+lib/
+
+public/
+
+engine/
+│
+├── api/
+│
+├── config/
+│
+├── models/
+│
+├── pipeline/
+│
+├── prompts/
+│
+├── providers/
+│
+├── services/
+│
+├── utils/
+│
+└── main.py
+
+docs/
+
+README.md
+
+## 🔌 API
+
+| Method | Endpoint | Description               |
+| ------ | -------- | ------------------------- |
+| GET    | /        | Health Check              |
+| POST   | /analyze | Analyze an Instagram Reel |
+| GET    | /docs    | Swagger UI                |
+| GET    | /test    | Pipeline Test Route       |
 
 ---
 
@@ -193,24 +254,34 @@ http://127.0.0.1:8000/docs
 
 # 🗺️ Roadmap
 
-Phase 1 ✅
+### Phase 1 — Backend Foundation ✅
 
-- Next.js
-- FastAPI
-- Provider Manager
+- Provider Architecture
+- FastAPI Engine
+- Metadata Extraction
+- Location Pipeline
+- Candidate Ranking
 
-Phase 2 🚧
+### Phase 2 — AI Intelligence 🚧
 
-- AI Location Extraction
 - OCR
 - Google Places
+- Gemini Reasoning
+- Confidence Scoring
 
-Phase 3
+### Phase 3 — Product
 
-- Maps Sync
+- Google Maps Sync
+- Saved Collections
+- Authentication
+- Database
+
+### Phase 4 — Ecosystem
+
 - Android App
-- Instagram Bot
 - Chrome Extension
+- Instagram Bot
+- Public API
 
 ---
 
@@ -238,6 +309,10 @@ The source code is not licensed for reuse or redistribution at this stage.
 
 **Pradnyesh**
 
+<<<<<<< HEAD
 • Builder
+=======
+**Builder**
+>>>>>>> 4e5274e (docs: update README for finalized backend architecture)
 
 If you like this project, consider giving it a ⭐.
