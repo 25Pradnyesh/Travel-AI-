@@ -238,6 +238,6 @@ The source code is not licensed for reuse or redistribution at this stage.
 
 **Pradnyesh**
 
-Engineering Student • Builder • Hackathon Enthusiast
+• Builder
 
 If you like this project, consider giving it a ⭐.
