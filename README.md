@@ -141,41 +141,42 @@ Travel AI follows a modular architecture designed for long-term scalability.
 
 ---
 
-# 📂 Project Structure
+## 📂 Project Structure
 
+```text
 travel-ai/
-
-app/ # Next.js frontend
-
-components/
-
-lib/
-
-public/
-
-engine/
-│
-├── api/
-│
-├── config/
-│
-├── models/
-│
-├── pipeline/
-│
-├── prompts/
-│
-├── providers/
-│
+├── app/                  # Next.js frontend
+├── components/
+├── constants/
+├── docker/
+├── docs/
+├── engine/
+│   ├── app/
+│   │   ├── api/
+│   │   ├── config/
+│   │   ├── models/
+│   │   ├── pipeline/
+│   │   ├── prompts/
+│   │   ├── providers/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   ├── dependencies.py
+│   │   └── main.py
+│   ├── assets/
+│   ├── core/
+│   ├── domain/
+│   └── tests/
+├── hooks/
+├── lib/
+├── prisma/
+├── public/
+├── scripts/
 ├── services/
-│
-├── utils/
-│
-└── main.py
+├── styles/
+├── types/
+└── README.md
 
-docs/
-
-README.md
+```
 
 ## 🔌 API
 
@@ -303,16 +304,4 @@ The source code is not licensed for reuse or redistribution at this stage.
 
 ---
 
-**Built by Pradnyesh**
-
-## 👨‍💻 Author
-
-**Pradnyesh**
-
-# <<<<<<< HEAD
-
-**Builder**
-
-> > > > > > > 4e5274e (docs: update README for finalized backend architecture)
-
-If you like this project, consider giving it a ⭐.
+### Built by **Pradnyesh**
