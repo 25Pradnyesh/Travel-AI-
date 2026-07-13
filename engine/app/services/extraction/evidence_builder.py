@@ -1,57 +1,42 @@
-from typing import Dict, Any
+from engine.app.services.extraction.ocr_service import OCRService
 
 
 class EvidenceBuilder:
-    """
-    Combines everything we know about a reel into one object.
 
-    Later this class will merge:
-    - Metadata
-    - OCR
-    - Video Frames
-    - Gemini Vision
-    - Google Places
-    """
+    def __init__(self):
+        self.ocr = OCRService()
 
     def build(
         self,
-        metadata: Dict[str, Any],
-        ocr_text: str = "",
-        frames: list | None = None,
-    ) -> Dict[str, Any]:
+        metadata: dict,
+        frame_paths: list[str] | None = None,
+    ):
 
-        frames = frames or []
+        frame_paths = frame_paths or []
 
-        title = metadata.get("title") or ""
-        caption = metadata.get("caption") or ""
-        tags = metadata.get("tags") or []
+        ocr_results = []
 
-        combined_text = "\n".join(
-            filter(
-                None,
-                [
-                    title,
-                    caption,
-                    " ".join(tags),
-                    ocr_text,
-                ],
-            )
-        )
+        for frame in frame_paths:
+
+            text = self.ocr.extract_text(frame)
+
+            if text.strip():
+                ocr_results.append(text)
+
+        combined_text = "\n".join([
+            metadata.get("title", ""),
+            metadata.get("caption", ""),
+            " ".join(metadata.get("tags") or []),
+            "\n".join(ocr_results),
+        ])
 
         return {
             "provider": "instagram",
-
             "metadata": metadata,
-
-            "title": title,
-
-            "caption": caption,
-
-            "hashtags": tags,
-
-            "ocr_text": ocr_text,
-
-            "frames": frames,
-
+            "title": metadata.get("title", ""),
+            "caption": metadata.get("caption", ""),
+            "hashtags": metadata.get("tags") or [],
+            "ocr_text": "\n".join(ocr_results),
+            "frames": frame_paths,
             "combined_text": combined_text,
         }

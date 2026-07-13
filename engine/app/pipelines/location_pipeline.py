@@ -1,6 +1,7 @@
 from engine.app.services.extraction.evidence_builder import EvidenceBuilder
 from engine.app.services.extraction.candidate_extractor import CandidateExtractor
 from engine.app.services.scoring.scoring_service import ScoringService
+from engine.app.services.extraction.frame_extractor import FrameExtractor
 
 
 class LocationPipeline:
@@ -9,10 +10,23 @@ class LocationPipeline:
         self.evidence_builder = EvidenceBuilder()
         self.extractor = CandidateExtractor()
         self.scorer = ScoringService()
+        self.frame_extractor = FrameExtractor()
 
-    def run(self, metadata: dict):
+    def run(
+        self,
+        metadata: dict,
+        video_path: str,
+    ):
 
-        evidence = self.evidence_builder.build(metadata)
+        frame_paths = self.frame_extractor.extract(
+            video_path=video_path,
+            output_dir="engine/assets/frames",
+        )
+
+        evidence = self.evidence_builder.build(
+            metadata,
+            frame_paths,
+        )
 
         candidates = self.extractor.extract(
             evidence["combined_text"]
@@ -20,7 +34,7 @@ class LocationPipeline:
 
         ranked = self.scorer.rank(
             candidates,
-            metadata
+            evidence,
         )
 
         return {
