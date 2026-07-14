@@ -1,10 +1,16 @@
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables FIRST
+BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(BASE_DIR / ".env")
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 
 from engine.providers.manager import ProviderManager
 from engine.app.pipelines.location_pipeline import LocationPipeline
 from engine.app.api.test_routes import router as test_router
-
 
 print("✅ test_routes imported")
 

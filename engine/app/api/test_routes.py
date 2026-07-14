@@ -1,58 +1,48 @@
 from fastapi import APIRouter
 
-from engine.providers.manager import ProviderManager
-
 from engine.app.pipelines.location_pipeline import LocationPipeline
 from engine.app.services.extraction.frame_extractor import FrameExtractor
 from engine.app.services.extraction.ocr_service import OCRService
-
-
+from engine.app.services.ai.gemini_service import GeminiService
+from engine.providers.manager import ProviderManager
+from engine.app.services.ai.gemini_service import GeminiService
 router = APIRouter()
 
 pipeline = LocationPipeline()
 frame_extractor = FrameExtractor()
 ocr = OCRService()
+gemini = GeminiService()
+gemini = GeminiService()
 provider = ProviderManager()
 
 
-# --------------------------------------------------
-# Provider Test
-# --------------------------------------------------
 @router.post("/provider")
 def provider_test():
 
-    reel_url = (
+    return provider.extract(
         "https://www.instagram.com/reel/DN2XxxY2O7-/"
     )
 
-    return provider.extract(reel_url)
 
-
-# --------------------------------------------------
-# Frame Extraction Test
-# --------------------------------------------------
 @router.get("/frames")
 def frames():
 
-    frame_paths = frame_extractor.extract(
-        video_path="engine/assets/sample.mp4",
-        output_dir="engine/assets/frames",
+    frames = frame_extractor.extract(
+        video_path="assets/sample.mp4",
+        output_dir="assets/frames",
         interval_seconds=2,
     )
 
     return {
-        "frames": frame_paths,
+        "frames": frames,
     }
 
 
-# --------------------------------------------------
-# OCR Test
-# --------------------------------------------------
 @router.get("/ocr")
 def test_ocr():
 
     text = ocr.extract_text(
-        "engine/assets/frames/frame_002.jpg"
+        "assets/frames/frame_002.jpg"
     )
 
     return {
@@ -60,23 +50,42 @@ def test_ocr():
     }
 
 
-# --------------------------------------------------
-# Pipeline Test (Manual Metadata)
-# --------------------------------------------------
-@router.get("/test")
-def test():
+@router.get("/gemini")
+def test_gemini():
 
-    metadata = {
+    evidence = {
         "title": "",
-        "caption": "Seebensee hike in Austria. Save this place for your Europe trip.",
-        "tags": [
+        "caption": "this hike was everything. Last summer we did some day hikes in Austria. 📍Seebensee hike in Austria.",
+        "ocr_text": "Seebensee Austria",
+        "hashtags": [
             "seebensee",
             "austria",
             "hiking",
         ],
     }
 
-    return pipeline.run(
-        metadata=metadata,
-        video_path="engine/assets/sample.mp4",
+    candidates = gemini.generate_candidates(
+        evidence
     )
+
+    return {
+        "candidates": candidates,
+    }
+
+@router.get("/gemini")
+def test_gemini():
+
+    evidence = {
+        "title": "",
+        "caption": "Seebensee hike in Austria. Save this place for your Europe trip.",
+        "ocr_text": "Austria",
+        "hashtags": [
+            "seebensee",
+            "austria",
+            "hiking",
+        ],
+    }
+
+    return {
+        "candidates": gemini.generate_candidates(evidence)
+    }
