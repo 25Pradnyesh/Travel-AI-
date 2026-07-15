@@ -6,6 +6,7 @@ from engine.app.services.extraction.ocr_service import OCRService
 from engine.app.services.ai.gemini_service import GeminiService
 from engine.providers.manager import ProviderManager
 from engine.app.services.maps.google_places_service import GooglePlacesService
+from engine.app.services.extraction.speech_service import SpeechService
 
 
 router = APIRouter()
@@ -16,7 +17,7 @@ ocr = OCRService()
 gemini = GeminiService()
 provider = ProviderManager()
 places = GooglePlacesService()
-
+speech = SpeechService()
 
 @router.post("/provider")
 def provider_test():
@@ -77,3 +78,14 @@ def test_places():
     return places.search(
         "Seebensee Austria"
     )
+
+@router.get("/speech")
+def test_speech():
+
+    text = speech.extract(
+        "engine/assets/sample.mp4"
+    )
+
+    return {
+        "speech": text
+    }

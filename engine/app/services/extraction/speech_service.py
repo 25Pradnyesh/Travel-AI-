@@ -5,10 +5,20 @@ class SpeechService:
 
     def __init__(self):
 
-        self.model = whisper.load_model("base")
+        print("Loading Whisper model...")
+
+        self.model = whisper.load_model("small")
+
+        print("✅ Whisper model loaded.")
 
     def extract(self, video_path: str):
 
-        result = self.model.transcribe(video_path)
+        print(f"🎤 Transcribing: {video_path}")
 
-        return result["text"]
+        result = self.model.transcribe(
+            video_path,
+            fp16=False,
+            verbose=False,
+        )
+
+        return result["text"].strip()
