@@ -6,9 +6,7 @@ class GooglePlacesService:
 
     def __init__(self):
 
-        self.api_key = os.getenv(
-            "GOOGLE_PLACES_API_KEY"
-        )
+        self.api_key = os.getenv("GOOGLE_PLACES_API_KEY")
 
         self.url = (
             "https://places.googleapis.com/v1/places:searchText"
@@ -19,12 +17,11 @@ class GooglePlacesService:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            "X-Goog-FieldMask": (
+            "X-Goog-FieldMask":
+                "places.id,"
                 "places.displayName,"
                 "places.formattedAddress,"
-                "places.location,"
-                "places.id"
-            ),
+                "places.location",
         }
 
         body = {
@@ -37,4 +34,19 @@ class GooglePlacesService:
             json=body,
         )
 
-        return response.json()
+        data = response.json()
+
+        places = data.get("places", [])
+
+        if not places:
+            return None
+
+        place = places[0]
+
+        return {
+            "id": place.get("id"),
+            "name": place["displayName"]["text"],
+            "address": place.get("formattedAddress"),
+            "latitude": place["location"]["latitude"],
+            "longitude": place["location"]["longitude"],
+        }

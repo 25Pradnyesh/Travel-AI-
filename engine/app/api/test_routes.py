@@ -5,7 +5,6 @@ from engine.app.services.extraction.frame_extractor import FrameExtractor
 from engine.app.services.extraction.ocr_service import OCRService
 from engine.app.services.ai.gemini_service import GeminiService
 from engine.providers.manager import ProviderManager
-from engine.app.services.ai.gemini_service import GeminiService
 from engine.app.services.maps.google_places_service import GooglePlacesService
 
 
@@ -14,7 +13,6 @@ router = APIRouter()
 pipeline = LocationPipeline()
 frame_extractor = FrameExtractor()
 ocr = OCRService()
-gemini = GeminiService()
 gemini = GeminiService()
 provider = ProviderManager()
 places = GooglePlacesService()
@@ -59,28 +57,6 @@ def test_gemini():
 
     evidence = {
         "title": "",
-        "caption": "this hike was everything. Last summer we did some day hikes in Austria. 📍Seebensee hike in Austria.",
-        "ocr_text": "Seebensee Austria",
-        "hashtags": [
-            "seebensee",
-            "austria",
-            "hiking",
-        ],
-    }
-
-    candidates = gemini.generate_candidates(
-        evidence
-    )
-
-    return {
-        "candidates": candidates,
-    }
-
-@router.get("/gemini")
-def test_gemini():
-
-    evidence = {
-        "title": "",
         "caption": "Seebensee hike in Austria. Save this place for your Europe trip.",
         "ocr_text": "Austria",
         "hashtags": [
@@ -93,6 +69,8 @@ def test_gemini():
     return {
         "candidates": gemini.generate_candidates(evidence)
     }
+
+
 @router.get("/places")
 def test_places():
 

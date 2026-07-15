@@ -1,14 +1,15 @@
 from engine.app.services.extraction.evidence_builder import EvidenceBuilder
-from engine.app.services.extraction.candidate_extractor import CandidateExtractor
 from engine.app.services.scoring.scoring_service import ScoringService
 from engine.app.services.extraction.frame_extractor import FrameExtractor
+from engine.app.services.location.location_resolver import LocationResolver
 
 
 class LocationPipeline:
 
     def __init__(self):
+
         self.evidence_builder = EvidenceBuilder()
-        self.extractor = CandidateExtractor()
+        self.resolver = LocationResolver()
         self.scorer = ScoringService()
         self.frame_extractor = FrameExtractor()
 
@@ -28,18 +29,21 @@ class LocationPipeline:
             frame_paths,
         )
 
-        candidates = self.extractor.extract(
-            evidence["combined_text"]
+        verified_places = self.resolver.resolve(
+            evidence
         )
 
         ranked = self.scorer.rank(
-            candidates,
+            [
+                place["place"]["name"]
+                for place in verified_places
+            ],
             evidence,
         )
 
         return {
             "evidence": evidence,
-            "candidates": candidates,
+            "verified_places": verified_places,
             "ranked_candidates": ranked,
             "best_guess": ranked[0] if ranked else None,
         }
