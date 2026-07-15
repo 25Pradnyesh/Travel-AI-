@@ -6,6 +6,9 @@ from engine.app.services.extraction.ocr_service import OCRService
 from engine.app.services.ai.gemini_service import GeminiService
 from engine.providers.manager import ProviderManager
 from engine.app.services.ai.gemini_service import GeminiService
+from engine.app.services.maps.google_places_service import GooglePlacesService
+
+
 router = APIRouter()
 
 pipeline = LocationPipeline()
@@ -14,6 +17,7 @@ ocr = OCRService()
 gemini = GeminiService()
 gemini = GeminiService()
 provider = ProviderManager()
+places = GooglePlacesService()
 
 
 @router.post("/provider")
@@ -89,3 +93,9 @@ def test_gemini():
     return {
         "candidates": gemini.generate_candidates(evidence)
     }
+@router.get("/places")
+def test_places():
+
+    return places.search(
+        "Seebensee Austria"
+    )
