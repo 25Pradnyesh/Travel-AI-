@@ -1,15 +1,14 @@
 import whisper
 
+print("Loading Whisper model...")
+WHISPER_MODEL = whisper.load_model("small")
+print("✅ Whisper model loaded.")
+
 
 class SpeechService:
 
     def __init__(self):
-
-        print("Loading Whisper model...")
-
-        self.model = whisper.load_model("small")
-
-        print("✅ Whisper model loaded.")
+        self.model = WHISPER_MODEL
 
     def extract(self, video_path: str):
 
