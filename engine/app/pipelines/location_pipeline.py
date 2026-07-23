@@ -10,10 +10,10 @@ class LocationPipeline:
 
     def __init__(self):
 
-        self.evidence_builder = EvidenceBuilder()
+        self.builder = EvidenceBuilder()
         self.resolver = LocationResolver()
         self.scorer = ScoringService()
-        self.frame_extractor = FrameExtractor()
+        self.frames = FrameExtractor()
 
     def run(
         self,
@@ -23,95 +23,146 @@ class LocationPipeline:
 
         total_start = time.perf_counter()
 
-        # ===============================
-        # Frame Extraction
-        # ===============================
+        # ====================================================
+        # STAGE 1
+        # Caption Only
+        # ====================================================
 
-        start = time.perf_counter()
+        print("\n🚀 Stage 1 : Caption")
 
-        frame_paths = self.frame_extractor.extract(
-            video_path=video_path,
-            output_dir="engine/assets/frames",
+        evidence = self.builder.build_caption(
+            metadata
         )
 
-        frame_time = time.perf_counter() - start
-
-        # ===============================
-        # Evidence Builder
-        # ===============================
-
-        start = time.perf_counter()
-
-        evidence = self.evidence_builder.build(
-            metadata=metadata,
-            video_path=video_path,
-            frame_paths=frame_paths,
-        )
-
-        evidence_time = time.perf_counter() - start
-
-        # ===============================
-        # Location Resolver
-        # ===============================
-
-        start = time.perf_counter()
-
-        verified_places = self.resolver.resolve(
+        evidence = self.builder.combine(
             evidence
         )
 
-        resolver_time = time.perf_counter() - start
+        verified = self.resolver.resolve(
+            evidence
+        )
 
-        # ===============================
-        # Scoring
-        # ===============================
+        if verified:
 
-        start = time.perf_counter()
+            ranked = self.scorer.rank(
+                [
+                    place["place"]["name"]
+                    for place in verified
+                ],
+                evidence,
+            )
+
+            if ranked and ranked[0]["score"] >= 80:
+
+                print("✅ Caption resolved location.")
+
+                return {
+                    "stage": "caption",
+                    "evidence": evidence,
+                    "verified_places": verified,
+                    "ranked_candidates": ranked,
+                    "best_guess": ranked[0],
+                    "performance": {
+                        "total": round(
+                            time.perf_counter() - total_start,
+                            2,
+                        )
+                    },
+                }
+
+        # ====================================================
+        # STAGE 2
+        # OCR
+        # ====================================================
+
+        print("\n🚀 Stage 2 : OCR")
+
+        frame_paths = self.frames.extract(
+            video_path,
+            "engine/assets/frames",
+        )
+
+        evidence = self.builder.build_ocr(
+            evidence,
+            frame_paths,
+        )
+
+        evidence = self.builder.combine(
+            evidence
+        )
+
+        verified = self.resolver.resolve(
+            evidence
+        )
+
+        if verified:
+
+            ranked = self.scorer.rank(
+                [
+                    place["place"]["name"]
+                    for place in verified
+                ],
+                evidence,
+            )
+
+            if ranked and ranked[0]["score"] >= 80:
+
+                print("✅ OCR resolved location.")
+
+                return {
+                    "stage": "ocr",
+                    "evidence": evidence,
+                    "verified_places": verified,
+                    "ranked_candidates": ranked,
+                    "best_guess": ranked[0],
+                    "performance": {
+                        "total": round(
+                            time.perf_counter() - total_start,
+                            2,
+                        )
+                    },
+                }
+
+        # ====================================================
+        # STAGE 3
+        # Speech
+        # ====================================================
+
+        print("\n🚀 Stage 3 : Speech")
+
+        evidence = self.builder.build_speech(
+            evidence,
+            video_path,
+        )
+
+        evidence = self.builder.combine(
+            evidence
+        )
+
+        verified = self.resolver.resolve(
+            evidence
+        )
 
         ranked = self.scorer.rank(
             [
                 place["place"]["name"]
-                for place in verified_places
+                for place in verified
             ],
             evidence,
         )
 
-        score_time = time.perf_counter() - start
-
-        # ===============================
-        # Total Time
-        # ===============================
-
-        total_time = time.perf_counter() - total_start
-
-        # ===============================
-        # Performance Report
-        # ===============================
-
-        performance = {
-            "frame_extraction": round(frame_time, 2),
-            "evidence_builder": round(evidence_time, 2),
-            "location_resolver": round(resolver_time, 2),
-            "scoring": round(score_time, 2),
-            "total": round(total_time, 2),
-        }
-
-        print("\n========== PIPELINE TIMINGS ==========")
-        print(f"🎞️ Frame Extraction : {frame_time:.2f}s")
-        print(f"📝 Evidence Builder : {evidence_time:.2f}s")
-        print(f"📍 Location Resolver: {resolver_time:.2f}s")
-        print(f"🏆 Scoring          : {score_time:.2f}s")
-        print("--------------------------------------")
-        print(f"⏱️ Total Pipeline   : {total_time:.2f}s")
-        print("======================================\n")
+        print("✅ Speech pipeline finished.")
 
         return {
+            "stage": "speech",
             "evidence": evidence,
-            "verified_places": verified_places,
+            "verified_places": verified,
             "ranked_candidates": ranked,
             "best_guess": ranked[0] if ranked else None,
             "performance": {
-            **performance,
-            "evidence_builder": evidence.get("performance", {})
+                "total": round(
+                    time.perf_counter() - total_start,
+                    2,
+                )
             },
         }
