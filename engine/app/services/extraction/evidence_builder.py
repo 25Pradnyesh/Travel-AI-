@@ -11,25 +11,42 @@ class EvidenceBuilder:
         self.ocr = OCRService()
         self.speech = SpeechService()
 
-    def build(
+    # ==========================================
+    # Stage 1
+    # Caption / Metadata only
+    # ==========================================
+
+    def build_caption(
         self,
         metadata: dict,
-        video_path: str,
-        frame_paths: list[str] | None = None,
     ):
 
-        total_start = time.perf_counter()
+        return {
+            "provider": "instagram",
+            "metadata": metadata,
+            "title": metadata.get("title", ""),
+            "caption": metadata.get("caption", ""),
+            "hashtags": metadata.get("tags") or [],
+            "ocr_text": "",
+            "speech_text": "",
+            "frames": [],
+        }
 
-        frame_paths = frame_paths or []
+    # ==========================================
+    # Stage 2
+    # OCR only
+    # ==========================================
 
-        ocr_results = []
+    def build_ocr(
+        self,
+        evidence: dict,
+        frame_paths: list[str],
+    ):
+
+        start = time.perf_counter()
+
         seen = set()
-
-        # ==================================
-        # OCR
-        # ==================================
-
-        ocr_start = time.perf_counter()
+        ocr_results = []
 
         for frame in frame_paths:
 
@@ -46,60 +63,56 @@ class EvidenceBuilder:
             seen.add(cleaned)
             ocr_results.append(cleaned)
 
-        ocr_time = time.perf_counter() - ocr_start
+        evidence["frames"] = frame_paths
+        evidence["ocr_text"] = "\n".join(ocr_results)
 
-        # ==================================
-        # Speech
-        # ==================================
+        print(
+            f"📝 OCR : {time.perf_counter()-start:.2f}s"
+        )
 
-        speech_start = time.perf_counter()
+        return evidence
 
-        speech_text = self.speech.extract(video_path)
+    # ==========================================
+    # Stage 3
+    # Speech only
+    # ==========================================
 
-        speech_time = time.perf_counter() - speech_start
+    def build_speech(
+        self,
+        evidence: dict,
+        video_path: str,
+    ):
 
-        # ==================================
-        # Combine Evidence
-        # ==================================
+        start = time.perf_counter()
 
-        combine_start = time.perf_counter()
+        evidence["speech_text"] = self.speech.extract(
+            video_path
+        )
+
+        print(
+            f"🎤 Speech : {time.perf_counter()-start:.2f}s"
+        )
+
+        return evidence
+
+    # ==========================================
+    # Final
+    # Merge everything
+    # ==========================================
+
+    def combine(
+        self,
+        evidence: dict,
+    ):
 
         combined_text = "\n".join([
-            metadata.get("title", ""),
-            metadata.get("caption", ""),
-            " ".join(metadata.get("tags") or []),
-            "\n".join(ocr_results),
-            speech_text,
+            evidence["title"],
+            evidence["caption"],
+            " ".join(evidence["hashtags"]),
+            evidence["ocr_text"],
+            evidence["speech_text"],
         ])
 
-        combine_time = time.perf_counter() - combine_start
+        evidence["combined_text"] = combined_text
 
-        total_time = time.perf_counter() - total_start
-
-        performance = {
-            "ocr": round(ocr_time, 2),
-            "speech": round(speech_time, 2),
-            "combine": round(combine_time, 2),
-            "total": round(total_time, 2),
-        }
-
-        print("\n========== EVIDENCE BUILDER ==========")
-        print(f"📝 OCR             : {ocr_time:.2f}s")
-        print(f"🎤 Speech          : {speech_time:.2f}s")
-        print(f"🧩 Combine         : {combine_time:.2f}s")
-        print("--------------------------------------")
-        print(f"⏱️ Total Evidence  : {total_time:.2f}s")
-        print("======================================\n")
-
-        return {
-            "provider": "instagram",
-            "metadata": metadata,
-            "title": metadata.get("title", ""),
-            "caption": metadata.get("caption", ""),
-            "hashtags": metadata.get("tags") or [],
-            "ocr_text": "\n".join(ocr_results),
-            "speech_text": speech_text,
-            "frames": frame_paths,
-            "combined_text": combined_text,
-            "performance": performance,
-        }
+        return evidence
