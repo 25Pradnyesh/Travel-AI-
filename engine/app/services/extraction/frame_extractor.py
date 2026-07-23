@@ -4,14 +4,15 @@ import cv2
 
 class FrameExtractor:
     """
-    Extracts frames from a video every N seconds.
+    Extracts a small set of representative frames
+    evenly distributed across the video.
     """
 
     def extract(
         self,
         video_path: str,
         output_dir: str,
-        interval_seconds: int = 2,
+        max_frames: int = 5,
     ):
 
         output = Path(output_dir)
@@ -19,37 +20,53 @@ class FrameExtractor:
 
         cap = cv2.VideoCapture(video_path)
 
-        fps = cap.get(cv2.CAP_PROP_FPS)
+        total_frames = int(
+            cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        )
 
-        if fps == 0:
+        if total_frames <= 0:
+            cap.release()
             raise Exception("Unable to read video.")
 
-        frame_interval = int(fps * interval_seconds)
+        # ----------------------------------------
+        # Select evenly spaced frame positions
+        # ----------------------------------------
 
-        frames = []
+        if total_frames <= max_frames:
+            positions = list(range(total_frames))
+        else:
+            positions = [
+                int(i * (total_frames - 1) / (max_frames - 1))
+                for i in range(max_frames)
+            ]
 
-        frame_count = 0
-        saved = 0
+        saved = []
 
-        while True:
+        for index, frame_no in enumerate(positions):
+
+            cap.set(
+                cv2.CAP_PROP_POS_FRAMES,
+                frame_no,
+            )
 
             success, frame = cap.read()
 
             if not success:
-                break
+                continue
 
-            if frame_count % frame_interval == 0:
+            filename = output / f"frame_{index:03d}.jpg"
 
-                filename = output / f"frame_{saved:03d}.jpg"
+            cv2.imwrite(
+                str(filename),
+                frame,
+            )
 
-                cv2.imwrite(str(filename), frame)
-
-                frames.append(str(filename))
-
-                saved += 1
-
-            frame_count += 1
+            saved.append(str(filename))
 
         cap.release()
 
-        return frames
+        print(
+            f"🎞️ Extracted {len(saved)} representative frames."
+        )
+
+        return saved
