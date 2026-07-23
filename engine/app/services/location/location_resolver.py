@@ -5,6 +5,7 @@ from engine.app.services.maps.google_places_service import GooglePlacesService
 class LocationResolver:
 
     def __init__(self):
+
         self.candidates = CandidateService()
         self.places = GooglePlacesService()
 
@@ -19,12 +20,39 @@ class LocationResolver:
 
         for candidate in candidates:
 
-            place = self.places.search(candidate)
+            places = self.places.search(candidate)
 
-            if place:
-                verified.append({
+            if not places:
+                continue
+
+            # ---------------------------------------
+            # Intelligent Early Exit
+            # ---------------------------------------
+
+            if len(places) == 1:
+
+                print(
+                    f"✅ High confidence from '{candidate}'"
+                )
+
+                return [
+                    {
+                        "query": candidate,
+                        "place": places[0],
+                        "confidence": "HIGH",
+                    }
+                ]
+
+            # ---------------------------------------
+            # Otherwise keep searching
+            # ---------------------------------------
+
+            verified.append(
+                {
                     "query": candidate,
-                    "place": place,
-                })
+                    "place": places[0],
+                    "confidence": "MEDIUM",
+                }
+            )
 
         return verified

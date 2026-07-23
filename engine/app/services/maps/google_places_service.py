@@ -38,15 +38,16 @@ class GooglePlacesService:
 
         places = data.get("places", [])
 
-        if not places:
-            return None
+        results = []
 
-        place = places[0]
+        for place in places:
 
-        return {
-            "id": place.get("id"),
-            "name": place["displayName"]["text"],
-            "address": place.get("formattedAddress"),
-            "latitude": place["location"]["latitude"],
-            "longitude": place["location"]["longitude"],
-        }
+            results.append({
+                "id": place.get("id"),
+                "name": place["displayName"]["text"],
+                "address": place.get("formattedAddress"),
+                "latitude": place["location"]["latitude"],
+                "longitude": place["location"]["longitude"],
+            })
+
+        return results
