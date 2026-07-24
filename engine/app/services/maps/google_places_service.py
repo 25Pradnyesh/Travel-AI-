@@ -17,11 +17,12 @@ class GooglePlacesService:
         headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": self.api_key,
-            "X-Goog-FieldMask":
+            "X-Goog-FieldMask": (
                 "places.id,"
                 "places.displayName,"
                 "places.formattedAddress,"
-                "places.location",
+                "places.location"
+            ),
         }
 
         body = {
@@ -34,6 +35,8 @@ class GooglePlacesService:
             json=body,
         )
 
+        response.raise_for_status()
+
         data = response.json()
 
         places = data.get("places", [])
@@ -42,12 +45,77 @@ class GooglePlacesService:
 
         for place in places:
 
-            results.append({
-                "id": place.get("id"),
-                "name": place["displayName"]["text"],
-                "address": place.get("formattedAddress"),
-                "latitude": place["location"]["latitude"],
-                "longitude": place["location"]["longitude"],
-            })
+            display_name = (
+                place.get("displayName", {})
+                .get("text", "")
+            )
+
+            formatted_address = place.get(
+                "formattedAddress",
+                "",
+            )
+
+            location = place.get(
+                "location",
+                {},
+            )
+
+            parts = [
+                part.strip()
+                for part in formatted_address.split(",")
+                if part.strip()
+            ]
+
+            country = parts[-1] if parts else ""
+
+            state = ""
+
+            if len(parts) >= 2:
+                state = parts[-2]
+
+            # -----------------------------------------
+            # Build our normalized travel name
+            # -----------------------------------------
+
+            if "," in query:
+                travel_name = query.strip()
+
+                if (
+                    country
+                    and country.lower()
+                    not in travel_name.lower()
+                ):
+                    travel_name = (
+                        f"{travel_name}, {country}"
+                    )
+
+            elif country:
+
+                travel_name = (
+                    f"{display_name}, {country}"
+                )
+
+            else:
+
+                travel_name = display_name
+
+            google_maps_url = (
+                "https://www.google.com/maps/place/"
+                f"?q=place_id:{place.get('id')}"
+            )
+
+            results.append(
+                {
+                    "id": place.get("id"),
+                    "name": display_name,
+                    "travel_name": travel_name,
+                    "country": country,
+                    "state": state,
+                    "address": formatted_address,
+                    "latitude": location.get("latitude"),
+                    "longitude": location.get("longitude"),
+                    "google_maps_url": google_maps_url,
+                }
+            )
 
         return results
