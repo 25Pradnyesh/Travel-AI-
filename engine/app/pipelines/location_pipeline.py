@@ -1,7 +1,6 @@
 import time
 
 from engine.app.services.extraction.evidence_builder import EvidenceBuilder
-from engine.app.services.scoring.scoring_service import ScoringService
 from engine.app.services.extraction.frame_extractor import FrameExtractor
 from engine.app.services.location.location_resolver import LocationResolver
 
@@ -12,8 +11,56 @@ class LocationPipeline:
 
         self.builder = EvidenceBuilder()
         self.resolver = LocationResolver()
-        self.scorer = ScoringService()
         self.frames = FrameExtractor()
+
+    def _build_response(
+        self,
+        stage: str,
+        evidence: dict,
+        verified: list,
+        total_start: float,
+    ):
+
+        best = verified[0] if verified else None
+
+        ranked = []
+
+        if best:
+
+            ranked.append(
+                {
+                    "place": best["place"],
+                    "score": best["score"],
+                    "confidence": best["confidence"],
+                }
+            )
+
+            for alternative in best.get(
+                "alternatives",
+                [],
+            ):
+
+                ranked.append(
+                    {
+                        "place": alternative,
+                        "score": None,
+                        "confidence": "ALTERNATIVE",
+                    }
+                )
+
+        return {
+            "stage": stage,
+            "evidence": evidence,
+            "verified_places": verified,
+            "ranked_candidates": ranked,
+            "best_guess": best,
+            "performance": {
+                "total": round(
+                    time.perf_counter() - total_start,
+                    2,
+                )
+            },
+        }
 
     def run(
         self,
@@ -25,50 +72,40 @@ class LocationPipeline:
 
         # ====================================================
         # STAGE 1
-        # Caption Only
+        # Caption
         # ====================================================
 
         print("\n🚀 Stage 1 : Caption")
 
         evidence = self.builder.build_caption(
-            metadata
+            metadata,
         )
 
         evidence = self.builder.combine(
-            evidence
+            evidence,
         )
 
         verified = self.resolver.resolve(
-            evidence
+            evidence,
         )
 
         if verified:
 
-            ranked = self.scorer.rank(
-                [
-                    place["place"]["name"]
-                    for place in verified
-                ],
-                evidence,
-            )
+            if verified[0]["confidence"] in (
+                "HIGH",
+                "MEDIUM",
+            ):
 
-            if ranked and ranked[0]["score"] >= 80:
+                print(
+                    "✅ Caption resolved location."
+                )
 
-                print("✅ Caption resolved location.")
-
-                return {
-                    "stage": "caption",
-                    "evidence": evidence,
-                    "verified_places": verified,
-                    "ranked_candidates": ranked,
-                    "best_guess": ranked[0],
-                    "performance": {
-                        "total": round(
-                            time.perf_counter() - total_start,
-                            2,
-                        )
-                    },
-                }
+                return self._build_response(
+                    "caption",
+                    evidence,
+                    verified,
+                    total_start,
+                )
 
         # ====================================================
         # STAGE 2
@@ -88,40 +125,30 @@ class LocationPipeline:
         )
 
         evidence = self.builder.combine(
-            evidence
+            evidence,
         )
 
         verified = self.resolver.resolve(
-            evidence
+            evidence,
         )
 
         if verified:
 
-            ranked = self.scorer.rank(
-                [
-                    place["place"]["name"]
-                    for place in verified
-                ],
-                evidence,
-            )
+            if verified[0]["confidence"] in (
+                "HIGH",
+                "MEDIUM",
+            ):
 
-            if ranked and ranked[0]["score"] >= 80:
+                print(
+                    "✅ OCR resolved location."
+                )
 
-                print("✅ OCR resolved location.")
-
-                return {
-                    "stage": "ocr",
-                    "evidence": evidence,
-                    "verified_places": verified,
-                    "ranked_candidates": ranked,
-                    "best_guess": ranked[0],
-                    "performance": {
-                        "total": round(
-                            time.perf_counter() - total_start,
-                            2,
-                        )
-                    },
-                }
+                return self._build_response(
+                    "ocr",
+                    evidence,
+                    verified,
+                    total_start,
+                )
 
         # ====================================================
         # STAGE 3
@@ -136,33 +163,20 @@ class LocationPipeline:
         )
 
         evidence = self.builder.combine(
-            evidence
-        )
-
-        verified = self.resolver.resolve(
-            evidence
-        )
-
-        ranked = self.scorer.rank(
-            [
-                place["place"]["name"]
-                for place in verified
-            ],
             evidence,
         )
 
-        print("✅ Speech pipeline finished.")
+        verified = self.resolver.resolve(
+            evidence,
+        )
 
-        return {
-            "stage": "speech",
-            "evidence": evidence,
-            "verified_places": verified,
-            "ranked_candidates": ranked,
-            "best_guess": ranked[0] if ranked else None,
-            "performance": {
-                "total": round(
-                    time.perf_counter() - total_start,
-                    2,
-                )
-            },
-        }
+        print(
+            "✅ Speech pipeline finished."
+        )
+
+        return self._build_response(
+            "speech",
+            evidence,
+            verified,
+            total_start,
+        )

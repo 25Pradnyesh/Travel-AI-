@@ -1,7 +1,16 @@
 from engine.app.services.location.candidate_service import CandidateService
-from engine.app.services.location.location_formatter import LocationFormatter
-from engine.app.services.location.geo_enrichment_service import GeoEnrichmentService
-from engine.app.services.maps.google_places_service import GooglePlacesService
+from engine.app.services.location.location_formatter import (
+    LocationFormatter,
+)
+from engine.app.services.location.geo_enrichment_service import (
+    GeoEnrichmentService,
+)
+from engine.app.services.maps.google_places_service import (
+    GooglePlacesService,
+)
+from engine.app.services.scoring.scoring_service import (
+    ScoringService,
+)
 
 
 class LocationResolver:
@@ -16,6 +25,8 @@ class LocationResolver:
 
         self.geo = GeoEnrichmentService()
 
+        self.scorer = ScoringService()
+
     def resolve(
         self,
         evidence: dict,
@@ -26,44 +37,123 @@ class LocationResolver:
             ocr_text=evidence["ocr_text"],
         )
 
-        verified = []
+        verified_places = []
+
+        print("\n========== LOCATION RESOLVER ==========")
+
+        # ----------------------------------------
+        # Search every extracted candidate
+        # ----------------------------------------
 
         for candidate in candidates:
 
-            places = self.places.search(candidate)
+            google_places = self.places.search(
+                candidate,
+            )
 
-            if not places:
+            if not google_places:
                 continue
 
-            formatted_place = self.formatter.format(
-                query=candidate,
-                place=places[0],
+            print(
+                f"🔍 '{candidate}' → {len(google_places)} Google result(s)"
             )
 
-            enriched_place = self.geo.enrich(
-                formatted_place,
-            )
+            # ----------------------------------------
+            # Format + Enrich every Google result
+            # ----------------------------------------
 
-            if len(places) == 1:
+            for google_place in google_places:
 
-                print(
-                    f"✅ High confidence from '{candidate}'"
+                formatted_place = self.formatter.format(
+                    query=candidate,
+                    place=google_place,
                 )
 
-                return [
-                    {
-                        "query": candidate,
-                        "place": enriched_place,
-                        "confidence": "HIGH",
-                    }
-                ]
+                enriched_place = self.geo.enrich(
+                    formatted_place,
+                )
 
-            verified.append(
+                verified_places.append(
+                    enriched_place,
+                )
+
+        # ----------------------------------------
+        # Nothing found
+        # ----------------------------------------
+
+        if not verified_places:
+
+            print("❌ No verified locations found.\n")
+
+            return []
+
+        # ----------------------------------------
+        # Rank every verified place
+        # ----------------------------------------
+
+        ranked = self.scorer.rank_places(
+            verified_places,
+            evidence,
+        )
+
+        if not ranked:
+
+            return []
+
+        # ----------------------------------------
+        # Keep Top 3
+        # ----------------------------------------
+
+        ranked = ranked[:3]
+
+        winner = ranked[0]
+
+        print("\n========== TOP MATCHES ==========")
+
+        for index, item in enumerate(
+            ranked,
+            start=1,
+        ):
+
+            place = item["place"]
+
+            print(
+                f"{index}. "
+                f"{place['travel_name']} | "
+                f"Score: {item['score']} | "
+                f"{item['confidence']}"
+            )
+
+        print("=======================================\n")
+
+        # ----------------------------------------
+        # Preserve alternatives with metadata
+        # ----------------------------------------
+
+        alternatives = []
+
+        for item in ranked[1:]:
+
+            alternatives.append(
                 {
-                    "query": candidate,
-                    "place": enriched_place,
-                    "confidence": "MEDIUM",
+                    "place": item["place"],
+                    "score": item["score"],
+                    "confidence": item["confidence"],
                 }
             )
 
-        return verified
+        # ----------------------------------------
+        # Final Result
+        # ----------------------------------------
+
+        return [
+            {
+                "query": winner["place"][
+                    "verified_query"
+                ],
+                "place": winner["place"],
+                "score": winner["score"],
+                "confidence": winner["confidence"],
+                "alternatives": alternatives,
+            }
+        ]

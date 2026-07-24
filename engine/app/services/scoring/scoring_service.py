@@ -17,6 +17,7 @@ COUNTRIES = {
     "iceland",
 }
 
+
 TRAVEL_KEYWORDS = {
     "valley",
     "lake",
@@ -30,27 +31,37 @@ TRAVEL_KEYWORDS = {
     "island",
     "park",
     "national",
+    "hike",
+    "trail",
 }
 
 
 class ScoringService:
 
-    def tokenize(self, text: str) -> list[str]:
-        """
-        Converts text into lowercase words.
-        Removes punctuation.
-        """
+    def tokenize(self, text: str):
 
-        return re.findall(r"[a-zA-Z]+", text.lower())
+        return re.findall(
+            r"[a-zA-Z]+",
+            text.lower(),
+        )
 
-    def generate_ngrams(self, words: list[str], n: int):
+    def generate_ngrams(
+        self,
+        words,
+        n,
+    ):
 
         return [
-            " ".join(words[i:i+n])
-            for i in range(len(words) - n + 1)
+            " ".join(words[i:i + n])
+            for i in range(
+                len(words) - n + 1
+            )
         ]
 
-    def build_search_space(self, text: str):
+    def build_search_space(
+        self,
+        text,
+    ):
 
         words = self.tokenize(text)
 
@@ -62,20 +73,13 @@ class ScoringService:
             )
         )
 
-    def fuzzy_match(self, candidate: str, text: str) -> int:
-
-        return fuzz.partial_ratio(
-            candidate.lower(),
-            text.lower(),
-        )
-
-    def score_against_index(
+    def score_index(
         self,
-        token: str,
-        index: list[str],
-        high: int,
-        medium: int,
-        low: int,
+        token,
+        index,
+        high,
+        medium,
+        low,
     ):
 
         best = 0
@@ -101,76 +105,190 @@ class ScoringService:
 
         return 0
 
-    def rank(self, candidates, evidence):
+    def confidence(
+        self,
+        score,
+    ):
 
-        title = (evidence.get("title") or "").lower()
-        caption = (evidence.get("caption") or "").lower()
+        if score >= 140:
+            return "HIGH"
+
+        if score >= 90:
+            return "MEDIUM"
+
+        return "LOW"
+
+    def rank_places(
+        self,
+        places,
+        evidence,
+    ):
+
+        title = (
+            evidence.get("title") or ""
+        ).lower()
+
+        caption = (
+            evidence.get("caption") or ""
+        ).lower()
+
+        ocr = (
+            evidence.get("ocr_text") or ""
+        ).lower()
+
+        speech = (
+            evidence.get("speech_text") or ""
+        ).lower()
+
         hashtags = " ".join(
             evidence.get("hashtags") or []
         ).lower()
-        ocr = (evidence.get("ocr_text") or "").lower()
-        speech = (evidence.get("speech_text") or "").lower()
 
-        # -----------------------------------
-        # Build indexes ONCE
-        # -----------------------------------
+        caption_index = self.build_search_space(
+            caption
+        )
 
-        caption_index = self.build_search_space(caption)
-        ocr_index = self.build_search_space(ocr)
-        speech_index = self.build_search_space(speech)
-        hashtag_index = self.build_search_space(hashtags)
+        ocr_index = self.build_search_space(
+            ocr
+        )
+
+        speech_index = self.build_search_space(
+            speech
+        )
+
+        hashtag_index = self.build_search_space(
+            hashtags
+        )
 
         ranked = []
 
-        for candidate in candidates:
+        for place in places:
 
             score = 0
 
-            candidate_lower = candidate.lower()
-            tokens = self.tokenize(candidate_lower)
+            travel_name = (
+                place.get(
+                    "travel_name",
+                    "",
+                ).lower()
+            )
 
-            # -----------------------------------
-            # Exact Matches
-            # -----------------------------------
+            city = (
+                place.get(
+                    "city",
+                    "",
+                ).lower()
+            )
 
-            if candidate_lower in title:
-                score += 30
+            region = (
+                place.get(
+                    "region",
+                    "",
+                ).lower()
+            )
 
-            if candidate_lower in caption:
+            country = (
+                place.get(
+                    "country",
+                    "",
+                ).lower()
+            )
+
+            address = (
+                place.get(
+                    "address",
+                    "",
+                ).lower()
+            )
+
+            verified_query = (
+                place.get(
+                    "verified_query",
+                    "",
+                ).lower()
+            )
+
+            searchable = " ".join([
+                travel_name,
+                city,
+                region,
+                country,
+                address,
+                verified_query,
+            ])
+
+            # ------------------------
+            # Exact matches
+            # ------------------------
+
+            if travel_name in caption:
                 score += 50
 
-            if candidate_lower in ocr:
-                score += 40
+            if city and city in caption:
+                score += 35
 
-            if candidate_lower in speech:
-                score += 30
+            if region and region in caption:
+                score += 35
 
-            if candidate_lower in hashtags:
+            if country and country in caption:
                 score += 25
 
-            # -----------------------------------
-            # Fuzzy Whole Candidate
-            # -----------------------------------
+            if verified_query in caption:
+                score += 40
 
-            if self.fuzzy_match(candidate_lower, caption) >= 90:
+            if address in caption:
                 score += 20
 
-            if self.fuzzy_match(candidate_lower, ocr) >= 90:
-                score += 15
+            if travel_name in title:
+                score += 20
 
-            if self.fuzzy_match(candidate_lower, speech) >= 90:
-                score += 10
+            if travel_name in ocr:
+                score += 30
 
-            # -----------------------------------
-            # Token Matching
-            # -----------------------------------
+            if travel_name in speech:
+                score += 25
+
+            # ------------------------
+            # Fuzzy travel name
+            # ------------------------
+
+            if fuzz.partial_ratio(
+                travel_name,
+                caption,
+            ) >= 90:
+
+                score += 30
+
+            if fuzz.partial_ratio(
+                city,
+                caption,
+            ) >= 90:
+
+                score += 20
+
+            if region:
+
+                if fuzz.partial_ratio(
+                    region,
+                    caption,
+                ) >= 90:
+
+                    score += 20
+
+            # ------------------------
+            # Token scoring
+            # ------------------------
+
+            tokens = self.tokenize(
+                searchable
+            )
 
             for token in tokens:
 
                 if len(token) <= 3:
                     continue
 
-                score += self.score_against_index(
+                score += self.score_index(
                     token,
                     caption_index,
                     20,
@@ -178,7 +296,7 @@ class ScoringService:
                     6,
                 )
 
-                score += self.score_against_index(
+                score += self.score_index(
                     token,
                     ocr_index,
                     15,
@@ -186,7 +304,7 @@ class ScoringService:
                     4,
                 )
 
-                score += self.score_against_index(
+                score += self.score_index(
                     token,
                     speech_index,
                     10,
@@ -194,7 +312,7 @@ class ScoringService:
                     3,
                 )
 
-                score += self.score_against_index(
+                score += self.score_index(
                     token,
                     hashtag_index,
                     10,
@@ -202,48 +320,46 @@ class ScoringService:
                     3,
                 )
 
-            # -----------------------------------
-            # Country Bonus
-            # -----------------------------------
+            # ------------------------
+            # Country consistency
+            # ------------------------
 
-            for country in COUNTRIES:
+            for known_country in COUNTRIES:
 
-                if (
-                    country in candidate_lower
-                    and country in caption
-                ):
-                    score += 20
+                if known_country in caption:
 
-            # -----------------------------------
-            # Travel Keyword Bonus
-            # -----------------------------------
+                    if known_country == country:
+
+                        score += 20
+
+                    else:
+
+                        score -= 15
+
+            # ------------------------
+            # Travel keywords
+            # ------------------------
 
             for keyword in TRAVEL_KEYWORDS:
 
-                if keyword in candidate_lower:
+                if keyword in searchable:
+
                     score += 5
 
-            # -----------------------------------
-            # Multi-word Bonus
-            # -----------------------------------
+            # ------------------------
+            # Multi-word bonus
+            # ------------------------
 
-            if len(tokens) > 1:
+            if len(travel_name.split()) > 1:
                 score += 15
-
-            # -----------------------------------
-            # Penalties
-            # -----------------------------------
-
-            if "studio" in candidate_lower:
-                score -= 50
-
-            if "video" in candidate_lower:
-                score -= 50
 
             ranked.append(
                 {
-                    "name": candidate,
+                    "place": place,
                     "score": score,
+                    "confidence": self.confidence(
+                        score
+                    ),
                 }
             )
 

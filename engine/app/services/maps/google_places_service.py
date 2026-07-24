@@ -14,6 +14,8 @@ class GooglePlacesService:
             "https://places.googleapis.com/v1/places:searchText"
         )
 
+        self.max_results = 5
+
     def search(
         self,
         query: str,
@@ -31,29 +33,59 @@ class GooglePlacesService:
         }
 
         body = {
-            "textQuery": query
+            "textQuery": query,
         }
 
-        response = requests.post(
-            self.url,
-            headers=headers,
-            json=body,
-            timeout=10,
-        )
+        try:
 
-        response.raise_for_status()
+            response = requests.post(
+                self.url,
+                headers=headers,
+                json=body,
+                timeout=10,
+            )
+
+            response.raise_for_status()
+
+        except requests.RequestException as e:
+
+            print(
+                f"❌ Google Places Error: {e}"
+            )
+
+            return []
 
         data = response.json()
 
-        places = data.get("places", [])
+        places = data.get(
+            "places",
+            [],
+        )
 
         results = []
 
+        seen_ids = set()
+
         for place in places:
 
+            place_id = place.get("id")
+
+            if not place_id:
+                continue
+
+            if place_id in seen_ids:
+                continue
+
+            seen_ids.add(place_id)
+
             display_name = (
-                place.get("displayName", {})
-                .get("text", "")
+                place.get(
+                    "displayName",
+                    {},
+                ).get(
+                    "text",
+                    "",
+                )
             )
 
             formatted_address = place.get(
@@ -68,18 +100,25 @@ class GooglePlacesService:
 
             google_maps_url = (
                 "https://www.google.com/maps/place/"
-                f"?q=place_id:{place.get('id')}"
+                f"?q=place_id:{place_id}"
             )
 
             results.append(
                 {
-                    "id": place.get("id"),
+                    "id": place_id,
                     "display_name": display_name,
                     "formatted_address": formatted_address,
-                    "latitude": location.get("latitude"),
-                    "longitude": location.get("longitude"),
+                    "latitude": location.get(
+                        "latitude"
+                    ),
+                    "longitude": location.get(
+                        "longitude"
+                    ),
                     "google_maps_url": google_maps_url,
                 }
             )
+
+            if len(results) >= self.max_results:
+                break
 
         return results
