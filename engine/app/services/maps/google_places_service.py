@@ -28,7 +28,9 @@ class GooglePlacesService:
                 "places.id,"
                 "places.displayName,"
                 "places.formattedAddress,"
-                "places.location"
+                "places.location,"
+                "places.types,"
+                "places.primaryType"
             ),
         }
 
@@ -64,7 +66,7 @@ class GooglePlacesService:
 
         results = []
 
-        seen_ids = set()
+        seen = set()
 
         for place in places:
 
@@ -73,10 +75,10 @@ class GooglePlacesService:
             if not place_id:
                 continue
 
-            if place_id in seen_ids:
+            if place_id in seen:
                 continue
 
-            seen_ids.add(place_id)
+            seen.add(place_id)
 
             display_name = (
                 place.get(
@@ -98,6 +100,16 @@ class GooglePlacesService:
                 {},
             )
 
+            types = place.get(
+                "types",
+                [],
+            )
+
+            primary_type = place.get(
+                "primaryType",
+                "",
+            )
+
             google_maps_url = (
                 "https://www.google.com/maps/place/"
                 f"?q=place_id:{place_id}"
@@ -114,6 +126,8 @@ class GooglePlacesService:
                     "longitude": location.get(
                         "longitude"
                     ),
+                    "types": types,
+                    "primary_type": primary_type,
                     "google_maps_url": google_maps_url,
                 }
             )

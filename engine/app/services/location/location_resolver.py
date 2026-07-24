@@ -1,4 +1,6 @@
-from engine.app.services.location.candidate_service import CandidateService
+from engine.app.services.location.candidate_service import (
+    CandidateService,
+)
 from engine.app.services.location.location_formatter import (
     LocationFormatter,
 )
@@ -13,18 +15,32 @@ from engine.app.services.scoring.scoring_service import (
 )
 
 
+BUSINESS_TYPES = {
+    "restaurant",
+    "food",
+    "cafe",
+    "bar",
+    "bakery",
+    "lodging",
+    "hotel",
+    "store",
+    "shopping_mall",
+    "hospital",
+    "school",
+    "bank",
+    "gas_station",
+    "gym",
+}
+
+
 class LocationResolver:
 
     def __init__(self):
 
         self.candidates = CandidateService()
-
         self.places = GooglePlacesService()
-
         self.formatter = LocationFormatter()
-
         self.geo = GeoEnrichmentService()
-
         self.scorer = ScoringService()
 
     def resolve(
@@ -39,30 +55,74 @@ class LocationResolver:
 
         verified_places = []
 
+        seen_place_ids = set()
+
         print("\n========== LOCATION RESOLVER ==========")
 
         # ----------------------------------------
-        # Search every extracted candidate
+        # Search every candidate
         # ----------------------------------------
 
         for candidate in candidates:
 
-            google_places = self.places.search(
+            google_results = self.places.search(
                 candidate,
             )
 
-            if not google_places:
+            if not google_results:
                 continue
 
             print(
-                f"🔍 '{candidate}' → {len(google_places)} Google result(s)"
+                f"🔍 '{candidate}' → {len(google_results)} result(s)"
             )
 
-            # ----------------------------------------
-            # Format + Enrich every Google result
-            # ----------------------------------------
+            for google_place in google_results:
 
-            for google_place in google_places:
+                place_id = google_place.get(
+                    "id",
+                )
+
+                if place_id in seen_place_ids:
+                    continue
+
+                seen_place_ids.add(
+                    place_id,
+                )
+
+                # ----------------------------------------
+                # Reject obvious businesses
+                # ----------------------------------------
+
+                primary_type = (
+                    google_place.get(
+                        "primary_type",
+                        ""
+                    )
+                    .lower()
+                )
+
+                types = [
+                    t.lower()
+                    for t in google_place.get(
+                        "types",
+                        [],
+                    )
+                ]
+
+                if (
+                    primary_type in BUSINESS_TYPES
+                    or any(
+                        t in BUSINESS_TYPES
+                        for t in types
+                    )
+                ):
+
+                    print(
+                        f"🚫 Ignoring business: "
+                        f"{google_place.get('display_name')}"
+                    )
+
+                    continue
 
                 formatted_place = self.formatter.format(
                     query=candidate,
@@ -83,12 +143,14 @@ class LocationResolver:
 
         if not verified_places:
 
-            print("❌ No verified locations found.\n")
+            print(
+                "❌ No verified locations.\n"
+            )
 
             return []
 
         # ----------------------------------------
-        # Rank every verified place
+        # Rank everything
         # ----------------------------------------
 
         ranked = self.scorer.rank_places(
@@ -97,54 +159,55 @@ class LocationResolver:
         )
 
         if not ranked:
-
             return []
-
-        # ----------------------------------------
-        # Keep Top 3
-        # ----------------------------------------
-
-        ranked = ranked[:3]
 
         winner = ranked[0]
 
+        # ----------------------------------------
+        # Reject weak winner
+        # ----------------------------------------
+
+        if winner["confidence"] == "LOW":
+
+            print(
+                "⚠️ No reliable location found."
+            )
+
+            return []
+
+        top_results = ranked[:3]
+
         print("\n========== TOP MATCHES ==========")
 
-        for index, item in enumerate(
-            ranked,
+        for i, result in enumerate(
+            top_results,
             start=1,
         ):
 
-            place = item["place"]
+            place = result["place"]
 
             print(
-                f"{index}. "
+                f"{i}. "
                 f"{place['travel_name']} | "
-                f"Score: {item['score']} | "
-                f"{item['confidence']}"
+                f"Score={result['score']} | "
+                f"{result['confidence']}"
             )
 
-        print("=======================================\n")
-
-        # ----------------------------------------
-        # Preserve alternatives with metadata
-        # ----------------------------------------
+        print(
+            "=================================\n"
+        )
 
         alternatives = []
 
-        for item in ranked[1:]:
+        for result in top_results[1:]:
 
             alternatives.append(
                 {
-                    "place": item["place"],
-                    "score": item["score"],
-                    "confidence": item["confidence"],
+                    "place": result["place"],
+                    "score": result["score"],
+                    "confidence": result["confidence"],
                 }
             )
-
-        # ----------------------------------------
-        # Final Result
-        # ----------------------------------------
 
         return [
             {

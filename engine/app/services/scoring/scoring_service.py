@@ -36,6 +36,34 @@ TRAVEL_KEYWORDS = {
 }
 
 
+GOOD_PLACE_TYPES = {
+    "natural_feature": 60,
+    "tourist_attraction": 50,
+    "locality": 40,
+    "administrative_area_level_1": 20,
+    "administrative_area_level_2": 15,
+}
+
+
+BAD_PLACE_TYPES = {
+    "restaurant",
+    "cafe",
+    "food",
+    "bakery",
+    "bar",
+    "hotel",
+    "lodging",
+    "store",
+    "shopping_mall",
+    "hospital",
+    "school",
+    "gym",
+    "bank",
+    "car_dealer",
+    "gas_station",
+}
+
+
 class ScoringService:
 
     def tokenize(self, text: str):
@@ -52,7 +80,7 @@ class ScoringService:
     ):
 
         return [
-            " ".join(words[i:i + n])
+            " ".join(words[i:i+n])
             for i in range(
                 len(words) - n + 1
             )
@@ -91,8 +119,10 @@ class ScoringService:
                 phrase,
             )
 
-            if similarity > best:
-                best = similarity
+            best = max(
+                best,
+                similarity,
+            )
 
         if best >= 95:
             return high
@@ -110,10 +140,10 @@ class ScoringService:
         score,
     ):
 
-        if score >= 140:
+        if score >= 170:
             return "HIGH"
 
-        if score >= 90:
+        if score >= 110:
             return "MEDIUM"
 
         return "LOW"
@@ -145,19 +175,19 @@ class ScoringService:
         ).lower()
 
         caption_index = self.build_search_space(
-            caption
+            caption,
         )
 
         ocr_index = self.build_search_space(
-            ocr
+            ocr,
         )
 
         speech_index = self.build_search_space(
-            speech
+            speech,
         )
 
         hashtag_index = self.build_search_space(
-            hashtags
+            hashtags,
         )
 
         ranked = []
@@ -166,46 +196,44 @@ class ScoringService:
 
             score = 0
 
-            travel_name = (
-                place.get(
-                    "travel_name",
-                    "",
-                ).lower()
+            travel_name = place.get(
+                "travel_name",
+                "",
+            ).lower()
+
+            city = place.get(
+                "city",
+                "",
+            ).lower()
+
+            region = place.get(
+                "region",
+                "",
+            ).lower()
+
+            country = place.get(
+                "country",
+                "",
+            ).lower()
+
+            address = place.get(
+                "address",
+                "",
+            ).lower()
+
+            verified_query = place.get(
+                "verified_query",
+                "",
+            ).lower()
+
+            primary_type = place.get(
+                "primary_type",
+                "",
             )
 
-            city = (
-                place.get(
-                    "city",
-                    "",
-                ).lower()
-            )
-
-            region = (
-                place.get(
-                    "region",
-                    "",
-                ).lower()
-            )
-
-            country = (
-                place.get(
-                    "country",
-                    "",
-                ).lower()
-            )
-
-            address = (
-                place.get(
-                    "address",
-                    "",
-                ).lower()
-            )
-
-            verified_query = (
-                place.get(
-                    "verified_query",
-                    "",
-                ).lower()
+            types = place.get(
+                "types",
+                [],
             )
 
             searchable = " ".join([
@@ -217,9 +245,9 @@ class ScoringService:
                 verified_query,
             ])
 
-            # ------------------------
+            # ----------------------------------
             # Exact matches
-            # ------------------------
+            # ----------------------------------
 
             if travel_name in caption:
                 score += 50
@@ -230,13 +258,10 @@ class ScoringService:
             if region and region in caption:
                 score += 35
 
-            if country and country in caption:
-                score += 25
-
-            if verified_query in caption:
+            if verified_query and verified_query in caption:
                 score += 40
 
-            if address in caption:
+            if address and address in caption:
                 score += 20
 
             if travel_name in title:
@@ -248,39 +273,34 @@ class ScoringService:
             if travel_name in speech:
                 score += 25
 
-            # ------------------------
-            # Fuzzy travel name
-            # ------------------------
+            # ----------------------------------
+            # Fuzzy matching
+            # ----------------------------------
 
             if fuzz.partial_ratio(
                 travel_name,
                 caption,
             ) >= 90:
-
                 score += 30
 
-            if fuzz.partial_ratio(
+            if city and fuzz.partial_ratio(
                 city,
                 caption,
             ) >= 90:
-
                 score += 20
 
-            if region:
+            if region and fuzz.partial_ratio(
+                region,
+                caption,
+            ) >= 90:
+                score += 20
 
-                if fuzz.partial_ratio(
-                    region,
-                    caption,
-                ) >= 90:
-
-                    score += 20
-
-            # ------------------------
+            # ----------------------------------
             # Token scoring
-            # ------------------------
+            # ----------------------------------
 
             tokens = self.tokenize(
-                searchable
+                searchable,
             )
 
             for token in tokens:
@@ -320,51 +340,84 @@ class ScoringService:
                     3,
                 )
 
-            # ------------------------
-            # Country consistency
-            # ------------------------
+            # ----------------------------------
+            # Country handling
+            # ----------------------------------
 
-            for known_country in COUNTRIES:
+            if country:
 
-                if known_country in caption:
+                if travel_name == country:
+                    score -= 40
 
-                    if known_country == country:
+                for known_country in COUNTRIES:
 
-                        score += 20
+                    if known_country in caption:
 
-                    else:
+                        if known_country == country:
+                            score += 10
+                        else:
+                            score -= 15
 
-                        score -= 15
+            # ----------------------------------
+            # Google Place Type Bonus
+            # ----------------------------------
 
-            # ------------------------
-            # Travel keywords
-            # ------------------------
+            if primary_type in GOOD_PLACE_TYPES:
+                score += GOOD_PLACE_TYPES[
+                    primary_type
+                ]
+
+            for place_type in types:
+
+                if place_type in GOOD_PLACE_TYPES:
+                    score += (
+                        GOOD_PLACE_TYPES[
+                            place_type
+                        ] // 2
+                    )
+
+            # ----------------------------------
+            # Business Penalty
+            # ----------------------------------
+
+            if primary_type in BAD_PLACE_TYPES:
+                score -= 100
+
+            for place_type in types:
+
+                if place_type in BAD_PLACE_TYPES:
+                    score -= 50
+
+            # ----------------------------------
+            # Travel keyword bonus
+            # ----------------------------------
 
             for keyword in TRAVEL_KEYWORDS:
 
                 if keyword in searchable:
-
                     score += 5
 
-            # ------------------------
-            # Multi-word bonus
-            # ------------------------
+            # ----------------------------------
+            # Compound locations
+            # ----------------------------------
 
-            if len(travel_name.split()) > 1:
-                score += 15
+            if len(
+                travel_name.split()
+            ) > 1:
+                score += 20
 
             ranked.append(
                 {
                     "place": place,
                     "score": score,
                     "confidence": self.confidence(
-                        score
+                        score,
                     ),
                 }
             )
 
         ranked.sort(
-            key=lambda x: x["score"],
+            key=lambda item: item["score"],
             reverse=True,
         )
 

@@ -6,13 +6,17 @@ STOP_WORDS = {
     "found",
     "shot",
     "video",
+    "videos",
     "comment",
+    "comments",
     "like",
     "follow",
     "share",
+    "save",
     "beautiful",
     "amazing",
     "travel",
+    "travels",
     "trip",
     "vacation",
     "holiday",
@@ -27,9 +31,23 @@ STOP_WORDS = {
     "going",
     "today",
     "everyone",
+    "every",
+    "another",
     "honestly",
     "highly",
     "recommend",
+    "grade",
+    "check",
+    "bio",
+    "link",
+    "free",
+    "tutorial",
+    "preset",
+    "camera",
+    "sony",
+    "canon",
+    "reel",
+    "instagram",
 }
 
 
@@ -50,6 +68,15 @@ TRAVEL_TERMINATORS = {
     "view",
     "sunrise",
     "sunset",
+    "camp",
+    "camping",
+    "restaurant",
+    "cafe",
+    "bar",
+    "hostel",
+    "stay",
+    "stays",
+    "resort",
 }
 
 
@@ -95,53 +122,172 @@ class CandidateService:
 
     def clean(self, text: str) -> str:
 
-        text = text.replace("📍", " 📍 ")
-        text = text.replace("#", " ")
-
-        # Remove emojis and symbols
         text = re.sub(
-            r"[^\w\s,📍]",
+            r"http\S+|www\S+",
             " ",
             text,
         )
 
-        return re.sub(
+        text = re.sub(
+            r"@\w+",
+            " ",
+            text,
+        )
+
+        text = text.replace(
+            "📍",
+            "\n📍 ",
+        )
+
+        text = re.sub(
+            r"#([A-Za-z0-9_]+)",
+            r" \1 ",
+            text,
+        )
+
+        text = re.sub(
+            r"[^\w\s,\n📍]",
+            " ",
+            text,
+        )
+
+        text = re.sub(
             r"\s+",
             " ",
             text,
-        ).strip()
-
-    def extract_pin_location(self, text: str):
-
-        match = re.search(
-            r"📍\s*([^#\n]+)",
-            text,
         )
 
-        if not match:
-            return None
+        return text.strip()
 
-        location = match.group(1).strip()
+    def deduplicate_words(
+        self,
+        candidate: str,
+    ):
 
-        words = location.split()
+        seen = set()
 
         cleaned = []
 
-        for word in words:
+        for word in candidate.split():
 
-            lower = word.lower()
+            key = word.lower()
 
-            if lower in TRAVEL_TERMINATORS:
-                break
+            if key in seen:
+                continue
 
-            if lower == "in":
-                break
+            seen.add(key)
 
             cleaned.append(word)
 
-        location = " ".join(cleaned).strip(" ,.")
+        return " ".join(cleaned)
 
-        return location if location else None
+    def normalize_candidate(
+        self,
+        candidate: str,
+    ):
+
+        candidate = self.deduplicate_words(
+            candidate,
+        )
+
+        candidate = re.sub(
+            r"\s+",
+            " ",
+            candidate,
+        )
+
+        return candidate.strip(" ,.")
+
+    def is_valid_candidate(
+        self,
+        candidate: str,
+    ):
+
+        candidate = candidate.strip()
+
+        if len(candidate) < 3:
+            return False
+
+        if candidate.lower() in STOP_WORDS:
+            return False
+
+        if candidate.isdigit():
+            return False
+
+        if "http" in candidate.lower():
+            return False
+
+        if (
+            candidate.isupper()
+            and len(candidate) <= 4
+        ):
+            return False
+
+        if re.fullmatch(
+            r"[\W_]+",
+            candidate,
+        ):
+            return False
+
+        return True
+
+    def extract_pin_location(
+        self,
+        text: str,
+    ):
+
+        for line in text.splitlines():
+
+            if "📍" not in line:
+                continue
+
+            location = line.replace(
+                "📍",
+                "",
+            )
+
+            location = re.sub(
+                r"#\S+",
+                "",
+                location,
+            )
+
+            location = re.sub(
+                r"@\S+",
+                "",
+                location,
+            )
+
+            location = re.sub(
+                r"[^\w\s,]",
+                " ",
+                location,
+            )
+
+            words = []
+
+            for word in location.split():
+
+                lower = word.lower()
+
+                if lower == "in":
+                    break
+
+                if lower in TRAVEL_TERMINATORS:
+                    break
+
+                words.append(word)
+
+            location = self.normalize_candidate(
+                " ".join(words),
+            )
+
+            if self.is_valid_candidate(
+                location,
+            ):
+                return location
+
+        return None
 
     def extract_compound_locations(
         self,
@@ -152,20 +298,12 @@ class CandidateService:
 
         candidates = []
 
-        # ----------------------------------------
-        # Priority 1
-        # 📍 Location
-        # ----------------------------------------
-
-        pin = self.extract_pin_location(text)
+        pin = self.extract_pin_location(
+            text,
+        )
 
         if pin:
             candidates.append(pin)
-
-        # ----------------------------------------
-        # Priority 2
-        # Comma-separated locations
-        # ----------------------------------------
 
         comma_matches = re.findall(
             r"([A-Z][A-Za-z]+,\s*[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
@@ -174,52 +312,55 @@ class CandidateService:
 
         candidates.extend(comma_matches)
 
-        # ----------------------------------------
-        # Priority 3
-        # Known travel patterns
-        # ----------------------------------------
-
         for pattern in KEYWORD_PATTERNS:
 
-            matches = re.findall(
-                pattern,
-                text,
+            candidates.extend(
+                re.findall(
+                    pattern,
+                    text,
+                )
             )
 
-            candidates.extend(matches)
-
-        # ----------------------------------------
-        # Priority 4
-        # Proper nouns
-        # ----------------------------------------
-
-        words = re.findall(
+        proper_nouns = re.findall(
             r"\b[A-Z][A-Za-z]+\b",
             text,
         )
 
-        for word in words:
+        for word in proper_nouns:
 
             if word.lower() in STOP_WORDS:
                 continue
 
             candidates.append(word)
 
-        # ----------------------------------------
-        # Deduplicate
-        # ----------------------------------------
-
         unique = []
+
+        seen = set()
 
         for candidate in candidates:
 
-            candidate = candidate.strip(" ,.")
+            candidate = self.normalize_candidate(
+                candidate,
+            )
 
-            if len(candidate) < 3:
+            if not self.is_valid_candidate(
+                candidate,
+            ):
                 continue
 
-            if candidate not in unique:
-                unique.append(candidate)
+            key = candidate.lower()
+
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            unique.append(candidate)
+
+        unique.sort(
+            key=len,
+            reverse=True,
+        )
 
         return unique
 
@@ -231,33 +372,73 @@ class CandidateService:
 
         candidates = []
 
-        caption = metadata.get("caption") or ""
-        title = metadata.get("title") or ""
+        caption = metadata.get(
+            "caption",
+            "",
+        )
 
-        candidates.extend(
-            self.extract_compound_locations(caption)
+        title = metadata.get(
+            "title",
+            "",
         )
 
         candidates.extend(
-            self.extract_compound_locations(title)
+            self.extract_compound_locations(
+                caption,
+            )
+        )
+
+        candidates.extend(
+            self.extract_compound_locations(
+                title,
+            )
         )
 
         if ocr_text:
+
             candidates.extend(
                 self.extract_compound_locations(
-                    ocr_text
+                    ocr_text,
                 )
             )
 
-        hashtags = metadata.get("tags") or []
+        hashtags = metadata.get(
+            "tags"
+        ) or []
 
-        candidates.extend(hashtags)
+        for tag in hashtags:
 
-        unique = []
+            tag = self.normalize_candidate(
+                tag.replace(
+                    "#",
+                    "",
+                )
+            )
+
+            if self.is_valid_candidate(
+                tag,
+            ):
+
+                candidates.append(tag)
+
+        final = []
+
+        seen = set()
 
         for candidate in candidates:
 
-            if candidate not in unique:
-                unique.append(candidate)
+            key = candidate.lower()
 
-        return unique
+            if key in seen:
+                continue
+
+            seen.add(key)
+
+            final.append(candidate)
+
+        final.sort(
+            key=len,
+            reverse=True,
+        )
+
+        return final
