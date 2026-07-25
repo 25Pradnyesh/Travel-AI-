@@ -2,125 +2,77 @@ import re
 
 
 STOP_WORDS = {
-    "welcome",
-    "found",
-    "shot",
-    "video",
-    "videos",
-    "comment",
-    "comments",
-    "like",
-    "follow",
-    "share",
-    "save",
-    "beautiful",
-    "amazing",
-    "travel",
-    "travels",
-    "trip",
-    "vacation",
-    "holiday",
-    "visit",
-    "visiting",
-    "exploring",
-    "discover",
-    "discovering",
-    "staying",
-    "walking",
-    "hiking",
-    "going",
-    "today",
-    "everyone",
-    "every",
-    "another",
-    "honestly",
-    "highly",
-    "recommend",
-    "grade",
-    "check",
-    "bio",
-    "link",
-    "free",
-    "tutorial",
-    "preset",
-    "camera",
-    "sony",
-    "canon",
-    "reel",
-    "instagram",
+    "welcome", "found", "shot", "video", "videos",
+    "comment", "comments", "like", "follow", "share",
+    "save", "beautiful", "amazing", "travel", "travels",
+    "trip", "vacation", "holiday", "visit", "visiting",
+    "exploring", "discover", "discovering", "staying",
+    "walking", "hiking", "going", "today", "everyone",
+    "every", "another", "honestly", "highly",
+    "recommend", "grade", "check", "bio", "link",
+    "free", "tutorial", "preset", "camera", "sony",
+    "canon", "reel", "instagram",
 }
 
 
 TRAVEL_TERMINATORS = {
-    "hike",
-    "trail",
-    "trek",
-    "walk",
-    "road",
-    "trip",
-    "tour",
-    "ferry",
-    "cable",
-    "train",
-    "station",
-    "hotel",
-    "viewpoint",
-    "view",
-    "sunrise",
-    "sunset",
-    "camp",
-    "camping",
-    "restaurant",
-    "cafe",
-    "bar",
-    "hostel",
-    "stay",
-    "stays",
-    "resort",
+    "hike", "trail", "trek", "walk", "road",
+    "trip", "tour", "ferry", "cable", "train",
+    "station", "hotel", "viewpoint", "view",
+    "sunrise", "sunset", "camp", "camping",
+    "restaurant", "cafe", "bar", "hostel",
+    "stay", "stays", "resort",
 }
 
 
 KEYWORD_PATTERNS = [
 
     r"(Lake\s+[A-Z][A-Za-z]+)",
-
     r"(Mount\s+[A-Z][A-Za-z]+)",
-
     r"([A-Z][A-Za-z]+\s+Valley)",
-
     r"([A-Z][A-Za-z]+\s+Peak)",
-
     r"([A-Z][A-Za-z]+\s+Falls)",
-
     r"([A-Z][A-Za-z]+\s+Waterfall)",
-
     r"([A-Z][A-Za-z]+\s+Beach)",
-
     r"([A-Z][A-Za-z]+\s+Island)",
-
     r"([A-Z][A-Za-z]+\s+Forest)",
-
     r"([A-Z][A-Za-z]+\s+Glacier)",
-
     r"([A-Z][A-Za-z]+\s+Temple)",
-
     r"([A-Z][A-Za-z]+\s+Castle)",
-
     r"([A-Z][A-Za-z]+\s+Pass)",
-
     r"([A-Z][A-Za-z]+\s+Canyon)",
-
     r"([A-Z][A-Za-z]+\s+Gorge)",
-
     r"([A-Z][A-Za-z]+\s+National\s+Park)",
-
     r"(Swiss\s+Alps)",
+
 ]
+
+
+SOURCE_PRIORITY = {
+
+    "caption": 5,
+
+    "speech": 4,
+
+    "ocr": 3,
+
+    "hashtags": 2,
+
+    "title": 1,
+
+}
 
 
 class CandidateService:
 
-    def clean(self, text: str) -> str:
+    # ==================================================
+    # Cleaning
+    # ==================================================
+
+    def clean(
+        self,
+        text: str,
+    ):
 
         text = re.sub(
             r"http\S+|www\S+",
@@ -134,15 +86,15 @@ class CandidateService:
             text,
         )
 
-        text = text.replace(
-            "📍",
-            "\n📍 ",
-        )
-
         text = re.sub(
             r"#([A-Za-z0-9_]+)",
             r" \1 ",
             text,
+        )
+
+        text = text.replace(
+            "📍",
+            "\n📍 ",
         )
 
         text = re.sub(
@@ -159,27 +111,31 @@ class CandidateService:
 
         return text.strip()
 
+    # ==================================================
+
     def deduplicate_words(
         self,
-        candidate: str,
+        text: str,
     ):
 
         seen = set()
 
-        cleaned = []
+        words = []
 
-        for word in candidate.split():
+        for word in text.split():
 
-            key = word.lower()
+            lower = word.lower()
 
-            if key in seen:
+            if lower in seen:
                 continue
 
-            seen.add(key)
+            seen.add(lower)
 
-            cleaned.append(word)
+            words.append(word)
 
-        return " ".join(cleaned)
+        return " ".join(words)
+
+    # ==================================================
 
     def normalize_candidate(
         self,
@@ -198,6 +154,8 @@ class CandidateService:
 
         return candidate.strip(" ,.")
 
+    # ==================================================
+
     def is_valid_candidate(
         self,
         candidate: str,
@@ -214,22 +172,12 @@ class CandidateService:
         if candidate.isdigit():
             return False
 
-        if "http" in candidate.lower():
-            return False
-
-        if (
-            candidate.isupper()
-            and len(candidate) <= 4
-        ):
-            return False
-
-        if re.fullmatch(
-            r"[\W_]+",
-            candidate,
-        ):
+        if candidate.isupper() and len(candidate) <= 4:
             return False
 
         return True
+
+    # ==================================================
 
     def extract_pin_location(
         self,
@@ -244,24 +192,6 @@ class CandidateService:
             location = line.replace(
                 "📍",
                 "",
-            )
-
-            location = re.sub(
-                r"#\S+",
-                "",
-                location,
-            )
-
-            location = re.sub(
-                r"@\S+",
-                "",
-                location,
-            )
-
-            location = re.sub(
-                r"[^\w\s,]",
-                " ",
-                location,
             )
 
             words = []
@@ -289,6 +219,8 @@ class CandidateService:
 
         return None
 
+    # ==================================================
+
     def extract_compound_locations(
         self,
         text: str,
@@ -298,16 +230,17 @@ class CandidateService:
 
         candidates = []
 
-        pin = self.extract_pin_location(
-            text,
-        )
+        pin = self.extract_pin_location(text)
 
         if pin:
             candidates.append(pin)
 
         comma_matches = re.findall(
+
             r"([A-Z][A-Za-z]+,\s*[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
+
             text,
+
         )
 
         candidates.extend(comma_matches)
@@ -321,19 +254,17 @@ class CandidateService:
                 )
             )
 
-        proper_nouns = re.findall(
+        proper = re.findall(
+
             r"\b[A-Z][A-Za-z]+\b",
+
             text,
+
         )
 
-        for word in proper_nouns:
+        candidates.extend(proper)
 
-            if word.lower() in STOP_WORDS:
-                continue
-
-            candidates.append(word)
-
-        unique = []
+        cleaned = []
 
         seen = set()
 
@@ -355,52 +286,102 @@ class CandidateService:
 
             seen.add(key)
 
-            unique.append(candidate)
+            cleaned.append(candidate)
 
-        unique.sort(
+        cleaned.sort(
             key=len,
             reverse=True,
         )
 
-        return unique
+        return cleaned
+
+    # ==================================================
+
+    def add_candidates(
+        self,
+        storage: dict,
+        text: str,
+        source: str,
+    ):
+
+        for candidate in self.extract_compound_locations(text):
+
+            key = candidate.lower()
+
+            if key not in storage:
+
+                storage[key] = {
+
+                    "candidate": candidate,
+
+                    "source": source,
+
+                    "priority": SOURCE_PRIORITY[source],
+
+                }
+
+            elif SOURCE_PRIORITY[source] > storage[key]["priority"]:
+
+                storage[key]["source"] = source
+
+                storage[key]["priority"] = SOURCE_PRIORITY[source]
+
+    # ==================================================
 
     def generate(
         self,
         metadata: dict,
         ocr_text: str,
+        speech_text: str = "",
     ):
 
-        candidates = []
+        storage = {}
 
-        caption = metadata.get(
+        self.add_candidates(
+
+            storage,
+
+            metadata.get(
+                "caption",
+                "",
+            ),
+
             "caption",
-            "",
+
         )
 
-        title = metadata.get(
+        self.add_candidates(
+
+            storage,
+
+            speech_text,
+
+            "speech",
+
+        )
+
+        self.add_candidates(
+
+            storage,
+
+            ocr_text,
+
+            "ocr",
+
+        )
+
+        self.add_candidates(
+
+            storage,
+
+            metadata.get(
+                "title",
+                "",
+            ),
+
             "title",
-            "",
+
         )
-
-        candidates.extend(
-            self.extract_compound_locations(
-                caption,
-            )
-        )
-
-        candidates.extend(
-            self.extract_compound_locations(
-                title,
-            )
-        )
-
-        if ocr_text:
-
-            candidates.extend(
-                self.extract_compound_locations(
-                    ocr_text,
-                )
-            )
 
         hashtags = metadata.get(
             "tags"
@@ -409,36 +390,51 @@ class CandidateService:
         for tag in hashtags:
 
             tag = self.normalize_candidate(
+
                 tag.replace(
                     "#",
                     "",
                 )
+
             )
 
-            if self.is_valid_candidate(
+            if not self.is_valid_candidate(
                 tag,
             ):
-
-                candidates.append(tag)
-
-        final = []
-
-        seen = set()
-
-        for candidate in candidates:
-
-            key = candidate.lower()
-
-            if key in seen:
                 continue
 
-            seen.add(key)
+            key = tag.lower()
 
-            final.append(candidate)
+            if key not in storage:
 
-        final.sort(
-            key=len,
-            reverse=True,
+                storage[key] = {
+
+                    "candidate": tag,
+
+                    "source": "hashtags",
+
+                    "priority": SOURCE_PRIORITY["hashtags"],
+
+                }
+
+        ordered = sorted(
+
+            storage.values(),
+
+            key=lambda x: (
+
+                -x["priority"],
+
+                -len(x["candidate"]),
+
+            ),
+
         )
 
-        return final
+        return [
+
+            item["candidate"]
+
+            for item in ordered
+
+        ]
