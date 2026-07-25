@@ -1,3 +1,4 @@
+import math
 import re
 from itertools import chain
 
@@ -33,45 +34,87 @@ TRAVEL_KEYWORDS = {
     "national",
     "hike",
     "trail",
+    "pass",
+    "canyon",
+    "gorge",
 }
 
 
 GOOD_PLACE_TYPES = {
-    "natural_feature": 60,
-    "tourist_attraction": 50,
-    "locality": 40,
-    "administrative_area_level_1": 20,
-    "administrative_area_level_2": 15,
+
+    "natural_feature": 70,
+
+    "tourist_attraction": 65,
+
+    "locality": 55,
+
+    "national_park": 60,
+
+    "park": 45,
+
+    "mountain_peak": 60,
+
+    "campground": 20,
+
+    "administrative_area_level_1": 15,
+
+    "administrative_area_level_2": 10,
+
 }
 
 
 BAD_PLACE_TYPES = {
+
     "restaurant",
+
     "cafe",
+
     "food",
+
     "bakery",
+
     "bar",
+
     "hotel",
+
     "lodging",
+
     "store",
+
     "shopping_mall",
+
     "hospital",
+
     "school",
+
     "gym",
+
     "bank",
-    "car_dealer",
+
     "gas_station",
+
+    "car_dealer",
+
+    "supermarket",
+
 }
 
 
 class ScoringService:
 
-    def tokenize(self, text: str):
+    # ==================================================
+
+    def tokenize(
+        self,
+        text: str,
+    ):
 
         return re.findall(
             r"[a-zA-Z]+",
             text.lower(),
         )
+
+    # ==================================================
 
     def generate_ngrams(
         self,
@@ -80,11 +123,16 @@ class ScoringService:
     ):
 
         return [
+
             " ".join(words[i:i+n])
+
             for i in range(
-                len(words) - n + 1
+                len(words)-n+1
             )
+
         ]
+
+    # ==================================================
 
     def build_search_space(
         self,
@@ -94,12 +142,26 @@ class ScoringService:
         words = self.tokenize(text)
 
         return list(
+
             chain(
+
                 words,
-                self.generate_ngrams(words, 2),
-                self.generate_ngrams(words, 3),
+
+                self.generate_ngrams(
+                    words,
+                    2,
+                ),
+
+                self.generate_ngrams(
+                    words,
+                    3,
+                ),
+
             )
+
         )
+
+    # ==================================================
 
     def score_index(
         self,
@@ -114,14 +176,15 @@ class ScoringService:
 
         for phrase in index:
 
-            similarity = fuzz.ratio(
-                token,
-                phrase,
-            )
-
             best = max(
+
                 best,
-                similarity,
+
+                fuzz.ratio(
+                    token,
+                    phrase,
+                ),
+
             )
 
         if best >= 95:
@@ -135,18 +198,74 @@ class ScoringService:
 
         return 0
 
-    def confidence(
+    # ==================================================
+
+    def normalize_score(
         self,
         score,
     ):
 
-        if score >= 170:
+        score = max(
+            0,
+            min(
+                score,
+                250,
+            ),
+        )
+
+        return round(
+            score / 250 * 100,
+            1,
+        )
+
+    # ==================================================
+
+    def confidence(
+        self,
+        normalized_score,
+    ):
+
+        if normalized_score >= 95:
+            return "VERIFIED"
+
+        if normalized_score >= 90:
+            return "VERY_HIGH"
+
+        if normalized_score >= 80:
             return "HIGH"
 
-        if score >= 110:
+        if normalized_score >= 70:
             return "MEDIUM"
 
-        return "LOW"
+        if normalized_score >= 60:
+            return "LOW"
+
+        return "VERY_LOW"
+
+    # ==================================================
+
+    def popularity_bonus(
+        self,
+        rating,
+        reviews,
+    ):
+
+        if not rating:
+            return 0
+
+        bonus = rating * 4
+
+        if reviews:
+
+            bonus += math.log10(
+                reviews + 1
+            ) * 6
+
+        return round(
+            bonus,
+        )
+
+    # ==================================================
 
     def rank_places(
         self,
@@ -171,7 +290,9 @@ class ScoringService:
         ).lower()
 
         hashtags = " ".join(
+
             evidence.get("hashtags") or []
+
         ).lower()
 
         caption_index = self.build_search_space(
@@ -236,52 +357,68 @@ class ScoringService:
                 [],
             )
 
+            rating = place.get(
+                "rating",
+                0,
+            )
+
+            reviews = place.get(
+                "user_rating_count",
+                0,
+            )
+
+            business_status = place.get(
+                "business_status",
+                "",
+            )
+
             searchable = " ".join([
+
                 travel_name,
+
                 city,
+
                 region,
+
                 country,
+
                 address,
+
                 verified_query,
+
             ])
 
-            # ----------------------------------
-            # Exact matches
-            # ----------------------------------
+            # --------------------
+            # Exact Match Signals
+            # --------------------
+
+            if verified_query in caption:
+                score += 50
 
             if travel_name in caption:
-                score += 50
+                score += 40
 
             if city and city in caption:
                 score += 35
 
-            if region and region in caption:
-                score += 35
+            if travel_name in speech:
+                score += 30
 
-            if verified_query and verified_query in caption:
-                score += 40
-
-            if address and address in caption:
-                score += 20
+            if travel_name in ocr:
+                score += 25
 
             if travel_name in title:
                 score += 20
 
-            if travel_name in ocr:
-                score += 30
-
-            if travel_name in speech:
-                score += 25
-
-            # ----------------------------------
-            # Fuzzy matching
-            # ----------------------------------
+            # --------------------
+            # Fuzzy
+            # --------------------
 
             if fuzz.partial_ratio(
-                travel_name,
+                verified_query,
                 caption,
             ) >= 90:
-                score += 30
+                score += 25
 
             if city and fuzz.partial_ratio(
                 city,
@@ -289,21 +426,13 @@ class ScoringService:
             ) >= 90:
                 score += 20
 
-            if region and fuzz.partial_ratio(
-                region,
-                caption,
-            ) >= 90:
-                score += 20
+            # --------------------
+            # Token Matching
+            # --------------------
 
-            # ----------------------------------
-            # Token scoring
-            # ----------------------------------
-
-            tokens = self.tokenize(
+            for token in self.tokenize(
                 searchable,
-            )
-
-            for token in tokens:
+            ):
 
                 if len(token) <= 3:
                     continue
@@ -318,18 +447,18 @@ class ScoringService:
 
                 score += self.score_index(
                     token,
-                    ocr_index,
-                    15,
-                    8,
-                    4,
+                    speech_index,
+                    18,
+                    10,
+                    5,
                 )
 
                 score += self.score_index(
                     token,
-                    speech_index,
-                    10,
-                    6,
-                    3,
+                    ocr_index,
+                    15,
+                    8,
+                    4,
                 )
 
                 score += self.score_index(
@@ -340,85 +469,123 @@ class ScoringService:
                     3,
                 )
 
-            # ----------------------------------
-            # Country handling
-            # ----------------------------------
+            # --------------------
+            # Country Penalty
+            # --------------------
 
-            if country:
+            if travel_name == country:
+                score -= 50
 
-                if travel_name == country:
-                    score -= 40
-
-                for known_country in COUNTRIES:
-
-                    if known_country in caption:
-
-                        if known_country == country:
-                            score += 10
-                        else:
-                            score -= 15
-
-            # ----------------------------------
-            # Google Place Type Bonus
-            # ----------------------------------
+            # --------------------
+            # Tourism Bias
+            # --------------------
 
             if primary_type in GOOD_PLACE_TYPES:
+
                 score += GOOD_PLACE_TYPES[
                     primary_type
                 ]
 
-            for place_type in types:
+            for t in types:
 
-                if place_type in GOOD_PLACE_TYPES:
+                if t in GOOD_PLACE_TYPES:
+
                     score += (
-                        GOOD_PLACE_TYPES[
-                            place_type
-                        ] // 2
+
+                        GOOD_PLACE_TYPES[t]
+
+                        * 0.4
+
                     )
 
-            # ----------------------------------
+            # --------------------
             # Business Penalty
-            # ----------------------------------
+            # --------------------
 
             if primary_type in BAD_PLACE_TYPES:
+
+                score -= 120
+
+            for t in types:
+
+                if t in BAD_PLACE_TYPES:
+
+                    score -= 60
+
+            # --------------------
+            # Closed Place
+            # --------------------
+
+            if (
+                business_status
+                == "CLOSED_PERMANENTLY"
+            ):
+
                 score -= 100
 
-            for place_type in types:
-
-                if place_type in BAD_PLACE_TYPES:
-                    score -= 50
-
-            # ----------------------------------
-            # Travel keyword bonus
-            # ----------------------------------
+            # --------------------
+            # Travel Keywords
+            # --------------------
 
             for keyword in TRAVEL_KEYWORDS:
 
                 if keyword in searchable:
+
                     score += 5
 
-            # ----------------------------------
-            # Compound locations
-            # ----------------------------------
+            # --------------------
+            # Compound Bonus
+            # --------------------
 
             if len(
                 travel_name.split()
             ) > 1:
-                score += 20
+
+                score += 15
+
+            # --------------------
+            # Popularity
+            # --------------------
+
+            score += self.popularity_bonus(
+
+                rating,
+
+                reviews,
+
+            )
+
+            normalized = self.normalize_score(
+                score,
+            )
 
             ranked.append(
+
                 {
+
                     "place": place,
-                    "score": score,
-                    "confidence": self.confidence(
+
+                    "raw_score": round(
                         score,
+                        2,
                     ),
+
+                    "score": normalized,
+
+                    "confidence": self.confidence(
+                        normalized,
+                    ),
+
                 }
+
             )
 
         ranked.sort(
-            key=lambda item: item["score"],
+
+            key=lambda x: x["score"],
+
             reverse=True,
+
         )
 
         return ranked

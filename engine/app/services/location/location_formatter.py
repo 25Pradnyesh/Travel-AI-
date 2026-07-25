@@ -1,5 +1,9 @@
 class LocationFormatter:
 
+    # ==================================================
+    # Main Formatter
+    # ==================================================
+
     def format(
         self,
         query: str,
@@ -7,7 +11,10 @@ class LocationFormatter:
     ):
 
         display_name = (
-            place.get("display_name", "")
+            place.get(
+                "display_name",
+                "",
+            )
             .strip()
         )
 
@@ -20,9 +27,13 @@ class LocationFormatter:
         )
 
         parts = [
+
             part.strip()
+
             for part in address.split(",")
+
             if part.strip()
+
         ]
 
         country = ""
@@ -36,42 +47,118 @@ class LocationFormatter:
             state = parts[-2]
 
         query_components = self.extract_query_components(
-            query
+            query,
         )
 
         travel_name = self.build_travel_name(
+
             city=query_components["city"],
+
             region=query_components["region"],
+
             display_name=display_name,
+
             country=country,
+
         )
 
-        return {
+        formatted = {
+
+            # =====================================
+            # IDs
+            # =====================================
+
             "id": place.get("id"),
 
-            # Google
+            # =====================================
+            # Original Google Data
+            # =====================================
+
             "name": display_name,
 
-            # User / AI verified query
             "verified_query": query,
 
-            # Structured travel object
+            # =====================================
+            # Structured Location
+            # =====================================
+
             "city": query_components["city"],
+
             "region": query_components["region"],
+
             "state": state,
+
             "country": country,
 
-            # Frontend display
             "travel_name": travel_name,
 
-            # Google metadata
-            "address": address,
-            "latitude": place.get("latitude"),
-            "longitude": place.get("longitude"),
-            "google_maps_url": place.get(
-                "google_maps_url"
+            # =====================================
+            # Coordinates
+            # =====================================
+
+            "latitude": place.get(
+                "latitude",
             ),
+
+            "longitude": place.get(
+                "longitude",
+            ),
+
+            # =====================================
+            # Address
+            # =====================================
+
+            "address": address,
+
+            # =====================================
+            # Google Maps
+            # =====================================
+
+            "google_maps_url": place.get(
+                "google_maps_url",
+            ),
+
+            # =====================================
+            # Google Intelligence
+            # =====================================
+
+            "primary_type": place.get(
+                "primary_type",
+                "",
+            ),
+
+            "types": place.get(
+                "types",
+                [],
+            ),
+
+            "rating": place.get(
+                "rating",
+                0.0,
+            ),
+
+            "user_rating_count": place.get(
+                "user_rating_count",
+                0,
+            ),
+
+            "business_status": place.get(
+                "business_status",
+                "",
+            ),
+
+            "viewport": place.get(
+                "viewport",
+                {},
+            ),
+
         }
+
+        return formatted
+
+    # ==================================================
+    # Query Parser
+    # ==================================================
 
     def extract_query_components(
         self,
@@ -81,32 +168,52 @@ class LocationFormatter:
         query = query.strip()
 
         if not query:
+
             return {
+
                 "city": "",
+
                 "region": "",
+
             }
 
         if "," in query:
 
             parts = [
+
                 part.strip()
+
                 for part in query.split(",")
+
                 if part.strip()
+
             ]
 
             city = parts[0]
 
-            region = ", ".join(parts[1:])
+            region = ", ".join(
+                parts[1:],
+            )
 
             return {
+
                 "city": city,
+
                 "region": region,
+
             }
 
         return {
+
             "city": query,
+
             "region": "",
+
         }
+
+    # ==================================================
+    # Frontend Display Name
+    # ==================================================
 
     def build_travel_name(
         self,
@@ -119,24 +226,48 @@ class LocationFormatter:
         pieces = []
 
         if city:
-            pieces.append(city)
+
+            pieces.append(
+                city,
+            )
 
         elif display_name:
-            pieces.append(display_name)
+
+            pieces.append(
+                display_name,
+            )
 
         if region:
 
-            if region.lower() != country.lower():
-                pieces.append(region)
+            if (
+                region.lower()
+                != country.lower()
+            ):
+
+                pieces.append(
+                    region,
+                )
 
         if (
-            country
-            and country.lower()
-            not in [
-                piece.lower()
-                for piece in pieces
-            ]
-        ):
-            pieces.append(country)
 
-        return ", ".join(pieces)
+            country
+
+            and country.lower()
+
+            not in [
+
+                part.lower()
+
+                for part in pieces
+
+            ]
+
+        ):
+
+            pieces.append(
+                country,
+            )
+
+        return ", ".join(
+            pieces,
+        )

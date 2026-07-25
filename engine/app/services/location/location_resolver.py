@@ -30,6 +30,9 @@ BUSINESS_TYPES = {
     "bank",
     "gas_station",
     "gym",
+    "pharmacy",
+    "supermarket",
+    "car_dealer",
 }
 
 
@@ -38,10 +41,18 @@ class LocationResolver:
     def __init__(self):
 
         self.candidates = CandidateService()
+
         self.places = GooglePlacesService()
+
         self.formatter = LocationFormatter()
+
         self.geo = GeoEnrichmentService()
+
         self.scorer = ScoringService()
+
+    # ==================================================
+    # Resolve Location
+    # ==================================================
 
     def resolve(
         self,
@@ -49,19 +60,34 @@ class LocationResolver:
     ):
 
         candidates = self.candidates.generate(
+
             metadata=evidence["metadata"],
-            ocr_text=evidence["ocr_text"],
+
+            ocr_text=evidence.get(
+                "ocr_text",
+                "",
+            ),
+
+            speech_text=evidence.get(
+                "speech_text",
+                "",
+            ),
+
+        )
+
+        print("\n========== LOCATION RESOLVER ==========\n")
+
+        print(
+            f"🧠 Candidates Found : {len(candidates)}"
         )
 
         verified_places = []
 
         seen_place_ids = set()
 
-        print("\n========== LOCATION RESOLVER ==========")
-
-        # ----------------------------------------
-        # Search every candidate
-        # ----------------------------------------
+        # ==========================================
+        # Google Verification
+        # ==========================================
 
         for candidate in candidates:
 
@@ -73,150 +99,213 @@ class LocationResolver:
                 continue
 
             print(
-                f"🔍 '{candidate}' → {len(google_results)} result(s)"
+                f"🔍 {candidate} -> {len(google_results)} Google result(s)"
             )
 
             for google_place in google_results:
 
                 place_id = google_place.get(
-                    "id",
+                    "id"
                 )
+
+                if not place_id:
+                    continue
 
                 if place_id in seen_place_ids:
                     continue
 
                 seen_place_ids.add(
-                    place_id,
+                    place_id
                 )
 
-                # ----------------------------------------
-                # Reject obvious businesses
-                # ----------------------------------------
-
                 primary_type = (
+
                     google_place.get(
                         "primary_type",
-                        ""
+                        "",
                     )
                     .lower()
+
                 )
 
                 types = [
+
                     t.lower()
+
                     for t in google_place.get(
                         "types",
                         [],
                     )
+
                 ]
 
+                # ----------------------------------
+                # Reject obvious businesses
+                # ----------------------------------
+
                 if (
+
                     primary_type in BUSINESS_TYPES
-                    or any(
+
+                    or
+
+                    any(
+
                         t in BUSINESS_TYPES
+
                         for t in types
+
                     )
+
                 ):
 
                     print(
-                        f"🚫 Ignoring business: "
+                        f"🚫 Skipping business : "
                         f"{google_place.get('display_name')}"
                     )
 
                     continue
 
-                formatted_place = self.formatter.format(
+                formatted = self.formatter.format(
+
                     query=candidate,
+
                     place=google_place,
+
                 )
 
-                enriched_place = self.geo.enrich(
-                    formatted_place,
+                enriched = self.geo.enrich(
+                    formatted,
                 )
 
                 verified_places.append(
-                    enriched_place,
+                    enriched,
                 )
 
-        # ----------------------------------------
-        # Nothing found
-        # ----------------------------------------
+        # ==========================================
+        # Nothing verified
+        # ==========================================
 
         if not verified_places:
 
             print(
-                "❌ No verified locations.\n"
+                "\n❌ No verified locations.\n"
             )
 
             return []
 
-        # ----------------------------------------
-        # Rank everything
-        # ----------------------------------------
+        # ==========================================
+        # Ranking
+        # ==========================================
 
         ranked = self.scorer.rank_places(
+
             verified_places,
+
             evidence,
+
         )
 
         if not ranked:
             return []
 
-        winner = ranked[0]
+        # Keep Top 5 internally
+        top_results = ranked[:5]
 
-        # ----------------------------------------
-        # Reject weak winner
-        # ----------------------------------------
+        winner = top_results[0]
 
-        if winner["confidence"] == "LOW":
+        # ==========================================
+        # Confidence Gate
+        # ==========================================
+
+        if winner["score"] < 65:
 
             print(
-                "⚠️ No reliable location found."
+                "\n⚠️ Confidence too low.\n"
             )
 
             return []
 
-        top_results = ranked[:3]
+        print(
+            "\n========== FINAL RANKING ==========\n"
+        )
 
-        print("\n========== TOP MATCHES ==========")
+        for index, item in enumerate(
 
-        for i, result in enumerate(
             top_results,
+
             start=1,
+
         ):
 
-            place = result["place"]
+            place = item["place"]
 
             print(
-                f"{i}. "
-                f"{place['travel_name']} | "
-                f"Score={result['score']} | "
-                f"{result['confidence']}"
+
+                f"{index}. "
+
+                f"{place['travel_name']}"
+
+                f" | {item['score']}"
+
+                f" | {item['confidence']}"
+
             )
 
         print(
-            "=================================\n"
+            "\n===================================\n"
         )
 
         alternatives = []
 
-        for result in top_results[1:]:
+        for item in top_results[1:]:
 
             alternatives.append(
+
                 {
-                    "place": result["place"],
-                    "score": result["score"],
-                    "confidence": result["confidence"],
+
+                    "place": item["place"],
+
+                    "score": item["score"],
+
+                    "raw_score": item["raw_score"],
+
+                    "confidence": item["confidence"],
+
                 }
+
             )
 
+        # ==========================================
+        # Final Output
+        # ==========================================
+
         return [
+
             {
+
                 "query": winner["place"][
                     "verified_query"
                 ],
+
                 "place": winner["place"],
+
                 "score": winner["score"],
+
+                "raw_score": winner["raw_score"],
+
                 "confidence": winner["confidence"],
+
                 "alternatives": alternatives,
+
+                "candidate_count": len(
+                    candidates,
+                ),
+
+                "verified_places": len(
+                    verified_places,
+                ),
+
             }
+
         ]
