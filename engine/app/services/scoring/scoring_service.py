@@ -20,6 +20,7 @@ COUNTRIES = {
 
 
 TRAVEL_KEYWORDS = {
+
     "valley",
     "lake",
     "beach",
@@ -37,6 +38,29 @@ TRAVEL_KEYWORDS = {
     "pass",
     "canyon",
     "gorge",
+
+    "viewpoint",
+    "lookout",
+    "summit",
+    "cliff",
+    "bay",
+    "coast",
+    "temple",
+    "shrine",
+    "castle",
+    "fort",
+    "monument",
+    "waterbody",
+
+    "bridge",
+    "waterfront",
+    "harbor",
+    "pier",
+    "volcano",
+    "desert",
+    "cave",
+    "museum",
+
 }
 
 
@@ -253,16 +277,20 @@ class ScoringService:
         if not rating:
             return 0
 
-        bonus = rating * 4
+        bonus = rating * 6
 
         if reviews:
 
-            bonus += math.log10(
+            bonus += min(
+            math.log10(
                 reviews + 1
-            ) * 6
+            ) * 8,
+            30,
+        )   
 
         return round(
             bonus,
+            2,
         )
 
     # ==================================================
@@ -350,12 +378,15 @@ class ScoringService:
             primary_type = place.get(
                 "primary_type",
                 "",
-            )
+            ).lower()
 
-            types = place.get(
-                "types",
-                [],
-            )
+            types = [
+                t.lower()
+                for t in place.get(
+                    "types",
+                    [],
+                )
+            ]
 
             rating = place.get(
                 "rating",
@@ -369,6 +400,26 @@ class ScoringService:
 
             business_status = place.get(
                 "business_status",
+                "",
+            )
+
+            editorial_summary = place.get(
+               "editorial_summary",
+               "",
+            )
+
+            photos = place.get(
+              "photos",
+              [],
+            )
+
+            website = place.get(
+              "website",
+              "",
+            )
+
+            price_level = place.get(
+               "price_level",
                 "",
             )
 
@@ -392,32 +443,40 @@ class ScoringService:
             # Exact Match Signals
             # --------------------
 
-            if verified_query in caption:
+            if verified_query and verified_query in caption:
                 score += 50
 
-            if travel_name in caption:
+            if travel_name and travel_name in caption:
                 score += 40
 
             if city and city in caption:
                 score += 35
 
-            if travel_name in speech:
+            if travel_name and travel_name  in speech:
                 score += 30
 
-            if travel_name in ocr:
+            if travel_name and travel_name  in ocr:
                 score += 25
 
-            if travel_name in title:
+            if travel_name and travel_name  in title:
                 score += 20
 
             # --------------------
             # Fuzzy
             # --------------------
 
-            if fuzz.partial_ratio(
-                verified_query,
-                caption,
-            ) >= 90:
+            if (
+
+                verified_query
+
+                and
+
+                fuzz.partial_ratio(
+                    verified_query,
+                    caption,
+                ) >= 90
+
+            ):
                 score += 25
 
             if city and fuzz.partial_ratio(
@@ -473,8 +532,42 @@ class ScoringService:
             # Country Penalty
             # --------------------
 
-            if travel_name == country:
+            if (
+
+                travel_name == country
+
+                and
+
+                primary_type != "country"
+
+            ):
+
                 score -= 50
+
+            # --------------------
+            # Country Consistency
+            # --------------------
+            combined_sources = " ".join([
+
+                caption,
+
+                speech,
+
+                ocr,
+
+            ])
+
+            for known_country in COUNTRIES:
+
+                if known_country in combined_sources:
+
+                    if known_country == country:
+
+                        score += 10
+
+                    else:
+
+                        score -= 15
 
             # --------------------
             # Tourism Bias
@@ -537,11 +630,15 @@ class ScoringService:
             # Compound Bonus
             # --------------------
 
-            if len(
-                travel_name.split()
-            ) > 1:
+            words = travel_name.split()
 
-                score += 15
+            if len(words) == 2:
+
+                score += 12
+
+            elif len(words) >= 3:
+
+                score += 20
 
             # --------------------
             # Popularity
@@ -554,6 +651,37 @@ class ScoringService:
                 reviews,
 
             )
+
+            # --------------------
+            # Editorial Summary
+            # --------------------
+
+            if editorial_summary:
+                 score += 15
+
+            # --------------------
+            # Photos
+            # --------------------
+
+            if photos:
+               score += min(
+                   len(photos) *2,
+                   12,
+            )
+
+            # --------------------
+            # Official Website
+            # --------------------
+
+            if website:
+                score += 4
+
+            # --------------------
+            # Price Level
+            # --------------------
+
+            if price_level:
+                score += 2
 
             normalized = self.normalize_score(
                 score,

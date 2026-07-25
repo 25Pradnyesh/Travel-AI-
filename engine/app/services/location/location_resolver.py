@@ -10,6 +10,9 @@ from engine.app.services.location.geo_enrichment_service import (
 from engine.app.services.maps.google_places_service import (
     GooglePlacesService,
 )
+from engine.app.services.maps.google_place_details_service import (
+    GooglePlaceDetailsService,
+)
 from engine.app.services.scoring.scoring_service import (
     ScoringService,
 )
@@ -41,9 +44,15 @@ class LocationResolver:
     def __init__(self):
 
         self.candidates = CandidateService()
-        self.places = GooglePlacesService()
+
+        self.search = GooglePlacesService()
+
+        self.details = GooglePlaceDetailsService()
+
         self.formatter = LocationFormatter()
+
         self.geo = GeoEnrichmentService()
+
         self.scorer = ScoringService()
 
     # ==================================================
@@ -56,15 +65,19 @@ class LocationResolver:
     ):
 
         candidates = self.candidates.generate(
+
             metadata=evidence["metadata"],
+
             ocr_text=evidence.get(
                 "ocr_text",
                 "",
             ),
+
             speech_text=evidence.get(
                 "speech_text",
                 "",
             ),
+
         )
 
         print(
@@ -79,28 +92,28 @@ class LocationResolver:
 
         seen_ids = set()
 
-        # ------------------------------------------
-        # Google Verification
-        # ------------------------------------------
+        # ==================================================
+        # Candidate Loop
+        # ==================================================
 
         for candidate in candidates:
 
-            results = self.places.search(
+            search_results = self.search.search(
                 candidate,
             )
 
-            if not results:
+            if not search_results:
                 continue
 
             print(
-                f"🔍 {candidate} -> {len(results)} result(s)"
+                f"🔍 {candidate} -> {len(search_results)} search result(s)"
             )
 
-            for google_place in results:
+            # ------------------------------------------
 
-                place_id = google_place.get(
-                    "id"
-                )
+            for result in search_results:
+
+                place_id = result.get("id")
 
                 if not place_id:
                     continue
@@ -108,12 +121,21 @@ class LocationResolver:
                 if place_id in seen_ids:
                     continue
 
-                seen_ids.add(
-                    place_id
+                seen_ids.add(place_id)
+
+                # ==========================================
+                # Fetch Rich Details
+                # ==========================================
+
+                details = self.details.get_details(
+                    place_id,
                 )
 
+                if not details:
+                    continue
+
                 primary_type = (
-                    google_place.get(
+                    details.get(
                         "primary_type",
                         "",
                     ).lower()
@@ -123,32 +145,49 @@ class LocationResolver:
 
                     t.lower()
 
-                    for t in google_place.get(
+                    for t in details.get(
                         "types",
                         [],
                     )
 
                 ]
 
+                # ==========================================
+                # Reject Businesses
+                # ==========================================
+
                 if (
-                    primary_type
-                    in BUSINESS_TYPES
-                    or any(
+
+                    primary_type in BUSINESS_TYPES
+
+                    or
+
+                    any(
+
                         t in BUSINESS_TYPES
+
                         for t in types
+
                     )
+
                 ):
 
                     print(
-                        f"🚫 Business skipped: "
-                        f"{google_place.get('display_name')}"
+
+                        f"🚫 Business skipped : "
+
+                        f"{details.get('display_name')}"
+
                     )
 
                     continue
 
                 formatted = self.formatter.format(
+
                     query=candidate,
-                    place=google_place,
+
+                    place=details,
+
                 )
 
                 enriched = self.geo.enrich(
@@ -156,12 +195,12 @@ class LocationResolver:
                 )
 
                 verified_places.append(
-                    enriched
+                    enriched,
                 )
 
-        # ------------------------------------------
-        # Nothing Verified
-        # ------------------------------------------
+        # ==================================================
+        # Nothing Found
+        # ==================================================
 
         if not verified_places:
 
@@ -171,28 +210,33 @@ class LocationResolver:
 
             return None
 
-        # ------------------------------------------
+        # ==================================================
         # Ranking
-        # ------------------------------------------
+        # ==================================================
 
         ranked = self.scorer.rank_places(
+
             verified_places,
+
             evidence,
+
         )
 
         if not ranked:
-
             return None
 
         ranked = ranked[:5]
 
         print(
-            "\n========== RANKED RESULTS ==========\n"
+            "\n========== FINAL RANKING ==========\n"
         )
 
         for index, item in enumerate(
+
             ranked,
+
             start=1,
+
         ):
 
             place = item["place"]
@@ -207,17 +251,21 @@ class LocationResolver:
 
                 f" | {item['confidence']}"
 
+                f" | ⭐ {place.get('rating', 0)}"
+
+                f" ({place.get('user_rating_count', 0)})"
+
             )
 
         print(
-            "\n====================================\n"
+            "\n===================================\n"
         )
 
         return {
 
-            "ranked_places": ranked,
-
             "winner": ranked[0],
+
+            "ranked_places": ranked,
 
             "candidate_count": len(
                 candidates,
