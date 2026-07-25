@@ -1,7 +1,8 @@
 import time
 
-from engine.app.services.extraction.ocr_service import OCRService
-from engine.app.services.extraction.speech_service import SpeechService
+from engine.app.services.ocr.ocr_service import OCRService
+from engine.app.services.ocr.ocr_aggregator import OCRAggregator
+from engine.app.services.speech.speech_service import SpeechService
 
 
 class EvidenceBuilder:
@@ -9,12 +10,15 @@ class EvidenceBuilder:
     def __init__(self):
 
         self.ocr = OCRService()
+
+        self.aggregator = OCRAggregator()
+
         self.speech = SpeechService()
 
-    # ==========================================
+    # ==================================================
     # Stage 1
-    # Caption / Metadata only
-    # ==========================================
+    # Caption
+    # ==================================================
 
     def build_caption(
         self,
@@ -22,20 +26,43 @@ class EvidenceBuilder:
     ):
 
         return {
+
             "provider": "instagram",
+
             "metadata": metadata,
-            "title": metadata.get("title", ""),
-            "caption": metadata.get("caption", ""),
-            "hashtags": metadata.get("tags") or [],
+
+            "title": metadata.get(
+                "title",
+                "",
+            ),
+
+            "caption": metadata.get(
+                "caption",
+                "",
+            ),
+
+            "hashtags": metadata.get(
+                "tags"
+            ) or [],
+
             "ocr_text": "",
+
+            "ocr_confidence": 0.0,
+
+            "ocr_quality": "NONE",
+
+            "ocr_detections": [],
+
             "speech_text": "",
+
             "frames": [],
+
         }
 
-    # ==========================================
+    # ==================================================
     # Stage 2
-    # OCR only
-    # ==========================================
+    # OCR
+    # ==================================================
 
     def build_ocr(
         self,
@@ -45,37 +72,113 @@ class EvidenceBuilder:
 
         start = time.perf_counter()
 
-        seen = set()
-        ocr_results = []
+        frame_results = []
 
-        for frame in frame_paths:
+        frames_processed = 0
 
-            text = self.ocr.extract_text(frame)
+        print("\n========== OCR ==========\n")
 
-            cleaned = text.strip()
+        for index, frame in enumerate(
+            frame_paths,
+            start=1,
+        ):
 
-            if not cleaned:
-                continue
+            detections = self.ocr.extract_text(
+                frame,
+            )
 
-            if cleaned in seen:
-                continue
+            frames_processed += 1
 
-            seen.add(cleaned)
-            ocr_results.append(cleaned)
+            if detections:
 
-        evidence["frames"] = frame_paths
-        evidence["ocr_text"] = "\n".join(ocr_results)
+                frame_results.append(
+                    detections,
+                )
+
+            aggregated = self.aggregator.aggregate(
+                frame_results,
+            )
+
+            print(
+
+                f"Frame {index}"
+
+                f" | OCR Confidence: {aggregated['confidence']}"
+
+                f" | Quality: {aggregated['quality']}"
+
+                f" | Unique: {aggregated['unique_detections']}"
+
+            )
+
+            if aggregated["should_stop"]:
+
+                print(
+                    "\n✅ Early OCR stop triggered.\n"
+                )
+
+                break
+
+        evidence["frames"] = frame_paths[
+            :frames_processed
+        ]
+
+        evidence["ocr_text"] = aggregated[
+            "text"
+        ]
+
+        evidence["ocr_confidence"] = aggregated[
+            "confidence"
+        ]
+
+        evidence["ocr_quality"] = aggregated[
+            "quality"
+        ]
+
+        evidence["ocr_detections"] = aggregated[
+            "detections"
+        ]
+
+        evidence["ocr_frames_used"] = aggregated[
+            "frames_used"
+        ]
+
+        evidence["ocr_unique_detections"] = aggregated[
+            "unique_detections"
+        ]
+
+        evidence["ocr_high_confidence"] = aggregated[
+            "high_confidence_detections"
+        ]
 
         print(
-            f"📝 OCR : {time.perf_counter()-start:.2f}s"
+            f"📝 OCR Time : {time.perf_counter()-start:.2f}s"
         )
+
+        print(
+            f"🎞 Frames Used : {frames_processed}/{len(frame_paths)}"
+        )
+
+        print(
+            f"📄 Unique OCR : {aggregated['unique_detections']}"
+        )
+
+        print(
+            f"🎯 OCR Confidence : {aggregated['confidence']}"
+        )
+
+        print(
+            f"⭐ OCR Quality : {aggregated['quality']}"
+        )
+
+        print("\n=========================\n")
 
         return evidence
 
-    # ==========================================
+    # ==================================================
     # Stage 3
-    # Speech only
-    # ==========================================
+    # Speech
+    # ==================================================
 
     def build_speech(
         self,
@@ -86,7 +189,7 @@ class EvidenceBuilder:
         start = time.perf_counter()
 
         evidence["speech_text"] = self.speech.extract(
-            video_path
+            video_path,
         )
 
         print(
@@ -95,23 +198,55 @@ class EvidenceBuilder:
 
         return evidence
 
-    # ==========================================
+    # ==================================================
     # Final
-    # Merge everything
-    # ==========================================
+    # ==================================================
 
     def combine(
         self,
         evidence: dict,
     ):
 
-        combined_text = "\n".join([
-            evidence["title"],
-            evidence["caption"],
-            " ".join(evidence["hashtags"]),
-            evidence["ocr_text"],
-            evidence["speech_text"],
-        ])
+        combined_text = "\n".join(
+
+            filter(
+
+                None,
+
+                [
+
+                    evidence.get(
+                        "title",
+                        "",
+                    ),
+
+                    evidence.get(
+                        "caption",
+                        "",
+                    ),
+
+                    " ".join(
+                        evidence.get(
+                            "hashtags",
+                            [],
+                        )
+                    ),
+
+                    evidence.get(
+                        "ocr_text",
+                        "",
+                    ),
+
+                    evidence.get(
+                        "speech_text",
+                        "",
+                    ),
+
+                ],
+
+            )
+
+        )
 
         evidence["combined_text"] = combined_text
 

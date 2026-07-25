@@ -2,11 +2,11 @@ from fastapi import APIRouter
 
 from engine.app.pipelines.location_pipeline import LocationPipeline
 from engine.app.services.extraction.frame_extractor import FrameExtractor
-from engine.app.services.extraction.ocr_service import OCRService
+from engine.app.services.ocr.ocr_service import OCRService
 from engine.app.services.ai.gemini_service import GeminiService
 from engine.providers.manager import ProviderManager
 from engine.app.services.maps.google_places_service import GooglePlacesService
-from engine.app.services.extraction.speech_service import SpeechService
+from engine.app.services.speech.speech_service import SpeechService
 
 
 router = APIRouter()
