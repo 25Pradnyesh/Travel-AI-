@@ -1,8 +1,17 @@
 import time
 
-from engine.app.services.extraction.evidence_builder import EvidenceBuilder
-from engine.app.services.extraction.frame_extractor import FrameExtractor
-from engine.app.services.location.location_resolver import LocationResolver
+from engine.app.services.extraction.evidence_builder import (
+    EvidenceBuilder,
+)
+from engine.app.services.extraction.frame_extractor import (
+    FrameExtractor,
+)
+from engine.app.services.gemini.gemini_verifier import (
+    GeminiVerifier,
+)
+from engine.app.services.location.location_resolver import (
+    LocationResolver,
+)
 
 
 class LocationPipeline:
@@ -10,57 +19,146 @@ class LocationPipeline:
     def __init__(self):
 
         self.builder = EvidenceBuilder()
-        self.resolver = LocationResolver()
+
         self.frames = FrameExtractor()
 
-    def _build_response(
+        self.resolver = LocationResolver()
+
+        self.gemini = GeminiVerifier()
+
+    # ==================================================
+    # Final Response Builder
+    # ==================================================
+
+    def build_response(
         self,
         stage: str,
         evidence: dict,
-        verified: list,
+        resolver_result: dict,
+        gemini_result,
         total_start: float,
     ):
 
-        best = verified[0] if verified else None
+        ranked_places = resolver_result[
+            "ranked_places"
+        ]
 
-        ranked = []
+        winner = resolver_result[
+            "winner"
+        ]
 
-        if best:
+        gemini_used = False
 
-            ranked.append(
-                {
-                    "place": best["place"],
-                    "score": best["score"],
-                    "confidence": best["confidence"],
-                }
+        gemini_reason = ""
+
+        gemini_confidence = None
+
+        if (
+            gemini_result
+            and gemini_result.get(
+                "winner"
+            )
+        ):
+
+            winner = gemini_result[
+                "winner"
+            ]
+
+            gemini_used = True
+
+            gemini_reason = gemini_result.get(
+                "reason",
+                "",
             )
 
-            for alternative in best.get(
-                "alternatives",
-                [],
-            ):
-
-                ranked.append(
-                    {
-                        "place": alternative,
-                        "score": None,
-                        "confidence": "ALTERNATIVE",
-                    }
-                )
+            gemini_confidence = gemini_result.get(
+                "confidence",
+            )
 
         return {
+
             "stage": stage,
+
+            "best_guess": winner,
+
+            "ranked_candidates": ranked_places,
+
             "evidence": evidence,
-            "verified_places": verified,
-            "ranked_candidates": ranked,
-            "best_guess": best,
-            "performance": {
-                "total": round(
-                    time.perf_counter() - total_start,
-                    2,
-                )
+
+            "candidate_count": resolver_result.get(
+                "candidate_count",
+                0,
+            ),
+
+            "verified_places": resolver_result.get(
+                "verified_count",
+                0,
+            ),
+
+            "gemini": {
+
+                "used": gemini_used,
+
+                "reason": gemini_reason,
+
+                "confidence": gemini_confidence,
+
             },
+
+            "performance": {
+
+                "total_seconds": round(
+
+                    time.perf_counter()
+                    - total_start,
+
+                    2,
+
+                )
+
+            },
+
         }
+
+    # ==================================================
+    # Gemini Decision
+    # ==================================================
+
+    def verify_if_needed(
+        self,
+        evidence,
+        resolver_result,
+    ):
+
+        ranked = resolver_result[
+            "ranked_places"
+        ]
+
+        if not self.gemini.should_verify(
+            ranked,
+        ):
+
+            print(
+                "\n⚡ Rule engine confident. Skipping Gemini.\n"
+            )
+
+            return None
+
+        print(
+            "\n🤖 Invoking Gemini...\n"
+        )
+
+        return self.gemini.verify(
+
+            evidence=evidence,
+
+            ranked_places=ranked,
+
+        )
+
+    # ==================================================
+    # Pipeline
+    # ==================================================
 
     def run(
         self,
@@ -70,12 +168,14 @@ class LocationPipeline:
 
         total_start = time.perf_counter()
 
-        # ====================================================
-        # STAGE 1
+        # ==================================================
+        # Stage 1
         # Caption
-        # ====================================================
+        # ==================================================
 
-        print("\n🚀 Stage 1 : Caption")
+        print(
+            "\n🚀 Stage 1 : Caption\n"
+        )
 
         evidence = self.builder.build_caption(
             metadata,
@@ -85,98 +185,189 @@ class LocationPipeline:
             evidence,
         )
 
-        verified = self.resolver.resolve(
+        resolver = self.resolver.resolve(
             evidence,
         )
 
-        if verified:
+        if resolver:
 
-            if verified[0]["confidence"] in (
-                "HIGH",
-                "MEDIUM",
+            gemini = self.verify_if_needed(
+
+                evidence,
+
+                resolver,
+
+            )
+
+            if (
+
+                gemini is None
+
+                or
+
+                gemini["winner"]["confidence"]
+                != "LOW"
+
             ):
 
-                print(
-                    "✅ Caption resolved location."
-                )
+                return self.build_response(
 
-                return self._build_response(
                     "caption",
+
                     evidence,
-                    verified,
+
+                    resolver,
+
+                    gemini,
+
                     total_start,
+
                 )
 
-        # ====================================================
-        # STAGE 2
+        # ==================================================
+        # Stage 2
         # OCR
-        # ====================================================
+        # ==================================================
 
-        print("\n🚀 Stage 2 : OCR")
+        print(
+            "\n🚀 Stage 2 : OCR\n"
+        )
 
         frame_paths = self.frames.extract(
+
             video_path,
+
             "engine/assets/frames",
+
         )
 
         evidence = self.builder.build_ocr(
+
             evidence,
+
             frame_paths,
+
         )
 
         evidence = self.builder.combine(
             evidence,
         )
 
-        verified = self.resolver.resolve(
+        resolver = self.resolver.resolve(
             evidence,
         )
 
-        if verified:
+        if resolver:
 
-            if verified[0]["confidence"] in (
-                "HIGH",
-                "MEDIUM",
+            gemini = self.verify_if_needed(
+
+                evidence,
+
+                resolver,
+
+            )
+
+            if (
+
+                gemini is None
+
+                or
+
+                gemini["winner"]["confidence"]
+                != "LOW"
+
             ):
 
-                print(
-                    "✅ OCR resolved location."
-                )
+                return self.build_response(
 
-                return self._build_response(
                     "ocr",
+
                     evidence,
-                    verified,
+
+                    resolver,
+
+                    gemini,
+
                     total_start,
+
                 )
 
-        # ====================================================
-        # STAGE 3
+        # ==================================================
+        # Stage 3
         # Speech
-        # ====================================================
+        # ==================================================
 
-        print("\n🚀 Stage 3 : Speech")
+        print(
+            "\n🚀 Stage 3 : Speech\n"
+        )
 
         evidence = self.builder.build_speech(
+
             evidence,
+
             video_path,
+
         )
 
         evidence = self.builder.combine(
             evidence,
         )
 
-        verified = self.resolver.resolve(
+        resolver = self.resolver.resolve(
             evidence,
         )
 
-        print(
-            "✅ Speech pipeline finished."
+        if not resolver:
+
+            return {
+
+                "stage": "speech",
+
+                "best_guess": None,
+
+                "ranked_candidates": [],
+
+                "evidence": evidence,
+
+                "gemini": {
+
+                    "used": False,
+
+                },
+
+                "performance": {
+
+                    "total_seconds": round(
+
+                        time.perf_counter()
+                        - total_start,
+
+                        2,
+
+                    )
+
+                },
+
+            }
+
+        gemini = self.verify_if_needed(
+
+            evidence,
+
+            resolver,
+
         )
 
-        return self._build_response(
+        return self.build_response(
+
             "speech",
+
             evidence,
-            verified,
+
+            resolver,
+
+            gemini,
+
             total_start,
+
         )

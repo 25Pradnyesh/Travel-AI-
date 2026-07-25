@@ -41,17 +41,13 @@ class LocationResolver:
     def __init__(self):
 
         self.candidates = CandidateService()
-
         self.places = GooglePlacesService()
-
         self.formatter = LocationFormatter()
-
         self.geo = GeoEnrichmentService()
-
         self.scorer = ScoringService()
 
     # ==================================================
-    # Resolve Location
+    # Resolve
     # ==================================================
 
     def resolve(
@@ -60,49 +56,47 @@ class LocationResolver:
     ):
 
         candidates = self.candidates.generate(
-
             metadata=evidence["metadata"],
-
             ocr_text=evidence.get(
                 "ocr_text",
                 "",
             ),
-
             speech_text=evidence.get(
                 "speech_text",
                 "",
             ),
-
         )
 
-        print("\n========== LOCATION RESOLVER ==========\n")
+        print(
+            "\n========== LOCATION RESOLVER ==========\n"
+        )
 
         print(
-            f"🧠 Candidates Found : {len(candidates)}"
+            f"🧠 Candidates : {len(candidates)}"
         )
 
         verified_places = []
 
-        seen_place_ids = set()
+        seen_ids = set()
 
-        # ==========================================
+        # ------------------------------------------
         # Google Verification
-        # ==========================================
+        # ------------------------------------------
 
         for candidate in candidates:
 
-            google_results = self.places.search(
+            results = self.places.search(
                 candidate,
             )
 
-            if not google_results:
+            if not results:
                 continue
 
             print(
-                f"🔍 {candidate} -> {len(google_results)} Google result(s)"
+                f"🔍 {candidate} -> {len(results)} result(s)"
             )
 
-            for google_place in google_results:
+            for google_place in results:
 
                 place_id = google_place.get(
                     "id"
@@ -111,21 +105,18 @@ class LocationResolver:
                 if not place_id:
                     continue
 
-                if place_id in seen_place_ids:
+                if place_id in seen_ids:
                     continue
 
-                seen_place_ids.add(
+                seen_ids.add(
                     place_id
                 )
 
                 primary_type = (
-
                     google_place.get(
                         "primary_type",
                         "",
-                    )
-                    .lower()
-
+                    ).lower()
                 )
 
                 types = [
@@ -139,39 +130,25 @@ class LocationResolver:
 
                 ]
 
-                # ----------------------------------
-                # Reject obvious businesses
-                # ----------------------------------
-
                 if (
-
-                    primary_type in BUSINESS_TYPES
-
-                    or
-
-                    any(
-
+                    primary_type
+                    in BUSINESS_TYPES
+                    or any(
                         t in BUSINESS_TYPES
-
                         for t in types
-
                     )
-
                 ):
 
                     print(
-                        f"🚫 Skipping business : "
+                        f"🚫 Business skipped: "
                         f"{google_place.get('display_name')}"
                     )
 
                     continue
 
                 formatted = self.formatter.format(
-
                     query=candidate,
-
                     place=google_place,
-
                 )
 
                 enriched = self.geo.enrich(
@@ -179,63 +156,43 @@ class LocationResolver:
                 )
 
                 verified_places.append(
-                    enriched,
+                    enriched
                 )
 
-        # ==========================================
-        # Nothing verified
-        # ==========================================
+        # ------------------------------------------
+        # Nothing Verified
+        # ------------------------------------------
 
         if not verified_places:
 
             print(
-                "\n❌ No verified locations.\n"
+                "\n❌ No verified places.\n"
             )
 
-            return []
+            return None
 
-        # ==========================================
+        # ------------------------------------------
         # Ranking
-        # ==========================================
+        # ------------------------------------------
 
         ranked = self.scorer.rank_places(
-
             verified_places,
-
             evidence,
-
         )
 
         if not ranked:
-            return []
 
-        # Keep Top 5 internally
-        top_results = ranked[:5]
+            return None
 
-        winner = top_results[0]
-
-        # ==========================================
-        # Confidence Gate
-        # ==========================================
-
-        if winner["score"] < 65:
-
-            print(
-                "\n⚠️ Confidence too low.\n"
-            )
-
-            return []
+        ranked = ranked[:5]
 
         print(
-            "\n========== FINAL RANKING ==========\n"
+            "\n========== RANKED RESULTS ==========\n"
         )
 
         for index, item in enumerate(
-
-            top_results,
-
+            ranked,
             start=1,
-
         ):
 
             place = item["place"]
@@ -246,66 +203,28 @@ class LocationResolver:
 
                 f"{place['travel_name']}"
 
-                f" | {item['score']}"
+                f" | Score={item['score']}"
 
                 f" | {item['confidence']}"
 
             )
 
         print(
-            "\n===================================\n"
+            "\n====================================\n"
         )
 
-        alternatives = []
+        return {
 
-        for item in top_results[1:]:
+            "ranked_places": ranked,
 
-            alternatives.append(
+            "winner": ranked[0],
 
-                {
+            "candidate_count": len(
+                candidates,
+            ),
 
-                    "place": item["place"],
+            "verified_count": len(
+                verified_places,
+            ),
 
-                    "score": item["score"],
-
-                    "raw_score": item["raw_score"],
-
-                    "confidence": item["confidence"],
-
-                }
-
-            )
-
-        # ==========================================
-        # Final Output
-        # ==========================================
-
-        return [
-
-            {
-
-                "query": winner["place"][
-                    "verified_query"
-                ],
-
-                "place": winner["place"],
-
-                "score": winner["score"],
-
-                "raw_score": winner["raw_score"],
-
-                "confidence": winner["confidence"],
-
-                "alternatives": alternatives,
-
-                "candidate_count": len(
-                    candidates,
-                ),
-
-                "verified_places": len(
-                    verified_places,
-                ),
-
-            }
-
-        ]
+        }
