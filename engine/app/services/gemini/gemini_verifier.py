@@ -1,10 +1,13 @@
 from engine.app.services.gemini.gemini_service import (
     GeminiService,
 )
-from engine.app.services.gemini.prompt_builder import (
+from engine.app.services.gemini.gemini_vision_service import (
+    GeminiVisionService,
+)
+from engine.app.services.gemini.text_prompt_builder import (
     PromptBuilder,
 )
-from engine.app.services.gemini.response_parser import (
+from engine.app.services.gemini.text_response_parser import (
     ResponseParser,
 )
 
@@ -13,33 +16,53 @@ class GeminiVerifier:
 
     def __init__(self):
 
-        self.gemini = GeminiService()
+        self.text_model = GeminiService()
+
+        self.vision_model = GeminiVisionService()
 
         self.prompt_builder = PromptBuilder()
 
         self.parser = ResponseParser()
 
     # ==================================================
-    # Verify Rule Engine Results
+    # Decide Whether Gemini Should Run
     # ==================================================
 
-    def verify(
+    def should_verify(
         self,
-        evidence: dict,
         ranked_places: list,
     ):
 
         if not ranked_places:
+            return False
 
-            return None
+        if len(ranked_places) == 1:
+            return False
 
-        print(
-            "\n========== GEMINI VERIFICATION ==========\n"
-        )
+        top = ranked_places[0]["score"]
 
-        # ------------------------------------------
-        # Build Prompt
-        # ------------------------------------------
+        second = ranked_places[1]["score"]
+
+        if top >= 95:
+            return False
+
+        if (top - second) <= 8:
+            return True
+
+        if top < 90:
+            return True
+
+        return False
+
+    # ==================================================
+    # Text Verification
+    # ==================================================
+
+    def verify_text(
+        self,
+        evidence: dict,
+        ranked_places: list,
+    ):
 
         prompt = self.prompt_builder.build(
 
@@ -49,19 +72,11 @@ class GeminiVerifier:
 
         )
 
-        # ------------------------------------------
-        # Gemini
-        # ------------------------------------------
-
-        response = self.gemini.verify_location(
+        response = self.text_model.verify_location(
             prompt,
         )
 
-        # ------------------------------------------
-        # Parse
-        # ------------------------------------------
-
-        parsed = self.parser.parse(
+        return self.parser.parse(
 
             response=response,
 
@@ -69,75 +84,123 @@ class GeminiVerifier:
 
         )
 
-        winner = parsed.get(
+    # ==================================================
+    # Vision Verification
+    # ==================================================
+
+    def verify_vision(
+        self,
+        image_path: str,
+        evidence: dict,
+        ranked_places: list,
+    ):
+
+        candidate_names = [
+
+            item["place"]["travel_name"]
+
+            for item in ranked_places
+
+        ]
+
+        return self.vision_model.verify(
+
+            image_path=image_path,
+
+            evidence=evidence,
+
+            candidates=candidate_names,
+
+        )
+
+    # ==================================================
+    # Main Verification
+    # ==================================================
+
+    def verify(
+        self,
+        evidence: dict,
+        ranked_places: list,
+        image_path: str | None = None,
+    ):
+
+        if not ranked_places:
+
+            return None
+
+        print(
+            "\n========== GEMINI ==========\n"
+        )
+
+        text_result = self.verify_text(
+
+            evidence,
+
+            ranked_places,
+
+        )
+
+        vision_result = None
+
+        if image_path:
+
+            vision_result = self.verify_vision(
+
+                image_path,
+
+                evidence,
+
+                ranked_places,
+
+            )
+
+        winner = text_result.get(
             "winner",
         )
 
         if winner:
 
-            place = winner["place"]
+            winner["place"]["gemini_verified"] = True
 
-            print(
-                f"✅ Gemini Selected : {place['travel_name']}"
+            winner["place"]["gemini_reason"] = text_result.get(
+                "reason",
             )
 
-            print(
-                f"🎯 Confidence : {parsed['confidence']}"
-            )
+            if vision_result:
 
-            print(
-                f"💡 Reason : {parsed['reason']}"
-            )
+                winner["place"]["vision_confidence"] = vision_result.get(
+                    "confidence",
+                )
 
-        else:
+                winner["place"]["vision_reason"] = vision_result.get(
+                    "reason",
+                )
 
-            print(
-                "⚠️ Gemini returned no valid winner."
-            )
+                winner["place"]["visual_clues"] = vision_result.get(
+                    "visual_clues",
+                    [],
+                )
+
+                winner["place"]["vision_best_match"] = vision_result.get(
+                    "best_match",
+                )
 
         print(
-            "\n=========================================\n"
+            "=================================\n"
         )
 
-        return parsed
+        return {
 
-    # ==================================================
-    # Decide if Gemini should run
-    # ==================================================
+            "winner": winner,
 
-    def should_verify(
-        self,
-        ranked_places: list,
-    ):
+            "confidence": text_result.get(
+                "confidence",
+            ),
 
-        if not ranked_places:
+            "reason": text_result.get(
+                "reason",
+            ),
 
-            return False
+            "vision": vision_result,
 
-        # Already extremely confident
-        if ranked_places[0]["score"] >= 95:
-
-            return False
-
-        # Only one candidate
-        if len(ranked_places) == 1:
-
-            return False
-
-        top_score = ranked_places[0]["score"]
-
-        second_score = ranked_places[1]["score"]
-
-        difference = top_score - second_score
-
-        # Very close candidates
-        if difference <= 8:
-
-            return True
-
-        # Rule engine not confident
-        if top_score < 90:
-
-            return True
-
-        return False
+        }

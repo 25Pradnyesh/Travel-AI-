@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 from engine.app.services.extraction.evidence_builder import (
     EvidenceBuilder,
@@ -27,44 +28,34 @@ class LocationPipeline:
         self.gemini = GeminiVerifier()
 
     # ==================================================
-    # Final Response Builder
+    # Final Response
     # ==================================================
 
     def build_response(
         self,
-        stage: str,
-        evidence: dict,
-        resolver_result: dict,
+        stage,
+        evidence,
+        resolver_result,
         gemini_result,
-        total_start: float,
+        total_start,
     ):
 
-        ranked_places = resolver_result[
-            "ranked_places"
-        ]
+        winner = resolver_result["winner"]
 
-        winner = resolver_result[
-            "winner"
-        ]
+        ranked = resolver_result["ranked_places"]
 
         gemini_used = False
-
         gemini_reason = ""
-
         gemini_confidence = None
+        vision = None
 
-        if (
-            gemini_result
-            and gemini_result.get(
-                "winner"
-            )
-        ):
-
-            winner = gemini_result[
-                "winner"
-            ]
+        if gemini_result:
 
             gemini_used = True
+
+            if gemini_result.get("winner"):
+
+                winner = gemini_result["winner"]
 
             gemini_reason = gemini_result.get(
                 "reason",
@@ -75,13 +66,17 @@ class LocationPipeline:
                 "confidence",
             )
 
+            vision = gemini_result.get(
+                "vision",
+            )
+
         return {
 
             "stage": stage,
 
             "best_guess": winner,
 
-            "ranked_candidates": ranked_places,
+            "ranked_candidates": ranked,
 
             "evidence": evidence,
 
@@ -99,9 +94,11 @@ class LocationPipeline:
 
                 "used": gemini_used,
 
+                "confidence": gemini_confidence,
+
                 "reason": gemini_reason,
 
-                "confidence": gemini_confidence,
+                "vision": vision,
 
             },
 
@@ -128,6 +125,7 @@ class LocationPipeline:
         self,
         evidence,
         resolver_result,
+        frame_paths,
     ):
 
         ranked = resolver_result[
@@ -144,8 +142,14 @@ class LocationPipeline:
 
             return None
 
+        image = None
+
+        if frame_paths:
+
+            image = frame_paths[0]
+
         print(
-            "\n🤖 Invoking Gemini...\n"
+            "\n🤖 Running Gemini...\n"
         )
 
         return self.gemini.verify(
@@ -153,6 +157,8 @@ class LocationPipeline:
             evidence=evidence,
 
             ranked_places=ranked,
+
+            image_path=image,
 
         )
 
@@ -162,14 +168,15 @@ class LocationPipeline:
 
     def run(
         self,
-        metadata: dict,
-        video_path: str,
+        metadata,
+        video_path,
     ):
 
         total_start = time.perf_counter()
 
+        frame_paths = []
+
         # ==================================================
-        # Stage 1
         # Caption
         # ==================================================
 
@@ -197,35 +204,25 @@ class LocationPipeline:
 
                 resolver,
 
+                frame_paths,
+
             )
 
-            if (
+            return self.build_response(
 
-                gemini is None
+                "caption",
 
-                or
+                evidence,
 
-                gemini["winner"]["confidence"]
-                != "LOW"
+                resolver,
 
-            ):
+                gemini,
 
-                return self.build_response(
+                total_start,
 
-                    "caption",
-
-                    evidence,
-
-                    resolver,
-
-                    gemini,
-
-                    total_start,
-
-                )
+            )
 
         # ==================================================
-        # Stage 2
         # OCR
         # ==================================================
 
@@ -265,35 +262,25 @@ class LocationPipeline:
 
                 resolver,
 
+                frame_paths,
+
             )
 
-            if (
+            return self.build_response(
 
-                gemini is None
+                "ocr",
 
-                or
+                evidence,
 
-                gemini["winner"]["confidence"]
-                != "LOW"
+                resolver,
 
-            ):
+                gemini,
 
-                return self.build_response(
+                total_start,
 
-                    "ocr",
-
-                    evidence,
-
-                    resolver,
-
-                    gemini,
-
-                    total_start,
-
-                )
+            )
 
         # ==================================================
-        # Stage 3
         # Speech
         # ==================================================
 
@@ -355,6 +342,8 @@ class LocationPipeline:
             evidence,
 
             resolver,
+
+            frame_paths,
 
         )
 
