@@ -219,16 +219,14 @@ class LocationFormatter:
             ),
 
             # ==================================================
-            # Future Enrichment
+            # Nearby Intelligence
             # ==================================================
-
-            "tourism_score": None,
-
-            "hidden_gem_score": None,
 
             "nearby_city": None,
 
             "nearby_airport": None,
+
+            "nearby_railway": None,
 
             "nearby_landmarks": [],
 
@@ -238,23 +236,46 @@ class LocationFormatter:
 
             "nearby_restaurants": [],
 
+            # ==================================================
+            # Travel Intelligence
+            # ==================================================
+
             "weather": None,
 
             "forecast": None,
 
             "best_season": None,
 
-            "currency": None,
+            "currency": place.get(
+                "currency",
+            ),
 
-            "language": None,
+            "languages": place.get(
+                "languages",
+                [],
+            ),
 
-            "timezone": None,
+            "timezone": place.get(
+                "timezone",
+            ),
+
+            "country_code": place.get(
+                "country_code",
+            ),
+
+            "continent": place.get(
+                "continent",
+            ),
 
             "visa_required": None,
 
             # ==================================================
             # AI Layer
             # ==================================================
+
+            "tourism_score": None,
+
+            "hidden_gem_score": None,
 
             "gemini_verified": False,
 
@@ -343,8 +364,11 @@ class LocationFormatter:
 
             and
 
-            region.lower()
-            != country.lower()
+            country
+
+            and
+
+            region.lower() != country.lower()
 
         ):
 
@@ -360,9 +384,9 @@ class LocationFormatter:
 
             not in [
 
-                p.lower()
+                piece.lower()
 
-                for p in pieces
+                for piece in pieces
 
             ]
 

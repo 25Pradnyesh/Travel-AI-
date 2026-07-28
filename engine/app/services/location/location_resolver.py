@@ -13,6 +13,9 @@ from engine.app.services.maps.google_places_service import (
 from engine.app.services.maps.google_place_details_service import (
     GooglePlaceDetailsService,
 )
+from engine.app.services.maps.nearby_search_service import (
+    NearbySearchService,
+)
 from engine.app.services.scoring.scoring_service import (
     ScoringService,
 )
@@ -49,6 +52,8 @@ class LocationResolver:
 
         self.details = GooglePlaceDetailsService()
 
+        self.nearby = NearbySearchService()
+
         self.formatter = LocationFormatter()
 
         self.geo = GeoEnrichmentService()
@@ -68,8 +73,7 @@ class LocationResolver:
             place.get(
                 "primary_type",
                 "",
-            )
-            .lower()
+            ).lower()
         )
 
         types = [
@@ -128,9 +132,11 @@ class LocationResolver:
 
         seen_place_ids = set()
 
-        # ==========================================
-        # Candidate Loop
-        # ==========================================
+        total_search_results = 0
+
+        # ==================================================
+        # Candidate Search
+        # ==================================================
 
         for candidate in candidates:
 
@@ -140,6 +146,10 @@ class LocationResolver:
 
             if not search_results:
                 continue
+
+            total_search_results += len(
+                search_results,
+            )
 
             print(
                 f"🔍 {candidate} → {len(search_results)} result(s)"
@@ -161,10 +171,6 @@ class LocationResolver:
                     place_id,
                 )
 
-                # --------------------------------------
-                # Cheap Business Filter
-                # --------------------------------------
-
                 if self.is_business(
                     result,
                 ):
@@ -175,10 +181,6 @@ class LocationResolver:
                     )
 
                     continue
-
-                # --------------------------------------
-                # Rich Place Details
-                # --------------------------------------
 
                 details = self.details.get_details(
                     place_id,
@@ -203,9 +205,9 @@ class LocationResolver:
                     enriched,
                 )
 
-        # ==========================================
-        # No Results
-        # ==========================================
+        # ==================================================
+        # Nothing Found
+        # ==================================================
 
         if not verified_places:
 
@@ -215,9 +217,9 @@ class LocationResolver:
 
             return None
 
-        # ==========================================
+        # ==================================================
         # Ranking
-        # ==========================================
+        # ==================================================
 
         ranked = self.scorer.rank_places(
 
@@ -233,6 +235,82 @@ class LocationResolver:
         ranked = ranked[:5]
 
         winner = ranked[0]
+
+        # ==================================================
+        # Nearby Intelligence
+        # ==================================================
+
+        winner_place = winner["place"]
+
+        latitude = winner_place.get(
+            "latitude",
+        )
+
+        longitude = winner_place.get(
+            "longitude",
+        )
+
+        nearby = self.nearby.search(
+
+            latitude,
+
+            longitude,
+
+        )
+
+        winner_place["nearby_landmarks"] = nearby.get(
+            "landmarks",
+            [],
+        )
+
+        winner_place["nearby_attractions"] = nearby.get(
+            "viewpoints",
+            [],
+        )
+
+        winner_place["nearby_airport"] = (
+
+            nearby.get(
+                "airports",
+                [None],
+            )[0]
+
+            if nearby.get(
+                "airports",
+            )
+
+            else None
+
+        )
+
+        winner_place["nearby_hotels"] = nearby.get(
+            "hotels",
+            [],
+        )
+
+        winner_place["nearby_restaurants"] = nearby.get(
+            "restaurants",
+            [],
+        )
+
+        winner_place["nearby_railway"] = (
+
+            nearby.get(
+                "railway",
+                [None],
+            )[0]
+
+            if nearby.get(
+                "railway",
+            )
+
+            else None
+
+        )
+
+        # ==================================================
+        # Logging
+        # ==================================================
 
         print(
             "\n========== FINAL RANKING ==========\n"
@@ -282,14 +360,6 @@ class LocationResolver:
                 verified_places,
             ),
 
-            "search_results": sum(
-                len(
-                    self.search.search(
-                        candidate,
-                    )
-                    or []
-                )
-                for candidate in candidates
-            ),
+            "search_results": total_search_results,
 
         }
