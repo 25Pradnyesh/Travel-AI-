@@ -81,65 +81,193 @@ class GeoEnrichmentService:
 
         self.timezone_finder = TimezoneFinder()
 
+    # ==================================================
+    # Country Lookup
+    # ==================================================
+
+    def get_country_code(
+        self,
+        country: str,
+    ):
+
+        if not country:
+            return ""
+
+        try:
+
+            match = pycountry.countries.lookup(
+                country,
+            )
+
+            return match.alpha_2
+
+        except LookupError:
+
+            return ""
+
+    # ==================================================
+    # Timezone
+    # ==================================================
+
+    def get_timezone(
+        self,
+        latitude,
+        longitude,
+    ):
+
+        if latitude is None:
+            return ""
+
+        if longitude is None:
+            return ""
+
+        return (
+
+            self.timezone_finder.timezone_at(
+
+                lat=latitude,
+
+                lng=longitude,
+
+            )
+
+            or ""
+
+        )
+
+    # ==================================================
+    # Enrichment
+    # ==================================================
+
     def enrich(
         self,
         location: dict,
     ):
 
-        country = location.get("country", "")
+        enriched = location.copy()
 
-        latitude = location.get("latitude")
+        country = enriched.get(
+            "country",
+            "",
+        )
 
-        longitude = location.get("longitude")
+        latitude = enriched.get(
+            "latitude",
+        )
+
+        longitude = enriched.get(
+            "longitude",
+        )
 
         metadata = COUNTRY_METADATA.get(
             country,
             {},
         )
 
-        iso = pycountry.countries.get(
-            name=country
-        )
-
-        country_code = ""
-
-        if iso:
-            country_code = iso.alpha_2
-
-        timezone = ""
-
-        if (
-            latitude is not None
-            and longitude is not None
-        ):
-
-            timezone = (
-                self.timezone_finder.timezone_at(
-                    lat=latitude,
-                    lng=longitude,
-                )
-                or ""
-            )
-
-        enriched = location.copy()
-
         enriched.update(
+
             {
-                "country_code": country_code,
+
+                # ==============================
+                # Geography
+                # ==============================
+
+                "country_code": self.get_country_code(
+                    country,
+                ),
+
                 "continent": metadata.get(
                     "continent",
                     "",
                 ),
+
+                # ==============================
+                # Currency
+                # ==============================
+
                 "currency": metadata.get(
                     "currency",
-                    "",
+                    enriched.get(
+                        "currency",
+                    ),
                 ),
+
+                # ==============================
+                # Language
+                # ==============================
+
                 "languages": metadata.get(
                     "languages",
                     [],
                 ),
-                "timezone": timezone,
+
+                # ==============================
+                # Time
+                # ==============================
+
+                "timezone": self.get_timezone(
+
+                    latitude,
+
+                    longitude,
+
+                ),
+
+                # ==============================
+                # Reserved
+                # (Upcoming Phases)
+                # ==============================
+
+                "weather": enriched.get(
+                    "weather",
+                ),
+
+                "forecast": enriched.get(
+                    "forecast",
+                ),
+
+                "best_season": enriched.get(
+                    "best_season",
+                ),
+
+                "nearby_city": enriched.get(
+                    "nearby_city",
+                ),
+
+                "nearby_airport": enriched.get(
+                    "nearby_airport",
+                ),
+
+                "nearby_landmarks": enriched.get(
+                    "nearby_landmarks",
+                    [],
+                ),
+
+                "nearby_attractions": enriched.get(
+                    "nearby_attractions",
+                    [],
+                ),
+
+                "nearby_hotels": enriched.get(
+                    "nearby_hotels",
+                    [],
+                ),
+
+                "nearby_restaurants": enriched.get(
+                    "nearby_restaurants",
+                    [],
+                ),
+
+                "tourism_score": enriched.get(
+                    "tourism_score",
+                ),
+
+                "hidden_gem_score": enriched.get(
+                    "hidden_gem_score",
+                ),
+
             }
+
         )
 
         return enriched

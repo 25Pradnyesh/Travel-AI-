@@ -37,24 +37,27 @@ class LocationFormatter:
         ]
 
         country = ""
-
         state = ""
+        locality = ""
 
         if len(parts) >= 1:
             country = parts[-1]
 
-        if len(parts) >= 3:
+        if len(parts) >= 2:
             state = parts[-2]
 
-        query_components = self.extract_query_components(
+        if len(parts) >= 3:
+            locality = parts[-3]
+
+        query_parts = self.extract_query_components(
             query,
         )
 
         travel_name = self.build_travel_name(
 
-            city=query_components["city"],
+            city=query_parts["city"],
 
-            region=query_components["region"],
+            region=query_parts["region"],
 
             display_name=display_name,
 
@@ -62,35 +65,37 @@ class LocationFormatter:
 
         )
 
-        formatted = {
+        return {
 
-            # =====================================
+            # ==================================================
             # Identity
-            # =====================================
+            # ==================================================
 
             "id": place.get("id"),
+
+            "verified_query": query,
 
             "name": display_name,
 
             "travel_name": travel_name,
 
-            "verified_query": query,
-
-            # =====================================
+            # ==================================================
             # Structured Location
-            # =====================================
+            # ==================================================
 
-            "city": query_components["city"],
+            "city": query_parts["city"],
 
-            "region": query_components["region"],
+            "region": query_parts["region"],
+
+            "locality": locality,
 
             "state": state,
 
             "country": country,
 
-            # =====================================
+            # ==================================================
             # Coordinates
-            # =====================================
+            # ==================================================
 
             "latitude": place.get(
                 "latitude",
@@ -100,15 +105,25 @@ class LocationFormatter:
                 "longitude",
             ),
 
-            # =====================================
+            # ==================================================
             # Address
-            # =====================================
+            # ==================================================
 
             "address": address,
 
-            # =====================================
+            "plus_code": place.get(
+                "plus_code",
+                {},
+            ),
+
+            "viewport": place.get(
+                "viewport",
+                {},
+            ),
+
+            # ==================================================
             # Google
-            # =====================================
+            # ==================================================
 
             "google_maps_url": place.get(
                 "google_maps_url",
@@ -125,9 +140,9 @@ class LocationFormatter:
                 "",
             ),
 
-            # =====================================
-            # Google Place Intelligence
-            # =====================================
+            # ==================================================
+            # Classification
+            # ==================================================
 
             "primary_type": place.get(
                 "primary_type",
@@ -143,6 +158,10 @@ class LocationFormatter:
                 "business_status",
                 "",
             ),
+
+            # ==================================================
+            # Popularity
+            # ==================================================
 
             "rating": float(
                 place.get(
@@ -165,9 +184,9 @@ class LocationFormatter:
                 "",
             ),
 
-            # =====================================
-            # Rich Travel Metadata
-            # =====================================
+            # ==================================================
+            # Travel Metadata
+            # ==================================================
 
             "editorial_summary": place.get(
                 "editorial_summary",
@@ -176,6 +195,11 @@ class LocationFormatter:
 
             "opening_hours": place.get(
                 "opening_hours",
+                [],
+            ),
+
+            "current_opening_hours": place.get(
+                "current_opening_hours",
                 [],
             ),
 
@@ -189,30 +213,56 @@ class LocationFormatter:
                 {},
             ),
 
-            # =====================================
-            # Reserved
-            # (future enrichment)
-            # =====================================
+            "utc_offset_minutes": place.get(
+                "utc_offset_minutes",
+                0,
+            ),
 
-            "tourism_score": 0,
+            # ==================================================
+            # Future Enrichment
+            # ==================================================
 
-            "hidden_gem_score": 0,
+            "tourism_score": None,
 
-            "nearby_airport": None,
+            "hidden_gem_score": None,
 
             "nearby_city": None,
 
-            "nearest_landmarks": [],
+            "nearby_airport": None,
+
+            "nearby_landmarks": [],
+
+            "nearby_attractions": [],
+
+            "nearby_hotels": [],
+
+            "nearby_restaurants": [],
 
             "weather": None,
 
+            "forecast": None,
+
             "best_season": None,
+
+            "currency": None,
+
+            "language": None,
+
+            "timezone": None,
 
             "visa_required": None,
 
-        }
+            # ==================================================
+            # AI Layer
+            # ==================================================
 
-        return formatted
+            "gemini_verified": False,
+
+            "gemini_reason": None,
+
+            "confidence_reason": None,
+
+        }
 
     # ==================================================
     # Query Parser
@@ -266,7 +316,7 @@ class LocationFormatter:
         }
 
     # ==================================================
-    # Display Name
+    # Frontend Display Name
     # ==================================================
 
     def build_travel_name(

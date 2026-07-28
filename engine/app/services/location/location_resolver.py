@@ -56,6 +56,42 @@ class LocationResolver:
         self.scorer = ScoringService()
 
     # ==================================================
+    # Business Filter
+    # ==================================================
+
+    def is_business(
+        self,
+        place: dict,
+    ):
+
+        primary = (
+            place.get(
+                "primary_type",
+                "",
+            )
+            .lower()
+        )
+
+        types = [
+
+            t.lower()
+
+            for t in place.get(
+                "types",
+                [],
+            )
+
+        ]
+
+        if primary in BUSINESS_TYPES:
+            return True
+
+        return any(
+            t in BUSINESS_TYPES
+            for t in types
+        )
+
+    # ==================================================
     # Resolve
     # ==================================================
 
@@ -90,11 +126,11 @@ class LocationResolver:
 
         verified_places = []
 
-        seen_ids = set()
+        seen_place_ids = set()
 
-        # ==================================================
+        # ==========================================
         # Candidate Loop
-        # ==================================================
+        # ==========================================
 
         for candidate in candidates:
 
@@ -106,80 +142,49 @@ class LocationResolver:
                 continue
 
             print(
-                f"🔍 {candidate} -> {len(search_results)} search result(s)"
+                f"🔍 {candidate} → {len(search_results)} result(s)"
             )
-
-            # ------------------------------------------
 
             for result in search_results:
 
-                place_id = result.get("id")
+                place_id = result.get(
+                    "id",
+                )
 
                 if not place_id:
                     continue
 
-                if place_id in seen_ids:
+                if place_id in seen_place_ids:
                     continue
 
-                seen_ids.add(place_id)
+                seen_place_ids.add(
+                    place_id,
+                )
 
-                # ==========================================
-                # Fetch Rich Details
-                # ==========================================
+                # --------------------------------------
+                # Cheap Business Filter
+                # --------------------------------------
+
+                if self.is_business(
+                    result,
+                ):
+
+                    print(
+                        f"🚫 Business skipped: "
+                        f"{result.get('display_name')}"
+                    )
+
+                    continue
+
+                # --------------------------------------
+                # Rich Place Details
+                # --------------------------------------
 
                 details = self.details.get_details(
                     place_id,
                 )
 
                 if not details:
-                    continue
-
-                primary_type = (
-                    details.get(
-                        "primary_type",
-                        "",
-                    ).lower()
-                )
-
-                types = [
-
-                    t.lower()
-
-                    for t in details.get(
-                        "types",
-                        [],
-                    )
-
-                ]
-
-                # ==========================================
-                # Reject Businesses
-                # ==========================================
-
-                if (
-
-                    primary_type in BUSINESS_TYPES
-
-                    or
-
-                    any(
-
-                        t in BUSINESS_TYPES
-
-                        for t in types
-
-                    )
-
-                ):
-
-                    print(
-
-                        f"🚫 Business skipped : "
-
-                        f"{details.get('display_name')}"
-
-                    )
-
                     continue
 
                 formatted = self.formatter.format(
@@ -198,9 +203,9 @@ class LocationResolver:
                     enriched,
                 )
 
-        # ==================================================
-        # Nothing Found
-        # ==================================================
+        # ==========================================
+        # No Results
+        # ==========================================
 
         if not verified_places:
 
@@ -210,9 +215,9 @@ class LocationResolver:
 
             return None
 
-        # ==================================================
+        # ==========================================
         # Ranking
-        # ==================================================
+        # ==========================================
 
         ranked = self.scorer.rank_places(
 
@@ -226,6 +231,8 @@ class LocationResolver:
             return None
 
         ranked = ranked[:5]
+
+        winner = ranked[0]
 
         print(
             "\n========== FINAL RANKING ==========\n"
@@ -247,13 +254,13 @@ class LocationResolver:
 
                 f"{place['travel_name']}"
 
-                f" | Score={item['score']}"
+                f" | {item['score']}"
 
                 f" | {item['confidence']}"
 
-                f" | ⭐ {place.get('rating', 0)}"
+                f" | ⭐ {place.get('rating',0)}"
 
-                f" ({place.get('user_rating_count', 0)})"
+                f" ({place.get('user_rating_count',0)})"
 
             )
 
@@ -263,7 +270,7 @@ class LocationResolver:
 
         return {
 
-            "winner": ranked[0],
+            "winner": winner,
 
             "ranked_places": ranked,
 
@@ -273,6 +280,16 @@ class LocationResolver:
 
             "verified_count": len(
                 verified_places,
+            ),
+
+            "search_results": sum(
+                len(
+                    self.search.search(
+                        candidate,
+                    )
+                    or []
+                )
+                for candidate in candidates
             ),
 
         }
