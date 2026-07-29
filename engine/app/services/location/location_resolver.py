@@ -20,6 +20,11 @@ from engine.app.services.scoring.scoring_service import (
     ScoringService,
 )
 
+from engine.app.services.travel.travel_intelligence_service import (
+    TravelIntelligenceService,
+)
+
+
 
 BUSINESS_TYPES = {
     "restaurant",
@@ -59,6 +64,8 @@ class LocationResolver:
         self.geo = GeoEnrichmentService()
 
         self.scorer = ScoringService()
+
+        self.travel = TravelIntelligenceService()
 
     # ==================================================
     # Business Filter
@@ -234,79 +241,74 @@ class LocationResolver:
 
         ranked = ranked[:5]
 
+        # ==================================================
+        # Travel Intelligence
+        # ==================================================
+
+        for item in ranked:
+
+            place = item["place"]
+
+            latitude = place.get(
+                "latitude",
+            )
+
+            longitude = place.get(
+                "longitude",
+            )
+
+            nearby = self.nearby.search(
+                latitude,
+                longitude,
+            ) or {}
+
+            place["nearby_landmarks"] = nearby.get(
+                "landmarks",
+                [],
+            )
+
+            place["nearby_attractions"] = nearby.get(
+                "viewpoints",
+                [],
+            )
+
+            airports = nearby.get(
+                "airports",
+                [],
+            )
+
+            place["nearby_airport"] = (
+                airports[0]
+                if airports
+                else None
+            )
+
+            place["nearby_hotels"] = nearby.get(
+                "hotels",
+                [],
+            )
+
+            place["nearby_restaurants"] = nearby.get(
+                "restaurants",
+                [],
+            )
+
+            railway = nearby.get(
+                "railway",
+                [],
+            )
+
+            place["nearby_railway"] = (
+                railway[0]
+                if railway
+                else None
+            )
+
+            item["place"] = self.travel.enrich(
+                place,
+            )
+
         winner = ranked[0]
-
-        # ==================================================
-        # Nearby Intelligence
-        # ==================================================
-
-        winner_place = winner["place"]
-
-        latitude = winner_place.get(
-            "latitude",
-        )
-
-        longitude = winner_place.get(
-            "longitude",
-        )
-
-        nearby = self.nearby.search(
-
-            latitude,
-
-            longitude,
-
-        )
-
-        winner_place["nearby_landmarks"] = nearby.get(
-            "landmarks",
-            [],
-        )
-
-        winner_place["nearby_attractions"] = nearby.get(
-            "viewpoints",
-            [],
-        )
-
-        winner_place["nearby_airport"] = (
-
-            nearby.get(
-                "airports",
-                [None],
-            )[0]
-
-            if nearby.get(
-                "airports",
-            )
-
-            else None
-
-        )
-
-        winner_place["nearby_hotels"] = nearby.get(
-            "hotels",
-            [],
-        )
-
-        winner_place["nearby_restaurants"] = nearby.get(
-            "restaurants",
-            [],
-        )
-
-        winner_place["nearby_railway"] = (
-
-            nearby.get(
-                "railway",
-                [None],
-            )[0]
-
-            if nearby.get(
-                "railway",
-            )
-
-            else None
-
-        )
 
         # ==================================================
         # Logging
@@ -317,29 +319,19 @@ class LocationResolver:
         )
 
         for index, item in enumerate(
-
             ranked,
-
             start=1,
-
         ):
 
             place = item["place"]
 
             print(
-
                 f"{index}. "
-
-                f"{place['travel_name']}"
-
-                f" | {item['score']}"
-
-                f" | {item['confidence']}"
-
-                f" | ⭐ {place.get('rating',0)}"
-
-                f" ({place.get('user_rating_count',0)})"
-
+                f"{place['travel_name']} "
+                f"| {item['score']} "
+                f"| {item['confidence']} "
+                f"| ⭐ {place.get('rating', 0)} "
+                f"({place.get('user_rating_count', 0)})"
             )
 
         print(

@@ -1,0 +1,1 @@
+self.travel = TravelIntelligenceService()
