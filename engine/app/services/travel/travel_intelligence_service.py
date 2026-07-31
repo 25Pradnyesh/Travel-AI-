@@ -11,6 +11,10 @@ from engine.app.services.travel.travel_tips_service import (
     TravelTipsService,
 )
 
+from engine.app.services.itinerary.itinerary_service import (
+    ItineraryService,
+)
+
 
 class TravelIntelligenceService:
 
@@ -24,8 +28,10 @@ class TravelIntelligenceService:
 
         self.tips = TravelTipsService()
 
+        self.itinerary = ItineraryService()
+
     # ==================================================
-    # Build Travel Intelligence
+    # Travel Intelligence
     # ==================================================
 
     def enrich(
@@ -50,7 +56,7 @@ class TravelIntelligenceService:
         )
 
         # ------------------------------------------
-        # Season
+        # Season Intelligence
         # ------------------------------------------
 
         season = self.season.get(
@@ -62,7 +68,7 @@ class TravelIntelligenceService:
         )
 
         # ------------------------------------------
-        # Budget
+        # Budget Intelligence
         # ------------------------------------------
 
         budget = self.budget.estimate(
@@ -86,7 +92,15 @@ class TravelIntelligenceService:
         )
 
         # ------------------------------------------
-        # Travel Summary
+        # Itinerary Intelligence
+        # ------------------------------------------
+
+        place = self.itinerary.enrich(
+            place,
+        )
+
+        # ------------------------------------------
+        # AI Travel Summary
         # ------------------------------------------
 
         place["travel_summary"] = self.build_summary(
@@ -96,7 +110,7 @@ class TravelIntelligenceService:
         return place
 
     # ==================================================
-    # Summary
+    # Summary Builder
     # ==================================================
 
     def build_summary(
@@ -104,24 +118,90 @@ class TravelIntelligenceService:
         place: dict,
     ):
 
-        parts = [
+        summary = [
 
-            f"{place.get('category_emoji','📍')} {place.get('category','Destination')}",
+            f"{place.get('category_emoji', '📍')} {place.get('category', 'Destination')}",
 
-            f"Best: {place.get('recommended','')}",
+            f"📅 {place.get('best_season', 'All Year')}",
 
-            f"Budget: {place.get('budget_level','Unknown')}",
+            f"💰 {place.get('budget_level', 'Unknown')}",
 
-            f"Trip: {place.get('recommended_trip_days','')}",
+            f"🕒 {place.get('recommended_trip_days', '1 Day')}",
 
         ]
 
-        return " • ".join(
+        return " • ".join(summary)
 
-            part
+    # ==================================================
+    # Export
+    # ==================================================
 
-            for part in parts
+    def export(
+        self,
+        place: dict,
+    ):
 
-            if part
+        return {
 
-        )
+            "travel_name": place.get(
+                "travel_name",
+            ),
+
+            "country": place.get(
+                "country",
+            ),
+
+            "category": place.get(
+                "category",
+            ),
+
+            "category_emoji": place.get(
+                "category_emoji",
+            ),
+
+            "best_season": place.get(
+                "best_season",
+            ),
+
+            "recommended_trip_days": place.get(
+                "recommended_trip_days",
+            ),
+
+            "budget_level": place.get(
+                "budget_level",
+            ),
+
+            "estimated_daily_budget": place.get(
+                "estimated_daily_budget",
+            ),
+
+            "travel_tips": place.get(
+                "travel_tips",
+                [],
+            ),
+
+            "activities": place.get(
+                "activities",
+                [],
+            ),
+
+            "packing_list": place.get(
+                "packing_list",
+                {},
+            ),
+
+            "timing": place.get(
+                "timing",
+                {},
+            ),
+
+            "sample_itinerary": place.get(
+                "sample_itinerary",
+                [],
+            ),
+
+            "travel_summary": place.get(
+                "travel_summary",
+            ),
+
+        }
