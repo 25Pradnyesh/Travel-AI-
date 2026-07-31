@@ -31,10 +31,12 @@ class VisionPromptBuilder:
         )
 
         hashtags = ", ".join(
+
             evidence.get(
                 "hashtags",
                 [],
             )
+
         )
 
         candidate_list = "\n".join(
@@ -48,15 +50,17 @@ class VisionPromptBuilder:
         return f"""
 You are an expert travel geolocation AI.
 
-Your task is to identify the exact travel location shown in the provided image.
+You are given MULTIPLE FRAMES extracted from the SAME travel reel.
 
-Use BOTH:
+Analyze ALL images together before making a decision.
 
-1. The image itself
-2. The contextual information
+Visual evidence is MORE IMPORTANT than captions or hashtags.
 
-Context
--------
+==================================================
+
+TEXT CONTEXT
+
+==================================================
 
 Title:
 {title}
@@ -73,56 +77,76 @@ Speech:
 Hashtags:
 {hashtags}
 
-Possible Google Candidates
---------------------------
+==================================================
+
+POSSIBLE GOOGLE LOCATION CANDIDATES
+
+==================================================
 
 {candidate_list}
 
-Instructions
-------------
+==================================================
 
-1. Study the visual landmarks carefully.
+YOUR TASK
 
-2. Compare them against the candidate locations.
+==================================================
 
-3. If none of the candidates match, infer the most likely real-world location.
+Determine the exact travel destination shown.
 
-4. Consider:
+Consider:
 
 - Mountains
 - Lakes
 - Beaches
-- Architecture
-- Skylines
+- Rivers
 - Forests
 - Waterfalls
-- Roads
-- Monuments
+- Snow
+- Coastline
+- Architecture
 - Bridges
 - Churches
 - Temples
 - Castles
+- Skylines
+- Road signs
+- Language
 - Vegetation
 - Terrain
-- Snow
-- Coastlines
+- Hiking trails
+- Peaks
+- Islands
 
-Return ONLY valid JSON.
+Compare the visual clues against the provided candidate locations.
 
-Schema
+If none match, infer the most likely real-world location.
+
+Never force a candidate if the visuals disagree.
+
+==================================================
+
+RETURN JSON ONLY
+
+==================================================
 
 {{
     "best_match": "...",
-    "confidence": 0-100,
+    "matches_candidate": true,
+    "confidence": 0,
     "reason": "...",
     "visual_clues": [
         "...",
         "..."
     ],
-    "matches_candidate": true
+    "detected_landmarks": [
+        "...",
+        "..."
+    ],
+    "detected_country": "...",
+    "detected_region": "..."
 }}
 
-Do not include markdown.
+Do not return markdown.
 
 Do not explain anything outside the JSON.
 """

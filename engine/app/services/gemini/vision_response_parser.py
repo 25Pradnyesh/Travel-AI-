@@ -20,7 +20,7 @@ class VisionResponseParser:
         response = response.strip()
 
         # ------------------------------------------
-        # Remove Markdown Code Blocks
+        # Remove Markdown
         # ------------------------------------------
 
         response = re.sub(
@@ -49,7 +49,7 @@ class VisionResponseParser:
         except json.JSONDecodeError:
 
             return self.empty(
-                reason="Invalid JSON returned by Gemini.",
+                "Invalid JSON returned by Gemini.",
             )
 
         return {
@@ -81,6 +81,27 @@ class VisionResponseParser:
                     [],
                 )
             ),
+
+            "detected_landmarks": self.normalize_list(
+                data.get(
+                    "detected_landmarks",
+                    [],
+                )
+            ),
+
+            "detected_country": str(
+                data.get(
+                    "detected_country",
+                    "",
+                )
+            ).strip(),
+
+            "detected_region": str(
+                data.get(
+                    "detected_region",
+                    "",
+                )
+            ).strip(),
 
             "matches_candidate": bool(
                 data.get(
@@ -134,7 +155,9 @@ class VisionResponseParser:
 
         for item in value:
 
-            item = str(item).strip()
+            item = str(
+                item,
+            ).strip()
 
             if not item:
                 continue
@@ -144,14 +167,18 @@ class VisionResponseParser:
             if key in seen:
                 continue
 
-            seen.add(key)
+            seen.add(
+                key,
+            )
 
-            cleaned.append(item)
+            cleaned.append(
+                item,
+            )
 
         return cleaned
 
     # ==================================================
-    # Empty Response
+    # Empty
     # ==================================================
 
     def empty(
@@ -168,6 +195,12 @@ class VisionResponseParser:
             "reason": reason,
 
             "visual_clues": [],
+
+            "detected_landmarks": [],
+
+            "detected_country": "",
+
+            "detected_region": "",
 
             "matches_candidate": False,
 

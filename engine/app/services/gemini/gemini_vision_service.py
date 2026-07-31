@@ -23,24 +23,20 @@ class GeminiVisionService:
         self.parser = VisionResponseParser()
 
     # ==================================================
-    # Verify Image
+    # Analyze Frames
     # ==================================================
 
-    def verify(
+    def analyze(
         self,
-        image_path: str,
+        frame_paths: list,
         evidence: dict,
         candidates: list,
     ):
 
-        image_path = Path(
-            image_path,
-        )
-
-        if not image_path.exists():
+        if not frame_paths:
 
             return self.parser.empty(
-                "Image not found.",
+                "No frames provided.",
             )
 
         prompt = self.prompt_builder.build(
@@ -51,13 +47,36 @@ class GeminiVisionService:
 
         )
 
-        try:
+        uploaded_frames = []
 
-            uploaded_image = genai.upload_file(
-                path=str(
-                    image_path,
+        for frame in frame_paths:
+
+            frame = Path(frame)
+
+            if not frame.exists():
+                continue
+
+            try:
+
+                uploaded_frames.append(
+
+                    genai.upload_file(
+                        path=str(frame),
+                    )
+
                 )
+
+            except Exception:
+
+                continue
+
+        if not uploaded_frames:
+
+            return self.parser.empty(
+                "No valid frames uploaded.",
             )
+
+        try:
 
             response = self.model.generate_content(
 
@@ -65,7 +84,7 @@ class GeminiVisionService:
 
                     prompt,
 
-                    uploaded_image,
+                    *uploaded_frames,
 
                 ]
 

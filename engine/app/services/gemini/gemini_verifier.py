@@ -31,10 +31,14 @@ class GeminiVerifier:
     def should_verify(
         self,
         ranked_places: list,
+        image_path: str | None = None,
     ):
 
         if not ranked_places:
             return False
+
+        if image_path:
+            return True
 
         if len(ranked_places) == 1:
             return False
@@ -58,7 +62,7 @@ class GeminiVerifier:
     # Text Verification
     # ==================================================
 
-    def verify_text(
+    def run_text_verification(
         self,
         evidence: dict,
         ranked_places: list,
@@ -88,7 +92,7 @@ class GeminiVerifier:
     # Vision Verification
     # ==================================================
 
-    def verify_vision(
+    def run_vision_verification(
         self,
         image_path: str,
         evidence: dict,
@@ -125,14 +129,17 @@ class GeminiVerifier:
     ):
 
         if not ranked_places:
-
             return None
 
         print(
             "\n========== GEMINI ==========\n"
         )
 
-        text_result = self.verify_text(
+        # ------------------------------------------
+        # Text Verification
+        # ------------------------------------------
+
+        text_result = self.run_text_verification(
 
             evidence,
 
@@ -140,11 +147,23 @@ class GeminiVerifier:
 
         )
 
+        winner = text_result.get(
+            "winner",
+        )
+
+        if not winner:
+
+            return None
+
+        # ------------------------------------------
+        # Vision Verification
+        # ------------------------------------------
+
         vision_result = None
 
         if image_path:
 
-            vision_result = self.verify_vision(
+            vision_result = self.run_vision_verification(
 
                 image_path,
 
@@ -154,36 +173,116 @@ class GeminiVerifier:
 
             )
 
-        winner = text_result.get(
-            "winner",
-        )
+        # ------------------------------------------
+        # Merge Vision + Text
+        # ------------------------------------------
 
-        if winner:
+        if vision_result:
 
-            winner["place"]["gemini_verified"] = True
+            text_name = winner["place"].get(
+                "travel_name",
+                "",
+            ).lower()
 
-            winner["place"]["gemini_reason"] = text_result.get(
-                "reason",
+            vision_name = vision_result.get(
+                "best_match",
+                "",
+            ).lower()
+
+            agrees = (
+
+                vision_name != ""
+
+                and
+
+                (
+                    vision_name in text_name
+                    or
+                    text_name in vision_name
+                )
+
             )
 
-            if vision_result:
+            winner["place"]["vision_agrees"] = agrees
 
-                winner["place"]["vision_confidence"] = vision_result.get(
-                    "confidence",
+            if agrees:
+
+                winner["score"] += 5
+
+            else:
+
+                winner["score"] = max(
+                    winner["score"] - 5,
+                    0,
                 )
 
-                winner["place"]["vision_reason"] = vision_result.get(
-                    "reason",
-                )
+        # ------------------------------------------
+        # Store Metadata
+        # ------------------------------------------
 
-                winner["place"]["visual_clues"] = vision_result.get(
-                    "visual_clues",
-                    [],
-                )
+        winner["place"]["gemini_verified"] = True
 
-                winner["place"]["vision_best_match"] = vision_result.get(
-                    "best_match",
-                )
+        winner["place"]["gemini_reason"] = text_result.get(
+            "reason",
+            "",
+        )
+
+        winner["place"]["text_confidence"] = text_result.get(
+            "confidence",
+            0,
+        )
+
+        winner["place"]["verification_status"] = (
+
+            "verified"
+
+            if text_result.get(
+                "confidence",
+                0,
+            ) >= 85
+
+            else "estimated"
+
+        )
+
+        winner["place"]["vision"] = vision_result
+
+        if vision_result:
+
+            winner["place"]["vision_confidence"] = vision_result.get(
+                "confidence",
+                0,
+            )
+
+            winner["place"]["vision_reason"] = vision_result.get(
+                "reason",
+                "",
+            )
+
+            winner["place"]["vision_best_match"] = vision_result.get(
+                "best_match",
+                "",
+            )
+
+            winner["place"]["visual_clues"] = vision_result.get(
+                "visual_clues",
+                [],
+            )
+
+            winner["place"]["detected_landmarks"] = vision_result.get(
+                "detected_landmarks",
+                [],
+            )
+
+            winner["place"]["detected_country"] = vision_result.get(
+                "detected_country",
+                "",
+            )
+
+            winner["place"]["detected_region"] = vision_result.get(
+                "detected_region",
+                "",
+            )
 
         print(
             "=================================\n"
