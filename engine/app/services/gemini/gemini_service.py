@@ -21,11 +21,12 @@ class GeminiService:
         )
 
         api_key = os.getenv(
-            "GEMINI_API_KEY"
+            "GEMINI_API_KEY",
         )
 
         if not api_key:
-            raise ValueError(
+
+            raise RuntimeError(
                 "GEMINI_API_KEY not found."
             )
 
@@ -34,20 +35,23 @@ class GeminiService:
         )
 
         self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
+
+            model_name="gemini-2.5-flash",
+
             generation_config={
 
-                "temperature": 0,
+                "temperature": 0.0,
 
-                "top_p": 0.95,
+                "top_p": 0.9,
 
                 "top_k": 20,
 
-                "max_output_tokens": 1024,
+                "max_output_tokens": 2048,
 
                 "response_mime_type": "application/json",
 
             },
+
         )
 
     # ==================================================
@@ -65,20 +69,46 @@ class GeminiService:
                 prompt,
             )
 
-            text = response.text.strip()
-
-            return json.loads(text)
-
         except Exception as e:
 
             print(
-                f"❌ Gemini Error: {e}"
+                f"\n❌ Gemini API Error\n{e}\n"
             )
 
             return None
 
+        text = getattr(
+            response,
+            "text",
+            "",
+        ).strip()
+
+        if not text:
+
+            print(
+                "⚠️ Gemini returned an empty response."
+            )
+
+            return None
+
+        try:
+
+            return json.loads(
+                text,
+            )
+
+        except json.JSONDecodeError:
+
+            print(
+                "\n⚠️ Gemini returned invalid JSON:\n"
+            )
+
+            print(text)
+
+            return None
+
     # ==================================================
-    # Verify Ranked Locations
+    # Location Verification
     # ==================================================
 
     def verify_location(
@@ -90,7 +120,55 @@ class GeminiService:
             prompt,
         )
 
-        if result is None:
-            return None
+        if not result:
+
+            return {
+
+                "winner": None,
+
+                "confidence": 0,
+
+                "reason": "Gemini verification failed.",
+
+            }
 
         return result
+
+    # ==================================================
+    # Generic Prompt
+    # ==================================================
+
+    def ask(
+        self,
+        prompt: str,
+    ):
+
+        return self.generate_json(
+            prompt,
+        )
+
+    # ==================================================
+    # Health Check
+    # ==================================================
+
+    def health_check(
+        self,
+    ):
+
+        try:
+
+            response = self.model.generate_content(
+                "Reply ONLY with JSON: {\"status\":\"ok\"}",
+            )
+
+            return bool(
+                getattr(
+                    response,
+                    "text",
+                    "",
+                )
+            )
+
+        except Exception:
+
+            return False

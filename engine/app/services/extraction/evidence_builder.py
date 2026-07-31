@@ -23,8 +23,7 @@ class EvidenceBuilder:
         self.speech_aggregator = SpeechAggregator()
 
     # ==================================================
-    # Stage 1
-    # Caption
+    # Caption Evidence
     # ==================================================
 
     def build_caption(
@@ -49,73 +48,62 @@ class EvidenceBuilder:
             ),
 
             "hashtags": metadata.get(
-                "tags"
-            ) or [],
+                "hashtags",
+            )
+            or metadata.get(
+                "tags",
+            )
+            or [],
+
+            "creator": metadata.get(
+                "creator",
+                "",
+            ),
+
+            "location": metadata.get(
+                "location",
+                "",
+            ),
 
             # OCR
 
             "ocr_text": "",
-
             "ocr_confidence": 0.0,
-
             "ocr_quality": "NONE",
-
             "ocr_detections": [],
 
             # Speech
 
             "speech_text": "",
-
             "speech_confidence": 0.0,
-
             "speech_quality": "NONE",
-
             "speech_segments": [],
 
-            # Misc
+            # Runtime
 
             "frames": [],
 
         }
 
     # ==================================================
-    # Stage 2
     # OCR
     # ==================================================
 
     def build_ocr(
         self,
         evidence: dict,
-        frame_paths: list[str],
+        frame_paths: list,
     ):
 
         start = time.perf_counter()
 
-        frame_results = []
+        results = []
 
-        frames_processed = 0
+        aggregated = None
 
-        print("\n========== OCR ==========\n")
-
-        aggregated = {
-
-            "text": "",
-
-            "confidence": 0.0,
-
-            "quality": "NONE",
-
-            "detections": [],
-
-            "frames_used": 0,
-
-            "unique_detections": 0,
-
-            "high_confidence_detections": 0,
-
-            "should_stop": False,
-
-        }
+        print(
+            "\n========== OCR ==========\n"
+        )
 
         for index, frame in enumerate(
             frame_paths,
@@ -126,78 +114,77 @@ class EvidenceBuilder:
                 frame,
             )
 
-            frames_processed += 1
-
             if detections:
 
-                frame_results.append(
+                results.append(
                     detections,
                 )
 
             aggregated = self.ocr_aggregator.aggregate(
-                frame_results,
+                results,
             )
 
             print(
 
                 f"Frame {index}"
 
-                f" | OCR={aggregated['confidence']}"
-
                 f" | {aggregated['quality']}"
 
-                f" | Unique={aggregated['unique_detections']}"
+                f" | {aggregated['confidence']}"
 
             )
 
-            if aggregated["should_stop"]:
+            if aggregated.get(
+                "should_stop",
+            ):
 
                 print(
-                    "\n✅ Early OCR stop.\n"
+                    "✅ OCR Early Stop"
                 )
 
                 break
 
-        evidence["frames"] = frame_paths[
-            :frames_processed
-        ]
+        if aggregated is None:
 
-        evidence["ocr_text"] = aggregated[
-            "text"
-        ]
+            aggregated = {
 
-        evidence["ocr_confidence"] = aggregated[
-            "confidence"
-        ]
+                "text": "",
+                "confidence": 0,
+                "quality": "NONE",
+                "detections": [],
+                "frames_used": 0,
+                "unique_detections": 0,
+                "high_confidence_detections": 0,
 
-        evidence["ocr_quality"] = aggregated[
-            "quality"
-        ]
+            }
 
-        evidence["ocr_detections"] = aggregated[
-            "detections"
-        ]
+        evidence["frames"] = frame_paths
 
-        evidence["ocr_frames_used"] = aggregated[
-            "frames_used"
-        ]
+        evidence["ocr_text"] = aggregated["text"]
 
-        evidence["ocr_unique_detections"] = aggregated[
-            "unique_detections"
-        ]
+        evidence["ocr_confidence"] = aggregated["confidence"]
 
-        evidence["ocr_high_confidence"] = aggregated[
-            "high_confidence_detections"
-        ]
+        evidence["ocr_quality"] = aggregated["quality"]
+
+        evidence["ocr_detections"] = aggregated["detections"]
+
+        evidence["ocr_frames_used"] = aggregated["frames_used"]
+
+        evidence["ocr_unique_detections"] = aggregated["unique_detections"]
+
+        evidence["ocr_high_confidence"] = aggregated["high_confidence_detections"]
 
         print(
-            f"📝 OCR : {time.perf_counter()-start:.2f}s"
+
+            f"📝 OCR Finished in "
+
+            f"{time.perf_counter()-start:.2f}s"
+
         )
 
         return evidence
 
     # ==================================================
-    # Stage 3
     # Speech
     # ==================================================
 
@@ -213,58 +200,38 @@ class EvidenceBuilder:
             video_path,
         )
 
-        cleaned_segments = (
-            self.speech_cleaner.clean_segments(
-                raw["segments"],
-            )
+        cleaned = self.speech_cleaner.clean_segments(
+            raw["segments"],
         )
 
-        aggregated = (
-            self.speech_aggregator.aggregate(
-                cleaned_segments,
-            )
+        aggregated = self.speech_aggregator.aggregate(
+            cleaned,
         )
 
-        evidence["speech_text"] = aggregated[
-            "text"
-        ]
+        evidence["speech_text"] = aggregated["text"]
 
-        evidence["speech_confidence"] = aggregated[
-            "confidence"
-        ]
+        evidence["speech_confidence"] = aggregated["confidence"]
 
-        evidence["speech_quality"] = aggregated[
-            "quality"
-        ]
+        evidence["speech_quality"] = aggregated["quality"]
 
-        evidence["speech_segments"] = aggregated[
-            "segments"
-        ]
+        evidence["speech_segments"] = aggregated["segments"]
 
-        evidence["speech_segment_count"] = aggregated[
-            "segment_count"
-        ]
+        evidence["speech_segment_count"] = aggregated["segment_count"]
 
-        evidence["speech_high_confidence"] = aggregated[
-            "high_confidence_segments"
-        ]
+        evidence["speech_high_confidence"] = aggregated["high_confidence_segments"]
 
         print(
-            f"🎤 Speech : {time.perf_counter()-start:.2f}s"
-        )
 
-        print(
-            f"🎯 Speech Confidence : {aggregated['confidence']}"
-        )
+            f"🎤 Speech Finished in "
 
-        print(
-            f"⭐ Speech Quality : {aggregated['quality']}"
+            f"{time.perf_counter()-start:.2f}s"
+
         )
 
         return evidence
 
     # ==================================================
-    # Final Merge
+    # Combine Evidence
     # ==================================================
 
     def combine(
@@ -272,47 +239,96 @@ class EvidenceBuilder:
         evidence: dict,
     ):
 
-        combined_text = "\n".join(
+        combined = []
 
-            filter(
+        weights = {}
 
-                None,
+        def add(name, text):
 
-                [
+            if not text:
+                return
 
-                    evidence.get(
-                        "title",
-                        "",
-                    ),
+            text = str(text).strip()
 
-                    evidence.get(
-                        "caption",
-                        "",
-                    ),
+            if not text:
+                return
 
-                    " ".join(
-                        evidence.get(
-                            "hashtags",
-                            [],
-                        )
-                    ),
+            combined.append(text)
 
-                    evidence.get(
-                        "ocr_text",
-                        "",
-                    ),
+            weights[name] = len(text)
 
-                    evidence.get(
-                        "speech_text",
-                        "",
-                    ),
-
-                ],
-
-            )
-
+        add(
+            "title",
+            evidence.get("title"),
         )
 
-        evidence["combined_text"] = combined_text
+        add(
+            "caption",
+            evidence.get("caption"),
+        )
+
+        hashtags = " ".join(
+            evidence.get(
+                "hashtags",
+                [],
+            )
+        )
+
+        add(
+            "hashtags",
+            hashtags,
+        )
+
+        add(
+            "ocr",
+            evidence.get(
+                "ocr_text",
+            ),
+        )
+
+        add(
+            "speech",
+            evidence.get(
+                "speech_text",
+            ),
+        )
+
+        evidence["combined_text"] = "\n".join(
+            combined,
+        )
+
+        evidence["evidence_weights"] = weights
+
+        evidence["evidence_score"] = (
+
+            evidence.get(
+                "ocr_confidence",
+                0,
+            )
+
+            +
+
+            evidence.get(
+                "speech_confidence",
+                0,
+            )
+
+        ) / 2
+
+        print(
+            "\n========== EVIDENCE =========="
+        )
+
+        print(
+            f"Combined Length : {len(evidence['combined_text'])}"
+        )
+
+        print(
+            f"Evidence Score  : {round(evidence['evidence_score'],2)}"
+        )
+
+        print(
+            "==============================\n"
+        )
 
         return evidence

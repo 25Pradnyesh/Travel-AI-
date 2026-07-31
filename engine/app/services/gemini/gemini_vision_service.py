@@ -9,35 +9,53 @@ from engine.app.services.gemini.vision_response_parser import (
     VisionResponseParser,
 )
 
+from engine.app.services.vision.scene_classifier import (
+    SceneClassifier,
+)
+
 
 class GeminiVisionService:
 
     def __init__(self):
 
         self.model = genai.GenerativeModel(
-            "gemini-2.5-flash"
+            "gemini-2.5-flash",
         )
 
         self.prompt_builder = VisionPromptBuilder()
 
         self.parser = VisionResponseParser()
 
+        self.scene = SceneClassifier()
+
     # ==================================================
-    # Analyze Frames
+    # Verify Image
     # ==================================================
 
-    def analyze(
+    def verify(
         self,
-        frame_paths: list,
+        image_path: str,
         evidence: dict,
         candidates: list,
     ):
 
-        if not frame_paths:
+        image_path = Path(
+            image_path,
+        )
+
+        if not image_path.exists():
 
             return self.parser.empty(
-                "No frames provided.",
+                "Image not found.",
             )
+
+        # ------------------------------------------
+        # Scene Analysis
+        # ------------------------------------------
+
+        scene = self.scene.classify(
+            str(image_path),
+        )
 
         prompt = self.prompt_builder.build(
 
@@ -47,36 +65,48 @@ class GeminiVisionService:
 
         )
 
-        uploaded_frames = []
+        prompt += f"""
 
-        for frame in frame_paths:
+Scene Analysis
+--------------
 
-            frame = Path(frame)
+Scene:
+{scene.get('scene')}
 
-            if not frame.exists():
-                continue
+Environment:
+{scene.get('environment')}
 
-            try:
+Terrain:
+{scene.get('terrain')}
 
-                uploaded_frames.append(
+Architecture:
+{scene.get('architecture')}
 
-                    genai.upload_file(
-                        path=str(frame),
-                    )
+Water Body:
+{scene.get('water_body')}
 
-                )
+Vegetation:
+{scene.get('vegetation')}
 
-            except Exception:
+Snow:
+{scene.get('snow')}
 
-                continue
+Beach:
+{scene.get('beach')}
 
-        if not uploaded_frames:
+Urban:
+{scene.get('urban')}
 
-            return self.parser.empty(
-                "No valid frames uploaded.",
-            )
+Use this scene information while deciding the best candidate.
+"""
 
         try:
+
+            uploaded = genai.upload_file(
+                path=str(
+                    image_path,
+                ),
+            )
 
             response = self.model.generate_content(
 
@@ -84,7 +114,7 @@ class GeminiVisionService:
 
                     prompt,
 
-                    *uploaded_frames,
+                    uploaded,
 
                 ]
 
@@ -92,9 +122,13 @@ class GeminiVisionService:
 
         except Exception as e:
 
-            return self.parser.empty(
+            result = self.parser.empty(
                 str(e),
             )
+
+            result["scene"] = scene
+
+            return result
 
         text = ""
 
@@ -105,6 +139,10 @@ class GeminiVisionService:
 
             text = response.text
 
-        return self.parser.parse(
+        result = self.parser.parse(
             text,
         )
+
+        result["scene"] = scene
+
+        return result

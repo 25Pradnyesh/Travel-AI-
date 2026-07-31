@@ -1,5 +1,4 @@
 import time
-from pathlib import Path
 
 from engine.app.services.extraction.evidence_builder import (
     EvidenceBuilder,
@@ -7,11 +6,11 @@ from engine.app.services.extraction.evidence_builder import (
 from engine.app.services.extraction.frame_extractor import (
     FrameExtractor,
 )
-from engine.app.services.gemini.gemini_verifier import (
-    GeminiVerifier,
-)
 from engine.app.services.location.location_resolver import (
     LocationResolver,
+)
+from engine.app.services.gemini.gemini_verifier import (
+    GeminiVerifier,
 )
 
 
@@ -48,12 +47,15 @@ class LocationPipeline:
         gemini_reason = ""
         gemini_confidence = None
         vision = None
+        scene = None
 
         if gemini_result:
 
             gemini_used = True
 
-            if gemini_result.get("winner"):
+            if gemini_result.get(
+                "winner",
+            ):
 
                 winner = gemini_result["winner"]
 
@@ -69,6 +71,12 @@ class LocationPipeline:
             vision = gemini_result.get(
                 "vision",
             )
+
+            if vision:
+
+                scene = vision.get(
+                    "scene",
+                )
 
         return {
 
@@ -90,6 +98,11 @@ class LocationPipeline:
                 0,
             ),
 
+            "search_results": resolver_result.get(
+                "search_results",
+                0,
+            ),
+
             "gemini": {
 
                 "used": gemini_used,
@@ -99,6 +112,8 @@ class LocationPipeline:
                 "reason": gemini_reason,
 
                 "vision": vision,
+
+                "scene": scene,
 
             },
 
@@ -111,7 +126,7 @@ class LocationPipeline:
 
                     2,
 
-                )
+                ),
 
             },
 
@@ -132,8 +147,18 @@ class LocationPipeline:
             "ranked_places"
         ]
 
+        image = None
+
+        if frame_paths:
+
+            image = frame_paths[0]
+
         if not self.gemini.should_verify(
+
             ranked,
+
+            image,
+
         ):
 
             print(
@@ -142,14 +167,8 @@ class LocationPipeline:
 
             return None
 
-        image = None
-
-        if frame_paths:
-
-            image = frame_paths[0]
-
         print(
-            "\n🤖 Running Gemini...\n"
+            "\n🤖 Running Gemini Verification...\n"
         )
 
         return self.gemini.verify(
@@ -177,7 +196,7 @@ class LocationPipeline:
         frame_paths = []
 
         # ==================================================
-        # Caption
+        # STAGE 1 : Caption
         # ==================================================
 
         print(
@@ -223,7 +242,7 @@ class LocationPipeline:
             )
 
         # ==================================================
-        # OCR
+        # STAGE 2 : OCR
         # ==================================================
 
         print(
@@ -281,7 +300,7 @@ class LocationPipeline:
             )
 
         # ==================================================
-        # Speech
+        # STAGE 3 : Speech
         # ==================================================
 
         print(
@@ -304,59 +323,77 @@ class LocationPipeline:
             evidence,
         )
 
-        if not resolver:
+        if resolver:
 
-            return {
+            gemini = self.verify_if_needed(
 
-                "stage": "speech",
+                evidence,
 
-                "best_guess": None,
+                resolver,
 
-                "ranked_candidates": [],
+                frame_paths,
 
-                "evidence": evidence,
+            )
 
-                "gemini": {
+            return self.build_response(
 
-                    "used": False,
+                "speech",
 
-                },
+                evidence,
 
-                "performance": {
+                resolver,
 
-                    "total_seconds": round(
+                gemini,
 
-                        time.perf_counter()
-                        - total_start,
+                total_start,
 
-                        2,
+            )
 
-                    )
+        # ==================================================
+        # Nothing Found
+        # ==================================================
 
-                },
+        return {
 
-            }
+            "stage": "failed",
 
-        gemini = self.verify_if_needed(
+            "best_guess": None,
 
-            evidence,
+            "ranked_candidates": [],
 
-            resolver,
+            "evidence": evidence,
 
-            frame_paths,
+            "candidate_count": 0,
 
-        )
+            "verified_places": 0,
 
-        return self.build_response(
+            "search_results": 0,
 
-            "speech",
+            "gemini": {
 
-            evidence,
+                "used": False,
 
-            resolver,
+                "confidence": None,
 
-            gemini,
+                "reason": "",
 
-            total_start,
+                "vision": None,
 
-        )
+                "scene": None,
+
+            },
+
+            "performance": {
+
+                "total_seconds": round(
+
+                    time.perf_counter()
+                    - total_start,
+
+                    2,
+
+                ),
+
+            },
+
+        }
