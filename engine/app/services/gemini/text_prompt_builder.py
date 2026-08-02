@@ -3,6 +3,10 @@ import json
 
 class PromptBuilder:
 
+    # ==================================================
+    # Build Verification Prompt
+    # ==================================================
+
     def build(
         self,
         evidence: dict,
@@ -34,11 +38,6 @@ class PromptBuilder:
                         "",
                     ),
 
-                    "region": place.get(
-                        "region",
-                        "",
-                    ),
-
                     "state": place.get(
                         "state",
                         "",
@@ -49,14 +48,14 @@ class PromptBuilder:
                         "",
                     ),
 
-                    "primary_type": place.get(
-                        "primary_type",
+                    "category": place.get(
+                        "category",
                         "",
                     ),
 
-                    "types": place.get(
-                        "types",
-                        [],
+                    "primary_type": place.get(
+                        "primary_type",
+                        "",
                     ),
 
                     "rating": place.get(
@@ -64,7 +63,7 @@ class PromptBuilder:
                         0,
                     ),
 
-                    "user_rating_count": place.get(
+                    "reviews": place.get(
                         "user_rating_count",
                         0,
                     ),
@@ -95,12 +94,12 @@ class PromptBuilder:
                 "",
             ),
 
-            "ocr": evidence.get(
+            "ocr_text": evidence.get(
                 "ocr_text",
                 "",
             ),
 
-            "speech": evidence.get(
+            "speech_text": evidence.get(
                 "speech_text",
                 "",
             ),
@@ -110,39 +109,72 @@ class PromptBuilder:
                 [],
             ),
 
+            "combined_text": evidence.get(
+                "combined_text",
+                "",
+            ),
+
             "rule_engine_candidates": candidates,
 
         }
 
-        prompt = f"""
-You are an expert travel location verification engine.
+        return f"""
+You are Travel AI's final verification engine.
 
-Your task is NOT to discover new locations.
+Your task is to determine which candidate location is MOST LIKELY correct.
 
-Your task is ONLY to select the SINGLE BEST travel destination from the provided candidates.
+IMPORTANT RULES
 
-Rules:
+• NEVER invent a new place.
+• ONLY choose from the supplied candidates.
+• NEVER change spellings.
+• NEVER merge two locations.
+• If evidence is weak, choose the highest scoring candidate.
+• Give extra importance to:
+  - OCR text
+  - Spoken location names
+  - Famous landmarks
+  - Mountains
+  - Lakes
+  - Beaches
+  - Architecture
+  - National Parks
+  - Monuments
+  - City skylines
 
-1. NEVER invent a location.
-2. NEVER return a place that is not in the candidate list.
-3. Use caption, OCR, speech and hashtags together.
-4. Prefer landmarks over countries.
-5. Prefer tourist attractions over businesses.
-6. Prefer the highest confidence evidence.
-7. If uncertain, choose the highest scoring candidate.
-8. Output ONLY valid JSON.
+Ignore:
 
-Return exactly this schema:
+- emojis
+- filler words
+- unrelated hashtags
+- promotional text
+- creator opinions
+
+Reasoning Priority
+
+1. OCR
+2. Speech
+3. Caption
+4. Title
+5. Hashtags
+6. Rule Engine Score
+
+Return ONLY valid JSON.
+
+Schema
 
 {{
     "selected_rank": 1,
-    "reason": "...",
-    "confidence": 0.95
+    "confidence": 94,
+    "reason": "OCR and speech both mention Seebensee while caption confirms Austria.",
+    "matched_sources": [
+        "ocr",
+        "speech",
+        "caption"
+    ]
 }}
 
-Input:
+Input Data
 
-{json.dumps(payload, indent=2)}
+{json.dumps(payload, indent=2, ensure_ascii=False)}
 """
-
-        return prompt

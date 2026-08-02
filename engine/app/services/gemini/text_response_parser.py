@@ -10,19 +10,18 @@ class ResponseParser:
         ranked_places: list,
     ):
 
-        # ------------------------------------------
-        # Invalid response
-        # ------------------------------------------
-
         if not response:
 
             return self.fallback(
+
                 ranked_places,
-                reason="Gemini returned no response.",
+
+                "Gemini returned no response.",
+
             )
 
         # ------------------------------------------
-        # Validate selected_rank
+        # Selected Rank
         # ------------------------------------------
 
         selected_rank = response.get(
@@ -35,22 +34,34 @@ class ResponseParser:
         ):
 
             return self.fallback(
+
                 ranked_places,
-                reason="Invalid selected_rank.",
+
+                "Invalid selected_rank.",
+
             )
 
         if (
+
             selected_rank < 1
+
             or
-            selected_rank > len(ranked_places)
+
+            selected_rank > len(
+                ranked_places,
+            )
+
         ):
 
             return self.fallback(
+
                 ranked_places,
-                reason="selected_rank out of range.",
+
+                "selected_rank out of range.",
+
             )
 
-        selected = ranked_places[
+        winner = ranked_places[
             selected_rank - 1
         ]
 
@@ -60,24 +71,24 @@ class ResponseParser:
 
         confidence = response.get(
             "confidence",
-            0.5,
+            0,
         )
 
         try:
 
-            confidence = float(
-                confidence
+            confidence = int(
+                confidence,
             )
 
         except Exception:
 
-            confidence = 0.5
+            confidence = 0
 
         confidence = max(
-            0.0,
+            0,
             min(
                 confidence,
-                1.0,
+                100,
             ),
         )
 
@@ -85,21 +96,70 @@ class ResponseParser:
         # Reason
         # ------------------------------------------
 
-        reason = response.get(
-            "reason",
-            "",
+        reason = str(
+
+            response.get(
+                "reason",
+                "",
+            )
+
+        ).strip()
+
+        # ------------------------------------------
+        # Matched Sources
+        # ------------------------------------------
+
+        matched_sources = response.get(
+            "matched_sources",
+            [],
         )
 
         if not isinstance(
-            reason,
-            str,
+            matched_sources,
+            list,
         ):
 
-            reason = ""
+            matched_sources = []
+
+        matched_sources = [
+
+            str(source).strip().lower()
+
+            for source in matched_sources
+
+            if str(source).strip()
+
+        ]
 
         # ------------------------------------------
-        # Final Parsed Output
+        # Attach Metadata
         # ------------------------------------------
+
+        winner["place"]["gemini_confidence"] = confidence
+
+        winner["place"]["gemini_reason"] = reason
+
+        winner["place"]["matched_sources"] = matched_sources
+
+        winner["place"]["gemini_verified"] = (
+
+            confidence >= 80
+
+        )
+
+        # Small confidence bonus
+
+        if confidence >= 90:
+
+            winner["score"] += 5
+
+        elif confidence >= 80:
+
+            winner["score"] += 3
+
+        elif confidence < 50:
+
+            winner["score"] -= 5
 
         return {
 
@@ -111,7 +171,9 @@ class ResponseParser:
 
             "reason": reason,
 
-            "winner": selected,
+            "matched_sources": matched_sources,
+
+            "winner": winner,
 
         }
 
@@ -133,13 +195,25 @@ class ResponseParser:
 
                 "selected_rank": None,
 
-                "confidence": 0.0,
+                "confidence": 0,
 
                 "reason": reason,
+
+                "matched_sources": [],
 
                 "winner": None,
 
             }
+
+        winner = ranked_places[0]
+
+        winner["place"]["gemini_verified"] = False
+
+        winner["place"]["gemini_reason"] = reason
+
+        winner["place"]["gemini_confidence"] = 0
+
+        winner["place"]["matched_sources"] = []
 
         return {
 
@@ -147,10 +221,12 @@ class ResponseParser:
 
             "selected_rank": 1,
 
-            "confidence": 0.0,
+            "confidence": 0,
 
             "reason": reason,
 
-            "winner": ranked_places[0],
+            "matched_sources": [],
+
+            "winner": winner,
 
         }
