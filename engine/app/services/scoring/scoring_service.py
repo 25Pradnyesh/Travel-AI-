@@ -6,139 +6,112 @@ from rapidfuzz import fuzz
 
 
 COUNTRIES = {
-    "austria",
-    "italy",
-    "france",
-    "switzerland",
     "india",
     "japan",
-    "norway",
+    "france",
+    "italy",
     "germany",
-    "spain",
+    "norway",
+    "switzerland",
     "iceland",
+    "spain",
+    "austria",
 }
 
 
 TRAVEL_KEYWORDS = {
-
-    "valley",
     "lake",
-    "beach",
-    "waterfall",
     "mountain",
     "peak",
+    "beach",
+    "waterfall",
     "river",
     "forest",
-    "glacier",
     "island",
     "park",
     "national",
-    "hike",
     "trail",
-    "pass",
+    "hike",
+    "valley",
+    "summit",
+    "glacier",
     "canyon",
     "gorge",
-
+    "cliff",
     "viewpoint",
     "lookout",
-    "summit",
-    "cliff",
-    "bay",
+    "bridge",
     "coast",
+    "bay",
     "temple",
-    "shrine",
     "castle",
     "fort",
     "monument",
-    "waterbody",
-
-    "bridge",
-    "waterfront",
-    "harbor",
-    "pier",
+    "museum",
     "volcano",
+    "harbor",
+    "waterfront",
+    "pier",
     "desert",
     "cave",
-    "museum",
-
 }
 
 
 GOOD_PLACE_TYPES = {
-
     "natural_feature": 70,
-
     "tourist_attraction": 65,
-
-    "locality": 55,
-
     "national_park": 60,
-
-    "park": 45,
-
     "mountain_peak": 60,
-
+    "locality": 55,
+    "park": 45,
     "campground": 20,
-
     "administrative_area_level_1": 15,
-
     "administrative_area_level_2": 10,
-
 }
 
 
 BAD_PLACE_TYPES = {
-
     "restaurant",
-
-    "cafe",
-
     "food",
-
-    "bakery",
-
+    "cafe",
     "bar",
-
+    "bakery",
     "hotel",
-
     "lodging",
-
     "store",
-
     "shopping_mall",
-
     "hospital",
-
     "school",
-
     "gym",
-
     "bank",
-
     "gas_station",
-
     "car_dealer",
-
     "supermarket",
-
 }
 
 
 class ScoringService:
 
-    # ==================================================
+    def __init__(self):
+        pass
 
-    def tokenize(
-        self,
-        text: str,
-    ):
+    # ==========================================================
+    # Tokenizer
+    # ==========================================================
+
+    def tokenize(self, text: str):
+
+        if not text:
+            return []
 
         return re.findall(
-            r"[a-zA-Z]+",
+            r"[A-Za-z]+",
             text.lower(),
         )
 
-    # ==================================================
+    # ==========================================================
+    # Ngrams
+    # ==========================================================
 
     def generate_ngrams(
         self,
@@ -156,7 +129,9 @@ class ScoringService:
 
         ]
 
-    # ==================================================
+    # ==========================================================
+    # Search Index
+    # ==========================================================
 
     def build_search_space(
         self,
@@ -185,15 +160,24 @@ class ScoringService:
 
         )
 
-    # ==================================================
+    # ==========================================================
+    # Token Score
+    # ==========================================================
 
     def score_index(
+
         self,
+
         token,
+
         index,
+
         high,
+
         medium,
+
         low,
+
     ):
 
         best = 0
@@ -205,8 +189,11 @@ class ScoringService:
                 best,
 
                 fuzz.ratio(
+
                     token,
+
                     phrase,
+
                 ),
 
             )
@@ -222,56 +209,18 @@ class ScoringService:
 
         return 0
 
-    # ==================================================
-
-    def normalize_score(
-        self,
-        score,
-    ):
-
-        score = max(
-            0,
-            min(
-                score,
-                250,
-            ),
-        )
-
-        return round(
-            score / 250 * 100,
-            1,
-        )
-
-    # ==================================================
-
-    def confidence(
-        self,
-        normalized_score,
-    ):
-
-        if normalized_score >= 95:
-            return "VERIFIED"
-
-        if normalized_score >= 90:
-            return "VERY_HIGH"
-
-        if normalized_score >= 80:
-            return "HIGH"
-
-        if normalized_score >= 70:
-            return "MEDIUM"
-
-        if normalized_score >= 60:
-            return "LOW"
-
-        return "VERY_LOW"
-
-    # ==================================================
+    # ==========================================================
+    # Popularity
+    # ==========================================================
 
     def popularity_bonus(
+
         self,
+
         rating,
+
         reviews,
+
     ):
 
         if not rating:
@@ -282,40 +231,107 @@ class ScoringService:
         if reviews:
 
             bonus += min(
-            math.log10(
-                reviews + 1
-            ) * 8,
-            30,
-        )   
+
+                math.log10(
+                    reviews + 1
+                ) * 8,
+
+                30,
+
+            )
 
         return round(
+
             bonus,
+
             2,
+
         )
 
-    # ==================================================
+    # ==========================================================
+    # Normalize
+    # ==========================================================
 
-    def rank_places(
+    def normalize_score(
+
         self,
-        places,
-        evidence,
+
+        score,
+
     ):
 
-        title = (
-            evidence.get("title") or ""
-        ).lower()
+        score = max(
 
-        caption = (
-            evidence.get("caption") or ""
-        ).lower()
+            0,
 
-        ocr = (
-            evidence.get("ocr_text") or ""
-        ).lower()
+            min(
 
-        speech = (
-            evidence.get("speech_text") or ""
-        ).lower()
+                score,
+
+                250,
+
+            ),
+
+        )
+
+        return round(
+
+            score / 250 * 100,
+
+            1,
+
+        )
+
+    # ==========================================================
+    # Confidence
+    # ==========================================================
+
+    def confidence(
+
+        self,
+
+        score,
+
+    ):
+
+        if score >= 95:
+            return "VERIFIED"
+
+        if score >= 90:
+            return "VERY_HIGH"
+
+        if score >= 80:
+            return "HIGH"
+
+        if score >= 70:
+            return "MEDIUM"
+
+        if score >= 60:
+            return "LOW"
+
+        return "VERY_LOW"
+
+    # ==========================================================
+    # Ranking
+    # ==========================================================
+
+    def rank_places(
+
+        self,
+
+        places,
+
+        evidence,
+
+    ):
+
+        title = (evidence.get("title") or "").lower()
+
+        caption = (evidence.get("caption") or "").lower()
+
+        speech = (evidence.get("speech_text") or "").lower()
+
+        ocr = (evidence.get("ocr_text") or "").lower()
 
         hashtags = " ".join(
 
@@ -323,27 +339,25 @@ class ScoringService:
 
         ).lower()
 
-        caption_index = self.build_search_space(
-            caption,
-        )
+        title_index = self.build_search_space(title)
 
-        ocr_index = self.build_search_space(
-            ocr,
-        )
+        caption_index = self.build_search_space(caption)
 
-        speech_index = self.build_search_space(
-            speech,
-        )
+        speech_index = self.build_search_space(speech)
 
-        hashtag_index = self.build_search_space(
-            hashtags,
-        )
+        ocr_index = self.build_search_space(ocr)
+
+        hashtag_index = self.build_search_space(hashtags)
 
         ranked = []
 
         for place in places:
 
             score = 0
+
+            matched_sources = set()
+
+            matched_terms = set()
 
             travel_name = place.get(
                 "travel_name",
@@ -381,11 +395,14 @@ class ScoringService:
             ).lower()
 
             types = [
+
                 t.lower()
+
                 for t in place.get(
                     "types",
                     [],
                 )
+
             ]
 
             rating = place.get(
@@ -404,157 +421,220 @@ class ScoringService:
             )
 
             editorial_summary = place.get(
-               "editorial_summary",
-               "",
-            )
-
-            photos = place.get(
-              "photos",
-              [],
-            )
-
-            website = place.get(
-              "website",
-              "",
-            )
-
-            price_level = place.get(
-               "price_level",
+                "editorial_summary",
                 "",
             )
 
-            searchable = " ".join([
+            photos = place.get(
+                "photos",
+                [],
+            )
 
+            website = place.get(
+                "website",
+                "",
+            )
+
+            price_level = place.get(
+                "price_level",
+                None,
+            )
+
+            nearby_landmarks = " ".join(
+                place.get(
+                    "nearby_landmarks",
+                    []
+                )
+            )
+
+            searchable = " ".join(filter(None, [
                 travel_name,
-
                 city,
-
                 region,
-
                 country,
-
                 address,
-
                 verified_query,
+                editorial_summary,
+                nearby_landmarks,
+            ]))
 
-            ])
-
-            # --------------------
+            # ==========================================================
             # Exact Match Signals
-            # --------------------
+            # ==========================================================
 
             if verified_query and verified_query in caption:
                 score += 50
+                matched_sources.add("caption")
+                matched_terms.add(verified_query)
 
             if travel_name and travel_name in caption:
                 score += 40
+                matched_sources.add("caption")
+                matched_terms.add(travel_name)
 
             if city and city in caption:
                 score += 35
+                matched_sources.add("caption")
+                matched_terms.add(city)
 
-            if travel_name and travel_name  in speech:
+            if travel_name and travel_name in speech:
                 score += 30
+                matched_sources.add("speech")
+                matched_terms.add(travel_name)
 
-            if travel_name and travel_name  in ocr:
+            if travel_name and travel_name in ocr:
                 score += 25
+                matched_sources.add("ocr")
+                matched_terms.add(travel_name)
 
-            if travel_name and travel_name  in title:
+            if travel_name and travel_name in title:
                 score += 20
+                matched_sources.add("title")
+                matched_terms.add(travel_name)
 
-            # --------------------
-            # Fuzzy
-            # --------------------
+            # ==========================================================
+            # Fuzzy Matching
+            # ==========================================================
 
             if (
-
                 verified_query
-
                 and
-
                 fuzz.partial_ratio(
                     verified_query,
                     caption,
                 ) >= 90
-
             ):
                 score += 25
-
-            if city and fuzz.partial_ratio(
-                city,
-                caption,
-            ) >= 90:
-                score += 20
-
-            # --------------------
-            # Token Matching
-            # --------------------
-
-            for token in self.tokenize(
-                searchable,
-            ):
-
-                if len(token) <= 3:
-                    continue
-
-                score += self.score_index(
-                    token,
-                    caption_index,
-                    20,
-                    12,
-                    6,
-                )
-
-                score += self.score_index(
-                    token,
-                    speech_index,
-                    18,
-                    10,
-                    5,
-                )
-
-                score += self.score_index(
-                    token,
-                    ocr_index,
-                    15,
-                    8,
-                    4,
-                )
-
-                score += self.score_index(
-                    token,
-                    hashtag_index,
-                    10,
-                    6,
-                    3,
-                )
-
-            # --------------------
-            # Country Penalty
-            # --------------------
+                matched_sources.add("caption")
+                matched_terms.add(verified_query)
 
             if (
-
-                travel_name == country
-
+                city
                 and
-
-                primary_type != "country"
-
+                fuzz.partial_ratio(
+                    city,
+                    caption,
+                ) >= 90
             ):
+                score += 20
+                matched_sources.add("caption")
+                matched_terms.add(city)
 
+                # ==========================================================
+                # Token Matching
+                # ==========================================================
+
+                for token in self.tokenize(searchable):
+
+                    if len(token) <= 3:
+                        continue
+
+                    # ----------------------------
+                    # Title
+                    # ----------------------------
+
+                    gained = self.score_index(
+                        token,
+                        title_index,
+                        15,
+                        8,
+                        4,
+                    )
+
+                    if gained:
+                        matched_sources.add("title")
+                        matched_terms.add(token)
+
+                    score += gained
+
+                    # ----------------------------
+                    # Caption
+                    # ----------------------------
+
+                    gained = self.score_index(
+                        token,
+                        caption_index,
+                        20,
+                        12,
+                        6,
+                    )
+
+                    if gained:
+                        matched_sources.add("caption")
+                        matched_terms.add(token)
+
+                    score += gained
+
+                    # ----------------------------
+                    # Speech
+                    # ----------------------------
+
+                    gained = self.score_index(
+                        token,
+                        speech_index,
+                        18,
+                        10,
+                        5,
+                    )
+
+                    if gained:
+                        matched_sources.add("speech")
+                        matched_terms.add(token)
+
+                    score += gained
+
+                    # ----------------------------
+                    # OCR
+                    # ----------------------------
+
+                    gained = self.score_index(
+                        token,
+                        ocr_index,
+                        15,
+                        8,
+                        4,
+                    )
+
+                    if gained:
+                        matched_sources.add("ocr")
+                        matched_terms.add(token)
+
+                    score += gained
+
+                    # ----------------------------
+                    # Hashtags
+                    # ----------------------------
+
+                    gained = self.score_index(
+                        token,
+                        hashtag_index,
+                        10,
+                        6,
+                        3,
+                    )
+
+                    if gained:
+                        matched_sources.add("hashtags")
+                        matched_terms.add(token)
+
+                    score += gained
+
+
+            # ==========================================================
+            # Country Consistency
+            # ==========================================================
+
+            if (
+                travel_name == country
+                and
+                primary_type != "country"
+            ):
                 score -= 50
 
-            # --------------------
-            # Country Consistency
-            # --------------------
             combined_sources = " ".join([
-
                 caption,
-
                 speech,
-
                 ocr,
-
             ])
 
             for known_country in COUNTRIES:
@@ -562,16 +642,13 @@ class ScoringService:
                 if known_country in combined_sources:
 
                     if known_country == country:
-
                         score += 10
-
                     else:
+                        score -= 8
 
-                        score -= 15
-
-            # --------------------
+            # ==========================================================
             # Tourism Bias
-            # --------------------
+            # ==========================================================
 
             if primary_type in GOOD_PLACE_TYPES:
 
@@ -584,136 +661,209 @@ class ScoringService:
                 if t in GOOD_PLACE_TYPES:
 
                     score += (
-
-                        GOOD_PLACE_TYPES[t]
-
-                        * 0.4
-
+                        GOOD_PLACE_TYPES[t] * 0.4
                     )
 
-            # --------------------
+            # ==========================================================
             # Business Penalty
-            # --------------------
+            # ==========================================================
 
             if primary_type in BAD_PLACE_TYPES:
-
                 score -= 120
 
             for t in types:
 
                 if t in BAD_PLACE_TYPES:
-
                     score -= 60
 
-            # --------------------
-            # Closed Place
-            # --------------------
-
             if (
-                business_status
-                == "CLOSED_PERMANENTLY"
+                business_status ==
+                "CLOSED_PERMANENTLY"
             ):
-
                 score -= 100
 
-            # --------------------
+            # ==========================================================
             # Travel Keywords
-            # --------------------
+            # ==========================================================
 
             for keyword in TRAVEL_KEYWORDS:
 
-                if keyword in searchable:
-
+                if (
+                    keyword in searchable
+                    and
+                    keyword in combined_sources
+                ):
                     score += 5
-
-            # --------------------
-            # Compound Bonus
-            # --------------------
+            # ==========================================================
+            # Name Complexity Bonus
+            # ==========================================================
 
             words = travel_name.split()
 
             if len(words) == 2:
-
                 score += 12
 
             elif len(words) >= 3:
-
                 score += 20
+            
 
-            # --------------------
+            # ==========================================================
             # Popularity
-            # --------------------
+            # ==========================================================
 
             score += self.popularity_bonus(
-
                 rating,
-
                 reviews,
-
             )
 
-            # --------------------
+            # ==========================================================
             # Editorial Summary
-            # --------------------
+            # ==========================================================
 
             if editorial_summary:
-                 score += 15
+                score += 15
 
-            # --------------------
+            # ==========================================================
             # Photos
-            # --------------------
+            # ==========================================================
 
             if photos:
-               score += min(
-                   len(photos) *2,
-                   12,
-            )
 
-            # --------------------
+                score += min(
+                    len(photos) * 2,
+                    12,
+                )
+
+            # ==========================================================
             # Official Website
-            # --------------------
+            # ==========================================================
 
             if website:
                 score += 4
 
-            # --------------------
+            # ==========================================================
             # Price Level
-            # --------------------
+            # ==========================================================
 
-            if price_level:
+            if price_level is not None:
                 score += 2
+
+            # ==========================================================
+            # Cross Evidence Bonus
+            # ==========================================================
+
+            evidence_bonus = len(
+                matched_sources
+            ) * 5
+
+            score += evidence_bonus
+
+            # ==========================================================
+            # Normalize
+            # ==========================================================
 
             normalized = self.normalize_score(
                 score,
             )
 
+            # ==========================================================
+            # Store Evidence
+            # ==========================================================
+
+            place["matched_sources"] = sorted(
+                matched_sources,
+            )
+
+            place["matched_terms"] = sorted(
+                matched_terms,
+            )
+
+            place["evidence_count"] = len(
+                matched_sources,
+            )
+
+            place["match_strength"] = normalized
+
+            # ==========================================================
+            # Append
+            # ==========================================================
+
             ranked.append(
-
                 {
-
                     "place": place,
-
                     "raw_score": round(
                         score,
                         2,
                     ),
-
                     "score": normalized,
-
                     "confidence": self.confidence(
                         normalized,
                     ),
-
                 }
-
             )
 
+        # ==========================================================
+        # Final Ranking
+        # ==========================================================
+
         ranked.sort(
-
-            key=lambda x: x["score"],
-
+            key=lambda x: (
+                x["score"],
+                x["place"].get(
+                    "rating",
+                    0,
+                ),
+                x["place"].get(
+                    "user_rating_count",
+                    0,
+                ),
+            ),
             reverse=True,
+        )
 
+        # ==========================================================
+        # Rank Numbers
+        # ==========================================================
+
+        for index, item in enumerate(
+            ranked,
+            start=1,
+        ):
+
+            item["rank"] = index
+
+        # ==========================================================
+        # Debug Logging
+        # ==========================================================
+
+        print(
+            "\n========== SCORING ==========\n"
+        )
+
+        for item in ranked:
+
+            place = item["place"]
+
+            print(
+                f"{item['rank']}. "
+                f"{place.get('travel_name','Unknown')} "
+                f"| Score={item['score']} "
+                f"| Raw={item['raw_score']} "
+                f"| {item['confidence']}"
+            )
+
+            print(
+                f"   Sources : "
+                f"{', '.join(place.get('matched_sources', []))}"
+            )
+
+            print(
+                f"   Terms   : "
+                f"{', '.join(place.get('matched_terms', []))}"
+            )
+
+        print(
+            "\n====================================\n"
         )
 
         return ranked
