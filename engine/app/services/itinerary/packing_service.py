@@ -112,7 +112,17 @@ class PackingService:
             ]
 
         }
+        self.adventure_categories = {
 
+            "mountain",
+            "forest",
+            "desert",
+            "lake",
+            "waterfall",
+            "canyon",
+            "national park",
+
+        }
         
     def normalize(
         self,

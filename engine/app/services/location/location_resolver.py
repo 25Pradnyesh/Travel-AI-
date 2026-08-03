@@ -970,4 +970,3 @@ class LocationResolver:
             "search_results": statistics["google_search_results"],
 
         }
-
