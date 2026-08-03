@@ -6,9 +6,7 @@ class GooglePlacesService:
 
     def __init__(self):
 
-        self.api_key = os.getenv(
-            "GOOGLE_PLACES_API_KEY"
-        )
+        self.api_key = os.getenv("GOOGLE_PLACES_API_KEY")
 
         self.url = (
             "https://places.googleapis.com/v1/places:searchText"
@@ -25,35 +23,50 @@ class GooglePlacesService:
         query: str,
     ):
 
+        query = (query or "").strip()
+
+        if not query:
+            return []
+
+        if not self.api_key:
+
+            print("❌ GOOGLE_PLACES_API_KEY not found.")
+
+            return []
+
         headers = {
 
             "Content-Type": "application/json",
 
             "X-Goog-Api-Key": self.api_key,
 
-            "X-Goog-FieldMask": (
+            "X-Goog-FieldMask": ",".join(
 
-                "places.id,"
+                [
 
-                "places.displayName,"
+                    "places.id",
 
-                "places.formattedAddress,"
+                    "places.displayName",
 
-                "places.location,"
+                    "places.formattedAddress",
 
-                "places.types,"
+                    "places.location",
 
-                "places.primaryType,"
+                    "places.types",
 
-                "places.rating,"
+                    "places.primaryType",
 
-                "places.userRatingCount,"
+                    "places.rating",
 
-                "places.businessStatus,"
+                    "places.userRatingCount",
 
-                "places.googleMapsUri,"
+                    "places.businessStatus",
 
-                "places.viewport"
+                    "places.googleMapsUri",
+
+                    "places.viewport",
+
+                ]
 
             ),
 
@@ -62,6 +75,8 @@ class GooglePlacesService:
         body = {
 
             "textQuery": query,
+
+            "pageSize": self.max_results,
 
         }
 
@@ -75,26 +90,29 @@ class GooglePlacesService:
 
                 json=body,
 
-                timeout=10,
+                timeout=15,
 
             )
 
-            response.raise_for_status()
+            if not response.ok:
+
+                print("\n========== GOOGLE SEARCH ERROR ==========")
+                print(f"Query : {query}")
+                print(f"Status: {response.status_code}")
+                print(response.text)
+                print("=========================================\n")
+
+                return []
+
+            data = response.json()
 
         except requests.RequestException as e:
 
-            print(
-                f"❌ Google Places Error: {e}"
-            )
+            print(f"❌ Google Places Error: {e}")
 
             return []
 
-        data = response.json()
-
-        places = data.get(
-            "places",
-            [],
-        )
+        places = data.get("places", [])
 
         results = []
 
@@ -102,9 +120,7 @@ class GooglePlacesService:
 
         for place in places:
 
-            place_id = place.get(
-                "id"
-            )
+            place_id = place.get("id")
 
             if not place_id:
                 continue
@@ -115,42 +131,13 @@ class GooglePlacesService:
             seen.add(place_id)
 
             display_name = (
-
-                place.get(
-                    "displayName",
-                    {}
-                ).get(
-                    "text",
-                    ""
-                )
-
-            )
-
-            formatted_address = place.get(
-                "formattedAddress",
-                ""
+                place.get("displayName", {})
+                .get("text", "")
             )
 
             location = place.get(
                 "location",
-                {}
-            )
-
-            google_maps_url = (
-
-                place.get(
-                    "googleMapsUri"
-                )
-
-                or
-
-                f"https://www.google.com/maps/place/?q=place_id:{place_id}"
-
-            )
-
-            viewport = place.get(
-                "viewport",
-                {}
+                {},
             )
 
             results.append(
@@ -161,7 +148,10 @@ class GooglePlacesService:
 
                     "display_name": display_name,
 
-                    "formatted_address": formatted_address,
+                    "formatted_address": place.get(
+                        "formattedAddress",
+                        "",
+                    ),
 
                     "latitude": location.get(
                         "latitude"
@@ -170,10 +160,6 @@ class GooglePlacesService:
                     "longitude": location.get(
                         "longitude"
                     ),
-
-                    # ----------------------------
-                    # Google Intelligence
-                    # ----------------------------
 
                     "types": place.get(
                         "types",
@@ -200,18 +186,25 @@ class GooglePlacesService:
                         "",
                     ),
 
-                    "viewport": viewport,
+                    "viewport": place.get(
+                        "viewport",
+                        {},
+                    ),
 
-                    # ----------------------------
+                    "google_maps_url": (
 
-                    "google_maps_url": google_maps_url,
+                        place.get(
+                            "googleMapsUri"
+                        )
+
+                        or
+
+                        f"https://www.google.com/maps/place/?q=place_id:{place_id}"
+
+                    ),
 
                 }
 
             )
-
-            if len(results) >= self.max_results:
-
-                break
 
         return results
