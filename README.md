@@ -358,4 +358,4 @@ The source code is not licensed for redistribution or commercial reuse.
 
 ---
 
-### Built with by **Pradnyesh**
+### Built by **Pradnyesh**
