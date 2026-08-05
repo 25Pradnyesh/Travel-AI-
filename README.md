@@ -1,16 +1,18 @@
 # 🌍 Travel AI
 
-> AI-powered travel location extraction from Instagram Reels.
+> **Transform travel reels into organized travel plans using AI.**
 
-> **Save travel destinations from Instagram Reels directly to Google Maps.**
+Travel AI analyzes public Instagram Reels using OCR, Speech Recognition, Google Places, and Gemini AI to accurately identify travel destinations, then enriches them with nearby attractions, travel tips, and packing suggestions.
 
-> 🚧 Status: Backend Architecture Complete • Core Engine Under Active Development
+> 🚧 **Status:** AI Location Engine Complete • Frontend & Integration Testing In Progress
 
 ---
 
-## 🎥 Demo
+# 🎥 Demo
 
-> 🚧 Demo video and screenshots will be added as the MVP evolves.
+> 🚧 Demo video, screenshots and live deployment will be added after MVP testing.
+
+---
 
 # ✨ Overview
 
@@ -18,88 +20,127 @@ Travel AI helps travelers stop losing amazing destinations hidden inside Instagr
 
 Paste a public Instagram Reel URL and Travel AI will:
 
-- 📍 Identify the destination
-- 🧠 Infer the exact travel location using AI
-- 🗺️ Validate the result with Google Maps
-- 📂 Organize destinations into country-based collections
-- 💾 _(Coming Soon)_ Save directly into your Google Maps account
+- 📍 Extract the destination from the reel
+- 🧠 Combine OCR, Speech, Metadata and Google Places to infer the exact location
+- 🌎 Rank multiple candidate locations using a multi-factor scoring engine
+- 🤖 Verify the final destination using Gemini AI
+- 🗺️ Validate the location with Google Maps
+- 💼 Generate travel intelligence including nearby attractions, travel tips and packing suggestions
+- 💾 *(Coming Soon)* Save directly to your Google Maps account
 
-## 🎯 Vision
+---
 
-Travel AI aims to become the easiest way to collect, organize, and revisit travel destinations discovered across social media.
+# 🎯 Vision
 
-The long-term goal is to support multiple platforms, AI-assisted trip planning, collaborative travel collections, and seamless Google Maps integration.
+Travel AI aims to become the easiest way to discover, organize and revisit travel destinations found across social media.
+
+The long-term vision includes:
+
+- Instagram
+- TikTok
+- YouTube Shorts
+- AI Trip Planner
+- Google Maps Synchronization
+- Collaborative Travel Collections
+- Chrome Extension
+- Android Application
 
 ---
 
 # 🚀 Current Features
 
-- ✅ Next.js Frontend
-- ✅ FastAPI AI Engine
+## AI Location Engine
+
+- ✅ FastAPI Backend
 - ✅ Modular Provider Architecture
-- ✅ Initial Metadata Extraction
-- ✅ Modular Provider Architecture
-- ✅ Instagram Metadata Provider
-- ✅ Rule-based Location Pipeline
-- ✅ Candidate Ranking Engine
-- ✅ Google Places Service (Foundation)
-- ✅ FastAPI REST API
+- ✅ Instagram Metadata Extraction
+- ✅ OCR Pipeline
+- ✅ Speech-to-Text Pipeline
+- ✅ Intelligent Candidate Extraction
+- ✅ Google Places Search API
+- ✅ Google Place Details API
+- ✅ Geo Enrichment
+- ✅ Multi-factor Scoring Engine
+- ✅ Gemini Text Verification
+- ✅ Gemini Vision Verification
+- ✅ Nearby Places Discovery
+- ✅ Travel Intelligence Engine
+- ✅ Packing Suggestions
+- ✅ Travel Tips Generator
 
-### Next Milestones
+## Frontend
 
-🚧 OCR Frame Extraction
-
-🚧 Google Places Verification
-
-🚧 Gemini-powered Reasoning
-
-🚧 Google Maps Synchronization
-
-🚧 Saved Collections
-
-🚧 Android App
-
-🚧 Chrome Extension
+- 🚧 Next.js 15
+- 🚧 TypeScript
+- 🚧 Tailwind CSS
+- 🚧 shadcn/ui
 
 ---
 
-# 🏗️ Architecture
+# 🧠 AI Decision Pipeline
+
+Instead of relying on a single AI response, Travel AI combines multiple independent signals to maximize accuracy.
 
 ```text
-Instagram Reel URL
+Instagram Reel
         │
         ▼
- Next.js Frontend
+Provider Extraction
         │
         ▼
- FastAPI Engine
+OCR
         │
         ▼
- Provider Manager
+Speech Recognition
         │
         ▼
- Metadata Provider
-(yt-dlp / Future Providers)
+Metadata Extraction
         │
         ▼
- AI Location Pipeline
+Candidate Extraction
         │
         ▼
- Google Places
+Google Places Search
         │
         ▼
- Structured Travel Location
+Google Place Details
+        │
+        ▼
+Geo Enrichment
+        │
+        ▼
+Multi-factor Scoring Engine
+        │
+        ▼
+Top 5 Ranked Places
+        │
+        ▼
+Gemini Verification
+        │
+        ▼
+Nearby Search
+        │
+        ▼
+Travel Intelligence
+        │
+        ▼
+Final Destination
 ```
 
-## 🧩 Architecture Principles
+---
 
-Travel AI follows a modular architecture designed for long-term scalability.
+# 🌍 Travel Intelligence
 
-- Provider-based ingestion (Instagram today, YouTube/TikTok tomorrow)
-- Pipeline-driven processing
-- Independent services with single responsibilities
-- AI components isolated from business logic
-- Easily extensible for future providers and AI models
+Once the destination has been verified, Travel AI automatically generates:
+
+- 📦 Packing Suggestions
+- 💡 Travel Tips
+- 📍 Nearby Attractions
+- 🍜 Food Recommendations
+- 🏨 Accommodation Suggestions
+- 🚆 Transport Information
+- 🛍 Shopping Areas
+- 💎 Hidden Gems
 
 ---
 
@@ -117,22 +158,22 @@ Travel AI follows a modular architecture designed for long-term scalability.
 - FastAPI
 - Python
 
-## AI
+## AI & Intelligence
 
-### Current
+- Google Places API
+- Google Place Details API
+- Gemini AI
+- OCR Pipeline
+- Speech Recognition
+- Candidate Extraction Engine
+- Multi-factor Scoring Engine
+- Geo Enrichment
+- Travel Intelligence Engine
 
-- Rule-based Location Pipeline
-
-### Planned
-
-- Gemini
-- OCR
-- Vision AI
-
-## Database
+## Database *(Upcoming)*
 
 - PostgreSQL
-- Prisma _(Planned)_
+- Prisma
 
 ## Deployment
 
@@ -141,113 +182,123 @@ Travel AI follows a modular architecture designed for long-term scalability.
 
 ---
 
-## 📂 Project Structure
+# 📊 Current Project Status
+
+| Module | Status |
+|---------|--------|
+| Provider Extraction | ✅ |
+| Metadata Extraction | ✅ |
+| OCR | ✅ |
+| Speech Recognition | ✅ |
+| Candidate Extraction | ✅ |
+| Google Places Search | ✅ |
+| Google Place Details | ✅ |
+| Geo Enrichment | ✅ |
+| Scoring Engine | ✅ |
+| Gemini Verification | ✅ |
+| Nearby Search | ✅ |
+| Travel Intelligence | ✅ |
+| Packing Suggestions | ✅ |
+| Travel Tips | ✅ |
+| Frontend | 🚧 |
+| Google Maps Sync | ⏳ |
+| Authentication | ⏳ |
+| Database | ⏳ |
+| Deployment | ⏳ |
+
+---
+
+# 📂 Project Structure
 
 ```text
 travel-ai/
-├── app/                  # Next.js frontend
+├── app/
 ├── components/
 ├── constants/
-├── docker/
 ├── docs/
 ├── engine/
 │   ├── app/
 │   │   ├── api/
-│   │   ├── config/
-│   │   ├── models/
-│   │   ├── pipeline/
-│   │   ├── prompts/
 │   │   ├── providers/
 │   │   ├── services/
-│   │   ├── utils/
-│   │   ├── dependencies.py
+│   │   ├── pipelines/
+│   │   ├── prompts/
+│   │   ├── models/
 │   │   └── main.py
 │   ├── assets/
-│   ├── core/
-│   ├── domain/
 │   └── tests/
-├── hooks/
-├── lib/
 ├── prisma/
 ├── public/
-├── scripts/
-├── services/
 ├── styles/
-├── types/
 └── README.md
-
 ```
 
-## 🔌 API
+---
 
-| Method | Endpoint | Description               |
-| ------ | -------- | ------------------------- |
-| GET    | /        | Health Check              |
-| POST   | /analyze | Analyze an Instagram Reel |
-| GET    | /docs    | Swagger UI                |
-| GET    | /test    | Pipeline Test Route       |
+# 🔌 API
+
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/` | Health Check |
+| POST | `/analyze` | Analyze Instagram Reel |
+| GET | `/provider` | Provider Test |
+| GET | `/health` | API Health |
 
 ---
 
 # ⚙️ Getting Started
 
-## Clone the repository
+## Clone
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
+git clone https://github.com/<your-username>/Travel-AI-.git
 
 cd travel-ai
 ```
 
-## Install dependencies
+## Frontend
 
 ```bash
 npm install
-```
 
-## Start the frontend
-
-```bash
 npm run dev
 ```
 
 Open:
 
-```text
+```
 http://localhost:3000
 ```
 
-### Python Engine
+## Backend
 
-Create a virtual environment:
+Create virtual environment
 
 ```bash
 python -m venv engine/.venv
 ```
 
-Activate it:
+Activate
 
-**Windows**
-
-```bash
+```powershell
 .\engine\.venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+Install dependencies
 
 ```bash
 pip install -r engine/requirements.txt
 ```
 
-Run FastAPI:
+Run FastAPI
 
 ```bash
-python -m uvicorn engine.main:app --reload
+python -m uvicorn engine.app.main:app --reload
 ```
 
-Open:
+Swagger
 
-```text
+```
 http://127.0.0.1:8000/docs
 ```
 
@@ -255,53 +306,56 @@ http://127.0.0.1:8000/docs
 
 # 🗺️ Roadmap
 
-### Phase 1 — Backend Foundation ✅
+## Phase 1 — AI Engine ✅
 
 - Provider Architecture
-- FastAPI Engine
-- Metadata Extraction
-- Location Pipeline
-- Candidate Ranking
+- OCR Pipeline
+- Speech Recognition
+- Candidate Extraction
+- Google Places Integration
+- Gemini Verification
+- Travel Intelligence
 
-### Phase 2 — AI Intelligence 🚧
+## Phase 2 — Product 🚧
 
-- OCR
-- Google Places
-- Gemini Reasoning
-- Confidence Scoring
-
-### Phase 3 — Product
-
-- Google Maps Sync
+- Next.js Frontend
+- Google Maps Synchronization
 - Saved Collections
-- Authentication
-- Database
+- User Authentication
+- PostgreSQL Database
 
-### Phase 4 — Ecosystem
+## Phase 3
 
-- Android App
+- AI Trip Planner
 - Chrome Extension
-- Instagram Bot
+- Android App
+- Multi-platform Support
+
+## Phase 4
+
 - Public API
+- Travel Community
+- Collaborative Collections
+- Enterprise Integrations
 
 ---
 
-## 🤝 Contributing
+# 🤝 Contributing
 
 Travel AI is currently under active development.
 
-Public contributions are temporarily closed while the MVP is being built.
+Public contributions are temporarily closed while the MVP is being completed.
 
-Feature requests and feedback are always welcome.
+Feedback, ideas and feature suggestions are always welcome.
 
 ---
 
-## 📄 License
+# 📄 License
 
 This project is currently proprietary and under active development.
 
-The source code is not licensed for reuse or redistribution at this stage.
+The source code is not licensed for redistribution or commercial reuse.
 
 ---
 
-### Built by **Pradnyesh**
+### Built with ❤️ by **Pradnyesh**
