@@ -26,7 +26,7 @@ Paste a public Instagram Reel URL and Travel AI will:
 - 🤖 Verify the final destination using Gemini AI
 - 🗺️ Validate the location with Google Maps
 - 💼 Generate travel intelligence including nearby attractions, travel tips and packing suggestions
-- 💾 *(Coming Soon)* Save directly to your Google Maps account
+- 💾 _(Coming Soon)_ Save directly to your Google Maps account
 
 ---
 
@@ -170,7 +170,7 @@ Once the destination has been verified, Travel AI automatically generates:
 - Geo Enrichment
 - Travel Intelligence Engine
 
-## Database *(Upcoming)*
+## Database _(Upcoming)_
 
 - PostgreSQL
 - Prisma
@@ -184,27 +184,27 @@ Once the destination has been verified, Travel AI automatically generates:
 
 # 📊 Current Project Status
 
-| Module | Status |
-|---------|--------|
-| Provider Extraction | ✅ |
-| Metadata Extraction | ✅ |
-| OCR | ✅ |
-| Speech Recognition | ✅ |
-| Candidate Extraction | ✅ |
-| Google Places Search | ✅ |
-| Google Place Details | ✅ |
-| Geo Enrichment | ✅ |
-| Scoring Engine | ✅ |
-| Gemini Verification | ✅ |
-| Nearby Search | ✅ |
-| Travel Intelligence | ✅ |
-| Packing Suggestions | ✅ |
-| Travel Tips | ✅ |
-| Frontend | 🚧 |
-| Google Maps Sync | ⏳ |
-| Authentication | ⏳ |
-| Database | ⏳ |
-| Deployment | ⏳ |
+| Module               | Status |
+| -------------------- | ------ |
+| Provider Extraction  | ✅     |
+| Metadata Extraction  | ✅     |
+| OCR                  | ✅     |
+| Speech Recognition   | ✅     |
+| Candidate Extraction | ✅     |
+| Google Places Search | ✅     |
+| Google Place Details | ✅     |
+| Geo Enrichment       | ✅     |
+| Scoring Engine       | ✅     |
+| Gemini Verification  | ✅     |
+| Nearby Search        | ✅     |
+| Travel Intelligence  | ✅     |
+| Packing Suggestions  | ✅     |
+| Travel Tips          | ✅     |
+| Frontend             | 🚧     |
+| Google Maps Sync     | ⏳     |
+| Authentication       | ⏳     |
+| Database             | ⏳     |
+| Deployment           | ⏳     |
 
 ---
 
@@ -237,12 +237,12 @@ travel-ai/
 
 # 🔌 API
 
-| Method | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/` | Health Check |
-| POST | `/analyze` | Analyze Instagram Reel |
-| GET | `/provider` | Provider Test |
-| GET | `/health` | API Health |
+| Method | Endpoint    | Description            |
+| ------ | ----------- | ---------------------- |
+| GET    | `/`         | Health Check           |
+| POST   | `/analyze`  | Analyze Instagram Reel |
+| GET    | `/provider` | Provider Test          |
+| GET    | `/health`   | API Health             |
 
 ---
 
@@ -358,4 +358,4 @@ The source code is not licensed for redistribution or commercial reuse.
 
 ---
 
-### Built with ❤️ by **Pradnyesh**
+### Built with by **Pradnyesh**
