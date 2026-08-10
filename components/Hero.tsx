@@ -50,13 +50,23 @@ export default function Hero() {
           transition={{ delay: 0.5 }}
           className="mt-12 flex flex-col gap-4 justify-center sm:flex-row"
         >
-          <button className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold hover:bg-blue-500 transition">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold hover:bg-blue-500 transition"
+          >
             Analyze Reel
-          </button>
+          </motion.button>
 
-          <button className="rounded-full border border-white/20 px-8 py-4 text-lg hover:bg-white/10 transition">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: "spring", stiffness: 400, damping: 20 }}
+            className="rounded-full border border-white/20 px-8 py-4 text-lg hover:bg-white/10 transition"
+          >
             Watch Demo
-          </button>
+          </motion.button>
         </motion.div>
       </div>
     </section>
