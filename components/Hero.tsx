@@ -4,7 +4,10 @@ import { motion } from "framer-motion";
 
 export default function Hero() {
   return (
-    <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+    <section
+      id="hero"
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
+    >
       {/* Background glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-1/4 top-20 h-96 w-96 rounded-full bg-blue-600/20 blur-[180px]" />
@@ -81,6 +84,31 @@ export default function Hero() {
           </motion.button>
         </motion.div>
       </div>
+
+      {/* Scroll Indicator */}
+      <motion.a
+        href="#discover"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 0.8 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+      >
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{
+            duration: 1.8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="flex cursor-pointer flex-col items-center gap-2"
+        >
+          <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">
+            Scroll
+          </span>
+
+          <div className="h-8 w-px bg-gradient-to-b from-zinc-500 to-transparent" />
+        </motion.div>
+      </motion.a>
     </section>
   );
 }
