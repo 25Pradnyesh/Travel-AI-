@@ -1,9 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Link as LinkIcon } from "lucide-react";
 
 export default function Hero() {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+
+  const handleAnalyze = () => {
+    if (!url.trim()) {
+      setError("Paste an Instagram Reel URL first.");
+      return;
+    }
+
+    if (!url.includes("instagram.com/reel/")) {
+      setError("Enter a valid Instagram Reel URL.");
+      return;
+    }
+
+    setError("");
+  };
+
   return (
     <section
       id="hero"
@@ -46,44 +64,66 @@ export default function Hero() {
           Your next trip is hiding in your feed.
         </motion.p>
 
-        {/* Reel Input */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="mx-auto mt-10 flex w-full max-w-2xl flex-col gap-3 sm:flex-row"
+          className="mx-auto mt-10 w-full max-w-2xl"
         >
-          <div className="flex flex-1 items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
-            <LinkIcon className="h-5 w-5 shrink-0 text-zinc-500" />
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div
+              className={`flex flex-1 items-center gap-3 rounded-full border bg-white/[0.04] px-5 py-4 backdrop-blur-xl transition ${
+                error
+                  ? "border-red-500/50"
+                  : "border-white/10 focus-within:border-blue-500/50"
+              }`}
+            >
+              <LinkIcon className="h-5 w-5 shrink-0 text-zinc-500" />
 
-            <input
-              type="url"
-              placeholder="Paste an Instagram Reel URL"
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
-            />
+              <input
+                type="url"
+                value={url}
+                onChange={(event) => {
+                  setUrl(event.target.value);
+                  setError("");
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleAnalyze();
+                  }
+                }}
+                placeholder="Paste an Instagram Reel URL"
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
+              />
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAnalyze}
+              className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold transition hover:bg-blue-500"
+            >
+              Analyze
+              <ArrowRight className="h-4 w-4" />
+            </motion.button>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold transition hover:bg-blue-500"
-          >
-            Analyze
-            <ArrowRight className="h-4 w-4" />
-          </motion.button>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.1, duration: 0.6 }}
-          className="mt-8 text-xs text-zinc-600"
-        >
-          Public Instagram Reels only
+          {error ? (
+            <motion.p
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 text-left text-sm text-red-400"
+            >
+              {error}
+            </motion.p>
+          ) : (
+            <p className="mt-3 text-xs text-zinc-600">
+              Public Instagram Reels only
+            </p>
+          )}
         </motion.div>
       </div>
 
-      {/* Scroll Indicator */}
       <motion.a
         href="#discover"
         initial={{ opacity: 0 }}
