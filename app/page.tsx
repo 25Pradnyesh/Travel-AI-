@@ -3,7 +3,7 @@ import Hero from "@/components/Hero";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black text-white scroll-smooth">
+    <main className="min-h-screen scroll-smooth bg-black text-white">
       <Navbar />
 
       <Hero />
@@ -12,19 +12,19 @@ export default function Home() {
         id="discover"
         className="flex min-h-screen items-center justify-center border-t border-white/5 bg-zinc-950 px-6"
       >
-        <div className="text-center">
-          <p className="mb-4 text-sm uppercase tracking-[0.3em] text-blue-400">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-blue-400">
             Discover
           </p>
 
-          <h2 className="text-4xl font-bold md:text-6xl">
-            Your next destination
+          <h2 className="text-4xl font-bold tracking-tight md:text-6xl">
+            From a reel
             <br />
-            starts here.
+            to somewhere real.
           </h2>
 
-          <p className="mx-auto mt-6 max-w-xl text-zinc-500">
-            Drop a travel reel and let Travel AI uncover the place behind it.
+          <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-zinc-500 md:text-lg">
+            Find the places hidden inside the content you already love.
           </p>
         </div>
       </section>
