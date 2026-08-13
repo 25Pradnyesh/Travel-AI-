@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ArrowRight, Link as LinkIcon } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -8,15 +9,12 @@ export default function Hero() {
       id="hero"
       className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
     >
-      {/* Background glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute left-1/4 top-20 h-96 w-96 rounded-full bg-blue-600/20 blur-[180px]" />
-
         <div className="absolute bottom-10 right-1/4 h-96 w-96 rounded-full bg-cyan-500/20 blur-[180px]" />
       </div>
 
-      <div className="mx-auto max-w-5xl text-center">
-        {/* Eyebrow */}
+      <div className="mx-auto w-full max-w-5xl text-center">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -26,7 +24,6 @@ export default function Hero() {
           Travel Discovery
         </motion.p>
 
-        {/* Main Heading */}
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -40,7 +37,6 @@ export default function Hero() {
           Into Real Trips.
         </motion.h1>
 
-        {/* Subtitle */}
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -50,38 +46,40 @@ export default function Hero() {
           Your next trip is hiding in your feed.
         </motion.p>
 
-        {/* CTA Buttons */}
+        {/* Reel Input */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
-          className="mt-12 flex flex-col justify-center gap-4 sm:flex-row"
+          className="mx-auto mt-10 flex w-full max-w-2xl flex-col gap-3 sm:flex-row"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 20,
-            }}
-            className="rounded-full bg-blue-600 px-8 py-4 text-lg font-semibold transition hover:bg-blue-500"
-          >
-            Analyze Reel
-          </motion.button>
+          <div className="flex flex-1 items-center gap-3 rounded-full border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-xl">
+            <LinkIcon className="h-5 w-5 shrink-0 text-zinc-500" />
+
+            <input
+              type="url"
+              placeholder="Paste an Instagram Reel URL"
+              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
+            />
+          </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
-            transition={{
-              type: "spring",
-              stiffness: 400,
-              damping: 20,
-            }}
-            className="rounded-full border border-white/20 px-8 py-4 text-lg transition hover:bg-white/10"
+            className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold transition hover:bg-blue-500"
           >
-            Watch Demo
+            Analyze
+            <ArrowRight className="h-4 w-4" />
           </motion.button>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.1, duration: 0.6 }}
+          className="mt-8 text-xs text-zinc-600"
+        >
+          Public Instagram Reels only
         </motion.div>
       </div>
 
