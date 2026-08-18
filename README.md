@@ -1,294 +1,414 @@
-@'
-
-# 🌍 Travel AI
-
-> **Turn Instagram inspiration into real destinations.**
-
-Travel AI finds the places hidden inside Instagram Reels and turns them into structured, useful travel destinations.
-
-Paste a public Instagram Reel → Travel AI analyzes the content → extracts location clues → searches and ranks real places → verifies the strongest candidates → returns travel intelligence.
-
----
-
 <div align="center">
 
-### 📍 Reel → Location → Travel Intelligence
+# TRAVEL AI
 
-**Save the places you discover before they disappear into your saved posts.**
+### Discover it. Save it. Go there.
+
+Turn travel inspiration from Instagram into places you can actually visit.
+
+<br />
+
+[![Status](https://img.shields.io/badge/STATUS-IN%20DEVELOPMENT-111111?style=for-the-badge)]()
+[![Next.js](https://img.shields.io/badge/NEXT.JS-15-111111?style=for-the-badge&logo=next.js)]()
+[![Python](https://img.shields.io/badge/PYTHON-FASTAPI-111111?style=for-the-badge&logo=python)]()
+[![TypeScript](https://img.shields.io/badge/TYPESCRIPT-111111?style=for-the-badge&logo=typescript)]()
+
+<br />
+
+**Built by [Pradnyesh](https://github.com/25Pradnyesh)**
 
 </div>
 
----
-
-## ✨ The Problem
-
-Instagram is one of the biggest sources of travel inspiration.
-
-The problem?
-
-You save a Reel today and six months later:
-
-> _"Where the fuck was this place?"_
-
-The location might be hidden inside captions, hashtags, on-screen text, spoken audio, place names, visual landmarks, or metadata.
-
-**Saving a Reel isn't the same as saving the destination.**
-
-Travel AI bridges that gap.
+<br />
 
 ---
 
-# 🚀 What Travel AI Does
+## The idea
 
-````text
-Instagram Reel
-      ↓
-Content Extraction
-      ↓
-┌─────┼─────┐
-↓     ↓     ↓
-OCR Speech Caption
-└─────┼─────┘
-      ↓
-Candidate Extraction
-      ↓
-Google Places
-      ↓
-Geo Enrichment
-      ↓
-Scoring Engine
-      ↓
-Top Candidates
-      ↓
-Gemini Verification
-      ↓
-Travel Intelligence
-      ↓
-📍 Final Destination
+Instagram has become one of the best places to discover where to travel.
 
-🧠 Intelligence Pipeline
-01 — Content Extraction
+A hidden beach.
 
-Travel AI extracts useful evidence from the Reel:
+A mountain you've never heard of.
+
+A restaurant in a city you've never visited.
+
+A viewpoint buried inside a 20-second Reel.
+
+You save it.
+
+Then months later:
+
+> **"Where the hell was this place?"**
+
+Travel AI is built to solve exactly that.
+
+Paste a public Instagram Reel and Travel AI works backwards from the content to identify the destination.
+
+---
+
+# From Reel → Destination
+
+```text
+                    INSTAGRAM REEL
+                          │
+                          ▼
+                ┌──────────────────┐
+                │    EXTRACTION     │
+                │                  │
+                │  Caption         │
+                │  Hashtags        │
+                │  Speech          │
+                │  OCR             │
+                │  Metadata        │
+                └────────┬─────────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │    CANDIDATES    │
+                │                  │
+                │  Extract places  │
+                │  Generate clues  │
+                │  Remove noise    │
+                └────────┬─────────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │  GOOGLE PLACES   │
+                │                  │
+                │  Search          │
+                │  Details         │
+                │  Coordinates     │
+                └────────┬─────────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │     SCORING      │
+                │                  │
+                │  Rank candidates │
+                │  Compare signals│
+                │  Enrich context  │
+                └────────┬─────────┘
+                         │
+                         ▼
+                ┌──────────────────┐
+                │ GEMINI VERIFY    │
+                │                  │
+                │  Text reasoning  │
+                │  Vision reasoning│
+                └────────┬─────────┘
+                         │
+                         ▼
+                  ┌─────────────┐
+                  │ DESTINATION │
+                  └──────┬──────┘
+                         │
+                         ▼
+                 TRAVEL INTELLIGENCE
+```
+
+The important part:
+
+Travel AI doesn't rely on one guess.
+
+It combines multiple pieces of evidence, searches against real places, ranks candidates, and verifies the strongest results.
+
+Why this approach?
+Most location systems ask:
+
+"Where is this Reel?"
+
+Travel AI asks something different:
+
+"Given everything we know about this Reel, which real-world place best explains the evidence?"
+
+That turns location detection into a candidate ranking + verification problem.
+
+Caption
+
+- OCR
+- Speech
+- Hashtags
+- Metadata
+- Geographic Context
+- Google Places
+- Scoring
+- Gemini
+  │
+  ▼
+  Best Candidate
+
+The pipeline
+01 — Extract
+
+Pull useful evidence from the Reel.
 
 Caption
 Hashtags
 Metadata
 Speech
-OCR text
+OCR
 Video frames
-02 — Candidate Extraction
 
-Potential locations are extracted from the available evidence.
+↓
 
-Examples:
+02 — Discover
+
+Generate possible locations from the available evidence.
+
 Lake Como
-Swiss Alps
-Dolomites
-Grand Canyon
-Kyoto
+Lake Bled
+Lake Louise
+Lake Tahoe
 
-03 — Candidate Search
+↓
 
-Potential locations are matched against real geographic places using Google Places.
+03 — Search
 
-04 — Geo Enrichment
+Match candidates against real geographic locations using Google Places.
 
-Candidates are enriched with geographic context such as:
+↓
+
+04 — Enrich
+
+Collect additional geographic context:
 
 Country
 City
 Region
 Coordinates
 Nearby places
-05 — Scoring
+Place details
 
-Candidates are ranked using multiple independent signals instead of trusting a single prediction.
+↓
 
-06 — Gemini Verification
+05 — Rank
 
-The strongest candidates are passed to Gemini for additional reasoning.
+Score candidates using multiple independent signals.
 
-Instead of asking Gemini to search the entire planet, Travel AI gives it a small set of already-ranked candidates.
+↓
 
-Top Candidates
-      ↓
-   Gemini
-      ↓
-Best Match
-      ↓
-Confidence + Reason
+06 — Verify
 
-07 — Travel Intelligence
+Send the strongest candidates to Gemini.
 
-Once the destination is identified, Travel AI can generate useful travel context including:
+Instead of asking Gemini to search the entire world, it receives a small set of already-ranked candidates.
+
+Top 5 Candidates
+│
+▼
+Gemini
+│
+├── Winner
+├── Confidence
+└── Reason
+
+↓
+
+07 — Understand
+
+Generate useful destination intelligence.
 
 Travel tips
 Packing suggestions
-Destination information
+Destination context
 Adventure considerations
 
-🎯 Core Architecture
+↓
 
-┌───────────────────────────────┐
-│       Instagram Reel          │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│      Provider Extraction      │
-│        Metadata / Media       │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│        Evidence Layer         │
-│   Caption • OCR • Speech      │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│       Candidate Service       │
-│       Location Extraction     │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│        Google Places          │
-│       Candidate Search        │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│        Geo Enrichment         │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│        Scoring Engine         │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│      Gemini Verification      │
-│        Text + Vision          │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│     Travel Intelligence       │
-│   Tips + Packing + Context    │
-└───────────────┬───────────────┘
-                ↓
-┌───────────────────────────────┐
-│       Final Destination       │
-└───────────────────────────────┘
+08 — Return
 
-✨ Current Features
+A structured destination ready for the product experience.
+
+Current capabilities
+
 Location Intelligence
-✅ Instagram metadata extraction
-✅ OCR pipeline
-✅ Speech recognition pipeline
-✅ Candidate extraction
-✅ Candidate deduplication
-✅ Travel keyword detection
-✅ Google Places search
-✅ Google Place Details
-✅ Geographic enrichment
-✅ Multi-factor location scoring
-✅ Top candidate ranking
-✅ Gemini text verification
-✅ Gemini vision verification
-✅ Final destination resolution
+
+| Capability                    | Status |
+| ----------------------------- | :----: |
+| Instagram metadata extraction |   ✅   |
+| OCR pipeline                  |   ✅   |
+| Speech recognition            |   ✅   |
+| Candidate extraction          |   ✅   |
+| Candidate deduplication       |   ✅   |
+| Travel keyword detection      |   ✅   |
+| Google Places search          |   ✅   |
+| Google Place Details          |   ✅   |
+| Geographic enrichment         |   ✅   |
+| Multi-factor scoring          |   ✅   |
+| Candidate ranking             |   ✅   |
+| Gemini text verification      |   ✅   |
+| Gemini vision verification    |   ✅   |
+| Location resolution           |   ✅   |
+
 Travel Intelligence
-✅ Travel tips generation
-✅ Weather-aware packing suggestions
-✅ Destination category rules
-✅ Trip-duration packing rules
-✅ International travel packing rules
-✅ High-altitude considerations
-✅ Adventure destination suggestions
+
+| Capability                   | Status |
+| ---------------------------- | :----: |
+| Travel tips                  |   ✅   |
+| Packing suggestions          |   ✅   |
+| Weather-aware packing        |   ✅   |
+| Trip-duration rules          |   ✅   |
+| International travel rules   |   ✅   |
+| High-altitude considerations |   ✅   |
+| Adventure destination rules  |   ✅   |
+
+Product
+
+| Capability             | Status |
+| ---------------------- | :----: |
+| Next.js frontend       |   ✅   |
+| Animated landing page  |   ✅   |
+| Framer Motion          |   ✅   |
+| Reel URL input         |   ✅   |
+| URL validation         |   ✅   |
+| Loading state          |   ✅   |
+| Backend integration    |   🚧   |
+| Destination results UI |   🚧   |
+
+Product direction
+
+Travel AI is intentionally not trying to look like another generic AI product.
+
+The visual direction is:
+
+Linear
+Precision. Motion. Technical clarity.
+
+Vercel
+Typography. Whitespace. Simplicity.
+
+Apple
+Hierarchy. Restraint. Product storytelling.
+
+Nothing
+Distinctive identity.
+
+The goal is a product that feels:
+
+minimal · cinematic · precise · quietly technical
+
+No unnecessary dashboards.
+
+No walls of AI buzzwords.
+
+No visual noise.
+
+Just:
+
+Discover → Understand → Save → Go.
+
+Architecture
+
+┌─────────────────────────────────────────────┐
+│ FRONTEND │
+│ │
+│ Next.js / React / TS │
+└──────────────────────┬──────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────┐
+│ ENGINE │
+│ │
+│ FastAPI │
+└──────────────────────┬──────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────┐
+│ EXTRACTION │
+│ │
+│ Metadata · Caption · OCR · Speech │
+└──────────────────────┬──────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────┐
+│ LOCATION ENGINE │
+│ │
+│ Candidate Extraction │
+│ Google Places │
+│ Geo Enrichment │
+│ Candidate Scoring │
+└──────────────────────┬──────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────┐
+│ VERIFICATION │
+│ │
+│ Gemini Text + Vision │
+└──────────────────────┬──────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────┐
+│ TRAVEL INTELLIGENCE │
+│ │
+│ Tips · Packing · Context │
+└──────────────────────┬──────────────────────┘
+│
+▼
+FINAL DESTINATION
+
+Stack
 Frontend
-✅ Next.js landing page
-✅ Animated hero
-✅ Framer Motion interactions
-✅ Instagram Reel URL input
-✅ Client-side URL validation
-✅ Loading state
-🚧 Backend integration
-🚧 Destination results UI
-
-🎨 Design Direction
-
-Travel AI's visual language takes inspiration from four different design philosophies:
-
-Reference	Inspiration
-Linear	Precision, motion, technical aesthetic
-Vercel	Minimalism, typography, whitespace
-Nothing	Distinctive visual identity
-Apple	Clean hierarchy, restraint, product storytelling
-
-The goal isn't to copy them.
-
-The goal is to create a Travel AI identity that feels:
-
-minimal · technical · cinematic · trustworthy
-
-🛠 Tech Stack
-Frontend
-Next.js
+Next.js 15
 React
 TypeScript
 Tailwind CSS
 Framer Motion
 Lucide React
 shadcn/ui
-Backend
-FastAPI
+Engine
 Python
+FastAPI
 Modular service architecture
-AI & Intelligence
+Intelligence
 Gemini
 OCR
 Speech Recognition
 Vision Analysis
 Geographic Intelligence
-Multi-factor Candidate Scoring
+Candidate Scoring
 Location
 Google Places
 Place Details
-Geographic Enrichment
+Geo Enrichment
 Candidate Ranking
-Database
+Data
 PostgreSQL
-Prisma — planned
-
-📂 Project Structure
-
+Prisma
+Repository
 travel-ai/
 │
 ├── app/
-│   ├── api/
-│   │   └── analyze/
-│   │       └── route.ts
-│   ├── globals.css
-│   ├── layout.tsx
-│   └── page.tsx
+│ ├── api/
+│ │ └── analyze/
+│ │ └── route.ts
+│ ├── globals.css
+│ ├── layout.tsx
+│ └── page.tsx
 │
 ├── components/
-│   ├── ui/
-│   │   └── button.tsx
-│   ├── Background.tsx
-│   ├── FloatingCards.tsx
-│   ├── Hero.tsx
-│   └── Navbar.tsx
+│ ├── ui/
+│ │ └── button.tsx
+│ ├── Background.tsx
+│ ├── FloatingCards.tsx
+│ ├── Hero.tsx
+│ └── Navbar.tsx
 │
 ├── engine/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── config/
-│   │   ├── models/
-│   │   ├── pipeline/
-│   │   ├── prompts/
-│   │   ├── providers/
-│   │   ├── services/
-│   │   └── utils/
-│   ├── assets/
-│   ├── core/
-│   ├── domain/
-│   └── tests/
+│ ├── app/
+│ │ ├── api/
+│ │ ├── config/
+│ │ ├── models/
+│ │ ├── pipeline/
+│ │ ├── prompts/
+│ │ ├── providers/
+│ │ ├── services/
+│ │ └── utils/
+│ │
+│ ├── assets/
+│ ├── core/
+│ ├── domain/
+│ └── tests/
 │
 ├── docs/
 ├── hooks/
@@ -302,205 +422,187 @@ travel-ai/
 │
 ├── package.json
 └── README.md
-
-🔌 API
-
-| Method | Endpoint   | Description                   |
-| ------ | ---------- | ----------------------------- |
-| `GET`  | `/`        | Engine health check           |
-| `POST` | `/analyze` | Analyze an Instagram Reel     |
-| `GET`  | `/docs`    | FastAPI Swagger documentation |
-| `GET`  | `/test`    | Pipeline test route           |
-
-
-⚙️ Getting Started
-
+API
+Method Endpoint Purpose
+GET / Engine health check
+POST /analyze Analyze an Instagram Reel
+GET /docs FastAPI Swagger
+GET /test Pipeline testing
+Local development
+Requirements
+Node.js
+Python 3.12+
+npm
+Google Places API key
+Gemini API key
 Clone
-
 git clone https://github.com/25Pradnyesh/Travel-AI-.git
 cd travel-ai
-
 Frontend
-
 npm install
 npm run dev
 
 Open:
+
 http://localhost:3000
+Python engine
 
-Python Engine
+Create the environment:
 
-Create the virtual environment:
 python -m venv engine/.venv
 
 Windows:
+
 .\engine\.venv\Scripts\Activate.ps1
 
 Install dependencies:
+
 pip install -r engine/requirements.txt
 
 Run FastAPI:
+
 python -m uvicorn engine.main:app --reload
 
-Open:
+API:
+
+http://127.0.0.1:8000
+
+Swagger:
+
 http://127.0.0.1:8000/docs
+Development status
+INTELLIGENCE ENGINE
 
-📊 Current Development Status
+Provider Architecture ████████████████████ DONE
+Instagram Extraction ████████████████████ DONE
+OCR ████████████████████ DONE
+Speech ████████████████████ DONE
+Candidate Extraction ████████████████████ DONE
+Google Places ████████████████████ DONE
+Geo Enrichment ████████████████████ DONE
+Scoring Engine ████████████████████ DONE
+Gemini Verification ████████████████████ DONE
+Location Resolution ████████████████████ DONE
 
-| System                         | Status |
-| ------------------------------ | :----: |
-| Instagram Extraction           |    ✅   |
-| OCR                            |    ✅   |
-| Speech Recognition             |    ✅   |
-| Candidate Extraction           |    ✅   |
-| Candidate Scoring              |    ✅   |
-| Google Places                  |    ✅   |
-| Place Details                  |    ✅   |
-| Geo Enrichment                 |    ✅   |
-| Gemini Text Verification       |    ✅   |
-| Gemini Vision Verification     |    ✅   |
-| Location Resolution            |    ✅   |
-| Travel Tips                    |    ✅   |
-| Packing Intelligence           |    ✅   |
-| Frontend Foundation            |    ✅   |
-| Animated Landing Page          |    ✅   |
-| Reel URL Validation            |    ✅   |
-| Loading State                  |    ✅   |
-| Frontend → Backend Integration |   🚧   |
-| End-to-End Testing             |   🚧   |
-| Authentication                 |    ⏳   |
-| Database                       |    ⏳   |
-| Saved Trips                    |    ⏳   |
-| Google Maps Sync               |    ⏳   |
-| Production Deployment          |    ⏳   |
+PRODUCT
 
+Landing Page ████████████████████ DONE
+Motion System ████████████████████ DONE
+Reel URL Input ████████████████████ DONE
+Frontend Integration ███████░░░░░░░░░░░░░ NEXT
+Results Experience ░░░░░░░░░░░░░░░░░░░░ NEXT
+Saved Destinations ░░░░░░░░░░░░░░░░░░░░ LATER
+Google Maps Sync ░░░░░░░░░░░░░░░░░░░░ LATER
+Roadmap
+01 — Intelligence
 
-🗺️ Roadmap
-Phase 1 — Intelligence Engine
+Build the engine.
 
-Status: 🟢
+Provider architecture
+Metadata extraction
+OCR
+Speech
+Candidate extraction
+Google Places
+Geo enrichment
+Scoring
+Gemini verification
+Location resolution
+02 — Product
 
- Provider architecture
- Metadata extraction
- OCR
- Speech extraction
- Candidate extraction
- Google Places
- Geo enrichment
- Candidate scoring
- Gemini verification
- Location resolution
-Phase 2 — Product Experience
+Make the experience effortless.
 
-Status: 🟡
+Landing page
+Motion system
+Reel URL input
+URL validation
+Loading state
+Connect frontend to analysis API
+Analysis progress experience
+Destination result page
+Nearby places
+Maps CTA
+03 — Memory
 
- Landing page
- Motion system
- Reel URL input
- URL validation
- Loading state
- Connect frontend to analysis API
- Analysis progress UI
- Destination result page
- Nearby places
- Google Maps CTA
-Phase 3 — Travel Collections
+Don't just discover places. Keep them.
 
-Status: ⚪
+Authentication
+Database
+Saved destinations
+Trips
+Collections
+Country organization
+Bucket lists
+04 — Everywhere
 
- Authentication
- PostgreSQL
- User profiles
- Saved destinations
- Trip collections
- Country collections
- Bucket lists
-Phase 4 — Google Maps
+Take travel discovery beyond one platform.
 
-Status: ⚪
+Google Maps synchronization
+Chrome extension
+Android application
+YouTube support
+TikTok support
+Public API
+Accuracy philosophy
 
-Discover
-   ↓
-Save
-   ↓
-Travel AI Collection
-   ↓
-Google Maps
+Travel AI treats location identification as a ranking and verification problem.
 
-Phase 5 — Platform Expansion
-
-Status: ⚪
-
- Android App
- Chrome Extension
- Instagram Bot
- YouTube Support
- TikTok Support
- Public API
-
-
-🧪 Accuracy
-
-Travel AI treats location extraction as a ranking and verification problem.
-
-Multiple signals contribute to the final destination:
+The system combines:
 
 Caption
-   +
-OCR
-   +
-Speech
-   +
-Hashtags
-   +
-Metadata
-   +
-Google Places
-   +
-Geographic Context
-   +
-Candidate Scoring
-   +
-Gemini Reasoning
 
-The goal is not to find a place.
+- OCR
+- Speech
+- Hashtags
+- Metadata
+- Google Places
+- Geographic Context
+- Candidate Scoring
+- Gemini Reasoning
 
-The goal is to find the correct place.
+The objective isn't:
 
-This matters especially for ambiguous names:
+Find something that sounds right.
+
+It is:
+
+Find the real place that best explains the evidence.
+
+This becomes especially important for ambiguous locations.
 
 Lake
-Lake Como
-Lake Bled
-Lake Louise
-
-🔐 Privacy
+│
+├── Lake Como
+├── Lake Bled
+├── Lake Louise
+└── Lake Tahoe
+Privacy
 
 Travel AI currently focuses on public Instagram Reel URLs.
 
 The MVP does not require Instagram login.
 
-Production authentication, data retention, privacy, and storage policies will be defined before public launch.
+Production authentication, storage, retention, and privacy policies will be defined before public launch.
 
-🤝 Contributing
+Contributing
 
 Travel AI is currently under active development.
 
-Public contributions are temporarily limited while the core MVP is being built.
+The core repository is focused on building and validating the MVP before opening broader contributions.
 
-📄 License
+License
 
 This project is currently proprietary and under active development.
 
 The source code is not licensed for reuse or redistribution at this stage.
 
-<div align="center">
-🌍 Travel AI
+<br /> <div align="center">
+TRAVEL AI
 Discover it. Save it. Go there.
+<br />
 
 Built by Pradnyesh
 
-</div> '@ | Set-Content -Path README.md -Encoding UTF8 ```
+GitHub
 
-
-````
+</div> ```
