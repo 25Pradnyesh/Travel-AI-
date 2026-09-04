@@ -1,3 +1,6 @@
+import json
+
+
 class VisionPromptBuilder:
 
     # ==================================================
@@ -8,145 +11,75 @@ class VisionPromptBuilder:
         self,
         evidence: dict,
         candidates: list,
-    ):
+    ) -> str:
 
-        title = evidence.get(
-            "title",
-            "",
-        )
+        metadata = evidence.get("metadata", {})
 
-        caption = evidence.get(
-            "caption",
-            "",
-        )
+        title = evidence.get("title", "") or metadata.get("title", "")
+        caption = evidence.get("caption", "") or metadata.get("caption", "")
+        ocr = evidence.get("ocr_text", "")
+        speech = evidence.get("speech_text", "")
 
-        ocr = evidence.get(
-            "ocr_text",
-            "",
-        )
+        hashtags = evidence.get("hashtags") or metadata.get("hashtags") or []
+        if isinstance(hashtags, list):
+            hashtags_str = ", ".join(str(tag) for tag in hashtags)
+        else:
+            hashtags_str = str(hashtags)
 
-        speech = evidence.get(
-            "speech_text",
-            "",
-        )
+        formatted_candidates = []
+        for index, item in enumerate(candidates, start=1):
+            if isinstance(item, dict):
+                name = item.get("name") or item.get("travel_name") or item.get("display_name", "")
+                country = item.get("country", "")
+                city = item.get("city", "")
+                formatted_candidates.append(f"{index}. {name} ({city}, {country})")
+            else:
+                formatted_candidates.append(f"{index}. {item}")
 
-        hashtags = ", ".join(
+        candidate_list_str = "\n".join(formatted_candidates)
 
-            evidence.get(
-                "hashtags",
-                [],
-            )
+        return f"""You are a travel geolocation verification AI.
 
-        )
+Analyze the image frames extracted from a travel Reel to verify which candidate location from the provided list matches the visual evidence.
 
-        candidate_list = "\n".join(
+CRITICAL RULES:
+- Do NOT hallucinate or invent new destinations.
+- Your goal is to verify if one of the supplied candidates matches the scene.
+- Check architecture, landscape, terrain, water bodies, mountains, flora, landmarks, language signs.
+- If the visual evidence clearly matches a candidate, select it with high confidence.
+- If the visuals contradict a candidate or none clearly match, state that no candidate matches.
 
-            f"- {candidate}"
+CANDIDATE DESTINATIONS:
+{candidate_list_str}
 
-            for candidate in candidates
+REEL CONTEXT:
+Title: {title}
+Caption: {caption}
+OCR: {ocr}
+Speech: {speech}
+Hashtags: {hashtags_str}
 
-        )
-
-        return f"""
-You are an expert travel geolocation AI.
-
-You are given MULTIPLE FRAMES extracted from the SAME travel reel.
-
-Analyze ALL images together before making a decision.
-
-Visual evidence is MORE IMPORTANT than captions or hashtags.
-
-==================================================
-
-TEXT CONTEXT
-
-==================================================
-
-Title:
-{title}
-
-Caption:
-{caption}
-
-OCR:
-{ocr}
-
-Speech:
-{speech}
-
-Hashtags:
-{hashtags}
-
-==================================================
-
-POSSIBLE GOOGLE LOCATION CANDIDATES
-
-==================================================
-
-{candidate_list}
-
-==================================================
-
-YOUR TASK
-
-==================================================
-
-Determine the exact travel destination shown.
-
-Consider:
-
-- Mountains
-- Lakes
-- Beaches
-- Rivers
-- Forests
-- Waterfalls
-- Snow
-- Coastline
-- Architecture
-- Bridges
-- Churches
-- Temples
-- Castles
-- Skylines
-- Road signs
-- Language
-- Vegetation
-- Terrain
-- Hiking trails
-- Peaks
-- Islands
-
-Compare the visual clues against the provided candidate locations.
-
-If none match, infer the most likely real-world location.
-
-Never force a candidate if the visuals disagree.
-
-==================================================
-
-RETURN JSON ONLY
-
-==================================================
-
+RETURN ONLY VALID JSON matching this schema:
 {{
-    "best_match": "...",
+    "matched_index": 1,
     "matches_candidate": true,
-    "confidence": 0,
-    "reason": "...",
-    "visual_clues": [
-        "...",
-        "..."
-    ],
-    "detected_landmarks": [
-        "...",
-        "..."
-    ],
-    "detected_country": "...",
-    "detected_region": "..."
+    "confidence": 0.85,
+    "reason": "The mountain lake and alpine architecture visually match candidate 1.",
+    "visual_clues": ["alpine lake", "pine trees", "snow-capped peaks"],
+    "detected_landmarks": ["mountain lake"],
+    "detected_country": "Austria",
+    "detected_region": "Tyrol"
 }}
 
-Do not return markdown.
-
-Do not explain anything outside the JSON.
-"""
+If none of the candidates match or the image is ambiguous, return:
+{{
+    "matched_index": null,
+    "matches_candidate": false,
+    "confidence": 0.2,
+    "reason": "Visual clues do not specifically identify or verify any candidate.",
+    "visual_clues": [],
+    "detected_landmarks": [],
+    "detected_country": "",
+    "detected_region": ""
+}}
+"""

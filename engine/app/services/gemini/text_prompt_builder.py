@@ -19,162 +19,104 @@ class PromptBuilder:
             ranked_places,
             start=1,
         ):
+            place = item.get("place", item)
 
-            place = item["place"]
-
-            candidates.append(
-
-                {
-
-                    "rank": index,
-
-                    "travel_name": place.get(
-                        "travel_name",
-                        "",
-                    ),
-
-                    "city": place.get(
-                        "city",
-                        "",
-                    ),
-
-                    "state": place.get(
-                        "state",
-                        "",
-                    ),
-
-                    "country": place.get(
-                        "country",
-                        "",
-                    ),
-
-                    "category": place.get(
-                        "category",
-                        "",
-                    ),
-
-                    "primary_type": place.get(
-                        "primary_type",
-                        "",
-                    ),
-
-                    "rating": place.get(
-                        "rating",
-                        0,
-                    ),
-
-                    "reviews": place.get(
-                        "user_rating_count",
-                        0,
-                    ),
-
-                    "score": item.get(
-                        "score",
-                        0,
-                    ),
-
-                    "confidence": item.get(
-                        "confidence",
-                        "",
-                    ),
-
-                }
-
+            name = (
+                place.get("travel_name")
+                or place.get("display_name")
+                or place.get("name")
+                or "Unknown"
             )
 
-        payload = {
+            candidates.append(
+                {
+                    "index": index,
+                    "name": name,
+                    "formatted_address": place.get("formatted_address", ""),
+                    "country": place.get("country", ""),
+                    "city": place.get("city", ""),
+                    "region": place.get("region") or place.get("state", ""),
+                    "latitude": place.get("latitude", 0.0),
+                    "longitude": place.get("longitude", 0.0),
+                    "types": place.get("types", []),
+                    "rating": place.get("rating", 0.0),
+                    "user_ratings_total": place.get("user_rating_count", 0),
+                }
+            )
 
-            "title": evidence.get(
-                "title",
-                "",
-            ),
+        metadata = evidence.get("metadata", {})
+        frame_info = evidence.get("frame_summary") or evidence.get("scene") or ""
 
-            "caption": evidence.get(
-                "caption",
-                "",
-            ),
-
-            "ocr_text": evidence.get(
-                "ocr_text",
-                "",
-            ),
-
-            "speech_text": evidence.get(
-                "speech_text",
-                "",
-            ),
-
-            "hashtags": evidence.get(
-                "hashtags",
-                [],
-            ),
-
-            "combined_text": evidence.get(
-                "combined_text",
-                "",
-            ),
-
-            "rule_engine_candidates": candidates,
-
+        reel_evidence = {
+            "caption": evidence.get("caption", ""),
+            "hashtags": evidence.get("hashtags", []),
+            "speech_transcript": evidence.get("speech_text", ""),
+            "ocr_text": evidence.get("ocr_text", ""),
+            "metadata": {
+                "title": evidence.get("title", ""),
+                "creator": evidence.get("creator", "") or metadata.get("creator", ""),
+                "location_tag": evidence.get("location", "") or metadata.get("location", ""),
+            },
         }
 
-        return f"""
-You are Travel AI's final verification engine.
+        if frame_info:
+            reel_evidence["frame_information"] = frame_info
 
-Your task is to determine which candidate location is MOST LIKELY correct.
+        payload = {
+            "reel_evidence": reel_evidence,
+            "candidates": candidates,
+        }
 
-IMPORTANT RULES
+        return f"""You are verifying the most likely real-world destination represented by a travel Reel.
 
-• NEVER invent a new place.
-• ONLY choose from the supplied candidates.
-• NEVER change spellings.
-• NEVER merge two locations.
-• If evidence is weak, choose the highest scoring candidate.
-• Give extra importance to:
-  - OCR text
-  - Spoken location names
-  - Famous landmarks
-  - Mountains
-  - Lakes
-  - Beaches
-  - Architecture
-  - National Parks
-  - Monuments
-  - City skylines
+You have:
+- Reel evidence
+- a ranked list of real Google Places candidates
 
-Ignore:
+Your job is NOT to search for new locations.
 
-- emojis
-- filler words
-- unrelated hashtags
-- promotional text
-- creator opinions
+Your job is to compare the supplied candidates against the evidence and select the candidate that best explains the evidence.
 
-Reasoning Priority
+Consider:
+- explicit place names
+- city names
+- country names
+- geographic clues
+- landmarks
+- spoken references
+- OCR text
+- caption
+- hashtags
+- contextual consistency
+- candidate address
+- candidate type
+- geographic plausibility
 
-1. OCR
-2. Speech
-3. Caption
-4. Title
-5. Hashtags
-6. Rule Engine Score
+Do not choose a candidate simply because its name contains a matching keyword.
 
 Return ONLY valid JSON.
 
-Schema
-
+Expected structure:
 {{
-    "selected_rank": 1,
-    "confidence": 94,
-    "reason": "OCR and speech both mention Seebensee while caption confirms Austria.",
-    "matched_sources": [
-        "ocr",
-        "speech",
-        "caption"
-    ]
+  "winner": 1,
+  "confidence": 0.96,
+  "reason": "..."
 }}
 
-Input Data
+Rules:
+- winner must be the candidate index (integer corresponding to one of the supplied candidates)
+- confidence must be a number between 0.0 and 1.0
+- reason must briefly explain the evidence connecting the Reel to the candidate
+- never invent a candidate
+- never return a place outside the supplied candidate list
+- if evidence is weak, confidence must be low
+- if no candidate is sufficiently supported, return winner as null:
+{{
+  "winner": null,
+  "confidence": 0.0,
+  "reason": "Insufficient evidence to confidently verify any supplied candidate."
+}}
 
+INPUT DATA:
 {json.dumps(payload, indent=2, ensure_ascii=False)}
-"""
+"""

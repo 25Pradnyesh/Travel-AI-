@@ -1,3 +1,11 @@
+import json
+import logging
+import re
+
+
+logger = logging.getLogger(__name__)
+
+
 class ResponseParser:
 
     # ==================================================
@@ -6,227 +14,178 @@ class ResponseParser:
 
     def parse(
         self,
-        response: dict,
+        response: dict | str | None,
         ranked_places: list,
-    ):
-
-        if not response:
-
-            return self.fallback(
-
-                ranked_places,
-
-                "Gemini returned no response.",
-
-            )
-
-        # ------------------------------------------
-        # Selected Rank
-        # ------------------------------------------
-
-        selected_rank = response.get(
-            "selected_rank",
-        )
-
-        if not isinstance(
-            selected_rank,
-            int,
-        ):
-
-            return self.fallback(
-
-                ranked_places,
-
-                "Invalid selected_rank.",
-
-            )
-
-        if (
-
-            selected_rank < 1
-
-            or
-
-            selected_rank > len(
-                ranked_places,
-            )
-
-        ):
-
-            return self.fallback(
-
-                ranked_places,
-
-                "selected_rank out of range.",
-
-            )
-
-        winner = ranked_places[
-            selected_rank - 1
-        ]
-
-        # ------------------------------------------
-        # Confidence
-        # ------------------------------------------
-
-        confidence = response.get(
-            "confidence",
-            0,
-        )
-
-        try:
-
-            confidence = int(
-                confidence,
-            )
-
-        except Exception:
-
-            confidence = 0
-
-        confidence = max(
-            0,
-            min(
-                confidence,
-                100,
-            ),
-        )
-
-        # ------------------------------------------
-        # Reason
-        # ------------------------------------------
-
-        reason = str(
-
-            response.get(
-                "reason",
-                "",
-            )
-
-        ).strip()
-
-        # ------------------------------------------
-        # Matched Sources
-        # ------------------------------------------
-
-        matched_sources = response.get(
-            "matched_sources",
-            [],
-        )
-
-        if not isinstance(
-            matched_sources,
-            list,
-        ):
-
-            matched_sources = []
-
-        matched_sources = [
-
-            str(source).strip().lower()
-
-            for source in matched_sources
-
-            if str(source).strip()
-
-        ]
-
-        # ------------------------------------------
-        # Attach Metadata
-        # ------------------------------------------
-
-        winner["place"]["gemini_confidence"] = confidence
-
-        winner["place"]["gemini_reason"] = reason
-
-        winner["place"]["matched_sources"] = matched_sources
-
-        winner["place"]["gemini_verified"] = (
-
-            confidence >= 80
-
-        )
-
-        # Small confidence bonus
-
-        if confidence >= 90:
-
-            winner["score"] += 5
-
-        elif confidence >= 80:
-
-            winner["score"] += 3
-
-        elif confidence < 50:
-
-            winner["score"] -= 5
-
-        return {
-
-            "gemini_verified": True,
-
-            "selected_rank": selected_rank,
-
-            "confidence": confidence,
-
-            "reason": reason,
-
-            "matched_sources": matched_sources,
-
-            "winner": winner,
-
-        }
-
-    # ==================================================
-    # Fallback
-    # ==================================================
-
-    def fallback(
-        self,
-        ranked_places,
-        reason: str,
-    ):
+    ) -> dict:
 
         if not ranked_places:
+            return self.empty(
+                reason="No candidate places provided for verification.",
+                status="failed",
+            )
 
+        if not response:
+            return self.empty(
+                reason="Gemini returned an empty response.",
+                status="failed",
+            )
+
+        # ------------------------------------------
+        # If string, clean and extract JSON
+        # ------------------------------------------
+        data = None
+
+        if isinstance(response, str):
+            raw_text = response.strip()
+
+            # 1. Remove markdown fences (```json ... ``` or ``` ... ```)
+            fence_match = re.search(
+                r"```(?:json)?\s*([\s\S]*?)\s*```",
+                raw_text,
+                re.IGNORECASE,
+            )
+            if fence_match:
+                candidate_json = fence_match.group(1).strip()
+            else:
+                candidate_json = raw_text
+
+            # 2. Try direct json load
+            try:
+                data = json.loads(candidate_json)
+            except json.JSONDecodeError:
+                # 3. Fallback: search for first balanced {...}
+                bracket_match = re.search(r"\{[\s\S]*\}", candidate_json)
+                if bracket_match:
+                    try:
+                        data = json.loads(bracket_match.group(0))
+                    except json.JSONDecodeError:
+                        data = None
+
+            if not isinstance(data, dict):
+                logger.warning(
+                    "[GEMINI] Failed to decode JSON from text response: %s",
+                    raw_text[:200],
+                )
+                return self.empty(
+                    reason="Gemini returned malformed JSON.",
+                    status="failed",
+                )
+        elif isinstance(response, dict):
+            data = response
+        else:
+            return self.empty(
+                reason=f"Unexpected response type: {type(response).__name__}",
+                status="failed",
+            )
+
+        # ------------------------------------------
+        # Winner Index Validation
+        # ------------------------------------------
+        raw_winner = data.get("winner")
+        if raw_winner is None:
+            # Check legacy keys just in case
+            raw_winner = data.get("selected_rank")
+
+        winner_index = None
+
+        if raw_winner is not None:
+            try:
+                winner_index = int(raw_winner)
+            except (ValueError, TypeError):
+                logger.warning(
+                    "[GEMINI] Invalid winner index type: %r",
+                    raw_winner,
+                )
+                winner_index = None
+
+        # Validate range: 1-indexed against ranked_places
+        if winner_index is not None:
+            if winner_index < 1 or winner_index > len(ranked_places):
+                logger.warning(
+                    "[GEMINI] Winner index %d out of range (1..%d)",
+                    winner_index,
+                    len(ranked_places),
+                )
+                return self.empty(
+                    reason=f"Winner index {winner_index} out of candidate range (1..{len(ranked_places)}).",
+                    status="failed",
+                )
+
+        # ------------------------------------------
+        # Confidence Normalization (0.0 to 1.0)
+        # ------------------------------------------
+        raw_conf = data.get("confidence", 0.0)
+        confidence = self.normalize_confidence(raw_conf)
+
+        # ------------------------------------------
+        # Reason Validation
+        # ------------------------------------------
+        reason = str(data.get("reason") or "").strip()
+        if not reason:
+            if winner_index is not None:
+                reason = f"Candidate {winner_index} selected as best explanation of evidence."
+            else:
+                reason = "Insufficient evidence to verify any candidate."
+
+        # ------------------------------------------
+        # Construct Parsed Result
+        # ------------------------------------------
+        if winner_index is None:
             return {
-
-                "gemini_verified": False,
-
-                "selected_rank": None,
-
-                "confidence": 0,
-
-                "reason": reason,
-
-                "matched_sources": [],
-
                 "winner": None,
-
+                "winner_index": None,
+                "confidence": confidence,
+                "reason": reason,
+                "status": "no_winner",
             }
 
-        winner = ranked_places[0]
-
-        winner["place"]["gemini_verified"] = False
-
-        winner["place"]["gemini_reason"] = reason
-
-        winner["place"]["gemini_confidence"] = 0
-
-        winner["place"]["matched_sources"] = []
+        winner_candidate = ranked_places[winner_index - 1]
 
         return {
-
-            "gemini_verified": False,
-
-            "selected_rank": 1,
-
-            "confidence": 0,
-
+            "winner": winner_candidate,
+            "winner_index": winner_index,
+            "confidence": confidence,
             "reason": reason,
-
-            "matched_sources": [],
-
-            "winner": winner,
-
+            "status": "verified",
         }
+
+    # ==================================================
+    # Normalize Confidence to 0.0 - 1.0
+    # ==================================================
+
+    def normalize_confidence(
+        self,
+        value: any,
+    ) -> float:
+
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            return 0.0
+
+        # If model returned percentage 1.0 < val <= 100.0, convert to 0..1
+        if 1.0 < val <= 100.0:
+            val = val / 100.0
+
+        # Clamp strictly between 0.0 and 1.0
+        val = max(0.0, min(1.0, val))
+
+        return round(val, 4)
+
+    # ==================================================
+    # Empty / Fallback Response
+    # ==================================================
+
+    def empty(
+        self,
+        reason: str = "Verification failed.",
+        status: str = "failed",
+    ) -> dict:
+
+        return {
+            "winner": None,
+            "winner_index": None,
+            "confidence": 0.0,
+            "reason": reason,
+            "status": status,
+        }

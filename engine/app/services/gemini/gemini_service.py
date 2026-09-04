@@ -1,9 +1,11 @@
 import json
+import logging
 import os
 from pathlib import Path
 
-import google.generativeai as genai
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiService:
@@ -20,92 +22,86 @@ class GeminiService:
             override=True,
         )
 
-        api_key = os.getenv(
+        self.api_key = os.getenv(
             "GEMINI_API_KEY",
         )
 
-        if not api_key:
+        self.model = None
+        self.available = False
 
-            raise RuntimeError(
-                "GEMINI_API_KEY not found."
+        if not self.api_key:
+            logger.warning(
+                "[GEMINI] GEMINI_API_KEY not found. Gemini service running in fallback mode."
+            )
+            return
+
+        try:
+            import google.generativeai as genai
+
+            genai.configure(
+                api_key=self.api_key,
             )
 
-        genai.configure(
-            api_key=api_key,
-        )
+            model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
-        self.model = genai.GenerativeModel(
+            self.model = genai.GenerativeModel(
+                model_name=model_name,
+                generation_config={
+                    "temperature": 0.0,
+                    "top_p": 0.9,
+                    "top_k": 20,
+                    "max_output_tokens": 2048,
+                    "response_mime_type": "application/json",
+                },
+            )
+            self.available = True
+            logger.info("[GEMINI] GeminiService initialized successfully with model: %s", model_name)
 
-            model_name="gemini-2.5-flash",
-
-            generation_config={
-
-                "temperature": 0.0,
-
-                "top_p": 0.9,
-
-                "top_k": 20,
-
-                "max_output_tokens": 2048,
-
-                "response_mime_type": "application/json",
-
-            },
-
-        )
+        except Exception as e:
+            logger.warning("[GEMINI] Failed to initialize GeminiService: %s", type(e).__name__)
+            self.model = None
+            self.available = False
 
     # ==================================================
-    # Generic JSON Generation
+    # Generic Content / JSON Generation
     # ==================================================
 
     def generate_json(
         self,
         prompt: str,
-    ):
+    ) -> dict | None:
+
+        if not self.available or not self.model:
+            logger.warning("[GEMINI] Service unavailable. Skipping Gemini request.")
+            return None
 
         try:
-
             response = self.model.generate_content(
                 prompt,
             )
 
         except Exception as e:
-
-            print(
-                f"\n❌ Gemini API Error\n{e}\n"
-            )
-
+            logger.error("[GEMINI] API Error: %s", type(e).__name__)
             return None
 
         text = getattr(
             response,
             "text",
             "",
-        ).strip()
+        )
+        if text is None:
+            text = ""
+        text = text.strip()
 
         if not text:
-
-            print(
-                "⚠️ Gemini returned an empty response."
-            )
-
+            logger.warning("[GEMINI] Received empty text from model.")
             return None
 
         try:
-
-            return json.loads(
-                text,
-            )
-
+            return json.loads(text)
         except json.JSONDecodeError:
-
-            print(
-                "\n⚠️ Gemini returned invalid JSON:\n"
-            )
-
-            print(text)
-
-            return None
+            # Return raw text so parser can handle markdown fences / regex
+            return text
 
     # ==================================================
     # Location Verification
@@ -114,25 +110,9 @@ class GeminiService:
     def verify_location(
         self,
         prompt: str,
-    ):
+    ) -> dict | str | None:
 
-        result = self.generate_json(
-            prompt,
-        )
-
-        if not result:
-
-            return {
-
-                "winner": None,
-
-                "confidence": 0,
-
-                "reason": "Gemini verification failed.",
-
-            }
-
-        return result
+        return self.generate_json(prompt)
 
     # ==================================================
     # Generic Prompt
@@ -153,10 +133,12 @@ class GeminiService:
 
     def health_check(
         self,
-    ):
+    ) -> bool:
+
+        if not self.available or not self.model:
+            return False
 
         try:
-
             response = self.model.generate_content(
                 "Reply ONLY with JSON: {\"status\":\"ok\"}",
             )
@@ -170,5 +152,4 @@ class GeminiService:
             )
 
         except Exception:
-
-            return False
+            return False
