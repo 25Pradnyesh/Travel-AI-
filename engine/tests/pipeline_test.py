@@ -85,15 +85,24 @@ class TestLocationPipeline(unittest.TestCase):
             video_path=None,
         )
 
+        self.assertTrue(response["success"])
         self.assertEqual(response["stage"], "caption")
-        self.assertEqual(response["verification_status"], "VERIFIED")
         self.assertTrue(response["gemini"]["used"])
         self.assertEqual(response["gemini"]["confidence"], 0.96)
-        self.assertEqual(response["best_guess"]["place"]["travel_name"], "Seebensee")
-        self.assertEqual(response["best_guess"]["place"]["place_id"], "google_place_123")
-        self.assertEqual(response["best_guess"]["place"]["formatted_address"], "Ehrwald 6632, Austria")
-        self.assertIn("category", response["best_guess"]["place"])
-        self.assertIn("travel_summary", response["best_guess"]["place"])
+        self.assertEqual(response["gemini"]["status"], "VERIFIED")
+
+        bg = response["best_guess"]
+        self.assertIsNotNone(bg)
+        self.assertEqual(bg["name"], "Seebensee")
+        self.assertEqual(bg["place_id"], "google_place_123")
+        self.assertEqual(bg["formatted_address"], "Ehrwald 6632, Austria")
+        self.assertEqual(bg["verification_status"], "VERIFIED")
+        self.assertEqual(bg["confidence_level"], "VERIFIED")
+        self.assertIn("why", bg)
+
+        ti = response["travel_intelligence"]
+        self.assertIn("category", ti)
+        self.assertIn("travel_summary", ti)
 
     def test_pipeline_handles_gemini_failure_gracefully(self):
         """When Gemini verifier throws an exception, pipeline must not crash and fallback to scoring."""
@@ -111,10 +120,12 @@ class TestLocationPipeline(unittest.TestCase):
         )
 
         # Pipeline recovers and falls back
+        self.assertTrue(response["success"])
         self.assertEqual(response["stage"], "caption")
-        self.assertEqual(response["verification_status"], "FAILED")
         self.assertIsNotNone(response["best_guess"])
-        self.assertEqual(response["best_guess"]["place"]["travel_name"], "Seebensee")
+        self.assertEqual(response["best_guess"]["name"], "Seebensee")
+        self.assertEqual(response["best_guess"]["verification_status"], "FAILED")
+        self.assertEqual(response["gemini"]["status"], "FAILED")
 
     def test_pipeline_returns_failed_when_no_candidates_found(self):
         """When resolver finds no candidates, pipeline returns clean failed response."""
@@ -128,10 +139,13 @@ class TestLocationPipeline(unittest.TestCase):
             video_path=None,
         )
 
+        self.assertFalse(response["success"])
         self.assertEqual(response["stage"], "failed")
         self.assertIsNone(response["best_guess"])
-        self.assertEqual(response["verification_status"], "FAILED")
+        self.assertEqual(response["gemini"]["status"], "FAILED")
         self.assertFalse(response["gemini"]["used"])
+        self.assertIn("error", response)
+
 
 
 if __name__ == "__main__":
