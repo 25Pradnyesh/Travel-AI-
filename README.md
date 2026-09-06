@@ -4,17 +4,23 @@
 
 ### Discover it. Save it. Go there.
 
-Turn travel inspiration from Instagram into places you can actually visit.
+Turn Instagram travel Reels into real-world destinations.
 
 <br />
 
-[![Status](https://img.shields.io/badge/Status-Active%20Development-18181B?style=for-the-badge&labelColor=09090B)](https://github.com/25Pradnyesh/Travel-AI-)
-[![Next.js](https://img.shields.io/badge/Next.js%2016-App%20Router-18181B?style=for-the-badge&logo=nextdotjs&logoColor=white&labelColor=09090B)](https://nextjs.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Python%203.12-18181B?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=09090B)](https://fastapi.tiangolo.com)
-[![Gemini](https://img.shields.io/badge/Gemini-Multimodal%20Verification-18181B?style=for-the-badge&logo=google&logoColor=white&labelColor=09090B)](https://ai.google.dev)
-[![Google Places](https://img.shields.io/badge/Google%20Places-API-18181B?style=for-the-badge&logo=googlemaps&logoColor=white&labelColor=09090B)](https://developers.google.com/maps)
+[![Next.js](https://img.shields.io/badge/Next.js%2016-18181B?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-18181B?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Python](https://img.shields.io/badge/Python%203.12-18181B?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-18181B?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Google Places](https://img.shields.io/badge/Google%20Places-18181B?style=for-the-badge&logo=googlemaps&logoColor=white)](https://developers.google.com/maps)
+[![Gemini](https://img.shields.io/badge/Gemini%20Verification-18181B?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 
 <br />
+
+<p align="center">
+  <strong>TRAVEL DISCOVERY</strong><br />
+  <em>Your next trip is hiding in your feed.</em>
+</p>
 
 </div>
 
@@ -22,29 +28,15 @@ Turn travel inspiration from Instagram into places you can actually visit.
 
 ## What is Travel AI?
 
-Travel AI is a multimodal location intelligence engine designed to bridge the gap between social media discovery and real-world travel.
+People discover extraordinary places through Instagram Reels every day: a hidden cove in Mallorca, a cliffside espresso bar in Amalfi, a mountain hut in the Dolomites.
 
-When you paste a public Instagram Reel URL, the system reverse-engineers the video—extracting on-screen signage, spoken audio, visual landmarks, and caption clues—to identify the exact real-world place.
+Yet the actual destination is almost impossible to identify and save. Captions are often cryptic, location tags are omitted, and audio tracks rarely provide geographic context. Saved collections quietly become graveyards of unnamed locations.
 
-Instead of guessing or returning vague regions, Travel AI anchors every discovery to verified geographic coordinates, surfaces nearby points of interest, and builds actionable travel intelligence.
+**Travel AI reverses this experience.**
 
----
+When you paste a public Instagram Reel URL, the system reverse-engineers the video—combining on-screen signage, spoken audio, visual landmarks, and caption clues—to identify the exact real-world place.
 
-## The Problem
-
-Instagram has quietly become the primary travel discovery engine for millions.
-
-A secluded cove in Mallorca.  
-A cliffside espresso bar in Amalfi.  
-A viewpoint tucked into the Swiss Alps.  
-
-You save the Reel. Months later, when you actually plan the trip:
-
-> **"Where was this place?"**
-
-Saved collections become graveyards of unnamed locations. Captions are often cryptic, geo-tags are omitted, and audio tracks rarely provide geographic context.
-
-Travel AI eliminates this friction:
+Instead of guessing or returning vague regions, Travel AI anchors every discovery to verified Google Places coordinates, explains why the place was matched, and synthesizes practical travel intelligence so you can actually visit.
 
 ```text
 Discover  ──►  Understand  ──►  Save  ──►  Go
@@ -54,232 +46,130 @@ Discover  ──►  Understand  ──►  Save  ──►  Go
 
 ## Reel → Destination
 
-The core technical differentiator of Travel AI is that it does **not** prompt an LLM with *"Where is this video?"* and expect an ungrounded guess.
+Travel AI does not prompt an LLM with *"Where is this video?"* and hope for a plausible answer.
 
-Instead, the system treats location resolution as an evidence extraction, entity discovery, ranking, and multimodal verification challenge:
+Instead, the system follows an evidence-based pipeline: extracting multimodal signals, grounding candidates in geographic databases, scoring them against evidence, and verifying the winner with Gemini:
 
 ```text
                PUBLIC INSTAGRAM REEL
                          │
                          ▼
-                    EXTRACTION
+                  EXTRACT EVIDENCE
+      Caption · Hashtags · OCR · Speech · Frames
                          │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-           Evidence            Video Frames
-   Caption · Hashtags · OCR         │
-   Metadata · Audio Speech          │
-              │                     │
-              ▼                     │
-     CANDIDATE EXTRACTION           │
-   Mining · Normalization · Dedupe  │
-              │                     │
-              ▼                     │
-        GOOGLE PLACES               │
-   Text Search · Place Details      │
-              │                     │
-              ▼                     │
-       GEO ENRICHMENT               │
-   Hierarchy · Nearby Discovery     │
-              │                     │
-              ▼                     │
-          SCORING                   │
-    Multi-Factor Weights            │
-              │                     │
-              ▼                     │
-     CANDIDATE RANKING              │
-       Top Candidates               │
-              │                     │
-              ▼                     │
-   GEMINI TEXT VERIFICATION         │
-              │                     │
-              ▼                     │
-   GEMINI VISION VERIFICATION ◄─────┘
-   Keyframe Landmark Cross-Check
-              │
-              ▼
-   FINAL VERIFIED DESTINATION
-              │
-              ▼
-      TRAVEL INTELLIGENCE
-   Season · Budget · Duration · Tips
-              │
-              ▼
-  CANONICAL DESTINATION RESPONSE
-              │
-              ▼
-  NEXT.JS PRODUCT EXPERIENCE
+                         ▼
+                GENERATE CANDIDATES
+          Entity Mining & Normalization
+                         │
+                         ▼
+                   GOOGLE PLACES
+            Place Search & Details API
+                         │
+                         ▼
+                  RANK & ENRICH
+        Multi-Factor Scoring & Context
+                         │
+                         ▼
+                GEMINI VERIFICATION
+          Text & Keyframe Cross-Checking
+                         │
+                         ▼
+              DESTINATION EXPERIENCE
+     Hero · Verification · Intelligence · Maps
 ```
+
+---
+
+## Destination Experience
+
+When analysis completes, Travel AI presents a cinematic, editorial destination experience built to turn social media inspiration into trip planning.
 
 ```text
-Evidence  ──►  Real Place Candidates  ──►  Ranking  ──►  Gemini Verification  ──►  Destination
+┌─────────────────────────────────────────────────────────────┐
+│ DESTINATION                                                 │
+│                                                             │
+│ [ CINEMATIC DESTINATION PHOTO ]                             │
+│                                                             │
+│ Lake Como                                                   │
+│ Como, Lombardy, Italy                                       │
+│                                                             │
+│ VERIFIED MATCH · 94% CONFIDENCE                             │
+│                                                             │
+│ "Why This Place: Matched caption Italian keywords and      │
+│  verified visual alpine shoreline features."                │
+│                                                             │
+│ BEST SEASON         DAILY BUDGET         DURATION           │
+│ May to September    $150 - $250          2-4 Days           │
+│                                                             │
+│ [ Open in Google Maps → ]                                   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## How It Works
-
-### 01 — Extract
-The engine ingests the Reel URL and runs parallel extraction across all available media tracks:
-- **Caption & Metadata**: Captions, author details, and location hashtags.
-- **Computer Vision (OCR)**: Scans video frames for signage, watermarks, and subtitles.
-- **Speech Recognition**: Transcribes spoken audio into timestamped text via Whisper.
-- **Keyframe Extraction**: Selects representative frames for visual landmark identification.
-
-### 02 — Discover
-Clues mined from captions, speech, and OCR are parsed into geographic entities. The system normalizes place names, resolves colloquial phrasing, and deduplicates references.
-
-### 03 — Search
-Candidate strings are queried against the Google Places API to establish ground truth. Every candidate is bound to an official `place_id`, verified coordinates, and administrative records.
-
-### 04 — Enrich
-The location engine gathers full context for each place: country, state/region, city, Google Place types, user ratings, and surrounding points of interest.
-
-### 05 — Rank
-Candidates are ranked through a weighted multi-factor scoring matrix evaluating:
-- Fuzzy string and token overlap against Reel evidence
-- Relevance of Google Place types (e.g., natural feature vs. business)
-- Geographic hierarchy consistency across multiple clues
-- Popularity and global entity priors
-
-### 06 — Verify
-The top candidates are evaluated by Gemini alongside the raw evidence. Gemini performs text-based consistency checking and vision-based keyframe comparison to confirm the winner, calculate confidence, and explain the selection.
-
-### 07 — Understand
-Once verified, the engine synthesizes contextual travel logistics:
-- Destination classification (coastal, alpine, urban, heritage)
-- Optimal visiting windows (peak months, shoulder months, seasons to avoid)
-- Estimated daily budget ranges and currency standards
-- Recommended stay length, climate packing items, and local travel advisories
-
-### 08 — Return
-All verified place data, maps links, nearby attractions, and intelligence summaries are formatted into a clean, predictable canonical JSON contract (`AnalysisResponse`).
-
-### 09 — Experience
-The Next.js frontend communicates with the analysis engine through an internal API route proxy (`/api/analyze`), triggering the pipeline and rendering the verified destination card with match confidence, "Why this place" rationale, and Google Maps routing.
+### The Core Product Moment
+- **Cinematic Imagery**: Displays high-resolution Google Places photography with author attribution, backed by a neutral topographic fallback when photos are unavailable.
+- **Typographic Hierarchy**: The verified destination name is the primary visual anchor, accompanied by country, region, and formatted address.
+- **Verification Badge & Confidence**: Clear status indicators (`VERIFIED`, `PARTIAL`, `SKIPPED`, `FAILED`) paired with an accessible match confidence meter.
+- **Editorial Rationale**: The "Why this place" section provides the exact reasoning behind the destination match without exposing internal scoring math.
+- **Travel Intelligence**: Actionable details including best visiting window, peak months, months to avoid, and recommended duration.
+- **Trip Budget**: Estimated daily expenses and budget tiers tailored to the destination style.
+- **Curated Travel Tips**: Practical local advice presented in concise, readable cards.
+- **Nearby Places**: Discovered surrounding attractions and viewpoints with ratings, categories, and distances.
+- **Google Maps Action**: One-click jump to Google Maps for immediate navigation and saving.
 
 ---
 
-## Current Capabilities
+## What It Can Do
 
-### Location Intelligence Engine
+### Reel Analysis
+- Ingest public Instagram Reel URLs with client and server validation
+- Extract caption text, hashtags, and creator metadata
+- Scan video keyframes for on-screen signage, subtitles, and watermarks via EasyOCR
+- Transcribe speech and ambient spoken mentions via OpenAI Whisper
 
-| Capability | Status | Description |
-|---|:---:|---|
-| Instagram Metadata & Caption Extraction | `DONE` | Ingests captions, hashtags, and author data |
-| Keyframe Extraction | `DONE` | Samples video frames at configurable intervals |
-| OCR Text Recognition | `DONE` | Detects on-screen signage, watermarks, and subtitles |
-| Whisper Audio Transcription | `DONE` | Transcribes audio speech tracks into text |
-| Evidence Aggregation | `DONE` | Merges multimodal clues into a unified evidence model |
-| Candidate Mining & Normalization | `DONE` | Extracts, cleans, and deduplicates location strings |
-| Travel Keyword Filtering | `DONE` | Filters false positives using travel lexicons |
-| Google Places Text Search | `DONE` | Discovers verified real-world place candidates |
-| Google Place Details | `DONE` | Retrieves coordinates, addresses, and photos |
-| Geographic Enrichment | `DONE` | Resolves country, state/region, and city hierarchy |
-| Nearby Places Discovery | `DONE` | Finds surrounding landmarks, attractions, and stays |
-| Multi-Factor Scoring Engine | `DONE` | Scores candidates via token overlap, types, and priors |
-| Candidate Ranking | `DONE` | Prunes weak candidates and isolates top candidates |
-| Gemini Text Verification | `DONE` | Evaluates evidence consistency and edge cases |
-| Gemini Vision Verification | `DONE` | Cross-checks video keyframes against place visuals |
-| Canonical Response Builder | `DONE` | Normalizes output into a unified Phase 6 schema |
+### Location Intelligence
+- Mine geographic candidate strings and deduplicate regional references
+- Query Google Places API to establish verified entity ground truth
+- Fetch official coordinates, place types, user ratings, and reviews
+- Enrich administrative hierarchy (city, region, country)
+- Discover nearby attractions, landmarks, and lodging
 
-### Travel Intelligence
+### Verification
+- Gemini text verification against extracted caption, OCR, and speech clues
+- Gemini vision verification cross-referencing video keyframes against place visual features
+- Deterministic winner selection balancing scoring priors and multimodal reasoning
+- Transparent verification states (`VERIFIED`, `PARTIAL`, `SKIPPED`, `FAILED`)
+- Graceful fallbacks when verification cannot run or API limits occur
 
-| Capability | Status | Description |
-|---|:---:|---|
-| Destination Categorization | `DONE` | Classifies terrain and travel style |
-| Seasonal Intelligence | `DONE` | Identifies peak, shoulder, and avoid months |
-| Budget Estimation | `DONE` | Estimates daily expenses and budget tiers |
-| Packing Guidance | `DONE` | Generates climate- and activity-aware checklists |
-| Trip-Duration Guidance | `DONE` | Recommends optimal stay length |
-| Curated Travel Tips | `DONE` | Surfaces localized tips and navigation advice |
-
-### Product & Frontend
-
-| Capability | Status | Description |
-|---|:---:|---|
-| Next.js 16 App Shell | `DONE` | Modern, responsive web interface |
-| Fluid Motion System | `DONE` | Smooth animations powered by Framer Motion |
-| Reel URL Input & Validation | `DONE` | Validates Instagram URL patterns client & server side |
-| Analysis Loading Experience | `DONE` | Real loading state with button locks and spinners |
-| Frontend ↔ Backend Proxy | `DONE` | Secure Next.js `/api/analyze` proxy to FastAPI |
-| Canonical Response Consumption | `DONE` | Consumes and renders Phase 6 canonical responses |
-| Initial Destination Reveal | `DONE` | Displays verified place, confidence, why, photos & Maps CTA |
-| Rich Destination Experience UI | `IN PROGRESS` | Multi-tab destination view, full gallery & interactive map |
-| Nearby Places Presentation | `IN PROGRESS` | Interactive carousel and category filters for nearby POIs |
-| Saved Collections & Memory | `LATER` | Personal library of resolved destinations |
-| User Authentication | `LATER` | Accounts, profiles, and cross-device sync |
-| Google Maps List Export | `LATER` | One-click export to Google Maps saved places |
+### Destination Experience
+- Cinematic destination hero with responsive media containers
+- Neutral cartographic fallback for places without Google imagery
+- Match confidence percentage and accessible visual meter
+- Dedicated "Why this place" editorial quote card
+- About the Destination travel summary
+- Seasonal intelligence with peak and avoid month tags
+- Daily budget estimations and currency standards
+- Local travel tips formatted for clean reading
+- Surrounding attractions grid with distances and ratings
+- Direct Google Maps routing CTA
 
 ---
 
-## Gemini Verification
+## Development Status
 
-Gemini is **not** used as an ungrounded search engine. It does not replace Google Places; rather, it acts as an intelligent arbitrator over verified place candidates.
-
-```text
-Scoring Engine  ──►  Top Place Candidates  ──►  Gemini Verifier  ──►  Verified Winner
-```
-
-1. **Grounded Input**: Gemini receives the strongest candidates discovered and ranked from Google Places, paired with the full multimodal evidence extracted from the Reel.
-2. **Dual-Track Verification**:
-   - **Text Verification**: Validates whether the candidate aligns with captions, hashtags, transcriptions, and geographical clues.
-   - **Vision Verification**: Cross-references video keyframes against candidate features and landscape context.
-3. **Resilience & Fallbacks**: The system handles Gemini timeouts, malformed outputs, and scoring disagreements gracefully by falling back to the top-scoring candidate with appropriate verification status flags (`VERIFIED`, `PARTIAL`, `SKIPPED`, `FAILED`).
-
----
-
-## Final Destination Response
-
-The backend produces a canonical, frontend-ready destination response (`AnalysisResponse`). The frontend consumes this structured payload directly without needing to parse internal Google or Gemini data:
-
-- **Identity**: Place ID, official name, formatted address.
-- **Geography**: Country, city, region, latitude, longitude.
-- **Reputation**: User rating, total review count, Google place types.
-- **Visuals**: Photo URLs, dimensions, and author attributions.
-- **Navigation**: Direct Google Maps URL.
-- **Verification**: Confidence score (0–100), confidence level, verification status, Gemini reasoning, and a human-readable `"why"` explanation.
-- **Travel Intelligence**: Best season, daily budget, trip duration, travel tips.
-- **Nearby Places**: List of surrounding points of interest with category, distance in km, and ratings.
-
----
-
-## Product Experience
-
-```text
-┌──────────────────────────┐
-│        PASTE REEL        │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│         ANALYZE          │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│  LOCATION INTELLIGENCE   │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│   VERIFIED DESTINATION   │
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│   TRAVEL INTELLIGENCE    │
-└──────────────────────────┘
-```
-
-1. **Paste Reel** — Paste any public Instagram Reel URL into the input field.
-2. **Analyze** — Trigger real-time extraction, candidate ranking, and Gemini verification.
-3. **Location Intelligence** — Multimodal evidence is aligned with Google Places ground truth.
-4. **Verified Destination** — Inspect the confirmed place name, address, confidence rating, explanation, and photos.
-5. **Travel Intelligence** — Review optimal visiting seasons, estimated daily budgets, and local tips.
-6. **Open in Maps** — Jump straight into Google Maps with one click.
-
-*Note: The product experience is currently being expanded into a richer, dedicated destination results interface.*
+| Milestone | Area | Status |
+|---|---|:---:|
+| **Phase 1** — Location Extraction | Extraction | Completed |
+| **Phase 2** — Evidence Extraction | Multimodal Signals | Completed |
+| **Phase 3** — Candidate Generation | Entity Mining | Completed |
+| **Phase 4** — Google Places Grounding | Geographic Ground Truth | Completed |
+| **Phase 5** — Gemini Verification | Multimodal Verification | Completed |
+| **Phase 6** — Final Destination Response | Canonical Schema Builder | Completed |
+| **Phase 7** — Frontend Integration | Next.js ↔ FastAPI Proxy | Completed |
+| **Phase 8** — Destination Experience | Cinematic UI & Intelligence | Completed |
+| **Phase 9** — Saved Destinations & Memory | Personal Library | Planned |
+| **Phase 10** — Trips & Collections | Itineraries & Bucket Lists | Planned |
+| **Phase 11** — Google Maps List Sync | One-Click List Export | Planned |
+| **Phase 12** — Everywhere | Extension & Mobile Apps | Planned |
 
 ---
 
@@ -334,20 +224,20 @@ The backend produces a canonical, frontend-ready destination response (`Analysis
                      ┌─────────────────────────┐
                      │   TRAVEL INTELLIGENCE   │
                      │ Category · Season       │
-                     │ Budget · Tips · Packing │
+                     │ Budget · Tips · Timing  │
                      └────────────┬────────────┘
                                   │
                                   ▼
                      ┌─────────────────────────┐
                      │    RESPONSE BUILDER     │
                      │ Canonical Best Guess    │
-                     │ Nearby POIs · Metadata  │
+                     │ Nearby POIs · Summary   │
                      └────────────┬────────────┘
                                   │
                                   ▼
                      ┌─────────────────────────┐
-                     │     FRONTEND RESULT     │
-                     │ Destination Card · Maps │
+                     │ DESTINATION EXPERIENCE  │
+                     │  Hero · Why · Maps CTA  │
                      └─────────────────────────┘
 ```
 
@@ -355,33 +245,18 @@ The backend produces a canonical, frontend-ready destination response (`Analysis
 
 ## Tech Stack
 
-### Frontend
-- **Framework**: Next.js 16 (App Router)
-- **Library**: React 19, TypeScript
-- **Styling**: Tailwind CSS v4
-- **Animation**: Framer Motion
-- **Icons**: Lucide React
-- **Primitives**: Radix UI / shadcn
-
-### Backend Engine
-- **Runtime**: Python 3.12+
-- **API Framework**: FastAPI
-- **Server**: Uvicorn
-- **Validation**: Pydantic v2
-
-### Multimodal Processing
-- **Computer Vision**: OpenCV (frame extraction)
-- **Text Recognition**: EasyOCR
-- **Audio Processing**: Whisper (speech transcription)
-- **Extraction Core**: yt-dlp
-
-### Location & Verification
-- **Geographic Data**: Google Places API (Text Search, Place Details, Nearby Search)
-- **Multimodal AI**: Google Gemini
-
-### Data & Persistence (Planned)
-- **Database**: PostgreSQL
-- **ORM**: Prisma
+| Layer | Technologies | Role |
+|---|---|---|
+| **Frontend** | Next.js 16, React 19, TypeScript | App Router web application |
+| **Styling** | Tailwind CSS v4, Lucide React | Clean, high-contrast dark aesthetic |
+| **Motion** | Framer Motion | Subtle, cubic-bezier staggered animation |
+| **Backend Engine** | Python 3.12, FastAPI, Uvicorn | High-performance asynchronous API |
+| **Data Validation** | Pydantic v2 | Strict schema contracts and serialization |
+| **Multimodal Vision** | OpenCV, EasyOCR | Keyframe sampling and on-screen text recognition |
+| **Speech Processing** | OpenAI Whisper | Audio speech-to-text transcription |
+| **Media Ingestion** | yt-dlp | Reel audio, video, and metadata extraction |
+| **Geographic Grounding** | Google Places API | Text Search, Place Details, Nearby Search |
+| **AI Verification** | Google Gemini | Multimodal text reasoning & keyframe verification |
 
 ---
 
@@ -390,34 +265,44 @@ The backend produces a canonical, frontend-ready destination response (`Analysis
 ```text
 travel-ai/
 ├── app/                          # Next.js App Router
-│   ├── api/analyze/route.ts      # Next.js API proxy to FastAPI engine
+│   ├── api/analyze/route.ts      # API proxy forwarding requests to FastAPI
 │   ├── globals.css               # Tailwind CSS stylesheet
 │   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Home page and analysis orchestrator
+│   └── page.tsx                  # Landing page & destination experience orchestrator
 ├── components/                   # React UI components
-│   ├── ui/                       # Primitive components
-│   ├── Background.tsx            # Ambient visual background
-│   ├── DestinationResult.tsx     # Destination result card & intelligence view
-│   ├── FloatingCards.tsx         # Decorative visual elements
-│   ├── Hero.tsx                  # Hero header, Reel URL input & Analyze button
-│   └── Navbar.tsx                # Top navigation bar
+│   ├── destination/              # Phase 8 Destination Experience
+│   │   ├── BudgetCard.tsx        # Daily budget, currency, and duration card
+│   │   ├── DestinationActions.tsx# Primary Google Maps CTA & reset button
+│   │   ├── DestinationExperience.tsx # Master container & motion orchestration
+│   │   ├── DestinationHero.tsx   # Cinematic photo, prominent title & rating
+│   │   ├── DestinationReason.tsx # "Why this place" editorial quote card
+│   │   ├── DestinationVerification.tsx # Status badge & confidence meter
+│   │   ├── NearbyPlaces.tsx      # Surrounding POIs grid with distances
+│   │   ├── TravelIntelligenceSection.tsx # Seasonal timing & peak month tags
+│   │   ├── TravelSummary.tsx     # Editorial destination summary
+│   │   └── TravelTips.tsx        # Concise local guidance cards
+│   ├── ui/                       # Primitive UI components
+│   ├── Background.tsx            # Ambient visual backdrop
+│   ├── FloatingCards.tsx         # Decorative visual accents
+│   ├── Hero.tsx                  # Reel URL input, validation & loading states
+│   └── Navbar.tsx                # Minimalist navigation bar
 ├── engine/                       # FastAPI intelligence engine
 │   ├── app/
-│   │   ├── api/                  # API routers (test_routes.py, etc.)
+│   │   ├── api/                  # API routers (analyze, health, test)
 │   │   ├── main.py               # FastAPI application entrypoint
-│   │   ├── pipelines/            # LocationPipeline execution logic
+│   │   ├── pipelines/            # LocationPipeline execution controller
 │   │   └── services/             # Modular domain services
 │   │       ├── extraction/       # Video download, frames, evidence builder
 │   │       ├── gemini/           # Gemini verifier, prompt builders, parsers
-│   │       ├── location/         # Location resolver & candidate normalization
-│   │       ├── maps/             # Google Places client & enrichment
+│   │       ├── location/         # Candidate mining & resolver
+│   │       ├── maps/             # Google Places API client & geo enrichment
 │   │       ├── ocr/              # EasyOCR text recognition
-│   │       ├── response/         # Canonical response builder
-│   │       ├── scoring/          # Multi-factor candidate scoring matrix
-│   │       ├── speech/           # Whisper audio transcription service
+│   │       ├── response/         # Canonical Phase 6 response builder
+│   │       ├── scoring/          # Multi-factor scoring matrix
+│   │       ├── speech/           # Whisper audio transcription
 │   │       └── travel/           # Travel intelligence synthesizer
-│   ├── domain/schemas/           # Pydantic schemas (responses.py, etc.)
-│   └── tests/                    # Backend regression test suite
+│   ├── domain/schemas/           # Pydantic schemas (AnalysisResponse, etc.)
+│   └── tests/                    # 31 automated unit & regression tests
 ├── types/                        # TypeScript definitions
 │   └── analysis.ts               # Canonical response & request interfaces
 ├── package.json                  # Frontend dependencies and scripts
@@ -426,122 +311,62 @@ travel-ai/
 
 ---
 
-## API
+## Accuracy Philosophy
 
-### Next.js Client Route
+Travel AI approaches destination identification as an **evidence-based ranking and verification problem**, not an unconstrained text generation prompt.
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/analyze` | Client proxy: validates Reel URL and forwards to FastAPI engine |
-
-**Request Body:**
-```json
-{
-  "url": "https://www.instagram.com/reel/DN2XxxY2O7-/"
-}
+```text
+Caption + OCR + Speech + Hashtags + Metadata + Geographic Context + Google Places + Scoring + Gemini + Vision
+= Best Supported Destination
 ```
 
-### FastAPI Intelligence Engine
+The system does not generate:
+> *"Something that sounds plausible."*
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/` | Engine health check |
-| `GET` | `/health` | Engine status endpoint |
-| `POST` | `/analyze` | Executes location pipeline and returns verified destination |
-| `GET` | `/docs` | Interactive Swagger / OpenAPI documentation |
+It resolves:
+> *"The verified real-world place that best accounts for all available evidence."*
 
-**Request Body:**
-```json
-{
-  "reel_url": "https://www.instagram.com/reel/DN2XxxY2O7-/"
-}
-```
+### Core Principles
+1. **Multiple Evidence Signals**: No single signal is trusted blindly. Evidence from captions, OCR, speech, and frames must align.
+2. **Ground Truth Anchor**: Every candidate must exist in the Google Places database with verified coordinates.
+3. **Transparent Uncertainty**: When confidence is moderate or partial, the UI clearly displays `PARTIAL` or `SKIPPED` rather than presenting an unverified guess as a certainty.
+4. **No Fabricated Destinations**: If a Reel cannot be confidently matched, the system returns a clean failure state rather than inventing a place.
 
-**Canonical Response:**
-```json
-{
-  "success": true,
-  "best_guess": {
-    "place_id": "ChIJN1tT3GuHK4cR35ogsmMo848",
-    "name": "Lake Como",
-    "formatted_address": "Lake Como, Lombardy, Italy",
-    "country": "Italy",
-    "city": "Como",
-    "region": "Lombardy",
-    "latitude": 45.9863,
-    "longitude": 9.2572,
-    "rating": 4.8,
-    "user_ratings_total": 14200,
-    "types": ["natural_feature", "tourist_attraction"],
-    "photos": [
-      {
-        "url": "https://...",
-        "width": 1080,
-        "height": 720
-      }
-    ],
-    "maps_url": "https://www.google.com/maps/search/?api=1&query=45.9863,9.2572",
-    "confidence": 94,
-    "confidence_level": "VERY_HIGH",
-    "verification_status": "VERIFIED",
-    "gemini_confidence": 0.95,
-    "gemini_reason": "Visual markers match lake shoreline referenced in caption and OCR.",
-    "why": "Verified from Reel's CAPTION, OCR and Google Places location data."
-  },
-  "travel_intelligence": {
-    "category": "Lakes & Mountains",
-    "category_emoji": "🌊",
-    "best_season": "May to September",
-    "budget_level": "$$$",
-    "estimated_daily_budget": "$150 - $250",
-    "recommended_trip_days": "2-4 Days",
-    "travel_tips": [
-      "Book ferry passes in advance during peak summer months"
-    ]
-  },
-  "nearby_places": [
-    {
-      "place_id": "ChIJ...",
-      "name": "Villa del Balbianello",
-      "formatted_address": "Via Guido Monzino, 1, 22016 Tremezzina CO, Italy",
-      "distance_km": 4.2,
-      "rating": 4.9,
-      "category": "Attraction",
-      "maps_url": "https://www.google.com/maps/..."
-    }
-  ]
-}
-```
+---
+
+## Input & Privacy
+
+Travel AI processes **public Instagram Reel URLs**.
+
+- No Instagram account credentials or personal logins are required.
+- Video frames and audio tracks are processed ephemerally during analysis.
+- The system only reads publicly accessible content shared by travel creators.
 
 ---
 
 ## Local Development
 
 ### Prerequisites
-
 - **Node.js**: 18.0 or newer
 - **Python**: 3.12 or newer
 - **Google Places API Key**: Required for place search and details
 - **Gemini API Key**: Required for multimodal verification
 
 ### 1. Clone the Repository
-
 ```bash
 git clone https://github.com/25Pradnyesh/Travel-AI-.git
 cd travel-ai
 ```
 
-### 2. Configure Environment Variables
+### 2. Environment Variables
 
 Create `engine/.env`:
-
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 GOOGLE_PLACES_API_KEY=your_google_places_api_key
 ```
 
 Create `.env.local` in the project root:
-
 ```env
 ENGINE_API_URL=http://127.0.0.1:8000
 ```
@@ -549,7 +374,6 @@ ENGINE_API_URL=http://127.0.0.1:8000
 ### 3. Start the Python Engine
 
 Create and activate a virtual environment:
-
 ```powershell
 # Windows (PowerShell)
 python -m venv engine/.venv
@@ -563,15 +387,13 @@ source engine/.venv/bin/activate
 ```
 
 Install engine dependencies:
-
 ```bash
 pip install -r engine/requirements.txt
 ```
 
 Start the FastAPI server:
-
 ```powershell
-# Windows PowerShell (UTF-8 enabled)
+# Windows PowerShell (with UTF-8 support)
 $env:PYTHONUTF8="1"; python -m uvicorn engine.app.main:app --reload
 ```
 
@@ -580,161 +402,54 @@ $env:PYTHONUTF8="1"; python -m uvicorn engine.app.main:app --reload
 python -m uvicorn engine.app.main:app --reload
 ```
 
-- Engine runs at `http://127.0.0.1:8000`  
-- Swagger documentation is available at `http://127.0.0.1:8000/docs`
+- Engine runs at `http://127.0.0.1:8000`
+- Interactive Swagger documentation is available at `http://127.0.0.1:8000/docs`
 
 ### 4. Start the Frontend Client
 
-From the repository root:
-
+From the project root:
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 5. Running Tests
-
-Run the backend regression test suite:
-
-```powershell
-$env:PYTHONUTF8="1"; engine\.venv\Scripts\python.exe -m unittest discover -s engine/tests -p "*test*.py"
-```
-
-Verify the frontend build and linter:
-
+### 5. Running Verification
 ```bash
+# Frontend linting & production build
 npm run lint
 npm run build
-```
 
----
-
-## Development Status
-
-### Intelligence Engine
-
-```text
-[DONE] Multimodal Extraction (Caption, OCR, Audio, Frames)
-[DONE] Candidate Mining, Normalization & Deduplication
-[DONE] Google Places Grounding & Place Details
-[DONE] Geographic Hierarchy Enrichment & Nearby Search
-[DONE] Multi-Factor Candidate Scoring Engine
-[DONE] Gemini Multimodal Text & Vision Verification
-[DONE] Travel Intelligence Synthesis (Season, Budget, Tips)
-[DONE] Canonical Response Builder (Phase 6 Schema)
-```
-
-### Product & Frontend
-
-```text
-[DONE] Landing Page & Visual Shell
-[DONE] Framer Motion Fluid Interaction
-[DONE] Reel URL Client & Server Validation
-[DONE] Analysis Loading Experience & Request Locks
-[DONE] Next.js ↔ FastAPI API Route Integration (Phase 7)
-[DONE] Canonical Response Consumption & State Management
-[DONE] Initial Destination Result Card & Google Maps CTA
-[IN PROGRESS] Rich Multi-Tab Destination Experience Page
-[IN PROGRESS] Nearby Places Interactive Carousel & Categories
-[LATER] User Accounts, Authentication & Profiles
-[LATER] Saved Collections & Destination Library
-[LATER] Google Maps Saved Lists Synchronization
+# Backend regression test suite (31 tests)
+$env:PYTHONUTF8="1"; engine\.venv\Scripts\python.exe -m unittest discover -s engine/tests -p "*test*.py"
 ```
 
 ---
 
 ## Roadmap
 
-### 01 — Location Intelligence `COMPLETED`
-- [x] Multimodal extraction pipeline (caption, OCR, speech, frames)
-- [x] Candidate entity extraction and deduplication
-- [x] Google Places search and Place Details enrichment
-- [x] Multi-factor candidate scoring and ranking
+### Current Milestones `COMPLETED`
+- [x] **Phase 1–4**: Extraction, OCR, Whisper speech transcription, candidate mining, Google Places grounding
+- [x] **Phase 5**: Gemini multimodal text and vision verification
+- [x] **Phase 6**: Canonical destination response builder
+- [x] **Phase 7**: Next.js ↔ FastAPI proxy integration
+- [x] **Phase 8**: Cinematic Destination Experience (Hero, verification, why rationale, travel intelligence, budget, tips, nearby places, Google Maps CTA)
 
-### 02 — Gemini Verification `COMPLETED`
-- [x] Gemini text verification against evidence clues
-- [x] Gemini vision verification against video keyframes
-- [x] Resilient fallbacks for API errors and ambiguous scores
-
-### 03 — Destination Response Builder `COMPLETED`
-- [x] Travel intelligence synthesis (seasons, budgets, packing, tips)
-- [x] Nearby places normalization
-- [x] Canonical Phase 6 frontend response contract
-
-### 04 — Frontend ↔ Backend Integration (Phase 7) `COMPLETED`
-- [x] Next.js `/api/analyze` proxy route to FastAPI engine
-- [x] Real-time request orchestration without mock data
-- [x] Loading states, error handling, and duplicate request prevention
-- [x] Initial destination reveal with match confidence and Maps CTA
-
-### 05 — Rich Destination Experience `UPCOMING`
-- [ ] Dedicated destination results page
-- [ ] High-resolution destination image gallery
-- [ ] Interactive nearby places carousel
-- [ ] Interactive travel intelligence dashboard (packing lists, seasonal chart)
-
-### 06 — Memory & Collections `LATER`
-- [ ] User authentication and session persistence
-- [ ] Saved destinations database
-- [ ] Trip itineraries and bucket lists
-- [ ] Geographic map view of all saved locations
-
-### 07 — Ecosystem & Everywhere `LATER`
-- [ ] One-click export to Google Maps saved lists
-- [ ] Chrome extension for one-click Reel analysis
-- [ ] Cross-platform support (YouTube Shorts, TikTok)
-- [ ] Public developer API
-
----
-
-## Accuracy Philosophy
-
-Travel AI approaches destination identification as an **evidence-based ranking and verification challenge**, not an unconstrained generative prompt.
-
-```text
-Caption + OCR + Speech + Hashtags + Metadata + Geographic Context + Google Places + Scoring + Gemini + Vision
-= Best Supported Destination
-```
-
-The system does not generate:
-> *"Something that sounds plausible."*
-
-It resolves:
-> *"The verified real-world place that best accounts for all available evidence."*
-
-A strong destination match requires cross-signal validation across independent evidence tracks before receiving high confidence.
-
----
-
-## Privacy
-
-Travel AI processes **public Instagram Reel URLs**.
-
-- No Instagram account credentials or logins are required to analyze public content.
-- Video frames and audio streams are processed ephemerally during analysis.
-- Production storage, user data retention, and privacy policies will be finalized prior to public launch.
-
----
-
-## Contributing
-
-Travel AI is currently in active development by its core maintainer. We are focused on stabilizing the core product flow before opening the repository to external contributions.
-
----
-
-## License
-
-This project is currently proprietary and under active development. The source code is not licensed for external redistribution or commercial reuse.
+### Upcoming Milestones `PLANNED`
+- [ ] **Phase 9**: Saved Destinations & Memory (personal destination bookmarking, local database persistence)
+- [ ] **Phase 10**: Trips & Collections (custom trip itineraries, bucket lists, categorized collections)
+- [ ] **Phase 11**: Google Maps List Export (one-click synchronization to saved Google Maps lists)
+- [ ] **Phase 12**: Production Hardening & Rate Limiting (caching layer, production deployment configuration)
+- [ ] **Phase 13**: Everywhere (browser extension for one-click Reel analysis, YouTube Shorts & TikTok support)
 
 ---
 
 <div align="center">
 
-### Author
+### Built by
 
-**Built by Pradnyesh**
+**Pradnyesh**
 
 *Connecting creative direction with autonomous agent architectures.*
 
@@ -748,14 +463,8 @@ This project is currently proprietary and under active development. The source c
 
 [@25Pradnyesh](https://github.com/25Pradnyesh) &nbsp;·&nbsp; [@Pradnyesh_25](https://x.com/Pradnyesh_25)
 
-</div>
+<br />
 
----
-
-<div align="center">
-
-### TRAVEL AI
-
-**Discover it. Save it. Go there.**
+**TRAVEL AI** · *Discover it. Save it. Go there.*
 
 </div>
