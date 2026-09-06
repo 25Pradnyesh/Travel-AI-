@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import DestinationResult from "@/components/DestinationResult";
+import DestinationExperience from "@/components/destination/DestinationExperience";
 import type { AnalysisResponse } from "@/types/analysis";
 
 const INSTAGRAM_REEL_REGEX =
@@ -62,9 +62,9 @@ export default function Home() {
 
       setResult(data);
 
-      // Smooth scroll to the result experience once rendered
+      // Smooth scroll to the destination experience once rendered
       setTimeout(() => {
-        const resultElement = document.getElementById("result-experience");
+        const resultElement = document.getElementById("destination-experience");
         if (resultElement) {
           resultElement.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -90,6 +90,15 @@ export default function Home() {
     }
   };
 
+  const handleClearError = () => {
+    setError("");
+    setUrl("");
+    const inputElement = document.querySelector('input[type="url"]') as HTMLInputElement;
+    if (inputElement) {
+      inputElement.focus();
+    }
+  };
+
   return (
     <main className="min-h-screen scroll-smooth bg-black text-white">
       <Navbar />
@@ -103,9 +112,12 @@ export default function Home() {
         onAnalyze={handleAnalyze}
         isLoading={isLoading}
         error={error}
+        onClearError={handleClearError}
       />
 
-      {result && <DestinationResult data={result} onReset={handleReset} />}
+      {result && (
+        <DestinationExperience data={result} onReset={handleReset} />
+      )}
 
       <section
         id="discover"

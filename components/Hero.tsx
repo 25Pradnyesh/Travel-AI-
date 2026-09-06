@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
+import { ArrowRight, Link as LinkIcon, Loader2, RotateCcw, AlertCircle } from "lucide-react";
 
 interface HeroProps {
   url: string;
@@ -9,6 +9,7 @@ interface HeroProps {
   onAnalyze: () => void;
   isLoading: boolean;
   error: string;
+  onClearError?: () => void;
 }
 
 export default function Hero({
@@ -17,7 +18,13 @@ export default function Hero({
   onAnalyze,
   isLoading,
   error,
+  onClearError,
 }: HeroProps) {
+  const isAnalysisFailure =
+    error &&
+    !error.includes("Paste an Instagram Reel") &&
+    !error.includes("Enter a valid Instagram Reel");
+
   return (
     <section
       id="hero"
@@ -90,6 +97,7 @@ export default function Hero({
                 }}
                 placeholder="Paste an Instagram Reel URL (e.g. https://www.instagram.com/reel/...)"
                 className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600 disabled:cursor-not-allowed"
+                aria-label="Instagram Reel URL"
               />
             </div>
 
@@ -98,7 +106,7 @@ export default function Hero({
               whileTap={isLoading ? {} : { scale: 0.97 }}
               onClick={onAnalyze}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold text-white transition hover:bg-blue-500 disabled:opacity-75 disabled:cursor-not-allowed min-w-[140px]"
+              className="flex min-w-[140px] items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-75"
             >
               {isLoading ? (
                 <>
@@ -114,19 +122,57 @@ export default function Hero({
             </motion.button>
           </div>
 
+          {/* Loading Experience: Reading your Reel */}
           {isLoading ? (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 flex items-center justify-center gap-2 text-xs text-blue-400"
+              className="mt-4 flex flex-col items-center justify-center gap-1 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3.5 backdrop-blur-md"
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-              </span>
-              <span>Analyzing Reel... Running location intelligence pipeline</span>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+                </span>
+                <span>Reading Your Reel</span>
+              </div>
+              <p className="text-xs text-zinc-400">
+                Finding the destination...
+              </p>
+            </motion.div>
+          ) : isAnalysisFailure ? (
+            /* Editorial Error Experience */
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-left backdrop-blur-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400">
+                      We Couldn&apos;t Find It
+                    </h4>
+                    <p className="mt-1 text-xs text-zinc-300">
+                      We couldn&apos;t confidently identify a destination from this Reel.
+                    </p>
+                  </div>
+                </div>
+
+                {onClearError && (
+                  <button
+                    onClick={onClearError}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span>Try Another Reel</span>
+                  </button>
+                )}
+              </div>
             </motion.div>
           ) : error ? (
+            /* Inline Validation Warning */
             <motion.p
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
