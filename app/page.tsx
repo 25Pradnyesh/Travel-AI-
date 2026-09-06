@@ -1,12 +1,111 @@
+"use client";
+
+import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import DestinationResult from "@/components/DestinationResult";
+import type { AnalysisResponse } from "@/types/analysis";
+
+const INSTAGRAM_REEL_REGEX =
+  /^https?:\/\/(?:www\.)?instagram\.com\/(?:reel|reels)\/([A-Za-z0-9_-]+)/i;
 
 export default function Home() {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResponse | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleAnalyze = async () => {
+    const trimmedUrl = url.trim();
+
+    if (!trimmedUrl) {
+      setError("Paste an Instagram Reel URL first.");
+      return;
+    }
+
+    if (!INSTAGRAM_REEL_REGEX.test(trimmedUrl)) {
+      setError("Enter a valid Instagram Reel URL.");
+      return;
+    }
+
+    setError("");
+    setIsLoading(true);
+
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ url: trimmedUrl }),
+        signal: abortController.signal,
+      });
+
+      const data: AnalysisResponse = await response.json();
+
+      if (!response.ok || !data.success || !data.best_guess) {
+        setError(
+          data.error ||
+            "We couldn't identify this Reel. Try another public Reel.",
+        );
+        return;
+      }
+
+      setResult(data);
+
+      // Smooth scroll to the result experience once rendered
+      setTimeout(() => {
+        const resultElement = document.getElementById("result-experience");
+        if (resultElement) {
+          resultElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    } catch (err: unknown) {
+      if ((err as Error)?.name === "AbortError") {
+        return;
+      }
+
+      console.error("[HOME] Analyze request failed:", err);
+      setError("Travel AI couldn't reach the analysis engine. Try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setError("");
+    const heroElement = document.getElementById("hero");
+    if (heroElement) {
+      heroElement.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <main className="min-h-screen scroll-smooth bg-black text-white">
       <Navbar />
 
-      <Hero />
+      <Hero
+        url={url}
+        onUrlChange={(val) => {
+          setUrl(val);
+          if (error) setError("");
+        }}
+        onAnalyze={handleAnalyze}
+        isLoading={isLoading}
+        error={error}
+      />
+
+      {result && <DestinationResult data={result} onReset={handleReset} />}
 
       <section
         id="discover"

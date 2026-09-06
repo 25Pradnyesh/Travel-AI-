@@ -1,27 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Link as LinkIcon } from "lucide-react";
+import { ArrowRight, Link as LinkIcon, Loader2 } from "lucide-react";
 
-export default function Hero() {
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
+interface HeroProps {
+  url: string;
+  onUrlChange: (value: string) => void;
+  onAnalyze: () => void;
+  isLoading: boolean;
+  error: string;
+}
 
-  const handleAnalyze = () => {
-    if (!url.trim()) {
-      setError("Paste an Instagram Reel URL first.");
-      return;
-    }
-
-    if (!url.includes("instagram.com/reel/")) {
-      setError("Enter a valid Instagram Reel URL.");
-      return;
-    }
-
-    setError("");
-  };
-
+export default function Hero({
+  url,
+  onUrlChange,
+  onAnalyze,
+  isLoading,
+  error,
+}: HeroProps) {
   return (
     <section
       id="hero"
@@ -76,39 +72,61 @@ export default function Hero() {
                 error
                   ? "border-red-500/50"
                   : "border-white/10 focus-within:border-blue-500/50"
-              }`}
+              } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
             >
               <LinkIcon className="h-5 w-5 shrink-0 text-zinc-500" />
 
               <input
                 type="url"
                 value={url}
+                disabled={isLoading}
                 onChange={(event) => {
-                  setUrl(event.target.value);
-                  setError("");
+                  onUrlChange(event.target.value);
                 }}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleAnalyze();
+                  if (event.key === "Enter" && !isLoading) {
+                    onAnalyze();
                   }
                 }}
-                placeholder="Paste an Instagram Reel URL"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600"
+                placeholder="Paste an Instagram Reel URL (e.g. https://www.instagram.com/reel/...)"
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600 disabled:cursor-not-allowed"
               />
             </div>
 
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleAnalyze}
-              className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold transition hover:bg-blue-500"
+              whileHover={isLoading ? {} : { scale: 1.03 }}
+              whileTap={isLoading ? {} : { scale: 0.97 }}
+              onClick={onAnalyze}
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold text-white transition hover:bg-blue-500 disabled:opacity-75 disabled:cursor-not-allowed min-w-[140px]"
             >
-              Analyze
-              <ArrowRight className="h-4 w-4" />
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <span>Analyze</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </motion.button>
           </div>
 
-          {error ? (
+          {isLoading ? (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 flex items-center justify-center gap-2 text-xs text-blue-400"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
+              </span>
+              <span>Analyzing Reel... Running location intelligence pipeline</span>
+            </motion.div>
+          ) : error ? (
             <motion.p
               initial={{ opacity: 0, y: -5 }}
               animate={{ opacity: 1, y: 0 }}
