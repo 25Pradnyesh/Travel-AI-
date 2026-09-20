@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { MapPin, Compass, ExternalLink, Star } from "lucide-react";
+import { MapPin, ExternalLink, Star } from "lucide-react";
 import type { BestGuess } from "@/types/analysis";
 
 interface DestinationHeroProps {
@@ -13,7 +12,6 @@ interface DestinationHeroProps {
 export default function DestinationHero({
   bestGuess,
   category,
-  categoryEmoji,
 }: DestinationHeroProps) {
   const primaryPhoto =
     bestGuess.photos && bestGuess.photos.length > 0 && bestGuess.photos[0]?.url
@@ -31,27 +29,37 @@ export default function DestinationHero({
   const hasRating = bestGuess.rating > 0;
 
   return (
-    <div className="relative w-full space-y-8">
-      {/* Category Eyebrow */}
+    <div className="w-full space-y-6">
+      {/* Eyebrow */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-blue-400">
-            Destination Identified
-          </span>
+        <div className="flex items-center gap-3">
+          <span className="text-metadata">DESTINATION IDENTIFIED</span>
           {category && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs text-zinc-400">
-              <span>{categoryEmoji || "📍"}</span>
-              <span>{category}</span>
+            <span
+              className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium"
+              style={{
+                backgroundColor: "var(--color-bg-primary)",
+                color: "var(--color-text-secondary)",
+                border: "1px solid var(--color-border)",
+              }}
+            >
+              {category}
             </span>
           )}
         </div>
 
         {hasRating && (
-          <div className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
-            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-white">{bestGuess.rating.toFixed(1)}</span>
+          <div
+            className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium"
+            style={{
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text-primary)",
+            }}
+          >
+            <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+            <span className="font-semibold">{bestGuess.rating.toFixed(1)}</span>
             {bestGuess.user_ratings_total > 0 && (
-              <span className="text-zinc-500">
+              <span style={{ color: "var(--color-text-muted)" }}>
                 ({bestGuess.user_ratings_total.toLocaleString()})
               </span>
             )}
@@ -59,42 +67,57 @@ export default function DestinationHero({
         )}
       </div>
 
-      {/* Cinematic Media Container */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden rounded-3xl border border-white/10 bg-zinc-950 shadow-2xl md:aspect-[21/9]">
+      {/* Image */}
+      <div
+        className="relative aspect-[16/10] w-full overflow-hidden rounded-xl md:aspect-[21/9]"
+        style={{ backgroundColor: "var(--color-bg-primary)" }}
+      >
         {primaryPhoto ? (
           /* Using standard img for resilience against Google Places dynamic CDN domains */
           /* eslint-disable-next-line @next/next/no-img-element */
           <img
             src={primaryPhoto.url}
             alt={bestGuess.name}
-            className="h-full w-full object-cover transition-transform duration-1000 ease-out hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 ease-out hover:scale-[1.03]"
             loading="lazy"
           />
         ) : (
-          /* Elegant neutral cartographic fallback when photo is absent (never fake stock photos) */
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-950 to-zinc-900 p-8 text-center">
-            <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
-              <Compass className="h-10 w-10 text-zinc-400" />
-            </div>
-            <p className="text-sm font-medium tracking-wide text-zinc-300">
+          /* Neutral fallback when photo is absent */
+          <div className="flex h-full w-full flex-col items-center justify-center p-8 text-center">
+            <MapPin
+              className="mb-3 h-8 w-8"
+              style={{ color: "var(--color-text-muted)" }}
+            />
+            <p
+              className="text-sm font-medium"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
               Verified Geographic Location
             </p>
             {bestGuess.latitude !== null && bestGuess.longitude !== null && (
-              <p className="mt-1 font-mono text-xs text-zinc-500">
-                {bestGuess.latitude?.toFixed(4)}° N, {bestGuess.longitude?.toFixed(4)}° E
+              <p
+                className="mt-1 font-mono text-xs"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                {bestGuess.latitude?.toFixed(4)}°,{" "}
+                {bestGuess.longitude?.toFixed(4)}°
               </p>
             )}
           </div>
         )}
 
-        {/* Cinematic Vignette Overlays */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent" />
+        {/* Gradient overlay for image text legibility */}
+        {primaryPhoto && (
+          <>
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent" />
+          </>
+        )}
 
-        {/* Photo Attribution if available */}
+        {/* Photo Attribution */}
         {primaryPhoto?.author && (
-          <div className="absolute bottom-4 right-4 z-10">
-            <span className="rounded-lg border border-white/10 bg-black/60 px-2.5 py-1 text-[10px] text-zinc-400 backdrop-blur-md">
+          <div className="absolute bottom-3 right-3 z-10">
+            <span className="rounded-md bg-black/50 px-2 py-1 text-[10px] text-white/70 backdrop-blur-sm">
               Photo:{" "}
               {Array.isArray(primaryPhoto.author)
                 ? primaryPhoto.author[0]
@@ -103,42 +126,59 @@ export default function DestinationHero({
           </div>
         )}
 
-        {/* Embedded Title Overlay on Larger Viewports */}
-        <div className="absolute bottom-6 left-6 right-6 z-10 hidden sm:block md:bottom-8 md:left-8">
-          {locationSubtitle && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-blue-400 drop-shadow-sm">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
-              <span>{locationSubtitle}</span>
-            </div>
-          )}
-          <h1 className="mt-1.5 text-3xl font-black tracking-tight text-white drop-shadow-md md:text-5xl lg:text-6xl">
-            {bestGuess.name}
-          </h1>
-        </div>
+        {/* Title Overlay on desktop (on image) */}
+        {primaryPhoto && (
+          <div className="absolute bottom-5 left-5 right-5 z-10 hidden sm:block md:bottom-7 md:left-7">
+            {locationSubtitle && (
+              <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-white/80">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span>{locationSubtitle}</span>
+              </div>
+            )}
+            <h1 className="mt-1.5 text-3xl font-semibold tracking-tight text-white drop-shadow-md md:text-5xl lg:text-6xl">
+              {bestGuess.name}
+            </h1>
+          </div>
+        )}
       </div>
 
-      {/* Mobile Title View (below image for maximum legibility on phones) */}
-      <div className="sm:hidden">
+      {/* Title below image (mobile or when no photo) */}
+      <div className={primaryPhoto ? "sm:hidden" : ""}>
         {locationSubtitle && (
-          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-blue-400">
+          <div
+            className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider"
+            style={{ color: "var(--color-text-muted)" }}
+          >
             <MapPin className="h-3.5 w-3.5 shrink-0" />
             <span>{locationSubtitle}</span>
           </div>
         )}
-        <h1 className="mt-1 text-3xl font-black tracking-tight text-white">
+        <h1
+          className="mt-1 text-3xl font-semibold tracking-tight md:text-5xl"
+          style={{ color: "var(--color-text-primary)" }}
+        >
           {bestGuess.name}
         </h1>
         {bestGuess.formatted_address && (
-          <p className="mt-1.5 text-xs text-zinc-400">
+          <p
+            className="mt-1.5 text-xs"
+            style={{ color: "var(--color-text-muted)" }}
+          >
             {bestGuess.formatted_address}
           </p>
         )}
       </div>
 
-      {/* Desktop Address & Primary Maps Action */}
-      <div className="flex flex-col items-start justify-between gap-4 border-b border-white/10 pb-8 sm:flex-row sm:items-center">
+      {/* Address + Maps CTA */}
+      <div
+        className="flex flex-col items-start justify-between gap-4 pb-6 sm:flex-row sm:items-center"
+        style={{ borderBottom: "1px solid var(--color-border)" }}
+      >
         {bestGuess.formatted_address ? (
-          <p className="hidden text-sm text-zinc-400 sm:block sm:max-w-xl">
+          <p
+            className="hidden text-sm sm:block sm:max-w-xl"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             {bestGuess.formatted_address}
           </p>
         ) : (
@@ -146,17 +186,20 @@ export default function DestinationHero({
         )}
 
         {bestGuess.maps_url && (
-          <motion.a
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <a
             href={bestGuess.maps_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-colors hover:bg-blue-500 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-medium transition-colors sm:w-auto"
+            style={{
+              backgroundColor: "var(--color-dark)",
+              color: "var(--color-bg-primary)",
+              transitionDuration: "var(--duration-fast)",
+            }}
           >
             <span>Open in Google Maps</span>
             <ExternalLink className="h-4 w-4" />
-          </motion.a>
+          </a>
         )}
       </div>
     </div>

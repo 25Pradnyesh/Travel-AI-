@@ -20,86 +20,132 @@ export default function DestinationVerification({
       label: "Verified Match",
       description: "Confirmed through multimodal evidence and visual cross-reference.",
       icon: CheckCircle2,
-      badgeStyle: "bg-emerald-500/10 text-emerald-400 border-emerald-500/25",
-      dotStyle: "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.5)]",
-      barGradient: "from-blue-500 to-emerald-400",
+      badgeStyle: {
+        backgroundColor: "rgba(45, 106, 79, 0.08)",
+        color: "var(--color-success)",
+        borderColor: "rgba(45, 106, 79, 0.2)",
+      },
+      dotColor: "var(--color-success)",
+      barColor: "var(--color-success)",
     },
     PARTIAL: {
       label: "Partially Verified",
       description: "Consistent with Reel signals; some secondary evidence unconfirmed.",
       icon: AlertTriangle,
-      badgeStyle: "bg-amber-500/10 text-amber-400 border-amber-500/25",
-      dotStyle: "bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]",
-      barGradient: "from-amber-500 to-yellow-400",
+      badgeStyle: {
+        backgroundColor: "rgba(181, 101, 29, 0.08)",
+        color: "var(--color-warning)",
+        borderColor: "rgba(181, 101, 29, 0.2)",
+      },
+      dotColor: "var(--color-warning)",
+      barColor: "var(--color-warning)",
     },
     SKIPPED: {
       label: "Algorithmic Placement",
       description: "Top scoring candidate derived from geographic tokens and Places ranking.",
       icon: HelpCircle,
-      badgeStyle: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
-      dotStyle: "bg-zinc-400",
-      barGradient: "from-zinc-500 to-zinc-400",
+      badgeStyle: {
+        backgroundColor: "var(--color-bg-primary)",
+        color: "var(--color-text-muted)",
+        borderColor: "var(--color-border)",
+      },
+      dotColor: "var(--color-text-muted)",
+      barColor: "var(--color-text-muted)",
     },
     FAILED: {
       label: "Unverified Candidate",
       description: "Could not be conclusively validated against visual evidence.",
       icon: XCircle,
-      badgeStyle: "bg-rose-500/10 text-rose-400 border-rose-500/25",
-      dotStyle: "bg-rose-400",
-      barGradient: "from-rose-500 to-rose-400",
+      badgeStyle: {
+        backgroundColor: "rgba(193, 41, 46, 0.06)",
+        color: "var(--color-error)",
+        borderColor: "rgba(193, 41, 46, 0.15)",
+      },
+      dotColor: "var(--color-error)",
+      barColor: "var(--color-error)",
     },
   }[status] || {
     label: status,
     description: "Evaluated by location pipeline.",
     icon: HelpCircle,
-    badgeStyle: "bg-zinc-500/10 text-zinc-400 border-zinc-500/25",
-    dotStyle: "bg-zinc-400",
-    barGradient: "from-zinc-500 to-zinc-400",
+    badgeStyle: {
+      backgroundColor: "var(--color-bg-primary)",
+      color: "var(--color-text-muted)",
+      borderColor: "var(--color-border)",
+    },
+    dotColor: "var(--color-text-muted)",
+    barColor: "var(--color-text-muted)",
   };
 
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md">
+    <div
+      className="rounded-xl p-5"
+      style={{
+        backgroundColor: "var(--color-bg-surface)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        {/* Verification Status with accessible icon & badge */}
+        {/* Status */}
         <div className="flex items-start gap-3">
-          <div className="mt-0.5">
-            <StatusIcon className="h-5 w-5 text-zinc-400" aria-hidden="true" />
-          </div>
+          <StatusIcon
+            className="mt-0.5 h-5 w-5"
+            style={{ color: "var(--color-text-muted)" }}
+            aria-hidden="true"
+          />
           <div>
             <div className="flex items-center gap-2">
               <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusConfig.badgeStyle}`}
+                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold"
+                style={{
+                  ...statusConfig.badgeStyle,
+                  border: `1px solid ${statusConfig.badgeStyle.borderColor}`,
+                }}
               >
-                <span className={`h-1.5 w-1.5 rounded-full ${statusConfig.dotStyle}`} />
+                <span
+                  className="h-1.5 w-1.5 rounded-full"
+                  style={{ backgroundColor: statusConfig.dotColor }}
+                />
                 {statusConfig.label}
               </span>
               {bestGuess.confidence_level && (
-                <span className="text-[11px] font-medium tracking-wide text-zinc-500 uppercase">
+                <span className="text-metadata">
                   {bestGuess.confidence_level}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs text-zinc-400">
+            <p
+              className="mt-1 text-xs"
+              style={{ color: "var(--color-text-muted)" }}
+            >
               {statusConfig.description}
             </p>
           </div>
         </div>
 
-        {/* Confidence Display (only shown if available from real backend) */}
+        {/* Confidence */}
         {hasConfidence && (
           <div className="sm:text-right">
             <div className="flex items-baseline gap-1 sm:justify-end">
-              <span className="text-2xl font-bold tracking-tight text-white">
+              <span
+                className="text-2xl font-semibold tracking-tight"
+                style={{ color: "var(--color-text-primary)" }}
+              >
                 {bestGuess.confidence}%
               </span>
-              <span className="text-xs text-zinc-400">confidence</span>
+              <span
+                className="text-xs"
+                style={{ color: "var(--color-text-muted)" }}
+              >
+                confidence
+              </span>
             </div>
 
-            {/* Accessible progress meter */}
             <div
-              className="mt-1.5 h-1.5 w-full min-w-[120px] overflow-hidden rounded-full bg-white/10 sm:w-36"
+              className="mt-1.5 h-1.5 w-full min-w-[120px] overflow-hidden rounded-full sm:w-36"
+              style={{ backgroundColor: "var(--color-border)" }}
               role="progressbar"
               aria-valuenow={bestGuess.confidence}
               aria-valuemin={0}
@@ -112,7 +158,8 @@ export default function DestinationVerification({
                   width: `${Math.min(100, Math.max(5, bestGuess.confidence))}%`,
                 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className={`h-full rounded-full bg-gradient-to-r ${statusConfig.barGradient}`}
+                className="h-full rounded-full"
+                style={{ backgroundColor: statusConfig.barColor }}
               />
             </div>
           </div>

@@ -11,9 +11,14 @@ import BudgetCard from "./BudgetCard";
 import TravelTips from "./TravelTips";
 import NearbyPlaces from "./NearbyPlaces";
 import DestinationActions from "./DestinationActions";
+import SourceReel from "@/components/results/SourceReel";
+import TravelMap from "@/components/results/TravelMap";
+import LocationDetail from "@/components/results/LocationDetail";
+import { useState } from "react";
 
 interface DestinationExperienceProps {
   data: AnalysisResponse;
+  sourceUrl?: string;
   onReset?: () => void;
 }
 
@@ -22,29 +27,31 @@ const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
+      staggerChildren: 0.08,
       delayChildren: 0.05,
     },
   },
 };
 
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
-      ease: "easeOut",
+      duration: 0.4,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
 
 export default function DestinationExperience({
   data,
+  sourceUrl,
   onReset,
 }: DestinationExperienceProps) {
   const { best_guess, travel_intelligence, nearby_places } = data;
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   if (!best_guess) {
     return null;
@@ -52,86 +59,158 @@ export default function DestinationExperience({
 
   const ti = (travel_intelligence || {}) as TravelIntelligence;
 
+  // Collect all coordinates for the map
+  const mapLocations = [
+    ...(best_guess.latitude != null && best_guess.longitude != null
+      ? [
+          {
+            id: best_guess.place_id,
+            name: best_guess.name,
+            lat: best_guess.latitude,
+            lng: best_guess.longitude,
+            isPrimary: true,
+          },
+        ]
+      : []),
+    ...(nearby_places || [])
+      .filter((p) => p.latitude != null && p.longitude != null)
+      .map((p) => ({
+        id: p.place_id,
+        name: p.name,
+        lat: p.latitude!,
+        lng: p.longitude!,
+        isPrimary: false,
+      })),
+  ];
+
+  // Find selected place data for detail panel
+  const selectedPlace = selectedPlaceId
+    ? nearby_places?.find((p) => p.place_id === selectedPlaceId) || null
+    : null;
+
   return (
     <section
       id="destination-experience"
-      className="relative z-10 mx-auto w-full max-w-6xl px-4 py-20 sm:px-6 lg:px-8"
+      className="section-padding"
+      style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative space-y-12 rounded-[2.5rem] border border-white/10 bg-zinc-950/85 p-6 backdrop-blur-3xl shadow-2xl shadow-black/90 sm:p-10 lg:p-12"
-      >
-        {/* Ambient Subtle Glows */}
-        <div className="pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-blue-600/10 blur-[130px]" />
-        <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-cyan-500/10 blur-[130px]" />
-
-        {/* 1. Destination Hero */}
-        <motion.div variants={itemVariants}>
-          <DestinationHero
-            bestGuess={best_guess}
-            category={ti.category}
-            categoryEmoji={ti.category_emoji}
-          />
-        </motion.div>
-
-        {/* 2. Verification Status & Confidence */}
-        <motion.div variants={itemVariants}>
-          <DestinationVerification bestGuess={best_guess} />
-        </motion.div>
-
-        {/* 3. Why This Place Editorial Rationale */}
-        {best_guess.why && (
+      <div className="mx-auto w-full max-w-[var(--max-width)] px-[var(--container-padding)]">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-8"
+        >
+          {/* Eyebrow */}
           <motion.div variants={itemVariants}>
-            <DestinationReason why={best_guess.why} />
+            <p className="text-metadata mb-2">TRAVEL ANALYSIS</p>
           </motion.div>
-        )}
 
-        {/* 4. About the Destination Summary */}
-        {ti.travel_summary && (
+          {/* 1. Destination Hero */}
           <motion.div variants={itemVariants}>
-            <TravelSummary summary={ti.travel_summary} />
-          </motion.div>
-        )}
-
-        {/* 5. Travel Intelligence (Season, Peak Months, Duration) */}
-        <motion.div variants={itemVariants}>
-          <TravelIntelligenceSection travelIntelligence={ti} />
-        </motion.div>
-
-        {/* 6. Trip Budget Breakdown */}
-        {(ti.budget_level || ti.estimated_daily_budget) && (
-          <motion.div variants={itemVariants}>
-            <BudgetCard travelIntelligence={ti} />
-          </motion.div>
-        )}
-
-        {/* 7. Local Travel Tips */}
-        {ti.travel_tips && ti.travel_tips.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <TravelTips tips={ti.travel_tips} />
-          </motion.div>
-        )}
-
-        {/* 8. Nearby Places Discovery */}
-        {nearby_places && nearby_places.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <NearbyPlaces
-              places={nearby_places}
-              destinationName={best_guess.name}
+            <DestinationHero
+              bestGuess={best_guess}
+              category={ti.category}
+              categoryEmoji={ti.category_emoji}
             />
           </motion.div>
-        )}
 
-        {/* 9. Bottom Actions (Maps CTA & Reset) */}
-        <motion.div variants={itemVariants}>
-          <DestinationActions
-            mapsUrl={best_guess.maps_url}
-            onReset={onReset}
-          />
+          {/* 2. Verification */}
+          <motion.div variants={itemVariants}>
+            <DestinationVerification bestGuess={best_guess} />
+          </motion.div>
+
+          {/* 3. Why */}
+          {best_guess.why && (
+            <motion.div variants={itemVariants}>
+              <DestinationReason why={best_guess.why} />
+            </motion.div>
+          )}
+
+          {/* 4. Summary */}
+          {ti.travel_summary && (
+            <motion.div variants={itemVariants}>
+              <TravelSummary summary={ti.travel_summary} />
+            </motion.div>
+          )}
+
+          {/* 5. Travel Intelligence */}
+          <motion.div variants={itemVariants}>
+            <TravelIntelligenceSection travelIntelligence={ti} />
+          </motion.div>
+
+          {/* 6. Budget */}
+          {(ti.budget_level || ti.estimated_daily_budget) && (
+            <motion.div variants={itemVariants}>
+              <BudgetCard travelIntelligence={ti} />
+            </motion.div>
+          )}
+
+          {/* 7. Travel Tips */}
+          {ti.travel_tips && ti.travel_tips.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <TravelTips tips={ti.travel_tips} />
+            </motion.div>
+          )}
+
+          {/* 8. Detected Places + Map */}
+          {nearby_places && nearby_places.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
+                <NearbyPlaces
+                  places={nearby_places}
+                  destinationName={best_guess.name}
+                  onSelectPlace={setSelectedPlaceId}
+                  selectedPlaceId={selectedPlaceId}
+                />
+                {mapLocations.length > 0 && (
+                  <div className="hidden lg:block">
+                    <div className="sticky top-24">
+                      <TravelMap
+                        locations={mapLocations}
+                        selectedId={selectedPlaceId}
+                        onSelectLocation={setSelectedPlaceId}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Mobile Map */}
+          {mapLocations.length > 0 && (
+            <motion.div variants={itemVariants} className="lg:hidden">
+              <TravelMap
+                locations={mapLocations}
+                selectedId={selectedPlaceId}
+                onSelectLocation={setSelectedPlaceId}
+              />
+            </motion.div>
+          )}
+
+          {/* 9. Source Reel */}
+          {sourceUrl && (
+            <motion.div variants={itemVariants}>
+              <SourceReel url={sourceUrl} />
+            </motion.div>
+          )}
+
+          {/* 10. Actions */}
+          <motion.div variants={itemVariants}>
+            <DestinationActions
+              mapsUrl={best_guess.maps_url}
+              onReset={onReset}
+            />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
+
+      {/* Location Detail Panel */}
+      <LocationDetail
+        place={selectedPlace}
+        onClose={() => setSelectedPlaceId(null)}
+      />
     </section>
   );
 }

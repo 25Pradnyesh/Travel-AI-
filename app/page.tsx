@@ -3,35 +3,26 @@
 import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import HowItWorks from "@/components/landing/HowItWorks";
+import ProductShowcase from "@/components/landing/ProductShowcase";
+import Footer from "@/components/landing/Footer";
+import AnalysisLoader from "@/components/analysis/AnalysisLoader";
 import DestinationExperience from "@/components/destination/DestinationExperience";
 import type { AnalysisResponse } from "@/types/analysis";
 
-const INSTAGRAM_REEL_REGEX =
-  /^https?:\/\/(?:www\.)?instagram\.com\/(?:reel|reels)\/([A-Za-z0-9_-]+)/i;
-
 export default function Home() {
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const [result, setResult] = useState<AnalysisResponse | null>(null);
+  const [sourceUrl, setSourceUrl] = useState("");
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const handleAnalyze = async () => {
-    const trimmedUrl = url.trim();
-
-    if (!trimmedUrl) {
-      setError("Paste an Instagram Reel URL first.");
-      return;
-    }
-
-    if (!INSTAGRAM_REEL_REGEX.test(trimmedUrl)) {
-      setError("Enter a valid Instagram Reel URL.");
-      return;
-    }
-
+  const handleSubmit = async (url: string) => {
     setError("");
     setIsLoading(true);
+    setResult(null);
+    setSourceUrl(url);
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -46,7 +37,7 @@ export default function Home() {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ url: trimmedUrl }),
+        body: JSON.stringify({ url }),
         signal: abortController.signal,
       });
 
@@ -55,27 +46,24 @@ export default function Home() {
       if (!response.ok || !data.success || !data.best_guess) {
         setError(
           data.error ||
-            "We couldn't identify this Reel. Try another public Reel.",
+            "We couldn\u2019t analyze this reel. Try another public reel.",
         );
         return;
       }
 
       setResult(data);
 
-      // Smooth scroll to the destination experience once rendered
+      // Scroll to results
       setTimeout(() => {
-        const resultElement = document.getElementById("destination-experience");
-        if (resultElement) {
-          resultElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        const el = document.getElementById("destination-experience");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }, 100);
     } catch (err: unknown) {
-      if ((err as Error)?.name === "AbortError") {
-        return;
-      }
-
+      if ((err as Error)?.name === "AbortError") return;
       console.error("[HOME] Analyze request failed:", err);
-      setError("Travel AI couldn't reach the analysis engine. Try again.");
+      setError("Travel AI couldn\u2019t reach the analysis engine. Try again.");
     } finally {
       setIsLoading(false);
     }
@@ -84,6 +72,7 @@ export default function Home() {
   const handleReset = () => {
     setResult(null);
     setError("");
+    setSourceUrl("");
     const heroElement = document.getElementById("hero");
     if (heroElement) {
       heroElement.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -92,53 +81,43 @@ export default function Home() {
 
   const handleClearError = () => {
     setError("");
-    setUrl("");
-    const inputElement = document.querySelector('input[type="url"]') as HTMLInputElement;
-    if (inputElement) {
-      inputElement.focus();
-    }
   };
 
   return (
-    <main className="min-h-screen scroll-smooth bg-black text-white">
+    <main
+      className="min-h-screen scroll-smooth"
+      style={{ backgroundColor: "var(--color-bg-primary)" }}
+    >
       <Navbar />
 
       <Hero
-        url={url}
-        onUrlChange={(val) => {
-          setUrl(val);
-          if (error) setError("");
-        }}
-        onAnalyze={handleAnalyze}
+        onSubmit={handleSubmit}
         isLoading={isLoading}
         error={error}
         onClearError={handleClearError}
       />
 
+      {/* Analysis Loading Experience */}
+      {isLoading && !result && <AnalysisLoader isActive={isLoading} />}
+
+      {/* Results */}
       {result && (
-        <DestinationExperience data={result} onReset={handleReset} />
+        <DestinationExperience
+          data={result}
+          sourceUrl={sourceUrl}
+          onReset={handleReset}
+        />
       )}
 
-      <section
-        id="discover"
-        className="flex min-h-screen items-center justify-center border-t border-white/5 bg-zinc-950 px-6"
-      >
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="mb-6 text-xs font-medium uppercase tracking-[0.35em] text-blue-400">
-            Discover
-          </p>
+      {/* Landing page sections (hidden when showing results) */}
+      {!result && !isLoading && (
+        <>
+          <HowItWorks />
+          <ProductShowcase />
+        </>
+      )}
 
-          <h2 className="text-4xl font-bold tracking-tight md:text-6xl">
-            From a reel
-            <br />
-            to somewhere real.
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-xl text-base leading-7 text-zinc-500 md:text-lg">
-            Find the places hidden inside the content you already love.
-          </p>
-        </div>
-      </section>
+      <Footer />
     </main>
   );
 }

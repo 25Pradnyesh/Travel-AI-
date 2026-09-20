@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Sun, AlertCircle, Clock } from "lucide-react";
+import { Calendar, Clock, Sun, AlertCircle } from "lucide-react";
 import type { TravelIntelligence } from "@/types/analysis";
 
 interface TravelIntelligenceSectionProps {
@@ -31,19 +31,23 @@ export default function TravelIntelligenceSection({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xs font-semibold tracking-wider text-zinc-400 uppercase">
-        Travel Intelligence
-      </h3>
+      <h3 className="text-metadata">TRAVEL INTELLIGENCE</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Best Season */}
         {bestSeason && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-              <Calendar className="h-4 w-4 text-blue-400" aria-hidden="true" />
+          <div
+            className="rounded-xl p-5"
+            style={{
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+              <Calendar className="h-4 w-4" aria-hidden="true" />
               <span>Best Time to Visit</span>
             </div>
-            <p className="mt-2 text-base font-semibold text-white">
+            <p className="mt-2 text-base font-semibold" style={{ color: "var(--color-text-primary)" }}>
               {bestSeason}
             </p>
           </div>
@@ -51,12 +55,18 @@ export default function TravelIntelligenceSection({
 
         {/* Recommended Duration */}
         {tripDays && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-              <Clock className="h-4 w-4 text-cyan-400" aria-hidden="true" />
+          <div
+            className="rounded-xl p-5"
+            style={{
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+              <Clock className="h-4 w-4" aria-hidden="true" />
               <span>Recommended Stay</span>
             </div>
-            <p className="mt-2 text-base font-semibold text-white">
+            <p className="mt-2 text-base font-semibold" style={{ color: "var(--color-text-primary)" }}>
               {tripDays}
             </p>
           </div>
@@ -64,16 +74,27 @@ export default function TravelIntelligenceSection({
 
         {/* Peak Season Months */}
         {peakMonths.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-              <Sun className="h-4 w-4 text-amber-400" aria-hidden="true" />
+          <div
+            className="rounded-xl p-5"
+            style={{
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+              <Sun className="h-4 w-4" aria-hidden="true" />
               <span>Peak Season</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {peakMonths.map((month) => (
                 <span
                   key={month}
-                  className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-300"
+                  className="rounded-md px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: "rgba(181, 101, 29, 0.08)",
+                    color: "var(--color-warning)",
+                    border: "1px solid rgba(181, 101, 29, 0.15)",
+                  }}
                 >
                   {month}
                 </span>
@@ -84,16 +105,27 @@ export default function TravelIntelligenceSection({
 
         {/* Months to Avoid */}
         {avoidMonths.length > 0 && (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-              <AlertCircle className="h-4 w-4 text-rose-400" aria-hidden="true" />
+          <div
+            className="rounded-xl p-5"
+            style={{
+              backgroundColor: "var(--color-bg-surface)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
               <span>Months to Avoid</span>
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {avoidMonths.map((month) => (
                 <span
                   key={month}
-                  className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-300"
+                  className="rounded-md px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: "rgba(193, 41, 46, 0.06)",
+                    color: "var(--color-error)",
+                    border: "1px solid rgba(193, 41, 46, 0.12)",
+                  }}
                 >
                   {month}
                 </span>

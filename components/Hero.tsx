@@ -1,216 +1,244 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, Link as LinkIcon, Loader2, RotateCcw, AlertCircle } from "lucide-react";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import ReelInput from "@/components/landing/ReelInput";
 
 interface HeroProps {
-  url: string;
-  onUrlChange: (value: string) => void;
-  onAnalyze: () => void;
+  onSubmit: (url: string) => void;
   isLoading: boolean;
   error: string;
   onClearError?: () => void;
 }
 
 export default function Hero({
-  url,
-  onUrlChange,
-  onAnalyze,
+  onSubmit,
   isLoading,
   error,
   onClearError,
 }: HeroProps) {
-  const isAnalysisFailure =
-    error &&
-    !error.includes("Paste an Instagram Reel") &&
-    !error.includes("Enter a valid Instagram Reel");
+  const ref = useRef<HTMLElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <section
+      ref={ref}
       id="hero"
-      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
+      className="relative flex min-h-[85vh] items-center pt-20"
+      style={{ backgroundColor: "var(--color-bg-primary)" }}
     >
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute left-1/4 top-20 h-96 w-96 rounded-full bg-blue-600/20 blur-[180px]" />
-        <div className="absolute bottom-10 right-1/4 h-96 w-96 rounded-full bg-cyan-500/20 blur-[180px]" />
-      </div>
-
-      <div className="mx-auto w-full max-w-5xl text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-5 font-medium uppercase tracking-widest text-blue-400"
-        >
-          Travel Discovery
-        </motion.p>
-
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-6xl font-black leading-tight md:text-8xl"
-        >
-          Transform
-          <br />
-          <span className="text-blue-500">Instagram Reels</span>
-          <br />
-          Into Real Trips.
-        </motion.h1>
-
-        <motion.p
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.6 }}
-          className="mx-auto mt-8 max-w-2xl text-lg text-zinc-400"
-        >
-          Your next trip is hiding in your feed.
-        </motion.p>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          className="mx-auto mt-10 w-full max-w-2xl"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div
-              className={`flex flex-1 items-center gap-3 rounded-full border bg-white/[0.04] px-5 py-4 backdrop-blur-xl transition ${
-                error
-                  ? "border-red-500/50"
-                  : "border-white/10 focus-within:border-blue-500/50"
-              } ${isLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+      <div className="mx-auto w-full max-w-[var(--max-width)] px-[var(--container-padding)]">
+        <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+          {/* Left: Content */}
+          <div>
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5 }}
+              className="text-metadata mb-6"
             >
-              <LinkIcon className="h-5 w-5 shrink-0 text-zinc-500" />
+              TRAVEL INTELLIGENCE
+            </motion.p>
 
-              <input
-                type="url"
-                value={url}
-                disabled={isLoading}
-                onChange={(event) => {
-                  onUrlChange(event.target.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !isLoading) {
-                    onAnalyze();
-                  }
-                }}
-                placeholder="Paste an Instagram Reel URL (e.g. https://www.instagram.com/reel/...)"
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-600 disabled:cursor-not-allowed"
-                aria-label="Instagram Reel URL"
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-display"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Turn travel reels
+              <br />
+              into places
+              <br />
+              worth visiting.
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.25 }}
+              className="mt-6 max-w-md text-base leading-relaxed"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Travel AI extracts destinations, landmarks and geographic context
+              from travel content — so inspiration becomes something you can
+              actually explore.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-10 max-w-lg"
+            >
+              <ReelInput
+                onSubmit={onSubmit}
+                isLoading={isLoading}
+                error={error}
+                onClearError={onClearError}
               />
-            </div>
+            </motion.div>
 
-            <motion.button
-              whileHover={isLoading ? {} : { scale: 1.03 }}
-              whileTap={isLoading ? {} : { scale: 0.97 }}
-              onClick={onAnalyze}
-              disabled={isLoading}
-              className="flex min-w-[140px] items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-4 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-75"
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={inView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.5, delay: 0.55 }}
+              className="mt-6"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  <span>Analyzing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Analyze</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </motion.button>
+              <a
+                href="#how-it-works"
+                className="inline-flex items-center gap-1 text-sm transition-colors"
+                style={{
+                  color: "var(--color-text-muted)",
+                  transitionDuration: "var(--duration-fast)",
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.color = "var(--color-text-primary)")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = "var(--color-text-muted)")
+                }
+              >
+                See how it works ↓
+              </a>
+            </motion.div>
           </div>
 
-          {/* Loading Experience: Reading your Reel */}
-          {isLoading ? (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 flex flex-col items-center justify-center gap-1 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-3.5 backdrop-blur-md"
+          {/* Right: Product Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.3 }}
+            className="hidden lg:block"
+          >
+            <div
+              className="rounded-xl p-8"
+              style={{
+                backgroundColor: "var(--color-bg-surface)",
+                border: "1px solid var(--color-border)",
+              }}
             >
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
-                </span>
-                <span>Reading Your Reel</span>
-              </div>
-              <p className="text-xs text-zinc-400">
-                Finding the destination...
-              </p>
-            </motion.div>
-          ) : isAnalysisFailure ? (
-            /* Editorial Error Experience */
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/5 p-4 text-left backdrop-blur-md"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
-                  <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-red-400">
-                      We Couldn&apos;t Find It
-                    </h4>
-                    <p className="mt-1 text-xs text-zinc-300">
-                      We couldn&apos;t confidently identify a destination from this Reel.
-                    </p>
+              {/* Simulated product preview */}
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <span className="text-metadata">ANALYSIS RESULT</span>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium"
+                    style={{
+                      backgroundColor: "rgba(45, 106, 79, 0.08)",
+                      color: "var(--color-success)",
+                    }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--color-success)" }} />
+                    Verified
+                  </span>
+                </div>
+
+                {/* Destination Preview */}
+                <div>
+                  <p
+                    className="text-xs font-medium uppercase tracking-wider"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    Destination
+                  </p>
+                  <p
+                    className="mt-1 text-2xl font-semibold tracking-tight"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    Santorini
+                  </p>
+                  <p
+                    className="mt-0.5 text-sm"
+                    style={{ color: "var(--color-text-secondary)" }}
+                  >
+                    Cyclades, Greece
+                  </p>
+                </div>
+
+                <div
+                  className="h-px w-full"
+                  style={{ backgroundColor: "var(--color-border)" }}
+                />
+
+                {/* Detected Places Preview */}
+                <div>
+                  <p className="text-metadata mb-3">DETECTED PLACES</p>
+                  <div className="space-y-2.5">
+                    {[
+                      { num: "01", name: "Oia", sub: "Santorini, Greece" },
+                      { num: "02", name: "Fira", sub: "Santorini, Greece" },
+                      { num: "03", name: "Ammoudi Bay", sub: "Oia, Greece" },
+                    ].map((place) => (
+                      <div
+                        key={place.num}
+                        className="flex items-baseline gap-3"
+                      >
+                        <span
+                          className="font-mono text-xs tabular-nums"
+                          style={{ color: "var(--color-text-muted)" }}
+                        >
+                          {place.num}
+                        </span>
+                        <div>
+                          <p
+                            className="text-sm font-medium"
+                            style={{ color: "var(--color-text-primary)" }}
+                          >
+                            {place.name}
+                          </p>
+                          <p
+                            className="text-xs"
+                            style={{ color: "var(--color-text-muted)" }}
+                          >
+                            {place.sub}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {onClearError && (
-                  <button
-                    onClick={onClearError}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300 transition hover:bg-white/10 hover:text-white"
+                <div
+                  className="h-px w-full"
+                  style={{ backgroundColor: "var(--color-border)" }}
+                />
+
+                {/* Confidence */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--color-text-muted)" }}
                   >
-                    <RotateCcw className="h-3 w-3" />
-                    <span>Try Another Reel</span>
-                  </button>
-                )}
+                    Confidence
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-1.5 w-24 overflow-hidden rounded-full"
+                      style={{ backgroundColor: "var(--color-border)" }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: "92%",
+                          backgroundColor: "var(--color-success)",
+                        }}
+                      />
+                    </div>
+                    <span
+                      className="text-xs font-medium tabular-nums"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      92%
+                    </span>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          ) : error ? (
-            /* Inline Validation Warning */
-            <motion.p
-              initial={{ opacity: 0, y: -5 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-3 text-left text-sm text-red-400"
-            >
-              {error}
-            </motion.p>
-          ) : (
-            <p className="mt-3 text-xs text-zinc-600">
-              Public Instagram Reels only
-            </p>
-          )}
-        </motion.div>
+            </div>
+          </motion.div>
+        </div>
       </div>
-
-      <motion.a
-        href="#discover"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-      >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{
-            duration: 1.8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-          className="flex cursor-pointer flex-col items-center gap-2"
-        >
-          <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-500">
-            Scroll
-          </span>
-
-          <div className="h-8 w-px bg-gradient-to-b from-zinc-500 to-transparent" />
-        </motion.div>
-      </motion.a>
     </section>
   );
 }

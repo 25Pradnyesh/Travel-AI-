@@ -1,15 +1,134 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   TRAVEL AI — Design System Tokens
+   Premium editorial / Swiss design
+   ============================================================ */
+
+:root {
+  /* ---- Color System ---- */
+  --color-bg-primary: #F7F7F5;
+  --color-bg-surface: #FFFFFF;
+  --color-text-primary: #111111;
+  --color-text-secondary: #666666;
+  --color-text-muted: #8A8A8A;
+  --color-border: #E5E5E2;
+  --color-accent: #C2CBD3;
+  --color-dark: #111111;
+  --color-dark-secondary: #181818;
+
+  /* Functional colors */
+  --color-success: #2D6A4F;
+  --color-warning: #B5651D;
+  --color-error: #C1292E;
+  --color-info: #4A6FA5;
+
+  /* ---- Typography ---- */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "GeistMono", ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+
+  /* Type scale */
+  --text-display: clamp(3rem, 6vw, 5.5rem);
+  --text-h1: clamp(2.25rem, 4vw, 3.5rem);
+  --text-h2: clamp(1.75rem, 3vw, 2.5rem);
+  --text-h3: clamp(1.25rem, 2vw, 1.5rem);
+  --text-body: 1rem;
+  --text-body-lg: 1.125rem;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
+  --text-metadata: 0.6875rem;
+
+  /* Leading */
+  --leading-tight: 1.05;
+  --leading-snug: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+
+  /* Tracking */
+  --tracking-tight: -0.03em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  --tracking-wider: 0.1em;
+  --tracking-widest: 0.2em;
+
+  /* ---- Spacing ---- */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --space-5xl: 8rem;
+  --space-section: clamp(4rem, 8vw, 8rem);
+
+  /* ---- Layout ---- */
+  --max-width: 1280px;
+  --max-width-narrow: 720px;
+  --max-width-wide: 1440px;
+  --container-padding: clamp(1rem, 4vw, 2rem);
+  --grid-gap: clamp(1rem, 2vw, 2rem);
+
+  /* ---- Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ---- Transitions ---- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* ---- Shadcn integration (mapped to Travel AI tokens) ---- */
+  --background: #F7F7F5;
+  --foreground: #111111;
+  --card: #FFFFFF;
+  --card-foreground: #111111;
+  --popover: #FFFFFF;
+  --popover-foreground: #111111;
+  --primary: #111111;
+  --primary-foreground: #F7F7F5;
+  --secondary: #F7F7F5;
+  --secondary-foreground: #111111;
+  --muted: #F0F0ED;
+  --muted-foreground: #666666;
+  --accent: #C2CBD3;
+  --accent-foreground: #111111;
+  --destructive: #C1292E;
+  --border: #E5E5E2;
+  --input: #E5E5E2;
+  --ring: #C2CBD3;
+  --radius: 0.5rem;
+
+  --chart-1: #111111;
+  --chart-2: #666666;
+  --chart-3: #8A8A8A;
+  --chart-4: #C2CBD3;
+  --chart-5: #E5E5E2;
+
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #F7F7F5;
+  --sidebar-accent: #F0F0ED;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #E5E5E2;
+  --sidebar-ring: #C2CBD3;
+}
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,83 +167,108 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+/* ============================================================
+   Base Styles
+   ============================================================ */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    line-height: var(--leading-normal);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-tight);
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-text-primary);
+  }
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+@layer utilities {
+  .container-narrow {
+    max-width: var(--max-width-narrow);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  .container-wide {
+    max-width: var(--max-width-wide);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--container-padding);
+    padding-right: var(--container-padding);
+  }
+
+  .text-display {
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    font-weight: 600;
+  }
+
+  .text-metadata {
+    font-size: var(--text-metadata);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  .section-padding {
+    padding-top: var(--space-section);
+    padding-bottom: var(--space-section);
+  }
+
+  /* Subtle horizontal rule */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
