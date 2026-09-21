@@ -56,18 +56,18 @@ export async function POST(request: NextRequest) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ reel_url: reelUrl }),
-        signal: AbortSignal.timeout(120000), // 120s timeout for video processing & verification
+        body: JSON.stringify({ reel_url: reelUrl, url: reelUrl }),
+        signal: AbortSignal.timeout(180000), // 180s timeout for video processing & verification
       });
     } catch (fetchError: unknown) {
       const err = fetchError as { name?: string; message?: string; cause?: { code?: string } };
 
       if (err?.name === "TimeoutError" || err?.name === "AbortError") {
-        console.error("[ANALYZE PROXY] Engine request timed out after 120s");
+        console.error("[ANALYZE PROXY] Engine request timed out after 180s");
         return NextResponse.json(
           {
             success: false,
-            error: "The analysis took too long. Please try again.",
+            error: "The analysis took longer than expected. Please try again.",
           },
           { status: 504 },
         );
@@ -77,23 +77,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Travel AI couldn't reach the analysis engine. Try again.",
+          error: "Couldn't connect to Travel AI. Check your connection and try again.",
         },
         { status: 503 },
       );
     }
 
     if (!engineResponse.ok) {
-      const errorText = await engineResponse.text().catch(() => "");
+      const errorData = await engineResponse.json().catch(() => null);
+      const detail =
+        errorData?.detail ||
+        errorData?.error ||
+        "Travel AI couldn't analyze this Reel. Make sure it's publicly available.";
+
       console.error(
         `[ANALYZE PROXY] Engine returned status ${engineResponse.status}:`,
-        errorText,
+        detail,
       );
 
       return NextResponse.json(
         {
           success: false,
-          error: "We couldn't identify this Reel. Try another public Reel.",
+          error: detail,
         },
         { status: engineResponse.status >= 500 ? 502 : engineResponse.status },
       );

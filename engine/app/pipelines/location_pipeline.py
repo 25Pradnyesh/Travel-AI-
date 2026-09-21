@@ -117,6 +117,33 @@ class LocationPipeline:
             }
 
     # ==================================================
+    def _cleanup_temp_files(
+        self,
+        video_path: str | None,
+        frame_paths: list[str],
+    ) -> None:
+        """
+        Safely removes temporary video and extracted frame files after all
+        pipeline stages (including Gemini vision) have completed or failed.
+        """
+        if frame_paths:
+            for fp in frame_paths:
+                try:
+                    p = Path(fp)
+                    if p.is_file():
+                        p.unlink(missing_ok=True)
+                except Exception as exc:
+                    logger.warning("[PIPELINE] Failed to remove temp frame %s: %s", fp, exc)
+
+        if video_path:
+            try:
+                vp = Path(video_path)
+                if vp.is_file():
+                    vp.unlink(missing_ok=True)
+            except Exception as exc:
+                logger.warning("[PIPELINE] Failed to remove temp video %s: %s", video_path, exc)
+
+    # ==================================================
     # Pipeline Execution
     # ==================================================
 
@@ -129,105 +156,109 @@ class LocationPipeline:
         total_start = time.perf_counter()
         frame_paths = []
 
-        # ==================================================
-        # STAGE 1 : Caption
-        # ==================================================
-        print("\n--- Stage 1: Caption ---")
-        evidence = self.builder.build_caption(metadata)
-        evidence = self.builder.combine(evidence)
+        try:
+            # ==================================================
+            # STAGE 1 : Caption
+            # ==================================================
+            print("\n--- Stage 1: Caption ---")
+            evidence = self.builder.build_caption(metadata)
+            evidence = self.builder.combine(evidence)
 
-        resolver = self.resolver.resolve(evidence)
+            resolver = self.resolver.resolve(evidence)
 
-        if resolver:
-            gemini = self.verify_if_needed(
-                evidence,
-                resolver,
-                frame_paths,
-            )
-            return self.build_response(
-                "caption",
-                evidence,
-                resolver,
-                gemini,
-                total_start,
-            )
-
-        # ==================================================
-        # STAGE 2 : OCR
-        # ==================================================
-        print("\n--- Stage 2: OCR ---")
-        if video_path and Path(video_path).exists():
-            try:
-                frame_paths = self.frames.extract(
-                    video_path,
-                    "engine/assets/frames",
-                )
-            except Exception as e:
-                logger.warning("[PIPELINE] Frame extraction failed: %s", type(e).__name__)
-                frame_paths = []
-
-        evidence = self.builder.build_ocr(
-            evidence,
-            frame_paths,
-        )
-        evidence = self.builder.combine(evidence)
-
-        resolver = self.resolver.resolve(evidence)
-
-        if resolver:
-            gemini = self.verify_if_needed(
-                evidence,
-                resolver,
-                frame_paths,
-            )
-            return self.build_response(
-                "ocr",
-                evidence,
-                resolver,
-                gemini,
-                total_start,
-            )
-
-        # ==================================================
-        # STAGE 3 : Speech
-        # ==================================================
-        print("\n--- Stage 3: Speech ---")
-        if video_path and Path(video_path).exists():
-            try:
-                evidence = self.builder.build_speech(
+            if resolver:
+                gemini = self.verify_if_needed(
                     evidence,
-                    video_path,
+                    resolver,
+                    frame_paths,
                 )
-            except Exception as e:
-                logger.warning("[PIPELINE] Speech extraction failed: %s", type(e).__name__)
+                return self.build_response(
+                    "caption",
+                    evidence,
+                    resolver,
+                    gemini,
+                    total_start,
+                )
 
-        evidence = self.builder.combine(evidence)
+            # ==================================================
+            # STAGE 2 : OCR
+            # ==================================================
+            print("\n--- Stage 2: OCR ---")
+            if video_path and Path(video_path).exists():
+                try:
+                    frame_paths = self.frames.extract(
+                        video_path,
+                        "engine/assets/frames",
+                    )
+                except Exception as e:
+                    logger.warning("[PIPELINE] Frame extraction failed: %s", type(e).__name__)
+                    frame_paths = []
 
-        resolver = self.resolver.resolve(evidence)
-
-        if resolver:
-            gemini = self.verify_if_needed(
+            evidence = self.builder.build_ocr(
                 evidence,
-                resolver,
                 frame_paths,
             )
-            return self.build_response(
-                "speech",
-                evidence,
-                resolver,
-                gemini,
-                total_start,
-            )
+            evidence = self.builder.combine(evidence)
 
-        # ==================================================
-        # Nothing Found
-        # ==================================================
-        perf = {
-            "total_seconds": round(time.perf_counter() - total_start, 2),
-        }
-        return self.response_builder.build_unresolved(
-            stage="failed",
-            error="No destination candidates found from the Reel.",
-            performance=perf,
-        ).model_dump()
+            resolver = self.resolver.resolve(evidence)
+
+            if resolver:
+                gemini = self.verify_if_needed(
+                    evidence,
+                    resolver,
+                    frame_paths,
+                )
+                return self.build_response(
+                    "ocr",
+                    evidence,
+                    resolver,
+                    gemini,
+                    total_start,
+                )
+
+            # ==================================================
+            # STAGE 3 : Speech
+            # ==================================================
+            print("\n--- Stage 3: Speech ---")
+            if video_path and Path(video_path).exists():
+                try:
+                    evidence = self.builder.build_speech(
+                        evidence,
+                        video_path,
+                    )
+                except Exception as e:
+                    logger.warning("[PIPELINE] Speech extraction failed: %s", type(e).__name__)
+
+            evidence = self.builder.combine(evidence)
+
+            resolver = self.resolver.resolve(evidence)
+
+            if resolver:
+                gemini = self.verify_if_needed(
+                    evidence,
+                    resolver,
+                    frame_paths,
+                )
+                return self.build_response(
+                    "speech",
+                    evidence,
+                    resolver,
+                    gemini,
+                    total_start,
+                )
+
+            # ==================================================
+            # Nothing Found
+            # ==================================================
+            perf = {
+                "total_seconds": round(time.perf_counter() - total_start, 2),
+            }
+            return self.response_builder.build_unresolved(
+                stage="failed",
+                error="No destination candidates found from the Reel.",
+                performance=perf,
+            ).model_dump()
+
+        finally:
+            self._cleanup_temp_files(video_path, frame_paths)
 

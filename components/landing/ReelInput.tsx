@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link as LinkIcon, Loader2, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
 
@@ -27,13 +27,9 @@ export default function ReelInput({
   const displayError = error || localError;
 
   const isAnalysisFailure =
-    displayError &&
+    Boolean(displayError) &&
     !displayError.includes("Paste an Instagram Reel") &&
     !displayError.includes("valid Instagram Reel");
-
-  useEffect(() => {
-    if (error) setLocalError("");
-  }, [error]);
 
   const handleSubmit = () => {
     const trimmed = url.trim();

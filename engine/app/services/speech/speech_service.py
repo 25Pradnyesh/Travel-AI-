@@ -1,19 +1,37 @@
-import whisper
+import logging
+import threading
+from typing import Any
 
-print("Loading Whisper model...")
+logger = logging.getLogger(__name__)
 
-WHISPER_MODEL = whisper.load_model(
-    "small",
-)
+_model_lock = threading.Lock()
+_whisper_model: Any = None
 
-print("✅ Whisper model loaded.")
+
+def get_whisper_model() -> Any:
+    """
+    Lazy-loads the Whisper model on first invocation to prevent
+    slow server startup and high initial memory overhead.
+    """
+    global _whisper_model
+    if _whisper_model is None:
+        with _model_lock:
+            if _whisper_model is None:
+                import whisper
+                logger.info("[WHISPER] Loading Whisper 'small' model on-demand...")
+                _whisper_model = whisper.load_model("small")
+                logger.info("[WHISPER] ✅ Whisper model loaded successfully.")
+    return _whisper_model
 
 
 class SpeechService:
 
     def __init__(self):
+        pass
 
-        self.model = WHISPER_MODEL
+    @property
+    def model(self):
+        return get_whisper_model()
 
     # ==================================================
     # Speech Extraction

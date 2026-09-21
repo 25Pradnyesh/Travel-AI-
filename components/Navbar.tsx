@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
 import MobileMenu from "@/components/navigation/MobileMenu";
@@ -23,10 +24,13 @@ export default function Navbar() {
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all ${
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-colors ${
           scrolled
-            ? "border-b bg-[var(--color-bg-primary)]/95 backdrop-blur-sm"
+            ? "border-b bg-[rgba(247,245,240,0.85)] backdrop-blur-md"
             : "border-b border-transparent bg-transparent"
         }`}
         style={{
@@ -39,14 +43,14 @@ export default function Navbar() {
       >
         <div className="mx-auto flex max-w-[var(--max-width)] items-center justify-between px-[var(--container-padding)] py-4">
           {/* Logo */}
-          <a
+          <Link
             href="/"
             className="text-sm font-semibold tracking-tight"
             style={{ color: "var(--color-text-primary)" }}
             aria-label="Travel AI — Home"
           >
             Travel AI
-          </a>
+          </Link>
 
           {/* Desktop Center Links */}
           <div className="hidden items-center gap-8 md:flex">
@@ -123,7 +127,7 @@ export default function Navbar() {
             <Menu className="h-5 w-5" />
           </motion.button>
         </div>
-      </nav>
+      </motion.header>
 
       {/* Mobile Menu */}
       <MobileMenu

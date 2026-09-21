@@ -96,7 +96,9 @@ class ResponseBuilder:
         for item in raw_photos:
             if isinstance(item, str):
                 item_str = item.strip()
-                if item_str:
+                if item_str.startswith("places/"):
+                    normalized.append(DestinationPhoto(url=f"/places/photo?name={urllib.parse.quote(item_str, safe='')}"))
+                elif item_str:
                     normalized.append(DestinationPhoto(url=item_str))
                 continue
 
@@ -106,15 +108,9 @@ class ResponseBuilder:
             url = item.get("url") or ""
             name = item.get("name") or ""
 
-            # If Google photo reference name is present, construct media URL
+            # Route through safe backend photo proxy without exposing Google API key to frontend
             if not url and name:
-                if self.api_key:
-                    url = (
-                        f"https://places.googleapis.com/v1/{name}/media"
-                        f"?key={self.api_key}&maxHeightPx=1000&maxWidthPx=1000"
-                    )
-                else:
-                    url = f"https://places.googleapis.com/v1/{name}/media?maxHeightPx=1000&maxWidthPx=1000"
+                url = f"/places/photo?name={urllib.parse.quote(name, safe='')}"
 
             if not url:
                 continue

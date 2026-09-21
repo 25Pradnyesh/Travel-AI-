@@ -1,3 +1,4 @@
+import concurrent.futures
 import math
 import os
 
@@ -475,7 +476,7 @@ class NearbySearchService:
         if place_type not in SUPPORTED_PLACE_TYPES:
 
             print(
-                f"⚠ Unsupported Google Place Type: {place_type}"
+                f"[WARN] Unsupported Google Place Type: {place_type}"
             )
 
             return []
@@ -521,7 +522,7 @@ class NearbySearchService:
         }
 
         print(
-            f"🔍 Searching Google Places → {place_type}"
+            f"[NEARBY] Searching Google Places -> {place_type}"
         )
 
         try:
@@ -541,7 +542,7 @@ class NearbySearchService:
         except requests.RequestException as e:
 
             print(
-                f"❌ Network Error ({place_type})"
+                f"[ERROR] Network Error ({place_type})"
             )
 
             print(e)
@@ -658,7 +659,7 @@ class NearbySearchService:
 
         print(
 
-            f"   ✓ Found {len(normalized)} place(s)"
+            f"   - Found {len(normalized)} place(s)"
 
         )
 
@@ -687,7 +688,7 @@ class NearbySearchService:
         seen = set()
 
         print(
-            f"\n📂 Category : {category}"
+            f"\n[NEARBY] Category : {category}"
         )
 
         for place_type in place_types:
@@ -889,29 +890,34 @@ class NearbySearchService:
         nearby = {}
 
         # --------------------------------------------------
-        # Search every Travel Category
+        # Search Travel Categories Concurrently
         # --------------------------------------------------
+        category_results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+            future_to_cat = {
+                executor.submit(
+                    self.search_category,
+                    latitude,
+                    longitude,
+                    cat,
+                    ptypes,
+                ): cat
+                for cat, ptypes in TRAVEL_CATEGORIES.items()
+            }
+            for future in concurrent.futures.as_completed(future_to_cat):
+                cat = future_to_cat[future]
+                try:
+                    category_results[cat] = future.result()
+                except Exception as exc:
+                    print(f"[ERROR] Error searching category '{cat}': {exc}")
+                    category_results[cat] = []
 
-        for category, place_types in TRAVEL_CATEGORIES.items():
-
-            nearby[category] = self.search_category(
-
-                latitude,
-
-                longitude,
-
-                category,
-
-                place_types,
-
-            )
-
+        # Preserve exact TRAVEL_CATEGORIES order
+        for category in TRAVEL_CATEGORIES:
+            nearby[category] = category_results.get(category, [])
             print(
-
-                f"✓ {category:<15}"
-
+                f" - {category:<15}"
                 f"{len(nearby[category])} place(s)"
-
             )
 
         # --------------------------------------------------

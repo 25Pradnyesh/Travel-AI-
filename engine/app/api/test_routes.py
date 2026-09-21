@@ -1,43 +1,19 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
 
 from engine.providers.manager import ProviderManager
-from engine.app.pipelines.location_pipeline import LocationPipeline
 
 from engine.app.services.extraction.frame_extractor import FrameExtractor
 from engine.app.services.ocr.ocr_service import OCRService
 from engine.app.services.speech.speech_service import SpeechService
 from engine.app.services.maps.google_places_service import GooglePlacesService
 
-
 router = APIRouter()
 
 provider = ProviderManager()
-pipeline = LocationPipeline()
-
 frames = FrameExtractor()
 ocr = OCRService()
 speech = SpeechService()
 places = GooglePlacesService()
-
-
-class AnalyzeRequest(BaseModel):
-    reel_url: str
-
-
-# ==================================================
-# Full Pipeline
-# ==================================================
-
-@router.post("/analyze")
-def analyze(request: AnalyzeRequest):
-
-    provider_output = provider.extract(request.reel_url)
-
-    return pipeline.run(
-        metadata=provider_output["metadata"],
-        video_path=provider_output["video_path"],
-    )
 
 
 # ==================================================
@@ -113,15 +89,4 @@ def test_places():
         "Seebensee Austria"
     )
 
-
-# ==================================================
-# Health
-# ==================================================
-
-@router.get("/health")
-def health():
-
-    return {
-        "status": "ok",
-        "service": "Travel AI Engine",
-    }
+
