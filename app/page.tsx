@@ -18,10 +18,13 @@ export default function Home() {
   const [sourceUrl, setSourceUrl] = useState("");
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const requestIdRef = useRef(0);
 
   const handleSubmit = async (url: string) => {
     // Disable duplicate submissions
     if (isLoading) return;
+
+    const currentRequestId = ++requestIdRef.current;
 
     setError("");
     setIsLoading(true);
@@ -47,7 +50,11 @@ export default function Home() {
         signal: abortController.signal,
       });
 
-      if (!data.success || !data.best_guess) {
+      // Ignore stale response if request was superseded or reset
+      if (currentRequestId !== requestIdRef.current) return;
+
+      // Minimum required data validation: success === true, best_guess exists, best_guess.name exists
+      if (!data.success || !data.best_guess || !data.best_guess.name) {
         setError(
           data.error ||
             "We couldn’t identify a destination from this Reel. Try another public Reel."
@@ -65,6 +72,7 @@ export default function Home() {
         }
       }, 100);
     } catch (err: unknown) {
+      if (currentRequestId !== requestIdRef.current) return;
       if ((err as Error)?.name === "AbortError") return;
       console.error("[HOME] Analysis failed:", err);
       const friendlyMessage = getFriendlyErrorMessage(err);
@@ -72,11 +80,14 @@ export default function Home() {
         setError(friendlyMessage);
       }
     } finally {
-      setIsLoading(false);
+      if (currentRequestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleReset = () => {
+    requestIdRef.current++;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -84,6 +95,7 @@ export default function Home() {
     setResult(null);
     setError("");
     setSourceUrl("");
+    setIsLoading(false);
     const heroElement = document.getElementById("hero");
     if (heroElement) {
       heroElement.scrollIntoView({ behavior: "smooth", block: "start" });

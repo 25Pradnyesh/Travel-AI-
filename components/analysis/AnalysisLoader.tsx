@@ -1,13 +1,31 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
+
+const STATUS_MESSAGES = [
+  "Analyzing your Reel…",
+  "Extracting location clues…",
+  "Resolving the destination…",
+  "Building travel intelligence…",
+];
 
 interface AnalysisLoaderProps {
   isActive: boolean;
 }
 
 export default function AnalysisLoader({ isActive }: AnalysisLoaderProps) {
+  const [statusIndex, setStatusIndex] = useState(0);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const interval = setInterval(() => {
+      setStatusIndex((prev) => (prev + 1) % STATUS_MESSAGES.length);
+    }, 7000);
+    return () => clearInterval(interval);
+  }, [isActive]);
+
   if (!isActive) return null;
 
   return (
@@ -44,15 +62,21 @@ export default function AnalysisLoader({ isActive }: AnalysisLoaderProps) {
         </motion.p>
 
         {/* Status Copy */}
-        <motion.h3
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="text-lg font-medium tracking-tight"
-          style={{ color: "var(--color-text-primary)" }}
-        >
-          Extracting travel information…
-        </motion.h3>
+        <div className="min-h-[32px]">
+          <AnimatePresence mode="wait">
+            <motion.h3
+              key={STATUS_MESSAGES[statusIndex]}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.3 }}
+              className="text-lg font-medium tracking-tight"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              {STATUS_MESSAGES[statusIndex]}
+            </motion.h3>
+          </AnimatePresence>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 6 }}

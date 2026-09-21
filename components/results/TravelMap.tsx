@@ -118,7 +118,29 @@ export default function TravelMap({
     });
   }, [selectedId, isLoaded, locations]);
 
-  if (locations.length === 0) return null;
+  if (locations.length === 0) {
+    return (
+      <div className="space-y-3">
+        <h3 className="text-metadata">MAP</h3>
+        <div
+          className="relative flex flex-col items-center justify-center rounded-xl p-8 text-center"
+          style={{
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg-surface)",
+            minHeight: "220px",
+          }}
+        >
+          <MapPin className="mb-2 h-6 w-6" style={{ color: "var(--color-text-muted)" }} />
+          <p className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
+            Map coordinates unavailable
+          </p>
+          <p className="mt-1 text-xs" style={{ color: "var(--color-text-muted)" }}>
+            Precise geographic coordinates could not be resolved for this location.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">

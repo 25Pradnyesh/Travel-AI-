@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Enter a valid Instagram Reel URL.",
+          error: "Enter a valid public Instagram Reel URL.",
         },
         { status: 400 },
       );
@@ -85,10 +85,17 @@ export async function POST(request: NextRequest) {
 
     if (!engineResponse.ok) {
       const errorData = await engineResponse.json().catch(() => null);
-      const detail =
-        errorData?.detail ||
-        errorData?.error ||
-        "Travel AI couldn't analyze this Reel. Make sure it's publicly available.";
+      let detail = "Travel AI couldn't analyze this Reel. Make sure it's publicly available.";
+      if (typeof errorData?.detail === "string" && errorData.detail.trim()) {
+        detail = errorData.detail.trim();
+      } else if (Array.isArray(errorData?.detail) && errorData.detail.length > 0) {
+        detail = errorData.detail
+          .map((item: { msg?: string }) => item.msg?.replace(/^Value error,\s*/i, "") || item.msg)
+          .filter(Boolean)
+          .join("; ");
+      } else if (typeof errorData?.error === "string" && errorData.error.trim()) {
+        detail = errorData.error.trim();
+      }
 
       console.error(
         `[ANALYZE PROXY] Engine returned status ${engineResponse.status}:`,

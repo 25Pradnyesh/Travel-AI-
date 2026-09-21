@@ -3,9 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link as LinkIcon, Loader2, ArrowRight, AlertCircle, RotateCcw } from "lucide-react";
-
-const INSTAGRAM_REEL_REGEX =
-  /^https?:\/\/(?:www\.)?instagram\.com\/(?:reel|reels)\/([A-Za-z0-9_-]+)/i;
+import { validateReelUrl } from "@/lib/api/travel-ai";
 
 interface ReelInputProps {
   onSubmit: (url: string) => void;
@@ -29,16 +27,14 @@ export default function ReelInput({
   const isAnalysisFailure =
     Boolean(displayError) &&
     !displayError.includes("Paste an Instagram Reel") &&
+    !displayError.includes("valid public Instagram Reel") &&
     !displayError.includes("valid Instagram Reel");
 
   const handleSubmit = () => {
     const trimmed = url.trim();
-    if (!trimmed) {
-      setLocalError("Paste an Instagram Reel URL first.");
-      return;
-    }
-    if (!INSTAGRAM_REEL_REGEX.test(trimmed)) {
-      setLocalError("That doesn\u2019t look like a valid Instagram Reel URL.");
+    const validation = validateReelUrl(trimmed);
+    if (!validation.isValid) {
+      setLocalError(validation.error || "Enter a valid public Instagram Reel URL.");
       return;
     }
     setLocalError("");

@@ -154,7 +154,7 @@ export default function DestinationExperience({
           )}
 
           {/* 8. Detected Places + Map */}
-          {nearby_places && nearby_places.length > 0 && (
+          {nearby_places && nearby_places.length > 0 ? (
             <motion.div variants={itemVariants}>
               <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
                 <NearbyPlaces
@@ -163,23 +163,31 @@ export default function DestinationExperience({
                   onSelectPlace={setSelectedPlaceId}
                   selectedPlaceId={selectedPlaceId}
                 />
-                {mapLocations.length > 0 && (
-                  <div className="hidden lg:block">
-                    <div className="sticky top-24">
-                      <TravelMap
-                        locations={mapLocations}
-                        selectedId={selectedPlaceId}
-                        onSelectLocation={setSelectedPlaceId}
-                      />
-                    </div>
+                <div className="hidden lg:block">
+                  <div className="sticky top-24">
+                    <TravelMap
+                      locations={mapLocations}
+                      selectedId={selectedPlaceId}
+                      onSelectLocation={setSelectedPlaceId}
+                    />
                   </div>
-                )}
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div variants={itemVariants}>
+              <div className="max-w-2xl">
+                <TravelMap
+                  locations={mapLocations}
+                  selectedId={selectedPlaceId}
+                  onSelectLocation={setSelectedPlaceId}
+                />
               </div>
             </motion.div>
           )}
 
-          {/* Mobile Map */}
-          {mapLocations.length > 0 && (
+          {/* Mobile Map when nearby places exist */}
+          {nearby_places && nearby_places.length > 0 && (
             <motion.div variants={itemVariants} className="lg:hidden">
               <TravelMap
                 locations={mapLocations}

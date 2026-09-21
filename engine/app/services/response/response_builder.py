@@ -128,7 +128,19 @@ class ResponseBuilder:
             except (ValueError, TypeError):
                 height = None
 
-            author = item.get("author") or item.get("authorAttributions")
+            author_raw = item.get("author") or item.get("authorAttributions")
+            author = None
+            if isinstance(author_raw, list):
+                author = [
+                    a.get("displayName", "") if isinstance(a, dict) else str(a)
+                    for a in author_raw
+                    if a
+                ]
+            elif isinstance(author_raw, dict):
+                disp = author_raw.get("displayName")
+                author = [str(disp)] if disp else None
+            elif isinstance(author_raw, str):
+                author = author_raw
 
             normalized.append(
                 DestinationPhoto(
