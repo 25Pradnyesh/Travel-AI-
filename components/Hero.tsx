@@ -113,21 +113,23 @@ export default function Hero({
             className="hidden lg:block"
           >
             <div
-              className="rounded-xl p-8"
+              className="rounded-2xl p-7 shadow-sm transition-all"
               style={{
                 backgroundColor: "var(--color-bg-surface)",
                 border: "1px solid var(--color-border)",
+                boxShadow: "0 4px 24px rgba(0,0,0,0.03)",
               }}
             >
-              {/* Simulated product preview */}
+              {/* Product preview */}
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
                   <span className="text-metadata">ANALYSIS RESULT</span>
                   <span
-                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
                     style={{
                       backgroundColor: "rgba(45, 106, 79, 0.08)",
                       color: "var(--color-success)",
+                      border: "1px solid rgba(45, 106, 79, 0.2)",
                     }}
                   >
                     <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "var(--color-success)" }} />
@@ -137,23 +139,28 @@ export default function Hero({
 
                 {/* Destination Preview */}
                 <div>
-                  <p
-                    className="text-xs font-medium uppercase tracking-wider"
-                    style={{ color: "var(--color-text-muted)" }}
-                  >
-                    Destination
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <p
+                      className="text-[10px] font-mono uppercase tracking-widest"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
+                      Primary Destination
+                    </p>
+                    <span className="font-mono text-[11px]" style={{ color: "var(--color-text-muted)" }}>
+                      36.4618° N, 25.3753° E
+                    </span>
+                  </div>
                   <p
                     className="mt-1 text-2xl font-semibold tracking-tight"
                     style={{ color: "var(--color-text-primary)" }}
                   >
-                    Santorini
+                    Santorini, Greece
                   </p>
                   <p
-                    className="mt-0.5 text-sm"
+                    className="mt-0.5 text-xs"
                     style={{ color: "var(--color-text-secondary)" }}
                   >
-                    Cyclades, Greece
+                    Cyclades, South Aegean Region
                   </p>
                 </div>
 
@@ -164,36 +171,41 @@ export default function Hero({
 
                 {/* Detected Places Preview */}
                 <div>
-                  <p className="text-metadata mb-3">DETECTED PLACES</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-metadata">DETECTED NEARBY PLACES</p>
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)]">3 LOCATIONS</span>
+                  </div>
                   <div className="space-y-2.5">
                     {[
-                      { num: "01", name: "Oia", sub: "Santorini, Greece" },
-                      { num: "02", name: "Fira", sub: "Santorini, Greece" },
-                      { num: "03", name: "Ammoudi Bay", sub: "Oia, Greece" },
+                      { num: "01", name: "Oia Cliffside Village", sub: "Must Visit · 0.4 km" },
+                      { num: "02", name: "Fira Historic Quarter", sub: "Food & Culture · 4.8 km" },
+                      { num: "03", name: "Ammoudi Bay Cove", sub: "Nature & Harbour · 1.2 km" },
                     ].map((place) => (
                       <div
                         key={place.num}
-                        className="flex items-baseline gap-3"
+                        className="flex items-baseline justify-between rounded-lg p-2 transition-colors hover:bg-neutral-50"
                       >
-                        <span
-                          className="font-mono text-xs tabular-nums"
-                          style={{ color: "var(--color-text-muted)" }}
-                        >
-                          {place.num}
-                        </span>
-                        <div>
-                          <p
-                            className="text-sm font-medium"
-                            style={{ color: "var(--color-text-primary)" }}
-                          >
-                            {place.name}
-                          </p>
-                          <p
-                            className="text-xs"
+                        <div className="flex items-baseline gap-3">
+                          <span
+                            className="font-mono text-[11px] tabular-nums"
                             style={{ color: "var(--color-text-muted)" }}
                           >
-                            {place.sub}
-                          </p>
+                            {place.num}
+                          </span>
+                          <div>
+                            <p
+                              className="text-xs font-medium"
+                              style={{ color: "var(--color-text-primary)" }}
+                            >
+                              {place.name}
+                            </p>
+                            <p
+                              className="text-[11px]"
+                              style={{ color: "var(--color-text-muted)" }}
+                            >
+                              {place.sub}
+                            </p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -206,14 +218,19 @@ export default function Hero({
                 />
 
                 {/* Confidence */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--color-text-muted)" }}
-                  >
-                    Confidence
-                  </span>
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    <span
+                      className="text-xs font-medium"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
+                      Multimodal Confidence
+                    </span>
+                    <p className="text-[10px]" style={{ color: "var(--color-text-muted)" }}>
+                      Visual frame & places match
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2.5">
                     <div
                       className="h-1.5 w-24 overflow-hidden rounded-full"
                       style={{ backgroundColor: "var(--color-border)" }}
@@ -221,16 +238,16 @@ export default function Hero({
                       <div
                         className="h-full rounded-full"
                         style={{
-                          width: "92%",
+                          width: "94%",
                           backgroundColor: "var(--color-success)",
                         }}
                       />
                     </div>
                     <span
-                      className="text-xs font-medium tabular-nums"
+                      className="font-mono text-xs font-semibold tabular-nums"
                       style={{ color: "var(--color-text-primary)" }}
                     >
-                      92%
+                      94%
                     </span>
                   </div>
                 </div>

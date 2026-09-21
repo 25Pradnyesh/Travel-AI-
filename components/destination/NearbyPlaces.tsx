@@ -1,6 +1,7 @@
 "use client";
 
-import { MapPin, Star, ExternalLink } from "lucide-react";
+import { useState, useMemo } from "react";
+import { MapPin, Star, ExternalLink, Compass } from "lucide-react";
 import type { NearbyPlace } from "@/types/analysis";
 
 interface NearbyPlacesProps {
@@ -10,57 +11,137 @@ interface NearbyPlacesProps {
   selectedPlaceId?: string | null;
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  all: "All",
+  must_visit: "Must Visit",
+  food: "Food & Dining",
+  stay: "Accommodations",
+  transport: "Transit",
+  nature: "Nature & Parks",
+  shopping: "Shopping",
+};
+
 export default function NearbyPlaces({
   places,
   destinationName,
   onSelectPlace,
   selectedPlaceId,
 }: NearbyPlacesProps) {
-  if (!places || places.length === 0) {
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const validPlaces = useMemo(() => places || [], [places]);
+
+  // Extract available categories
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    validPlaces.forEach((p) => {
+      if (p.category) set.add(p.category);
+    });
+    return ["all", ...Array.from(set)];
+  }, [validPlaces]);
+
+  // Filtered list
+  const filteredPlaces = useMemo(() => {
+    if (activeCategory === "all") return validPlaces;
+    return validPlaces.filter((p) => p.category === activeCategory);
+  }, [validPlaces, activeCategory]);
+
+  if (validPlaces.length === 0) {
     return null;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5">
+      {/* Header & Category Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-metadata">DETECTED PLACES</h3>
+          <h3 className="text-metadata">SURROUNDING HIGHLIGHTS</h3>
           <p
             className="mt-0.5 text-xs"
             style={{ color: "var(--color-text-muted)" }}
           >
-            Points of interest near {destinationName}
+            Curated points of interest identified around {destinationName}
           </p>
         </div>
         <span
-          className="rounded-md px-2.5 py-0.5 text-xs font-medium"
+          className="self-start sm:self-auto rounded-md px-2.5 py-1 text-xs font-mono font-medium"
           style={{
-            backgroundColor: "var(--color-bg-primary)",
-            color: "var(--color-text-muted)",
+            backgroundColor: "var(--color-bg-surface)",
+            color: "var(--color-text-secondary)",
             border: "1px solid var(--color-border)",
           }}
         >
-          {places.length} places
+          {filteredPlaces.length} of {validPlaces.length} places
         </span>
       </div>
 
+      {/* Category Filter Pills */}
+      {categories.length > 2 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {categories.map((cat) => {
+            const isSelected = activeCategory === cat;
+            const count =
+              cat === "all"
+                ? validPlaces.length
+                : validPlaces.filter((p) => p.category === cat).length;
+            const label = CATEGORY_LABELS[cat] || cat.replace(/_/g, " ");
+
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
+                  isSelected
+                    ? "bg-[var(--color-dark)] text-white shadow-xs"
+                    : "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-dark)]"
+                }`}
+                style={{
+                  border: `1px solid ${
+                    isSelected ? "var(--color-dark)" : "var(--color-border)"
+                  }`,
+                }}
+              >
+                <span>{label}</span>
+                <span
+                  className={`text-[10px] font-mono tabular-nums ${
+                    isSelected ? "text-white/80" : "text-[var(--color-text-muted)]"
+                  }`}
+                >
+                  ({count})
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Grid of Places */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {places.map((place, index) => {
+        {filteredPlaces.map((place, index) => {
           const hasRating = place.rating > 0;
           const hasDistance =
             place.distance_km !== null && place.distance_km !== undefined;
           const isSelected = selectedPlaceId === place.place_id;
 
+          const categoryDisplay =
+            CATEGORY_LABELS[place.category] || place.category?.replace(/_/g, " ") || "Nearby";
+
           return (
             <div
               key={place.place_id || place.name}
-              className="group flex cursor-pointer flex-col justify-between rounded-xl p-5 transition-all"
+              className={`group flex cursor-pointer flex-col justify-between rounded-xl p-4 sm:p-5 transition-all ${
+                isSelected
+                  ? "ring-2 ring-[var(--color-dark)] shadow-sm"
+                  : "hover:border-[var(--color-dark)] hover:shadow-xs"
+              }`}
               style={{
                 backgroundColor: isSelected
-                  ? "var(--color-bg-primary)"
+                  ? "var(--color-bg-surface)"
                   : "var(--color-bg-surface)",
-                border: `1px solid ${isSelected ? "var(--color-text-muted)" : "var(--color-border)"}`,
-                transitionDuration: "var(--duration-fast)",
+                border: `1px solid ${
+                  isSelected ? "var(--color-dark)" : "var(--color-border)"
+                }`,
               }}
               onClick={() => onSelectPlace?.(place.place_id)}
               role={onSelectPlace ? "button" : undefined}
@@ -74,15 +155,21 @@ export default function NearbyPlaces({
               aria-label={`${place.name}, ${place.formatted_address || ""}`}
             >
               <div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-metadata" style={{ fontSize: "10px" }}>
-                    {String(index + 1).padStart(2, "0")}
-                    {place.category ? ` · ${place.category}` : ""}
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span
+                    className="rounded-md px-2 py-0.5 text-[10px] font-mono font-medium"
+                    style={{
+                      backgroundColor: "var(--color-bg-primary)",
+                      color: "var(--color-text-muted)",
+                      border: "1px solid var(--color-border)",
+                    }}
+                  >
+                    {String(index + 1).padStart(2, "0")} · {categoryDisplay}
                   </span>
                   {hasDistance && (
                     <span
-                      className="font-mono text-[11px]"
-                      style={{ color: "var(--color-text-muted)" }}
+                      className="font-mono text-[11px] font-medium"
+                      style={{ color: "var(--color-text-secondary)" }}
                     >
                       {place.distance_km} km
                     </span>
@@ -90,7 +177,7 @@ export default function NearbyPlaces({
                 </div>
 
                 <h4
-                  className="mt-1 text-sm font-medium transition-colors"
+                  className="mt-1 text-sm font-semibold transition-colors group-hover:text-black line-clamp-1"
                   style={{ color: "var(--color-text-primary)" }}
                 >
                   {place.name}
@@ -98,7 +185,7 @@ export default function NearbyPlaces({
 
                 {place.formatted_address && (
                   <p
-                    className="mt-1 text-xs line-clamp-2"
+                    className="mt-1 text-xs line-clamp-2 leading-relaxed"
                     style={{ color: "var(--color-text-muted)" }}
                   >
                     {place.formatted_address}
@@ -111,40 +198,44 @@ export default function NearbyPlaces({
                 style={{ borderTop: "1px solid var(--color-border)" }}
               >
                 {hasRating ? (
-                  <div className="flex items-center gap-1 font-medium">
-                    <Star className="h-3 w-3 fill-amber-500 text-amber-500" aria-hidden="true" />
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" aria-hidden="true" />
                     <span style={{ color: "var(--color-text-primary)" }}>
                       {place.rating.toFixed(1)}
                     </span>
                     {place.user_ratings_total > 0 && (
-                      <span style={{ color: "var(--color-text-muted)" }}>
-                        ({place.user_ratings_total})
+                      <span className="text-[11px]" style={{ color: "var(--color-text-muted)" }}>
+                        ({place.user_ratings_total.toLocaleString()})
                       </span>
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1" style={{ color: "var(--color-text-muted)" }}>
+                  <div className="flex items-center gap-1 text-[11px]" style={{ color: "var(--color-text-muted)" }}>
                     <MapPin className="h-3 w-3" aria-hidden="true" />
-                    <span>Nearby</span>
+                    <span>Point of Interest</span>
                   </div>
                 )}
 
-                {place.maps_url && (
+                {place.maps_url ? (
                   <a
                     href={place.maps_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 transition-colors"
+                    className="inline-flex items-center gap-1 font-medium transition-colors hover:text-black"
                     style={{
                       color: "var(--color-text-muted)",
-                      transitionDuration: "var(--duration-fast)",
                     }}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Open ${place.name} in Google Maps`}
                   >
-                    <span>View Map</span>
+                    <span>Maps</span>
                     <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </a>
+                ) : (
+                  <span className="text-[11px] font-mono text-[var(--color-text-muted)]">
+                    <Compass className="h-3 w-3 inline mr-1" />
+                    Pin
+                  </span>
                 )}
               </div>
             </div>

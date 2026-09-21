@@ -120,43 +120,52 @@ export default function DestinationExperience({
             <DestinationVerification bestGuess={best_guess} />
           </motion.div>
 
-          {/* 3. Why */}
-          {best_guess.why && (
+          {/* 3. Editorial Context Dossier */}
+          {(best_guess.why || ti.travel_summary) && (
             <motion.div variants={itemVariants}>
-              <DestinationReason why={best_guess.why} />
+              <div
+                className={`grid grid-cols-1 ${
+                  best_guess.why && ti.travel_summary ? "md:grid-cols-2" : ""
+                } gap-6`}
+              >
+                {best_guess.why && <DestinationReason why={best_guess.why} />}
+                {ti.travel_summary && <TravelSummary summary={ti.travel_summary} />}
+              </div>
             </motion.div>
           )}
 
-          {/* 4. Summary */}
-          {ti.travel_summary && (
-            <motion.div variants={itemVariants}>
-              <TravelSummary summary={ti.travel_summary} />
-            </motion.div>
-          )}
-
-          {/* 5. Travel Intelligence */}
+          {/* 4. Seasonality & Practical Intelligence */}
           <motion.div variants={itemVariants}>
             <TravelIntelligenceSection travelIntelligence={ti} />
           </motion.div>
 
-          {/* 6. Budget */}
-          {(ti.budget_level || ti.estimated_daily_budget) && (
-            <motion.div variants={itemVariants}>
-              <BudgetCard travelIntelligence={ti} />
+          {/* 5. Budget & Local Travel Advice */}
+          {(ti.budget_level || ti.estimated_daily_budget || (ti.travel_tips && (Array.isArray(ti.travel_tips) ? ti.travel_tips.length > 0 : true))) && (
+            <motion.div variants={itemVariants} className="space-y-6">
+              {(ti.budget_level || ti.estimated_daily_budget) && (
+                <BudgetCard travelIntelligence={ti} />
+              )}
+              {ti.travel_tips && (
+                <TravelTips tips={ti.travel_tips} />
+              )}
             </motion.div>
           )}
 
-          {/* 7. Travel Tips */}
-          {ti.travel_tips && ti.travel_tips.length > 0 && (
-            <motion.div variants={itemVariants}>
-              <TravelTips tips={ti.travel_tips} />
-            </motion.div>
-          )}
-
-          {/* 8. Detected Places + Map */}
+          {/* 6. Detected Places + Map */}
           {nearby_places && nearby_places.length > 0 ? (
-            <motion.div variants={itemVariants}>
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_400px]">
+            <motion.div variants={itemVariants} className="pt-2">
+              <div className="mb-4 flex items-center justify-between border-b border-[var(--color-border)] pb-3">
+                <div>
+                  <p className="text-metadata">CARTOGRAPHY & EXPLORATION</p>
+                  <h3 className="text-lg font-semibold tracking-tight text-[var(--color-text-primary)]">
+                    Detected Points of Interest
+                  </h3>
+                </div>
+                <span className="font-mono text-xs text-[var(--color-text-muted)]">
+                  {nearby_places.length} LOCATIONS
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_420px]">
                 <NearbyPlaces
                   places={nearby_places}
                   destinationName={best_guess.name}
@@ -164,12 +173,15 @@ export default function DestinationExperience({
                   selectedPlaceId={selectedPlaceId}
                 />
                 <div className="hidden lg:block">
-                  <div className="sticky top-24">
+                  <div className="sticky top-24 space-y-4">
                     <TravelMap
                       locations={mapLocations}
                       selectedId={selectedPlaceId}
                       onSelectLocation={setSelectedPlaceId}
                     />
+                    <p className="text-center font-mono text-[11px] text-[var(--color-text-muted)]">
+                      Select any location marker to center & inspect
+                    </p>
                   </div>
                 </div>
               </div>

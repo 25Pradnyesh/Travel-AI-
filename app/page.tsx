@@ -121,7 +121,9 @@ export default function Home() {
       />
 
       {/* Analysis Loading Experience */}
-      {isLoading && !result && <AnalysisLoader isActive={isLoading} />}
+      {isLoading && !result && (
+        <AnalysisLoader isActive={isLoading} onCancel={handleReset} />
+      )}
 
       {/* Results */}
       {result && (
