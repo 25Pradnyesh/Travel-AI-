@@ -50,7 +50,7 @@ export default function DestinationExperience({
   sourceUrl,
   onReset,
 }: DestinationExperienceProps) {
-  const { best_guess, travel_intelligence, nearby_places } = data;
+  const { best_guess, travel_intelligence, nearby_places, gemini } = data;
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   if (!best_guess) {
@@ -117,7 +117,7 @@ export default function DestinationExperience({
 
           {/* 2. Verification */}
           <motion.div variants={itemVariants}>
-            <DestinationVerification bestGuess={best_guess} />
+            <DestinationVerification bestGuess={best_guess} gemini={gemini} />
           </motion.div>
 
           {/* 3. Editorial Context Dossier */}

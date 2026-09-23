@@ -1,20 +1,35 @@
 import logging
 import os
 from pathlib import Path
+import time
 import urllib.parse
 from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, model_validator
 import requests
 
-from engine.providers.manager import ProviderManager
-from engine.app.pipelines.location_pipeline import LocationPipeline
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Analysis"])
 
-provider = ProviderManager()
-pipeline = LocationPipeline()
+_provider = None
+_pipeline = None
+
+
+def get_provider():
+    global _provider
+    if _provider is None:
+        from engine.providers.manager import ProviderManager
+        _provider = ProviderManager()
+    return _provider
+
+
+def get_pipeline():
+    global _pipeline
+    if _pipeline is None:
+        from engine.app.pipelines.location_pipeline import LocationPipeline
+        _pipeline = LocationPipeline()
+    return _pipeline
+
 
 
 class AnalyzeRequest(BaseModel):
@@ -40,9 +55,14 @@ class AnalyzeRequest(BaseModel):
 def analyze(request: AnalyzeRequest):
     url = request.target_url
 
+    total_start = time.perf_counter()
+    provider_duration = None
     provider_output = None
     try:
+        provider_start = time.perf_counter()
+        provider = get_provider()
         provider_output = provider.extract(url)
+        provider_duration = time.perf_counter() - provider_start
     except ValueError as e:
         logger.warning("[API] Validation error: %s", e)
         raise HTTPException(
@@ -64,9 +84,12 @@ def analyze(request: AnalyzeRequest):
 
     video_path = provider_output.get("video_path") if provider_output else None
     try:
+        pipeline = get_pipeline()
         return pipeline.run(
             metadata=provider_output["metadata"],
             video_path=video_path,
+            total_start=total_start,
+            provider_duration=provider_duration,
         )
     except Exception as e:
         logger.error("[API] Pipeline execution error: %s", e)

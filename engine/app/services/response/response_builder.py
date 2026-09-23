@@ -97,7 +97,7 @@ class ResponseBuilder:
             if isinstance(item, str):
                 item_str = item.strip()
                 if item_str.startswith("places/"):
-                    normalized.append(DestinationPhoto(url=f"/places/photo?name={urllib.parse.quote(item_str, safe='')}"))
+                    normalized.append(DestinationPhoto(url=f"/places/photo?name={urllib.parse.quote(item_str)}"))
                 elif item_str:
                     normalized.append(DestinationPhoto(url=item_str))
                 continue
@@ -110,7 +110,7 @@ class ResponseBuilder:
 
             # Route through safe backend photo proxy without exposing Google API key to frontend
             if not url and name:
-                url = f"/places/photo?name={urllib.parse.quote(name, safe='')}"
+                url = f"/places/photo?name={urllib.parse.quote(name)}"
 
             if not url:
                 continue
@@ -172,10 +172,14 @@ class ResponseBuilder:
         matched_sources = place.get("matched_sources") or []
         if matched_sources:
             sources_str = ", ".join(sorted(str(s).upper() for s in matched_sources))
-            return f"Verified from Reel's {sources_str} and Google Places location data."
+            if verification_status in ("VERIFIED", "PARTIAL"):
+                return f"Verified from Reel's {sources_str} and Google Places location data."
+            return f"Identified from Reel's {sources_str} and Google Places location data (unverified)."
 
         # 3. Fallback
-        return "Top scoring travel destination matching Reel context and Google Places data."
+        if verification_status in ("VERIFIED", "PARTIAL"):
+            return "Top scoring travel destination matching Reel context and Google Places data."
+        return "Top scoring travel destination matching Reel context and Google Places data (unverified)."
 
     # ==================================================
     # Build Travel Intelligence
@@ -359,21 +363,25 @@ class ResponseBuilder:
             or "FAILED"
         ).upper()
 
+        if verification_status != "VERIFIED" and confidence_level == "VERIFIED":
+            confidence_level = "VERY_HIGH"
+
         gemini_conf = 0.0
-        if gemini_result and gemini_result.get("confidence") is not None:
-            try:
-                gemini_conf = float(gemini_result["confidence"])
-                if gemini_conf > 1.0:
-                    gemini_conf = round(gemini_conf / 100.0, 4)
-            except (ValueError, TypeError):
-                gemini_conf = 0.0
-        elif place.get("gemini_confidence") is not None:
-            try:
-                gemini_conf = float(place["gemini_confidence"])
-                if gemini_conf > 1.0:
-                    gemini_conf = round(gemini_conf / 100.0, 4)
-            except (ValueError, TypeError):
-                gemini_conf = 0.0
+        if verification_status in ("VERIFIED", "PARTIAL"):
+            if gemini_result and gemini_result.get("confidence") is not None:
+                try:
+                    gemini_conf = float(gemini_result["confidence"])
+                    if gemini_conf > 1.0:
+                        gemini_conf = round(gemini_conf / 100.0, 4)
+                except (ValueError, TypeError):
+                    gemini_conf = 0.0
+            elif place.get("gemini_confidence") is not None:
+                try:
+                    gemini_conf = float(place["gemini_confidence"])
+                    if gemini_conf > 1.0:
+                        gemini_conf = round(gemini_conf / 100.0, 4)
+                except (ValueError, TypeError):
+                    gemini_conf = 0.0
 
         gemini_reason = str(
             (gemini_result.get("reason") if gemini_result else None)
@@ -445,7 +453,7 @@ class ResponseBuilder:
         if gemini_result:
             gemini_status = gemini_result.get("verification_status", "SKIPPED")
             gemini_conf = 0.0
-            if gemini_result.get("confidence") is not None:
+            if gemini_status in ("VERIFIED", "PARTIAL") and gemini_result.get("confidence") is not None:
                 try:
                     gemini_conf = float(gemini_result["confidence"])
                     if gemini_conf > 1.0:

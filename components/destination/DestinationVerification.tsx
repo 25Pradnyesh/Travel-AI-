@@ -2,14 +2,16 @@
 
 import { motion } from "framer-motion";
 import { CheckCircle2, AlertTriangle, HelpCircle, XCircle } from "lucide-react";
-import type { BestGuess } from "@/types/analysis";
+import type { BestGuess, GeminiInfo } from "@/types/analysis";
 
 interface DestinationVerificationProps {
   bestGuess: BestGuess;
+  gemini?: GeminiInfo | null;
 }
 
 export default function DestinationVerification({
   bestGuess,
+  gemini,
 }: DestinationVerificationProps) {
   const status = (bestGuess.verification_status || "SKIPPED").toUpperCase();
   const hasConfidence =
@@ -122,6 +124,14 @@ export default function DestinationVerification({
             >
               {statusConfig.description}
             </p>
+            {gemini?.used && gemini?.reason && gemini.reason !== bestGuess.why && (
+              <p
+                className="mt-1 text-xs font-mono"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                Gemini: {gemini.reason}
+              </p>
+            )}
           </div>
         </div>
 

@@ -1,3 +1,5 @@
+import time
+
 from engine.app.services.location.candidate_service import (
     CandidateService,
 )
@@ -267,6 +269,8 @@ class LocationResolver:
         evidence: dict,
 
     ):
+
+        res_start = time.perf_counter()
 
         # ==================================================
         # Generate Search Candidates
@@ -561,6 +565,8 @@ class LocationResolver:
 
         ranked = ranked[:5]
 
+        candidate_res_duration = time.perf_counter() - res_start
+
         print()
 
         self.log(
@@ -572,6 +578,9 @@ class LocationResolver:
         # ==================================================
         # Nearby Search + Travel Intelligence
         # ==================================================
+
+        nearby_duration = 0.0
+        travel_duration = 0.0
 
         for item in ranked:
 
@@ -593,6 +602,8 @@ class LocationResolver:
             # Nearby Search
             # ------------------------------------------
 
+            t_nb_start = time.perf_counter()
+
             nearby = self.nearby.search(
 
                 latitude,
@@ -600,6 +611,8 @@ class LocationResolver:
                 longitude,
 
             ) or {}
+
+            nearby_duration += (time.perf_counter() - t_nb_start)
 
             place = self.attach_nearby(
 
@@ -737,11 +750,15 @@ class LocationResolver:
             # AI Travel Intelligence
             # ------------------------------------------
 
+            t_tr_start = time.perf_counter()
+
             place = self.travel.enrich(
 
                 place,
 
             )
+
+            travel_duration += (time.perf_counter() - t_tr_start)
 
             # ------------------------------------------
             # Future AI Fields
@@ -968,5 +985,11 @@ class LocationResolver:
             "verified_count": statistics["verified_places"],
 
             "search_results": statistics["google_search_results"],
+
+            "stage_timings": {
+                "candidate_resolution": candidate_res_duration,
+                "nearby_places": nearby_duration,
+                "travel_intelligence": travel_duration,
+            },
 
         }

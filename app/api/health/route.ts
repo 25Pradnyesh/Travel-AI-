@@ -40,7 +40,7 @@ export async function GET() {
         service: "Travel AI Next.js Proxy",
         error: isTimeout
           ? "Health check timed out."
-          : "Travel AI engine is unreachable.",
+          : "Travel AI is temporarily unavailable.",
       },
       { status: 503 },
     );

@@ -1,0 +1,730 @@
+{
+  "elapsed_s": 16.96,
+  "http_status": 200,
+  "response": {
+    "success": true,
+    "best_guess": {
+      "place_id": "ChIJObSww3wdnUcRqFouz5BzSE4",
+      "name": "Seebensee, Austria",
+      "formatted_address": "Seebensee, Austria",
+      "country": "Austria",
+      "city": "Seebensee",
+      "region": "Seebensee",
+      "latitude": 47.368815,
+      "longitude": 10.934934,
+      "rating": 4.9,
+      "user_ratings_total": 524,
+      "types": [
+        "lake",
+        "natural_feature",
+        "establishment"
+      ],
+      "photos": [
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMbz9Z1T6nMDJsmYlh8EhShj_0vwXHnOxKGCoDIGj8OA6OltEAXU4wUsIhAPmVA85uiXtKBcoqhm_s8J5mHZv3htszjTVBHW2Cf-V4eQfpq5GYKLvDpowbKEb1HfESZThQbZf26OFSjfmo1i83gU9qhm4LtaCJ8PXaOGtUNiNDk4Ipj9XnHpwjZ0ZjQTLkyuCsuMzvvrlxYD8RPRENf6SHQuzAUsdUfAVe7sX2kdDXHzdjOJqIOOhtb-7coftF2_R91sS0z4u_t93TyHcibaMCVmh1WFhnp2whQIoOXalu8xvZsUQvE7-GnYQNwV8eFQH128xhsx-P4WHcwBgtgxIRxvgO5iNjHkngYhOv4_v3Sm1-6ce3vwN_VKv-E17oGuZPoNHqaTRSnxfWxj-kbkSF5Im_V26Hg",
+          "width": 4800,
+          "height": 3600,
+          "author": [
+            "Daniel Kempken"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMY8ZSxya7fqCqDQjl0AOk7zrcD8OLFpZWpHEFpNsoa4MQGL2cRQTwZ3MoHzVtY8TpcfaGRhV4aE-trv7N4lOMBYMij9oKTDqgu4p5xHuHDCxYAQ6cZQ-8Bj8Bo2W0fJj8VTH9W7Xzfqziw86hnECsg3XfTGzhNvmS3IwUYDnvX41dZ89wFSXMtOJQ0a6bJcsK99EBnddWO3fVwZxqb_dKudo0HZYTaKQnnycITcOop81L-u6W9-MOzTML4PTKw3E1SfkV4SYI5_tOvUsUWDa1uOuDCntEdng0a_nNPdqA2eekfeP9lxQW_V2fDG8ymKoeCrDCxsH_XipX19sWuQscxVJ6tzmxsl0kxTgoNOnzwzi5YjWoX1oXDUcehnQilDWwgTNoaUAeF-pcHJVmaX8-DIgzINQ5E",
+          "width": 4032,
+          "height": 3024,
+          "author": [
+            "Micha T"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMboRrDVUq9HLb20Iu6cYmJZCjVhZzc_9ToZQJNN9FU1LdNC-PboTF16YKLMSh3CWjp7sGfiTChnvFZ4BRtqIwCwtcEu3KlMLtokbMXFDohrM5WIpwQjzuX410selxeh84p0gQObRZAZMckY0K20YP7DBLjsBOR7YDXIzVuU0reLt0GBty1ATz3syVa7GnYFUDk2E6QnkWsBH121sUI9myF7xsVsXAeyJPvZNobRU98XUPYkGPzoeKWfXjnCKB5b64-fIlHxfjRIuXNXLF4eJdJyc2FR8pmLV8jHTA2UlVS1xPU0uPM8I61xWHIM8EcKb8dP6hqdQfIWr2Y6kbkAZkByGJjCK6xfY_WpnAVUGHz4cWnu9OvYC8AoRcexwtky_zDZdZ6Crfsgf5MWFH9XgIxFR5_Z4BQ",
+          "width": 4032,
+          "height": 3024,
+          "author": [
+            "鄭侑青"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMaS8DdLIR44YVC05TnT6ESRkJjXjnWEOz9elcqjR2Zf8b_7rIQr1ZWZERxd5hUByNCziyWJWQolneVQSuALOF01q4XF9qaK1wB6lD_1FFessy7wD9tsBwnECiEgrlz93O5f-tg4odK53YExxZ1vN4mgciaK1u6v2rPAWaTPBQNhBJTgxQA2pODqbESjZGfoHaN3baxeUXKyAh6RqC_lqqskgnQ0t_BdLq7YIUnGrxMzlkjWyXc9fbzv91Cy6NhST1J7HMkDRabxl_gQR2MsSpAkbxPy01n_N8Y2qkSdVXwKJHNIebS2Ehc9n6_NhiG8F95x90xiOYaNk0NGewgxbRzc1JACsj7kyyoDXj2keLR_3NRC6prbIYnhdR14L8TFKwAJ-5Kg8SeeLtP4rQrhUpL3QDHD",
+          "width": 2268,
+          "height": 4032,
+          "author": [
+            "Harald wurzinger"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMbrBcd1j5v1fIQkna4ZR0uBIt7JO15nlOMg0qGr9U7Ex67gkiRhiAc4OOfcTFooEzPxmrdrlKHMJZKGbgyg2wtpg3IIY0FcJECzyoH0h7GeWqRd37dWnfvOrOhnGZzhG_ZKEgDyyaigLllYImCZP6rlWWZIyHYIJwWSaRArMLtTxhhEFTS5LArHh5lXh4Ku4h_yKzhFZL4paWTqjTAG70V7M1RX-HHuPOTVD_DjlXqBFxQaTpCeDvaBgd_syEmQHEQbJAXqbKvM-cqckQUdTVgaMbaQ4cA7B9510jyuvmsqv6XN1G5DaqAV6MT1_vfFocnXkkmAzKCysbkIMkazfK0ezEnHqDdWBP3NCbfSN1SDfQddV_IsQuSZypn89u8D1yqVoopgqGyasBZ-AueejoVBQ7Kd4O0",
+          "width": 3000,
+          "height": 4000,
+          "author": [
+            "Eva-Maria Friedle"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMYzsK25JXIjJLxgtGiCNyXB8ycWMQsIbZP8pSh9fqCW0IQAdjMFkfhvgE2TrrCnZp1zrnFOetAjWwqw8dQfN0tUWPGpyJdnhlunab6wmWWgIEaKqFzIMkxiimosGKtMkuWWJcwGyvUeAsUFDq8fpeO-oH-kaxjQlHipvG01fxhZwXUdS3M2EKHSWksxUfIdNltKWn_zMU7NXDTSeu6GeciBdLGrgZj9z4VVUlqqWUAFevqlskT_fdU5QzkF1nqlB9IbIRFnj6FrAepStinKscMQLxzfk9wAK0ATnMOIS8gpKtvQlfjN-xdjGFaplte7t2GKN-rt4QEe05y7BiDya9ZX1QNjEgTSAST49_imWmIMIjefE8MYsBQxdz6XmMYLyqb-iwfleGvml9F5JX5As96pEx8Y",
+          "width": 1280,
+          "height": 960,
+          "author": [
+            "Manuel Cosmin Bogdan"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMawdKjBIoJ-GEvPlORn46Jxa6CyrbAd8vSh5dVtcTtOTgfbmq-kskth3agRj5tg_SK5h_6HTzGh8Qr8bWxJIl9vMGf8FDHiLXf6jqmGYsZVNhINzgneVuG_flIvyPDQM7LtbhqnrsV7HVQqho3A_g2KfaeHIEXfh8L3ZdlxWWWkmuHvna7gNTKGWRW0geG4O6vcuZahIsV7F3yIdPzQj70z359U1aRwWAhQqjfQGVqk3n1DWy0xrJI8PT3YoZ1jYVUGF1FNesCznYe19levFmRmoP0h4a5XSPPB-vOd8HZIXoRRji7SFALmLkJHkYb_kJ5J8_hZPCIKsuu9elNiFYtmQTKMIPuk4KZ6j2omUQRAPAoQd3wTEuorWbVNy1qVU4ph5qxRgYe_qrMWFVVrmef30T0",
+          "width": 1200,
+          "height": 801,
+          "author": [
+            "simon chang"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMaH7ZOONXTEXX9H4hHlIbhDyE4wHcHruyQnyT55IsXUucUIQMPpHMRdth84vD3IsKIroLUgKne548BIPoruaLCZEDq2FO9HGvnIAOPtNNp0xDSGgi7MDz6SmCJvPukbNbhyLA2lNjVqVs_XOYDLrp0oMZlotU4RKfmmdMXL3mZCtkVcQ0gB74wImMuCQJHctaxxV9A9uQ8U2d9J-2xKlzRSQS3q-_3YcvTiWsmFp1NIbHu_gdy-TDitjFobMQeOQAuWFy7z7tP9X2ynzNIP3gfd0-mRKEPlXzXurwPX19qNqjuqumI1HiFr5Fp1gg1lC3tzi4ftaYKyErTesM_sa_twAIRGC7V992QKSQbuwgheodyNide23Co02hkqwnyTusWOOm6vECqSujyRBSgQnWwih4v6xJ4",
+          "width": 2048,
+          "height": 1536,
+          "author": [
+            "Ulrike Wiedemann"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMZj3yOZ2MvDdRANznlQK8KFlUAAOCH-zXmFwdVZTGSfFO82VHvBnHUeGmaIeNZ-QSgt-qK5mjEyP1LFsmX4KWQOTMyar9Tgs9aed7nQOj6AzfNXFOBK3rMXdBp43QiDGXUHdNqVg1fdK8cZY-yjZzCIaxnYS94CJ6hCz60Ds8CrVFfk-XD1Dw4F9W1GAE6ame-sqg0YrTu_lKkwjh0__nVEkO0MIdhJMaxdq99rC7AhQIjMGo9wIznqt7iUlrEhL0RgxW0zDfNT2yZ_JthIVXVzHESd9GvHz00RFr2S3g2RGETyMFgPbodSJ2wvxHksrJ1SdgJOBRpPG9V7xy8ZeCuH4cr8C8eADWHHiTgzclwL-RXZnOBGDm6ajHHLmdYc335pdadyfbMv9zE-x9UsHugZCKk",
+          "width": 4032,
+          "height": 3024,
+          "author": [
+            "Sandra K"
+          ]
+        },
+        {
+          "url": "/places/photo?name=places/ChIJObSww3wdnUcRqFouz5BzSE4/photos/Aa-ngMabd1IiuX4WBkMhULJfY8Rjyhuzhx0Vr21wVrIk3C220oY0WdQadXPIzsTe7IknCqsP3T5Y4AFgqTQmB_iFehALHMLJycP8W71WxWaouvzMATX91ODPwO1IFoReqwYF3wcjrrmHQK3pT4rrc7alhXInzBVP-fsvTA8VPBiIRf4DF7DQB8ncoWJP-csUKWtyjdYjMxpHGfD-LJLEo_o2EIZPkkc-RFx4gnbTaYu4Jj84Ajr8CYDn9mlP5AV57M09NBhCh9XvWHegdCZJvj0ht902_12QeSCa7RqcNtvzAcfqEkOJcqhxb-lwKb2TkQAnJqNIpiadEmizgkawZDb2WHi1smimxqzKdeZ7sh_82iU9xAE5n4KZHLkX3Qahi8RpDG-ATTyBV86FpVUA1Bh5p586d8f_",
+          "width": 4032,
+          "height": 3024,
+          "author": [
+            "Mirko"
+          ]
+        }
+      ],
+      "maps_url": "https://maps.google.com/?cid=5640885599069952680&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAIYBCAA",
+      "confidence": 100,
+      "confidence_level": "VERY_HIGH",
+      "verification_status": "FAILED",
+      "gemini_confidence": 0,
+      "gemini_reason": "Gemini verification unavailable. Used scoring fallback.",
+      "why": "Verified from Reel's CAPTION and Google Places location data."
+    },
+    "travel_intelligence": {
+      "category": "Lake",
+      "category_emoji": "🏞️",
+      "best_season": null,
+      "peak_months": [],
+      "shoulder_months": [],
+      "avoid_months": [],
+      "budget_level": "Premium",
+      "estimated_daily_budget": 219,
+      "currency": "EUR",
+      "recommended_trip_days": "1–2 Days",
+      "travel_tips": {
+        "travel_tips": [
+          "Check boating conditions before visiting.",
+          "Be careful near slippery rocks.",
+          "Carry waterproof footwear.",
+          "Best season to visit: May, June, July, August."
+        ],
+        "safety_tips": [
+          "Keep emergency contacts available.",
+          "Carry a valid ID.",
+          "Respect local laws and customs."
+        ],
+        "local_tips": [
+          "Boat rides are usually calmer during the morning.",
+          "Check weather before renting boats.",
+          "Respect local customs and etiquette in Austria."
+        ],
+        "photography_tip": "Early morning usually provides calm reflections.",
+        "recommended_transport": "Local ferries and taxis are commonly available.",
+        "avoid": [],
+        "best_time_of_day": "Sunrise",
+        "packing_highlights": {}
+      },
+      "activities": [
+        "Boating",
+        "Kayaking",
+        "Photography",
+        "Picnic",
+        "Nature Walk"
+      ],
+      "packing_list": {
+        "Essentials": [
+          "Phone Charger",
+          "Power Bank",
+          "Water Bottle",
+          "Passport / ID",
+          "Cash / Cards",
+          "Medicines"
+        ],
+        "Lake": [
+          "Quick Dry Clothes",
+          "Water Shoes"
+        ],
+        "Adventure": [
+          "First Aid Kit",
+          "Pocket Knife",
+          "Offline Maps",
+          "Power Bank"
+        ]
+      },
+      "timing": {
+        "best_time_of_day": "Daytime",
+        "best_season": null
+      },
+      "sample_itinerary": [
+        "Morning Walk",
+        "Boating",
+        "Photography"
+      ],
+      "travel_summary": "🏞️ Lake • 📅 None • 💰 Premium • 🕒 1–2 Days"
+    },
+    "nearby_places": [
+      {
+        "place_id": "ChIJfZGFSGMdnUcRqB_rhEH06uI",
+        "name": "Seebensee",
+        "formatted_address": "Unnamed Road,, 6414 Ehrwald, Austria",
+        "latitude": 47.369809,
+        "longitude": 10.937044,
+        "rating": 4.9,
+        "user_ratings_total": 1113,
+        "types": [
+          "tourist_attraction",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 0.19,
+        "maps_url": "https://maps.google.com/?cid=16351149959362060200&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Attraction"
+      },
+      {
+        "place_id": "ChIJI9f1FvTjnEcRRglZDmFPXYw",
+        "name": "Stempelstelle Moosle's Zauberwald",
+        "formatted_address": "Unnamed Road, 6631 Lermoos, Austria",
+        "latitude": 47.400401,
+        "longitude": 10.872432,
+        "rating": 4.9,
+        "user_ratings_total": 28,
+        "types": [
+          "museum",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.87,
+        "maps_url": "https://maps.google.com/?cid=10114327616415140166&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Attraction"
+      },
+      {
+        "place_id": "ChIJzxOHAPjjnEcRYo4qZzYDpj4",
+        "name": "Ruine Sigmundsburg",
+        "formatted_address": "Sigmundsburg, 6465 Nassereith, Austria",
+        "latitude": 47.345099,
+        "longitude": 10.823892,
+        "rating": 4.8,
+        "user_ratings_total": 76,
+        "types": [
+          "historical_landmark",
+          "historical_place",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 8.77,
+        "maps_url": "https://maps.google.com/?cid=4514299208679460450&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Attraction"
+      },
+      {
+        "place_id": "ChIJ7zBPwXcDnUcRsmJtn1kWjmk",
+        "name": "Alte Bergstation",
+        "formatted_address": "CX9J+RM, 6632 Ehrwald, Austria",
+        "latitude": 47.419618,
+        "longitude": 10.981654,
+        "rating": 4.8,
+        "user_ratings_total": 13,
+        "types": [
+          "historical_landmark",
+          "tourist_attraction",
+          "historical_place",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 6.65,
+        "maps_url": "https://maps.google.com/?cid=7606041394857992882&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Attraction"
+      },
+      {
+        "place_id": "ChIJQarZlo_jnEcRhRST2gksCKE",
+        "name": "Römische Spuren der Via Claudia Augusta",
+        "formatted_address": "St. Wendelin 23, 6465 Nassereith, Austria",
+        "latitude": 47.352885,
+        "longitude": 10.825876,
+        "rating": 4.8,
+        "user_ratings_total": 6,
+        "types": [
+          "historical_landmark",
+          "historical_place",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 8.4,
+        "maps_url": "https://maps.google.com/?cid=11603572860753482885&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Attraction"
+      },
+      {
+        "place_id": "ChIJG2QHkAgfnUcR89DIwtEIkZA",
+        "name": "Pavillon Gemeinde Mötz",
+        "formatted_address": "6423 Mötz, Austria",
+        "latitude": 47.280472,
+        "longitude": 10.955903,
+        "rating": 5,
+        "user_ratings_total": 5,
+        "types": [
+          "park",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 9.95,
+        "maps_url": "https://maps.google.com/?cid=10417117110093795571&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Nature"
+      },
+      {
+        "place_id": "ChIJg-5TCQAdnUcRcAKW2ZOLzbg",
+        "name": "DIDI's RAST",
+        "formatted_address": "6632 Ehrwald, Austria",
+        "latitude": 47.382933,
+        "longitude": 10.96548,
+        "rating": 5,
+        "user_ratings_total": 1,
+        "types": [
+          "park",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 2.78,
+        "maps_url": "https://maps.google.com/?cid=13316453140331364976&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Nature"
+      },
+      {
+        "place_id": "ChIJsYUSNF8bnUcR6pDVGZGcjMk",
+        "name": "Gaistal",
+        "formatted_address": "6105 Leutasch, Austria",
+        "latitude": 47.367612,
+        "longitude": 11.060704,
+        "rating": 4.9,
+        "user_ratings_total": 74,
+        "types": [
+          "wildlife_refuge",
+          "park",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 9.47,
+        "maps_url": "https://maps.google.com/?cid=14523155045380624618&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Nature"
+      },
+      {
+        "place_id": "ChIJ--qbsCzjnEcR57t1qxYi1PQ",
+        "name": "Lusspark",
+        "formatted_address": "Garmischer Str. 22d, 6631 Lermoos, Austria",
+        "latitude": 47.403438,
+        "longitude": 10.884697,
+        "rating": 4.7,
+        "user_ratings_total": 108,
+        "types": [
+          "park",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.4,
+        "maps_url": "https://maps.google.com/?cid=17641763121078320103&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Nature"
+      },
+      {
+        "place_id": "ChIJZXhbdgAdnUcRx2ywsCKvpjI",
+        "name": "Hidden Bench",
+        "formatted_address": "Obermieming 9536/1, 6414 Obermieming, Austria",
+        "latitude": 47.360008,
+        "longitude": 10.93268,
+        "rating": 0,
+        "user_ratings_total": 0,
+        "types": [
+          "park",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 0.99,
+        "maps_url": "https://maps.google.com/?cid=3649797111558466759&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Nature"
+      },
+      {
+        "place_id": "ChIJZRWG-6IenUcR1AKmW17f9BU",
+        "name": "Alpenresort Schwarz",
+        "formatted_address": "Obermieming 141, 6414 Obermieming, Austria",
+        "latitude": 47.307222,
+        "longitude": 10.986111,
+        "rating": 4.8,
+        "user_ratings_total": 1427,
+        "types": [
+          "hotel",
+          "gym",
+          "spa",
+          "sports_activity_location",
+          "clothing_store",
+          "store",
+          "lodging",
+          "health",
+          "restaurant",
+          "food",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 7.86,
+        "maps_url": "https://maps.google.com/?cid=1582134965471412948&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Food & Drink"
+      },
+      {
+        "place_id": "ChIJn0PTuD0enUcRucX5c2L9-hg",
+        "name": "Holzleiten Bio Wellness Hotel",
+        "formatted_address": "Holzleiten 84, 6416 Obsteig, Austria",
+        "latitude": 47.30939,
+        "longitude": 10.88497,
+        "rating": 4.8,
+        "user_ratings_total": 1017,
+        "types": [
+          "hotel",
+          "spa",
+          "lodging",
+          "restaurant",
+          "food",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 7.61,
+        "maps_url": "https://maps.google.com/?cid=1800029600382305721&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Food & Drink"
+      },
+      {
+        "place_id": "ChIJPWr8JiAcnUcR3DmH85_7z90",
+        "name": "Stöttlalm",
+        "formatted_address": "Stöttlalm, Obermieming 141e, 6414 Obermieming, Austria",
+        "latitude": 47.319814,
+        "longitude": 10.984646,
+        "rating": 4.8,
+        "user_ratings_total": 1015,
+        "types": [
+          "restaurant",
+          "wedding_venue",
+          "event_venue",
+          "food",
+          "point_of_interest",
+          "service",
+          "establishment"
+        ],
+        "distance_km": 6.61,
+        "maps_url": "https://maps.google.com/?cid=15983270266965277148&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Food & Drink"
+      },
+      {
+        "place_id": "ChIJRXvSkEfjnEcRF3xUNPJWYB4",
+        "name": "BrotQuelle Ehrwald",
+        "formatted_address": "Martinspl. 2, 6632 Ehrwald, Austria",
+        "latitude": 47.397374,
+        "longitude": 10.921713,
+        "rating": 4.8,
+        "user_ratings_total": 85,
+        "types": [
+          "bakery",
+          "food_store",
+          "store",
+          "food",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 3.33,
+        "maps_url": "https://maps.google.com/?cid=2188845017162087447&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Food & Drink"
+      },
+      {
+        "place_id": "ChIJxVeT2ULhnEcRqVe9bnTaDOc",
+        "name": "GURGLTALBROT Bäckerei-Cafe´ Tschiderer e.U.",
+        "formatted_address": "Fernpaß-Straße 12, 6465 Nassereith, Austria",
+        "latitude": 47.317562,
+        "longitude": 10.832045,
+        "rating": 4.7,
+        "user_ratings_total": 207,
+        "types": [
+          "bakery",
+          "breakfast_restaurant",
+          "food_store",
+          "store",
+          "restaurant",
+          "food",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 9.62,
+        "maps_url": "https://maps.google.com/?cid=16648922116090845097&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Food & Drink"
+      },
+      {
+        "place_id": "ChIJSfEXZy3jnEcRjDEzSJ2NC1s",
+        "name": "Alpenrose - Familux Resort",
+        "formatted_address": "Danielstraße 3, 6631 Lermoos, Austria",
+        "latitude": 47.402863,
+        "longitude": 10.880928,
+        "rating": 4.8,
+        "user_ratings_total": 1182,
+        "types": [
+          "hotel",
+          "lodging",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.56,
+        "maps_url": "https://maps.google.com/?cid=6560492988855955852&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Lodging"
+      },
+      {
+        "place_id": "ChIJE0h8_GT9nEcR39Py63mno4c",
+        "name": "Zugspitz Resort",
+        "formatted_address": "Obermoos 1, 6632 Ehrwald, Austria",
+        "latitude": 47.426611,
+        "longitude": 10.941061,
+        "rating": 4.7,
+        "user_ratings_total": 1645,
+        "types": [
+          "hotel",
+          "resort_hotel",
+          "campground",
+          "lodging",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 6.44,
+        "maps_url": "https://maps.google.com/?cid=9773839758415549407&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Lodging"
+      },
+      {
+        "place_id": "ChIJgcSTu-AbnUcRckyWQVGv2TQ",
+        "name": "Sonnenplateau Camping Gerhardhof",
+        "formatted_address": "Gasthof Gerhardhof 1, 6413 Wildermieming, Austria",
+        "latitude": 47.31434,
+        "longitude": 11.035633,
+        "rating": 4.6,
+        "user_ratings_total": 1260,
+        "types": [
+          "campground",
+          "pub",
+          "bar",
+          "lodging",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 9.71,
+        "maps_url": "https://maps.google.com/?cid=3808267723446045810&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Lodging"
+      },
+      {
+        "place_id": "ChIJG4gzaCjjnEcR1ez0Ph0DJyY",
+        "name": "Hotel MOHR Life Resort",
+        "formatted_address": "Innsbrucker Str. 40, 6631 Lermoos, Austria",
+        "latitude": 47.394574,
+        "longitude": 10.887937,
+        "rating": 4.6,
+        "user_ratings_total": 1092,
+        "types": [
+          "hotel",
+          "lodging",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 4.55,
+        "maps_url": "https://maps.google.com/?cid=2749169521678150869&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Lodging"
+      },
+      {
+        "place_id": "ChIJC5SMhPIenUcRrLgR7X931Vs",
+        "name": "Modellflug Mieming",
+        "formatted_address": "See 90a, 6414 See, Austria",
+        "latitude": 47.294942,
+        "longitude": 10.965447,
+        "rating": 5,
+        "user_ratings_total": 6,
+        "types": [
+          "airstrip",
+          "airport",
+          "transportation_service",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 8.53,
+        "maps_url": "https://maps.google.com/?cid=6617326618812725420&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Transport"
+      },
+      {
+        "place_id": "ChIJC4J58S3jnEcRs724jCsbhpA",
+        "name": "Landeplatz für Paraglider",
+        "formatted_address": "Hinterfeldweg 8, 6631 Lermoos, Austria",
+        "latitude": 47.399923,
+        "longitude": 10.880307,
+        "rating": 5,
+        "user_ratings_total": 3,
+        "types": [
+          "airstrip",
+          "airport",
+          "transportation_service",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.37,
+        "maps_url": "https://maps.google.com/?cid=10414041062199311795&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Transport"
+      },
+      {
+        "place_id": "ChIJxyAickX7nEcRleqJuftOUHY",
+        "name": "Lähn b.Bichlbach Bahnhof",
+        "formatted_address": "6621, Austria",
+        "latitude": 47.419613,
+        "longitude": 10.833194,
+        "rating": 5,
+        "user_ratings_total": 3,
+        "types": [
+          "transit_station",
+          "bus_stop",
+          "train_station",
+          "transit_stop",
+          "transportation_service",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 9.52,
+        "maps_url": "https://maps.google.com/?cid=8525400937668930197&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Transport"
+      },
+      {
+        "place_id": "ChIJC4uOvjD9nEcRk9atwChZ27Q",
+        "name": "Ehrwald Zugspitzbahn",
+        "formatted_address": "6632 Ehrwald, Austria",
+        "latitude": 47.410032,
+        "longitude": 10.913709,
+        "rating": 4.5,
+        "user_ratings_total": 37,
+        "types": [
+          "train_station",
+          "transit_station",
+          "transportation_service",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 4.85,
+        "maps_url": "https://maps.google.com/?cid=13032107978292844179&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Transport"
+      },
+      {
+        "place_id": "ChIJveW9Js38nEcRuN8XYuFdJWk",
+        "name": "Lermoos",
+        "formatted_address": "6631 Lermoos, Austria",
+        "latitude": 47.405397,
+        "longitude": 10.878684,
+        "rating": 4.5,
+        "user_ratings_total": 33,
+        "types": [
+          "train_station",
+          "transit_station",
+          "transportation_service",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.87,
+        "maps_url": "https://maps.google.com/?cid=7576565170715484088&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Transport"
+      },
+      {
+        "place_id": "ChIJzUNDJuYfnUcR-ePJ3tbzRcM",
+        "name": "Blumen-Mieming",
+        "formatted_address": "Obermieming 205a, 6414 Obermieming, Austria",
+        "latitude": 47.305646,
+        "longitude": 10.976151,
+        "rating": 5,
+        "user_ratings_total": 5,
+        "types": [
+          "market",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 7.68,
+        "maps_url": "https://maps.google.com/?cid=14070920714975306745&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Shopping"
+      },
+      {
+        "place_id": "ChIJD_fkmz0enUcRLzWJSOBECBA",
+        "name": "Sonnenplateau Mieming - Wohlfühlpension Alpenhof",
+        "formatted_address": "Oberstrass 226, 6416 Obsteig, Austria",
+        "latitude": 47.30059,
+        "longitude": 10.920874,
+        "rating": 4.8,
+        "user_ratings_total": 105,
+        "types": [
+          "bed_and_breakfast",
+          "market",
+          "lodging",
+          "point_of_interest",
+          "service",
+          "establishment"
+        ],
+        "distance_km": 7.66,
+        "maps_url": "https://maps.google.com/?cid=1155249034500846895&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Shopping"
+      },
+      {
+        "place_id": "ChIJjVMDqC3jnEcRkQ11b2OeVN8",
+        "name": "\"LANDART\" Petz & Hosp Handels-GmbH",
+        "formatted_address": "Unterdorf 14, 6631 Lermoos, Austria",
+        "latitude": 47.40157,
+        "longitude": 10.882314,
+        "rating": 4.8,
+        "user_ratings_total": 38,
+        "types": [
+          "store",
+          "shopping_mall",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 5.38,
+        "maps_url": "https://maps.google.com/?cid=16092661518410517905&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Shopping"
+      },
+      {
+        "place_id": "ChIJCf2gm2IfnUcRbeqdPqT2vxQ",
+        "name": "BS",
+        "formatted_address": "Lärchenweg 10, 6416 Obsteig, Austria",
+        "latitude": 47.302267,
+        "longitude": 10.909682,
+        "rating": 0,
+        "user_ratings_total": 0,
+        "types": [
+          "market",
+          "point_of_interest",
+          "establishment"
+        ],
+        "distance_km": 7.64,
+        "maps_url": "https://maps.google.com/?cid=1495184786595900013&g_mp=Cilnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaE5lYXJieRACGAQgAA",
+        "category": "Shopping"
+      }
+    ],
+    "gemini": {
+      "used": false,
+      "status": "FAILED",
+      "confidence": 0,
+      "reason": "Gemini verification unavailable. Used scoring fallback.",
+      "vision": null,
+      "scene": null
+    },
+    "stage": "caption",
+    "performance": {
+      "total_seconds": 12.72
+    },
+    "error": null
+  }
+}

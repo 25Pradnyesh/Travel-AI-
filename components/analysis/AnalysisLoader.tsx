@@ -138,7 +138,7 @@ export default function AnalysisLoader({ isActive, onCancel }: AnalysisLoaderPro
           />
         </div>
 
-        {/* 4-Stage Editorial Process Tracker */}
+        {/* Multimodal Pipeline Architecture Overview */}
         <div className="mt-6 space-y-2 rounded-xl p-3 sm:p-4 text-left"
           style={{
             backgroundColor: "var(--color-bg-primary)",
@@ -146,27 +146,22 @@ export default function AnalysisLoader({ isActive, onCancel }: AnalysisLoaderPro
           }}
         >
           <p className="text-[10px] font-mono uppercase tracking-widest text-[var(--color-text-muted)] mb-2 px-1">
-            Pipeline Progression Stages
+            Multimodal Analysis Pipeline
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {STAGES.map((stage, i) => {
-              const isCurrent = i === statusIndex;
+            {STAGES.map((stage) => {
               const StageIcon = stage.icon;
               return (
                 <div
                   key={stage.key}
-                  className={`flex items-start gap-2.5 rounded-lg p-2.5 transition-all ${
-                    isCurrent ? "bg-white shadow-xs" : "opacity-60"
-                  }`}
+                  className="flex items-start gap-2.5 rounded-lg p-2.5 transition-all bg-white/80 shadow-xs"
                   style={{
-                    border: isCurrent
-                      ? "1px solid var(--color-border)"
-                      : "1px solid transparent",
+                    border: "1px solid var(--color-border)",
                   }}
                 >
                   <div className="mt-0.5 shrink-0">
                     <StageIcon
-                      className={`h-4 w-4 ${isCurrent ? "text-[var(--color-dark)]" : "text-[var(--color-text-muted)]"}`}
+                      className="h-4 w-4 text-[var(--color-dark)]"
                     />
                   </div>
                   <div className="min-w-0">
@@ -174,9 +169,6 @@ export default function AnalysisLoader({ isActive, onCancel }: AnalysisLoaderPro
                       <span className="text-xs font-semibold" style={{ color: "var(--color-text-primary)" }}>
                         {stage.label}
                       </span>
-                      {isCurrent && (
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-dark)] animate-pulse" />
-                      )}
                     </div>
                     <p className="text-[11px] truncate" style={{ color: "var(--color-text-muted)" }}>
                       {stage.desc}

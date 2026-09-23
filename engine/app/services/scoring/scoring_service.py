@@ -294,9 +294,6 @@ class ScoringService:
 
     ):
 
-        if score >= 95:
-            return "VERIFIED"
-
         if score >= 90:
             return "VERY_HIGH"
 

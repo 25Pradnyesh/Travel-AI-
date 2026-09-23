@@ -23,11 +23,11 @@ const INSTAGRAM_REEL_REGEX =
  */
 export function getFriendlyErrorMessage(err: unknown): string {
   if (err instanceof TimeoutError) {
-    return "Analysis exceeded the allowed processing time. Please try again.";
+    return "The analysis is taking too long. Please try again.";
   }
 
   if (err instanceof NetworkError) {
-    return "Travel AI engine is unavailable. Check your connection or try again later.";
+    return "Travel AI is temporarily unavailable. Please try again.";
   }
 
   if (err instanceof ApiError) {
@@ -39,52 +39,59 @@ export function getFriendlyErrorMessage(err: unknown): string {
       backendMsg.includes("File \"") ||
       backendMsg.includes("AIzaSy") ||
       backendMsg.includes("key=") ||
+      backendMsg.includes("500:") ||
       backendMsg.length > 250;
 
     if (!isLeakingInternal && backendMsg) {
-      // Case A & B safe messages from backend
-      if (
-        backendMsg.includes("valid public Instagram Reel") ||
-        backendMsg.includes("Instagram Reel URL") ||
-        backendMsg.includes("couldn't be accessed") ||
-        backendMsg.includes("publicly available")
-      ) {
-        return backendMsg;
-      }
-
-      // Case C: Unresolved destination
+      // Case C: Unresolved destination (preserve backend message)
       if (
         backendMsg.includes("No destination") ||
         backendMsg.includes("No verified destination")
       ) {
         return backendMsg;
       }
+
+      // Case B: Inaccessible Reel messages
+      if (
+        backendMsg.includes("couldn't be accessed") ||
+        backendMsg.includes("publicly available") ||
+        backendMsg.includes("public and available")
+      ) {
+        return "The Reel could not be accessed. Make sure it is public and available.";
+      }
+
+      // Case A: Invalid URL message
+      if (
+        backendMsg.includes("Instagram Reel URL") ||
+        backendMsg.includes("valid public Instagram Reel")
+      ) {
+        return "Invalid Instagram Reel URL.";
+      }
     }
 
     switch (err.status) {
       // Case A: Invalid URL
       case 400:
-        return "Enter a valid public Instagram Reel URL.";
+        return "Invalid Instagram Reel URL.";
 
       // Case B: Reel inaccessible
       case 401:
       case 403:
-      case 422:
-        return "This Reel couldn't be accessed. Make sure it's publicly available.";
       case 404:
-        return "This Reel couldn't be found. Check the URL and try again.";
+      case 422:
+        return "The Reel could not be accessed. Make sure it is public and available.";
 
       case 429:
         return "Too many requests. Please wait a moment and try again.";
 
       // Case E: Timeout
       case 504:
-        return "Analysis exceeded the allowed processing time. Please try again.";
+        return "The analysis is taking too long. Please try again.";
 
       // Case F: Engine unavailable
       case 502:
       case 503:
-        return "Travel AI engine is unavailable. Check your connection or try again later.";
+        return "Travel AI is temporarily unavailable. Please try again.";
 
       // Case D: Processing failure
       case 500:
@@ -100,7 +107,7 @@ export function getFriendlyErrorMessage(err: unknown): string {
     return "An unexpected error occurred. Please try again.";
   }
 
-  return "Travel AI couldn't complete the analysis.";
+  return "Travel AI couldn't complete the analysis. Please try again.";
 }
 
 /**
@@ -112,7 +119,7 @@ export function validateReelUrl(url: string): { isValid: boolean; error?: string
     return { isValid: false, error: "Paste an Instagram Reel URL first." };
   }
   if (!INSTAGRAM_REEL_REGEX.test(trimmed)) {
-    return { isValid: false, error: "Enter a valid public Instagram Reel URL." };
+    return { isValid: false, error: "Invalid Instagram Reel URL." };
   }
   return { isValid: true };
 }
@@ -123,7 +130,7 @@ export class TravelAiService {
    *
    * Flow:
    * 1. Validates Reel URL client-side.
-   * 2. Calls backend /analyze (or proxy).
+   * 2. Calls Next.js proxy route (/api/analyze).
    * 3. Validates and returns structured AnalysisResponse.
    */
   public async analyzeReel(
@@ -146,11 +153,8 @@ export class TravelAiService {
       timeoutMs: options?.timeoutMs ?? 180000, // 180s for heavy video processing
     };
 
-    // Determine target endpoint:
-    // If NEXT_PUBLIC_API_URL is configured, client calls FastAPI directly (/analyze).
-    // If NEXT_PUBLIC_API_URL is empty, client calls relative Next.js route (/api/analyze).
-    const isDirectBackend = Boolean(apiClient.getBaseUrl());
-    const path = isDirectBackend ? "/analyze" : "/api/analyze";
+    // Primary frontend API path: always routes through the Next.js proxy (/api/analyze)
+    const path = "/api/analyze";
 
     const response = await apiClient.post<AnalysisResponse>(path, payload, requestOptions);
 
@@ -158,17 +162,16 @@ export class TravelAiService {
       throw new ApiError("Malformed response from Travel AI.", 502);
     }
 
-    // Return the response directly so the caller can inspect success, best_guess,
+    // Return the response directly so caller can inspect success, best_guess,
     // and unresolved destination error messages cleanly
     return response;
   }
 
   /**
-   * Checks the health of the Travel AI backend engine.
+   * Checks the health of the Travel AI backend engine via Next.js proxy.
    */
   public async checkHealth(): Promise<{ status: string; service?: string }> {
-    const isDirectBackend = Boolean(apiClient.getBaseUrl());
-    const path = isDirectBackend ? "/health" : "/api/health";
+    const path = "/api/health";
     return apiClient.get<{ status: string; service?: string }>(path, { timeoutMs: 5000 });
   }
 }

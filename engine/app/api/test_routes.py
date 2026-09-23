@@ -1,19 +1,31 @@
 from fastapi import APIRouter
 
-from engine.providers.manager import ProviderManager
-
-from engine.app.services.extraction.frame_extractor import FrameExtractor
-from engine.app.services.ocr.ocr_service import OCRService
-from engine.app.services.speech.speech_service import SpeechService
-from engine.app.services.maps.google_places_service import GooglePlacesService
-
 router = APIRouter()
 
-provider = ProviderManager()
-frames = FrameExtractor()
-ocr = OCRService()
-speech = SpeechService()
-places = GooglePlacesService()
+
+def get_provider():
+    from engine.providers.manager import ProviderManager
+    return ProviderManager()
+
+
+def get_frames():
+    from engine.app.services.extraction.frame_extractor import FrameExtractor
+    return FrameExtractor()
+
+
+def get_ocr():
+    from engine.app.services.ocr.ocr_service import OCRService
+    return OCRService()
+
+
+def get_speech():
+    from engine.app.services.speech.speech_service import SpeechService
+    return SpeechService()
+
+
+def get_places():
+    from engine.app.services.maps.google_places_service import GooglePlacesService
+    return GooglePlacesService()
 
 
 # ==================================================
@@ -23,7 +35,7 @@ places = GooglePlacesService()
 @router.post("/provider")
 def provider_test():
 
-    return provider.extract(
+    return get_provider().extract(
         "https://www.instagram.com/reel/DN2XxxY2O7-/"
     )
 
@@ -35,7 +47,7 @@ def provider_test():
 @router.get("/frames")
 def test_frames():
 
-    extracted = frames.extract(
+    extracted = get_frames().extract(
         video_path="engine/assets/sample.mp4",
         output_dir="engine/assets/frames",
         interval_seconds=2,
@@ -53,7 +65,7 @@ def test_frames():
 @router.get("/ocr")
 def test_ocr():
 
-    text = ocr.extract_text(
+    text = get_ocr().extract_text(
         "engine/assets/frames/frame_002.jpg"
     )
 
@@ -69,7 +81,7 @@ def test_ocr():
 @router.get("/speech")
 def test_speech():
 
-    text = speech.extract(
+    text = get_speech().extract(
         "engine/assets/sample.mp4"
     )
 
@@ -85,7 +97,7 @@ def test_speech():
 @router.get("/places")
 def test_places():
 
-    return places.search(
+    return get_places().search(
         "Seebensee Austria"
     )
 

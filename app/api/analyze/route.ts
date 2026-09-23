@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Enter a valid public Instagram Reel URL.",
+          error: "Invalid Instagram Reel URL.",
         },
         { status: 400 },
       );
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: "The analysis took longer than expected. Please try again.",
+            error: "The analysis is taking too long. Please try again.",
           },
           { status: 504 },
         );
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Couldn't connect to Travel AI. Check your connection and try again.",
+          error: "Travel AI is temporarily unavailable. Please try again.",
         },
         { status: 503 },
       );
@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     if (!engineResponse.ok) {
       const errorData = await engineResponse.json().catch(() => null);
-      let detail = "Travel AI couldn't analyze this Reel. Make sure it's publicly available.";
+      let detail = "The Reel could not be accessed. Make sure it is public and available.";
       if (typeof errorData?.detail === "string" && errorData.detail.trim()) {
         detail = errorData.detail.trim();
       } else if (Array.isArray(errorData?.detail) && errorData.detail.length > 0) {
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "An unexpected error occurred. Please try again.",
+        error: "Travel AI couldn't complete the analysis. Please try again.",
       },
       { status: 500 },
     );

@@ -61,11 +61,11 @@ export interface TravelIntelligence {
   estimated_daily_budget?: string;
   currency?: string;
   recommended_trip_days?: string;
-  travel_tips?: string[];
+  travel_tips?: string[] | Record<string, unknown>;
   activities?: string[];
-  packing_list?: Record<string, string[]>;
-  timing?: Record<string, string>;
-  sample_itinerary?: Array<Record<string, unknown>>;
+  packing_list?: Record<string, string[]> | string[] | Record<string, unknown>;
+  timing?: Record<string, string> | string;
+  sample_itinerary?: Array<Record<string, unknown>> | string[];
   travel_summary?: string;
 }
 
@@ -78,6 +78,7 @@ export interface AnalysisResponse {
   stage?: string | null;
   performance?: {
     total_seconds?: number;
+    stages?: Record<string, number>;
   } | null;
   error?: string | null;
 }

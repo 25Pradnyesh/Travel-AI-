@@ -61,8 +61,6 @@ TRAVEL_CATEGORIES = {
 
         "park",
 
-        "natural_feature",
-
     ],
 
 }
@@ -92,8 +90,6 @@ SUPPORTED_PLACE_TYPES = {
     "monument",
 
     "museum",
-
-    "natural_feature",
 
     "park",
 

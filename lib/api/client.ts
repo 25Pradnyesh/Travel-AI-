@@ -17,14 +17,14 @@ export class ApiError extends Error {
 }
 
 export class NetworkError extends Error {
-  constructor(message = "Travel AI engine is unavailable. Check your connection or try again later.") {
+  constructor(message = "Travel AI is temporarily unavailable. Please try again.") {
     super(message);
     this.name = "NetworkError";
   }
 }
 
 export class TimeoutError extends Error {
-  constructor(message = "Analysis exceeded the allowed processing time. Please try again.") {
+  constructor(message = "The analysis is taking too long. Please try again.") {
     super(message);
     this.name = "TimeoutError";
   }
@@ -183,7 +183,7 @@ export class HttpClient {
         throw new TimeoutError();
       }
 
-      throw new NetworkError(errorObj?.message || "Couldn't connect to Travel AI. Check your connection and try again.");
+      throw new NetworkError();
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
       if (callerSignal) {

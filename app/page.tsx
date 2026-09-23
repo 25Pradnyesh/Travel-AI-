@@ -53,11 +53,17 @@ export default function Home() {
       // Ignore stale response if request was superseded or reset
       if (currentRequestId !== requestIdRef.current) return;
 
-      // Minimum required data validation: success === true, best_guess exists, best_guess.name exists
-      if (!data.success || !data.best_guess || !data.best_guess.name) {
+      // Explicitly check for business failure (success: false) or unresolved destination
+      if (!data.success) {
         setError(
-          data.error ||
-            "We couldn’t identify a destination from this Reel. Try another public Reel."
+          data.error || "No destination candidates found from the Reel."
+        );
+        return;
+      }
+
+      if (!data.best_guess || !data.best_guess.name) {
+        setError(
+          data.error || "No destination candidates found from the Reel."
         );
         return;
       }

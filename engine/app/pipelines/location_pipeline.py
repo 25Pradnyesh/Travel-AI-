@@ -46,29 +46,68 @@ class LocationPipeline:
         resolver_result: dict,
         gemini_result: dict | None,
         total_start: float,
+        provider_duration: float | None = None,
+        extract_seconds: float = 0.0,
+        verify_seconds: float = 0.0,
     ) -> dict:
 
-        winner = resolver_result.get("winner")
+        t_build_start = time.perf_counter()
+
+        winner = resolver_result.get("winner") if isinstance(resolver_result, dict) else None
         if gemini_result and gemini_result.get("winner"):
             winner = gemini_result["winner"]
 
-        perf = {
-            "total_seconds": round(time.perf_counter() - total_start, 2),
-        }
+        resolver_timings = (resolver_result.get("stage_timings") or {}) if isinstance(resolver_result, dict) else {}
+        candidate_res_sec = resolver_timings.get("candidate_resolution", 0.0)
+        nearby_sec = resolver_timings.get("nearby_places", 0.0)
+        travel_sec = resolver_timings.get("travel_intelligence", 0.0)
 
         if not winner:
+            build_sec = time.perf_counter() - t_build_start
+            stages = {}
+            if provider_duration is not None:
+                stages["provider"] = round(provider_duration, 2)
+            stages["location_extraction"] = round(extract_seconds, 2)
+            stages["candidate_resolution"] = round(candidate_res_sec, 2)
+            stages["verification"] = round(verify_seconds, 2)
+            stages["nearby_places"] = round(nearby_sec, 2)
+            stages["travel_intelligence"] = round(travel_sec, 2)
+            stages["response_building"] = round(build_sec, 2)
+
+            perf = {
+                "total_seconds": round(time.perf_counter() - total_start, 2),
+                "stages": stages,
+            }
             return self.response_builder.build_unresolved(
                 stage=stage,
                 error="No verified destination candidate resolved.",
                 performance=perf,
             ).model_dump()
 
-        return self.response_builder.build(
+        resp = self.response_builder.build(
             winner=winner,
             gemini_result=gemini_result,
             stage=stage,
-            performance=perf,
-        ).model_dump()
+            performance=None,
+        )
+        build_sec = time.perf_counter() - t_build_start
+
+        stages = {}
+        if provider_duration is not None:
+            stages["provider"] = round(provider_duration, 2)
+        stages["location_extraction"] = round(extract_seconds, 2)
+        stages["candidate_resolution"] = round(candidate_res_sec, 2)
+        stages["verification"] = round(verify_seconds, 2)
+        stages["nearby_places"] = round(nearby_sec, 2)
+        stages["travel_intelligence"] = round(travel_sec, 2)
+        stages["response_building"] = round(build_sec, 2)
+
+        perf = {
+            "total_seconds": round(time.perf_counter() - total_start, 2),
+            "stages": stages,
+        }
+        resp.performance = perf
+        return resp.model_dump()
 
 
     # ==================================================
@@ -107,7 +146,15 @@ class LocationPipeline:
             top_winner = ranked[0]
             top_winner["place"]["verification_status"] = "FAILED"
             top_winner["place"]["gemini_verified"] = False
+            top_winner["place"]["gemini_confidence"] = 0.0
             top_winner["place"]["gemini_reason"] = f"Gemini error: {type(exc).__name__}"
+            fallback_conf = self.gemini.calculate_confidence_level(
+                score=top_winner.get("score", 0.0),
+                verification_status="FAILED",
+                gemini_confidence=0.0,
+            )
+            top_winner["confidence"] = fallback_conf
+            top_winner["place"]["confidence"] = fallback_conf
             return {
                 "winner": top_winner,
                 "confidence": 0.0,
@@ -151,39 +198,52 @@ class LocationPipeline:
         self,
         metadata: dict,
         video_path: str | None = None,
+        total_start: float | None = None,
+        provider_duration: float | None = None,
     ) -> dict:
 
-        total_start = time.perf_counter()
+        if total_start is None:
+            total_start = time.perf_counter()
+
         frame_paths = []
+        extract_seconds = 0.0
 
         try:
             # ==================================================
             # STAGE 1 : Caption
             # ==================================================
             print("\n--- Stage 1: Caption ---")
+            t_ext = time.perf_counter()
             evidence = self.builder.build_caption(metadata)
             evidence = self.builder.combine(evidence)
+            extract_seconds += (time.perf_counter() - t_ext)
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
+                t_ver = time.perf_counter()
                 gemini = self.verify_if_needed(
                     evidence,
                     resolver,
                     frame_paths,
                 )
+                verify_seconds = time.perf_counter() - t_ver
                 return self.build_response(
                     "caption",
                     evidence,
                     resolver,
                     gemini,
                     total_start,
+                    provider_duration=provider_duration,
+                    extract_seconds=extract_seconds,
+                    verify_seconds=verify_seconds,
                 )
 
             # ==================================================
             # STAGE 2 : OCR
             # ==================================================
             print("\n--- Stage 2: OCR ---")
+            t_ext = time.perf_counter()
             if video_path and Path(video_path).exists():
                 try:
                     frame_paths = self.frames.extract(
@@ -199,27 +259,34 @@ class LocationPipeline:
                 frame_paths,
             )
             evidence = self.builder.combine(evidence)
+            extract_seconds += (time.perf_counter() - t_ext)
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
+                t_ver = time.perf_counter()
                 gemini = self.verify_if_needed(
                     evidence,
                     resolver,
                     frame_paths,
                 )
+                verify_seconds = time.perf_counter() - t_ver
                 return self.build_response(
                     "ocr",
                     evidence,
                     resolver,
                     gemini,
                     total_start,
+                    provider_duration=provider_duration,
+                    extract_seconds=extract_seconds,
+                    verify_seconds=verify_seconds,
                 )
 
             # ==================================================
             # STAGE 3 : Speech
             # ==================================================
             print("\n--- Stage 3: Speech ---")
+            t_ext = time.perf_counter()
             if video_path and Path(video_path).exists():
                 try:
                     evidence = self.builder.build_speech(
@@ -230,28 +297,46 @@ class LocationPipeline:
                     logger.warning("[PIPELINE] Speech extraction failed: %s", type(e).__name__)
 
             evidence = self.builder.combine(evidence)
+            extract_seconds += (time.perf_counter() - t_ext)
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
+                t_ver = time.perf_counter()
                 gemini = self.verify_if_needed(
                     evidence,
                     resolver,
                     frame_paths,
                 )
+                verify_seconds = time.perf_counter() - t_ver
                 return self.build_response(
                     "speech",
                     evidence,
                     resolver,
                     gemini,
                     total_start,
+                    provider_duration=provider_duration,
+                    extract_seconds=extract_seconds,
+                    verify_seconds=verify_seconds,
                 )
 
             # ==================================================
             # Nothing Found
             # ==================================================
+            build_start = time.perf_counter()
+            stages = {}
+            if provider_duration is not None:
+                stages["provider"] = round(provider_duration, 2)
+            stages["location_extraction"] = round(extract_seconds, 2)
+            stages["candidate_resolution"] = 0.0
+            stages["verification"] = 0.0
+            stages["nearby_places"] = 0.0
+            stages["travel_intelligence"] = 0.0
+            stages["response_building"] = round(time.perf_counter() - build_start, 2)
+
             perf = {
                 "total_seconds": round(time.perf_counter() - total_start, 2),
+                "stages": stages,
             }
             return self.response_builder.build_unresolved(
                 stage="failed",
