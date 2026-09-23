@@ -225,6 +225,69 @@ class LocationResolver:
         return place
 
     # ==================================================
+    # Candidate Enrichment Helper
+    # ==================================================
+
+    def _enrich_candidate(
+        self,
+        item: dict,
+    ) -> tuple[dict, float, float]:
+        """
+        Enriches a single candidate with nearby places and travel intelligence.
+        Returns: (enriched_item, nearby_duration_seconds, travel_duration_seconds)
+        """
+        place = item["place"]
+        latitude = place.get("latitude")
+        longitude = place.get("longitude")
+
+        # ------------------------------------------
+        # Nearby Search
+        # ------------------------------------------
+        t_nb_start = time.perf_counter()
+        nearby = self.nearby.search(
+            latitude,
+            longitude,
+        ) or {}
+        nearby_duration = time.perf_counter() - t_nb_start
+
+        place = self.attach_nearby(
+            place,
+            nearby,
+        )
+
+        must_visit = nearby.get("must_visit", [])
+        food = nearby.get("food", [])
+        stay = nearby.get("stay", [])
+        transport = nearby.get("transport", [])
+        shopping = nearby.get("shopping", [])
+        nature = nearby.get("nature", [])
+
+        place["featured_attraction"] = must_visit[0] if must_visit else None
+        place["recommended_restaurant"] = food[0] if food else None
+        place["recommended_hotel"] = stay[0] if stay else None
+        place["nearest_transport"] = transport[0] if transport else None
+
+        stats = nearby.get("statistics", {})
+        place["nearby_places_found"] = stats.get("places_found", 0)
+        place["nearby_categories"] = stats.get("categories", 0)
+
+        # ------------------------------------------
+        # AI Travel Intelligence
+        # ------------------------------------------
+        t_tr_start = time.perf_counter()
+        place = self.travel.enrich(place)
+        travel_duration = time.perf_counter() - t_tr_start
+
+        place.setdefault("editorial_summary", "")
+        place.setdefault("hidden_gems", [])
+        place.setdefault("local_tips", [])
+        place.setdefault("photo_gallery", [])
+        place.setdefault("travel_story", "")
+
+        item["place"] = place
+        return item, nearby_duration, travel_duration
+
+    # ==================================================
     # Resolver Statistics
     # ==================================================
 
@@ -582,229 +645,21 @@ class LocationResolver:
         nearby_duration = 0.0
         travel_duration = 0.0
 
-        for item in ranked:
-
-            place = item["place"]
-
-            latitude = place.get(
-
-                "latitude",
-
-            )
-
-            longitude = place.get(
-
-                "longitude",
-
-            )
-
-            # ------------------------------------------
-            # Nearby Search
-            # ------------------------------------------
-
-            t_nb_start = time.perf_counter()
-
-            nearby = self.nearby.search(
-
-                latitude,
-
-                longitude,
-
-            ) or {}
-
-            nearby_duration += (time.perf_counter() - t_nb_start)
-
-            place = self.attach_nearby(
-
-                place,
-
-                nearby,
-
-            )
-
-            # ------------------------------------------
-            # Quick Access Fields
-            # ------------------------------------------
-
-            must_visit = nearby.get(
-
-                "must_visit",
-
-                [],
-
-            )
-
-            food = nearby.get(
-
-                "food",
-
-                [],
-
-            )
-
-            stay = nearby.get(
-
-                "stay",
-
-                [],
-
-            )
-
-            transport = nearby.get(
-
-                "transport",
-
-                [],
-
-            )
-
-            shopping = nearby.get(
-
-                "shopping",
-
-                [],
-
-            )
-
-            nature = nearby.get(
-
-                "nature",
-
-                [],
-
-            )
-
-            # ------------------------------------------
-            # Featured Recommendations
-            # ------------------------------------------
-
-            place["featured_attraction"] = (
-
-                must_visit[0]
-
-                if must_visit
-
-                else None
-
-            )
-
-            place["recommended_restaurant"] = (
-
-                food[0]
-
-                if food
-
-                else None
-
-            )
-
-            place["recommended_hotel"] = (
-
-                stay[0]
-
-                if stay
-
-                else None
-
-            )
-
-            place["nearest_transport"] = (
-
-                transport[0]
-
-                if transport
-
-                else None
-
-            )
-
-            # ------------------------------------------
-            # Statistics
-            # ------------------------------------------
-
-            stats = nearby.get(
-
-                "statistics",
-
-                {},
-
-            )
-
-            place["nearby_places_found"] = stats.get(
-
-                "places_found",
-
-                0,
-
-            )
-
-            place["nearby_categories"] = stats.get(
-
-                "categories",
-
-                0,
-
-            )
-
-            # ------------------------------------------
-            # AI Travel Intelligence
-            # ------------------------------------------
-
-            t_tr_start = time.perf_counter()
-
-            place = self.travel.enrich(
-
-                place,
-
-            )
-
-            travel_duration += (time.perf_counter() - t_tr_start)
-
-            # ------------------------------------------
-            # Future AI Fields
-            # ------------------------------------------
-
-            place.setdefault(
-
-                "editorial_summary",
-
-                "",
-
-            )
-
-            place.setdefault(
-
-                "hidden_gems",
-
-                [],
-
-            )
-
-            place.setdefault(
-
-                "local_tips",
-
-                [],
-
-            )
-
-            place.setdefault(
-
-                "photo_gallery",
-
-                [],
-
-            )
-
-            place.setdefault(
-
-                "travel_story",
-
-                "",
-
-            )
-
-            item["place"] = place
+        # Performance Optimization (Phase 7):
+        # Only enrich the top candidate (ranked[0]). Non-winning candidates
+        # remain available for Gemini comparison without incurring 5x Google Places calls.
+        if ranked:
+            ranked[0], nearby_duration, travel_duration = self._enrich_candidate(ranked[0])
+            for item in ranked[1:]:
+                p = item["place"]
+                p.setdefault("nearby", {})
+                p.setdefault("nearby_places_found", 0)
+                p.setdefault("nearby_categories", 0)
+                p.setdefault("editorial_summary", "")
+                p.setdefault("hidden_gems", [])
+                p.setdefault("local_tips", [])
+                p.setdefault("photo_gallery", [])
+                p.setdefault("travel_story", "")
 
         # ==================================================
         # Final Winner

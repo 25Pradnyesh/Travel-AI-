@@ -1,24 +1,47 @@
+import logging
+import threading
+from typing import Any
+
 import cv2
-import easyocr
 import numpy as np
 
 from engine.app.services.ocr.ocr_cleaner import OCRCleaner
+
+logger = logging.getLogger(__name__)
+
+_reader_lock = threading.Lock()
+_ocr_reader: Any = None
+
+
+def get_ocr_reader() -> Any:
+    """
+    Lazy-loads and caches the EasyOCR reader singleton on first invocation to prevent
+    slow startup time and unnecessary model loading when only OpenCV image metrics
+    (density, sharpness, brightness) are used.
+    """
+    global _ocr_reader
+    if _ocr_reader is None:
+        with _reader_lock:
+            if _ocr_reader is None:
+                import easyocr
+
+                logger.info("[OCR] Loading EasyOCR 'en' reader on-demand...")
+                _ocr_reader = easyocr.Reader(["en"], gpu=False)
+                logger.info("[OCR] ✅ EasyOCR reader loaded successfully.")
+    return _ocr_reader
 
 
 class OCRService:
 
     def __init__(self):
-
-        self.reader = easyocr.Reader(
-            ["en"],
-            gpu=False,
-        )
-
         self.cleaner = OCRCleaner()
-
         self.min_confidence = 0.45
         self.min_width = 30
         self.min_height = 10
+
+    @property
+    def reader(self) -> Any:
+        return get_ocr_reader()
 
     # ==================================================
     # Internal

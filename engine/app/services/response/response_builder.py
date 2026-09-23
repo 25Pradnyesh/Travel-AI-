@@ -191,8 +191,11 @@ class ResponseBuilder:
     ) -> dict[str, Any]:
 
         try:
-            # Ensure travel intelligence is enriched on the place
-            enriched = self.travel_service.enrich(place)
+            # Avoid duplicate processing if already enriched during candidate resolution
+            if "travel_summary" in place and "category_emoji" in place:
+                enriched = place
+            else:
+                enriched = self.travel_service.enrich(place)
 
             return {
                 "category": enriched.get("category", "Destination"),

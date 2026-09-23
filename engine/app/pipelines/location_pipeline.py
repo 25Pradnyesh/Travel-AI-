@@ -62,6 +62,25 @@ class LocationPipeline:
         nearby_sec = resolver_timings.get("nearby_places", 0.0)
         travel_sec = resolver_timings.get("travel_intelligence", 0.0)
 
+        # On-demand enrichment if Gemini chose a candidate that was not already enriched
+        if (
+            gemini_result
+            and gemini_result.get("winner")
+            and resolver_result
+            and gemini_result.get("winner") != resolver_result.get("winner")
+            and hasattr(self.resolver, "_enrich_candidate")
+        ):
+            place = winner.get("place", {}) if isinstance(winner, dict) else {}
+            if isinstance(place, dict) and not place.get("nearby"):
+                try:
+                    res_tuple = self.resolver._enrich_candidate(winner)
+                    if isinstance(res_tuple, tuple) and len(res_tuple) == 3:
+                        winner, nb_sec, tr_sec = res_tuple
+                        nearby_sec += nb_sec
+                        travel_sec += tr_sec
+                except Exception as exc:
+                    logger.warning("[PIPELINE] On-demand candidate enrichment failed: %s", exc)
+
         if not winner:
             build_sec = time.perf_counter() - t_build_start
             stages = {}

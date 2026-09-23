@@ -668,51 +668,64 @@ class NearbySearchService:
     # ==========================================================
 
     def search_category(
-
         self,
-
         latitude: float,
-
         longitude: float,
-
         category: str,
-
         place_types: list[str],
-
     ):
+        print(f"\n[NEARBY] Category : {category}")
+
+        if not place_types:
+            return []
+
+        # Bounded concurrency across place types within this category
+        type_results = []
+        if len(place_types) <= 1:
+            for place_type in place_types:
+                type_results.append(
+                    self.search_single_type(
+                        latitude,
+                        longitude,
+                        place_type,
+                    )
+                )
+        else:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=min(4, len(place_types))
+            ) as executor:
+                future_to_type = {
+                    executor.submit(
+                        self.search_single_type,
+                        latitude,
+                        longitude,
+                        pt,
+                    ): pt
+                    for pt in place_types
+                }
+                results_by_type = {}
+                for future in concurrent.futures.as_completed(future_to_type):
+                    pt = future_to_type[future]
+                    try:
+                        results_by_type[pt] = future.result()
+                    except Exception as exc:
+                        print(f"[ERROR] Error searching place type '{pt}': {exc}")
+                        results_by_type[pt] = []
+
+                # Preserve deterministic place_types order
+                for pt in place_types:
+                    type_results.append(results_by_type.get(pt, []))
 
         merged = []
-
         seen = set()
 
-        print(
-            f"\n[NEARBY] Category : {category}"
-        )
-
-        for place_type in place_types:
-
-            results = self.search_single_type(
-
-                latitude,
-
-                longitude,
-
-                place_type,
-
-            )
-
+        for results in type_results:
             for place in results:
-
-                place_id = place["id"]
-
-                if place_id in seen:
-
+                place_id = place.get("id")
+                if not place_id or place_id in seen:
                     continue
-
                 seen.add(place_id)
-
                 place["travel_category"] = category
-
                 merged.append(place)
 
         # --------------------------------------------------
