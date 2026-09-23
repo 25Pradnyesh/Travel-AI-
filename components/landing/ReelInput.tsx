@@ -140,25 +140,26 @@ export default function ReelInput({
               <button
                 type="button"
                 onClick={handleClear}
-                className="rounded-md p-1 transition-colors hover:bg-neutral-100"
+                className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-neutral-100"
                 style={{ color: "var(--color-text-muted)" }}
                 aria-label="Clear URL input"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-4 w-4" />
               </button>
             ) : hasClipboard ? (
               <button
                 type="button"
                 onClick={handlePaste}
-                className="hidden sm:inline-flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors hover:bg-neutral-100"
+                className="inline-flex h-8 items-center gap-1 rounded-md px-2 sm:px-2.5 text-[11px] font-medium transition-colors hover:bg-neutral-100"
                 style={{
                   color: "var(--color-text-muted)",
                   border: "1px solid var(--color-border)",
                 }}
                 title="Paste from clipboard"
+                aria-label="Paste from clipboard"
               >
-                <ClipboardPaste className="h-3 w-3" />
-                <span>Paste</span>
+                <ClipboardPaste className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Paste</span>
               </button>
             ) : null}
           </div>

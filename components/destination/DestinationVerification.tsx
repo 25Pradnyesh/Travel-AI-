@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { CheckCircle2, AlertTriangle, HelpCircle, XCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, HelpCircle, ShieldCheck } from "lucide-react";
 import type { BestGuess, GeminiInfo } from "@/types/analysis";
 
 interface DestinationVerificationProps {
@@ -13,38 +13,65 @@ export default function DestinationVerification({
   bestGuess,
   gemini,
 }: DestinationVerificationProps) {
-  const status = (bestGuess.verification_status || "SKIPPED").toUpperCase();
+  const rawStatus = (bestGuess.verification_status || "SKIPPED").toUpperCase();
   const hasConfidence =
     typeof bestGuess.confidence === "number" && bestGuess.confidence > 0;
 
-  const statusConfig = {
-    VERIFIED: {
-      label: "Verified Match",
-      description: "Confirmed through multimodal evidence and visual cross-reference.",
-      icon: CheckCircle2,
-      badgeStyle: {
-        backgroundColor: "rgba(45, 106, 79, 0.08)",
-        color: "var(--color-success)",
-        borderColor: "rgba(45, 106, 79, 0.2)",
-      },
-      dotColor: "var(--color-success)",
-      barColor: "var(--color-success)",
-    },
-    PARTIAL: {
-      label: "Partially Verified",
-      description: "Consistent with Reel signals; some secondary evidence unconfirmed.",
-      icon: AlertTriangle,
-      badgeStyle: {
-        backgroundColor: "rgba(181, 101, 29, 0.08)",
-        color: "var(--color-warning)",
-        borderColor: "rgba(181, 101, 29, 0.2)",
-      },
-      dotColor: "var(--color-warning)",
-      barColor: "var(--color-warning)",
-    },
-    SKIPPED: {
+  // Resolve truthful status configuration
+  const getStatusConfig = () => {
+    if (rawStatus === "VERIFIED") {
+      const isGemini = Boolean(gemini?.used && gemini.status === "VERIFIED");
+      return {
+        label: isGemini ? "Verified by Gemini" : "Verified Match",
+        description: "Confirmed through multimodal evidence and visual cross-reference.",
+        icon: CheckCircle2,
+        badgeStyle: {
+          backgroundColor: "rgba(45, 106, 79, 0.08)",
+          color: "var(--color-success)",
+          borderColor: "rgba(45, 106, 79, 0.2)",
+        },
+        dotColor: "var(--color-success)",
+        barColor: "var(--color-success)",
+      };
+    }
+
+    if (rawStatus === "PARTIAL") {
+      return {
+        label: "Partially Verified",
+        description: "Consistent with Reel signals; some secondary evidence unconfirmed.",
+        icon: AlertTriangle,
+        badgeStyle: {
+          backgroundColor: "rgba(181, 101, 29, 0.08)",
+          color: "var(--color-warning)",
+          borderColor: "rgba(181, 101, 29, 0.2)",
+        },
+        dotColor: "var(--color-warning)",
+        barColor: "var(--color-warning)",
+      };
+    }
+
+    if (rawStatus === "FAILED") {
+      // Destination was successfully identified via Reel context & Places,
+      // but AI visual verification was unavailable or unconfirmed.
+      return {
+        label: "Location Identified (AI Unverified)",
+        description:
+          "Resolved through Reel context and Google Places data. AI multimodal verification was unavailable or unconfirmed.",
+        icon: ShieldCheck,
+        badgeStyle: {
+          backgroundColor: "var(--color-bg-primary)",
+          color: "var(--color-text-secondary)",
+          borderColor: "var(--color-border)",
+        },
+        dotColor: "#6B7280",
+        barColor: bestGuess.confidence >= 80 ? "var(--color-dark)" : "#8A8A8A",
+      };
+    }
+
+    // Default / SKIPPED
+    return {
       label: "Algorithmic Placement",
-      description: "Top scoring candidate derived from geographic tokens and Places ranking.",
+      description: "Top scoring candidate derived from geographic tokens and Google Places ranking.",
       icon: HelpCircle,
       badgeStyle: {
         backgroundColor: "var(--color-bg-primary)",
@@ -53,52 +80,50 @@ export default function DestinationVerification({
       },
       dotColor: "var(--color-text-muted)",
       barColor: "var(--color-text-muted)",
-    },
-    FAILED: {
-      label: "Unverified Candidate",
-      description: "Could not be conclusively validated against visual evidence.",
-      icon: XCircle,
-      badgeStyle: {
-        backgroundColor: "rgba(193, 41, 46, 0.06)",
-        color: "var(--color-error)",
-        borderColor: "rgba(193, 41, 46, 0.15)",
-      },
-      dotColor: "var(--color-error)",
-      barColor: "var(--color-error)",
-    },
-  }[status] || {
-    label: status,
-    description: "Evaluated by location pipeline.",
-    icon: HelpCircle,
-    badgeStyle: {
-      backgroundColor: "var(--color-bg-primary)",
-      color: "var(--color-text-muted)",
-      borderColor: "var(--color-border)",
-    },
-    dotColor: "var(--color-text-muted)",
-    barColor: "var(--color-text-muted)",
+    };
   };
 
+  const statusConfig = getStatusConfig();
   const StatusIcon = statusConfig.icon;
+
+  // Sanitize Gemini explanation if present (avoid raw 404 / internal traceback leaks)
+  const getCleanGeminiNote = () => {
+    if (!gemini) return null;
+    const reason = (gemini.reason || "").trim();
+    if (!reason) return null;
+
+    if (
+      reason.includes("404") ||
+      reason.includes("NOT_FOUND") ||
+      reason.includes("traceback") ||
+      reason.includes("models/")
+    ) {
+      return "AI visual verification was unavailable for this destination.";
+    }
+
+    return reason;
+  };
+
+  const geminiNote = getCleanGeminiNote();
 
   return (
     <div
-      className="rounded-xl p-5"
+      className="rounded-xl p-4 sm:p-5 shadow-2xs"
       style={{
         backgroundColor: "var(--color-bg-surface)",
         border: "1px solid var(--color-border)",
       }}
     >
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        {/* Status */}
+        {/* Status Section */}
         <div className="flex items-start gap-3">
           <StatusIcon
-            className="mt-0.5 h-5 w-5"
-            style={{ color: "var(--color-text-muted)" }}
+            className="mt-0.5 h-5 w-5 shrink-0"
+            style={{ color: statusConfig.dotColor }}
             aria-hidden="true"
           />
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span
                 className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-0.5 text-xs font-semibold"
                 style={{
@@ -114,33 +139,35 @@ export default function DestinationVerification({
               </span>
               {bestGuess.confidence_level && (
                 <span className="text-metadata">
-                  {bestGuess.confidence_level}
+                  {bestGuess.confidence_level} CONFIDENCE
                 </span>
               )}
             </div>
+
             <p
-              className="mt-1 text-xs"
+              className="mt-1 text-xs leading-relaxed max-w-xl"
               style={{ color: "var(--color-text-muted)" }}
             >
               {statusConfig.description}
             </p>
-            {gemini?.used && gemini?.reason && gemini.reason !== bestGuess.why && (
+
+            {geminiNote && gemini?.used && (
               <p
                 className="mt-1 text-xs font-mono"
                 style={{ color: "var(--color-text-secondary)" }}
               >
-                Gemini: {gemini.reason}
+                Verification note: {geminiNote}
               </p>
             )}
           </div>
         </div>
 
-        {/* Confidence */}
+        {/* Confidence Progress Meter */}
         {hasConfidence && (
-          <div className="sm:text-right">
+          <div className="sm:text-right shrink-0">
             <div className="flex items-baseline gap-1 sm:justify-end">
               <span
-                className="text-2xl font-semibold tracking-tight"
+                className="text-2xl font-semibold tracking-tight tabular-nums"
                 style={{ color: "var(--color-text-primary)" }}
               >
                 {bestGuess.confidence}%
@@ -149,7 +176,7 @@ export default function DestinationVerification({
                 className="text-xs"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                confidence
+                match
               </span>
             </div>
 
@@ -167,7 +194,7 @@ export default function DestinationVerification({
                 animate={{
                   width: `${Math.min(100, Math.max(5, bestGuess.confidence))}%`,
                 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
                 className="h-full rounded-full"
                 style={{ backgroundColor: statusConfig.barColor }}
               />

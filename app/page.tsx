@@ -21,7 +21,7 @@ export default function Home() {
   const requestIdRef = useRef(0);
 
   const handleSubmit = async (url: string) => {
-    // Disable duplicate submissions
+    // Prevent duplicate submissions
     if (isLoading) return;
 
     const currentRequestId = ++requestIdRef.current;
@@ -50,27 +50,42 @@ export default function Home() {
         signal: abortController.signal,
       });
 
-      // Ignore stale response if request was superseded or reset
+      // Ignore stale response if request was superseded or cancelled
       if (currentRequestId !== requestIdRef.current) return;
 
-      // Explicitly check for business failure (success: false) or unresolved destination
+      // Check if destination could not be resolved (unresolved result state)
+      const isUnresolved =
+        (!data.success &&
+          Boolean(
+            data.error?.includes("No destination") ||
+            data.error?.includes("No verified destination") ||
+            data.error?.includes("unresolved")
+          )) ||
+        (data.success && (!data.best_guess || !data.best_guess.name));
+
+      if (isUnresolved) {
+        setResult(data);
+        setTimeout(() => {
+          const el = document.getElementById("destination-experience");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 100);
+        return;
+      }
+
+      // Check for hard technical error
       if (!data.success) {
         setError(
-          data.error || "No destination candidates found from the Reel."
+          data.error || "Travel AI couldn't complete the analysis. Please try again."
         );
         return;
       }
 
-      if (!data.best_guess || !data.best_guess.name) {
-        setError(
-          data.error || "No destination candidates found from the Reel."
-        );
-        return;
-      }
-
+      // Successful destination match
       setResult(data);
 
-      // Scroll to results once rendered
+      // Smooth scroll to results
       setTimeout(() => {
         const el = document.getElementById("destination-experience");
         if (el) {
@@ -131,7 +146,7 @@ export default function Home() {
         <AnalysisLoader isActive={isLoading} onCancel={handleReset} />
       )}
 
-      {/* Results */}
+      {/* Results & Unresolved Experience */}
       {result && (
         <DestinationExperience
           data={result}

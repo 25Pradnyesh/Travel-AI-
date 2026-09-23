@@ -29,7 +29,9 @@ export default function NearbyPlaces({
 }: NearbyPlacesProps) {
   const [activeCategory, setActiveCategory] = useState("all");
 
-  const validPlaces = useMemo(() => places || [], [places]);
+  const validPlaces = useMemo(() => {
+    return (places || []).filter((p) => Boolean(p && (p.name || p.place_id)));
+  }, [places]);
 
   // Extract available categories
   const categories = useMemo(() => {
@@ -51,9 +53,9 @@ export default function NearbyPlaces({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header & Category Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
         <div>
           <h3 className="text-metadata">SURROUNDING HIGHLIGHTS</h3>
           <p
@@ -91,7 +93,7 @@ export default function NearbyPlaces({
                 key={cat}
                 type="button"
                 onClick={() => setActiveCategory(cat)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0 min-h-[36px] ${
                   isSelected
                     ? "bg-[var(--color-dark)] text-white shadow-xs"
                     : "bg-[var(--color-bg-surface)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-dark)]"
@@ -119,26 +121,33 @@ export default function NearbyPlaces({
       {/* Grid of Places */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filteredPlaces.map((place, index) => {
-          const hasRating = place.rating > 0;
+          const hasRating = typeof place.rating === "number" && place.rating > 0;
           const hasDistance =
-            place.distance_km !== null && place.distance_km !== undefined;
+            place.distance_km != null &&
+            !isNaN(Number(place.distance_km)) &&
+            Number(place.distance_km) >= 0;
+
+          const formattedDistance = hasDistance
+            ? `${Number(place.distance_km).toFixed(1)} km`
+            : null;
+
           const isSelected = selectedPlaceId === place.place_id;
 
           const categoryDisplay =
-            CATEGORY_LABELS[place.category] || place.category?.replace(/_/g, " ") || "Nearby";
+            CATEGORY_LABELS[place.category] ||
+            place.category?.replace(/_/g, " ") ||
+            "Highlight";
 
           return (
             <div
               key={place.place_id || place.name}
-              className={`group flex cursor-pointer flex-col justify-between rounded-xl p-4 sm:p-5 transition-all ${
+              className={`group flex cursor-pointer flex-col justify-between rounded-xl p-4 transition-all ${
                 isSelected
                   ? "ring-2 ring-[var(--color-dark)] shadow-sm"
-                  : "hover:border-[var(--color-dark)] hover:shadow-xs"
+                  : "hover:border-[var(--color-dark)] hover:shadow-2xs"
               }`}
               style={{
-                backgroundColor: isSelected
-                  ? "var(--color-bg-surface)"
-                  : "var(--color-bg-surface)",
+                backgroundColor: "var(--color-bg-surface)",
                 border: `1px solid ${
                   isSelected ? "var(--color-dark)" : "var(--color-border)"
                 }`,
@@ -152,12 +161,12 @@ export default function NearbyPlaces({
                   onSelectPlace?.(place.place_id);
                 }
               }}
-              aria-label={`${place.name}, ${place.formatted_address || ""}`}
+              aria-label={`${place.name || "Place"}, ${place.formatted_address || ""}`}
             >
               <div>
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span
-                    className="rounded-md px-2 py-0.5 text-[10px] font-mono font-medium"
+                    className="rounded-md px-2 py-0.5 text-[10px] font-mono font-medium truncate max-w-[170px]"
                     style={{
                       backgroundColor: "var(--color-bg-primary)",
                       color: "var(--color-text-muted)",
@@ -166,12 +175,12 @@ export default function NearbyPlaces({
                   >
                     {String(index + 1).padStart(2, "0")} · {categoryDisplay}
                   </span>
-                  {hasDistance && (
+                  {formattedDistance && (
                     <span
-                      className="font-mono text-[11px] font-medium"
+                      className="font-mono text-[11px] font-medium shrink-0"
                       style={{ color: "var(--color-text-secondary)" }}
                     >
-                      {place.distance_km} km
+                      {formattedDistance}
                     </span>
                   )}
                 </div>
@@ -180,7 +189,7 @@ export default function NearbyPlaces({
                   className="mt-1 text-sm font-semibold transition-colors group-hover:text-black line-clamp-1"
                   style={{ color: "var(--color-text-primary)" }}
                 >
-                  {place.name}
+                  {place.name || "Local Destination"}
                 </h4>
 
                 {place.formatted_address && (
@@ -221,7 +230,7 @@ export default function NearbyPlaces({
                     href={place.maps_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-medium transition-colors hover:text-black"
+                    className="inline-flex items-center gap-1 font-medium transition-colors hover:text-black p-1"
                     style={{
                       color: "var(--color-text-muted)",
                     }}
