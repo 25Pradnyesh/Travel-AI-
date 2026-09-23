@@ -180,7 +180,7 @@ class LocationPipeline:
                     if p.is_file():
                         p.unlink(missing_ok=True)
                 except Exception as exc:
-                    logger.warning("[PIPELINE] Failed to remove temp frame %s: %s", fp, exc)
+                    logger.warning("[PIPELINE] Failed to remove temp frame %s: %s", fp, type(exc).__name__)
 
         if video_path:
             try:
@@ -188,7 +188,7 @@ class LocationPipeline:
                 if vp.is_file():
                     vp.unlink(missing_ok=True)
             except Exception as exc:
-                logger.warning("[PIPELINE] Failed to remove temp video %s: %s", video_path, exc)
+                logger.warning("[PIPELINE] Failed to remove temp video %s: %s", video_path, type(exc).__name__)
 
     # ==================================================
     # Pipeline Execution

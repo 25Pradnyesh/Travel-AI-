@@ -536,13 +536,15 @@ class NearbySearchService:
             )
 
         except requests.RequestException as e:
-
+            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
             print(
-                f"[ERROR] Network Error ({place_type})"
+                f"[ERROR] Nearby Search Network Error ({place_type}): {type(e).__name__} (status: {status_code})"
             )
-
-            print(e)
-
+            return []
+        except Exception as e:
+            print(
+                f"[ERROR] Nearby Search Error ({place_type}): {type(e).__name__}"
+            )
             return []
 
         # --------------------------------------------------
@@ -564,7 +566,7 @@ class NearbySearchService:
             )
 
             print(
-                f"Response   :\n{response.text}"
+                f"Error      : Upstream request failed with status {response.status_code}"
             )
 
             print(

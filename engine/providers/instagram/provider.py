@@ -43,7 +43,30 @@ class InstagramYtDlpProvider(BaseProvider):
 
             "noplaylist": True,
 
+            "socket_timeout": 30,
+
         }
+
+    # ==================================================
+    # Cleanup Partial Downloads
+    # ==================================================
+
+    def _cleanup_partial_files(
+        self,
+        file_id: str,
+    ) -> None:
+        """
+        Removes any leftover partial files or chunks matching the unique download ID.
+        """
+        try:
+            for p in self.download_dir.glob(f"{file_id}*"):
+                if p.is_file():
+                    try:
+                        p.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
     # ==================================================
     # Download Reel
@@ -54,7 +77,8 @@ class InstagramYtDlpProvider(BaseProvider):
         url: str,
     ):
 
-        filename = f"{uuid.uuid4().hex}.%(ext)s"
+        file_id = uuid.uuid4().hex
+        filename = f"{file_id}.%(ext)s"
 
         output_template = str(
             self.download_dir / filename
@@ -95,11 +119,15 @@ class InstagramYtDlpProvider(BaseProvider):
 
         except DownloadError as e:
 
+            self._cleanup_partial_files(file_id)
             raise RuntimeError(
 
                 f"Instagram download failed.\n\n{e}"
 
             )
+        except Exception:
+            self._cleanup_partial_files(file_id)
+            raise
 
         video_path = Path(
             video_path,
@@ -107,6 +135,7 @@ class InstagramYtDlpProvider(BaseProvider):
 
         if not video_path.exists():
 
+            self._cleanup_partial_files(file_id)
             raise FileNotFoundError(
 
                 "Downloaded video not found."

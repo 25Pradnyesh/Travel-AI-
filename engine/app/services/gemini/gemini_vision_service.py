@@ -106,11 +106,11 @@ Vegetation: {scene_info.get('vegetation', 'None')}
 """
 
         try:
-            pil_image = Image.open(path_obj)
-
-            response = self.model.generate_content(
-                [prompt, pil_image],
-            )
+            with Image.open(path_obj) as pil_image:
+                pil_image.load()
+                response = self.model.generate_content(
+                    [prompt, pil_image],
+                )
 
             text = getattr(response, "text", "") or ""
             result = self.parser.parse(text)

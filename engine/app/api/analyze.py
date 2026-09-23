@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+import re
 import time
 import urllib.parse
 from fastapi import APIRouter, HTTPException, Response, status
@@ -10,6 +11,11 @@ import requests
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Analysis"])
+
+INSTAGRAM_REEL_REGEX = re.compile(
+    r"^https?://(?:www\.)?instagram\.com/(?:reel|reels)/([A-Za-z0-9_-]+)",
+    re.IGNORECASE,
+)
 
 _provider = None
 _pipeline = None
@@ -42,7 +48,7 @@ class AnalyzeRequest(BaseModel):
 
     @model_validator(mode="after")
     def check_url(self):
-        if not self.target_url:
+        if not self.target_url or not INSTAGRAM_REEL_REGEX.match(self.target_url):
             raise ValueError("Enter a valid public Instagram Reel URL.")
         return self
 
@@ -58,52 +64,61 @@ def analyze(request: AnalyzeRequest):
     total_start = time.perf_counter()
     provider_duration = None
     provider_output = None
-    try:
-        provider_start = time.perf_counter()
-        provider = get_provider()
-        provider_output = provider.extract(url)
-        provider_duration = time.perf_counter() - provider_start
-    except ValueError as e:
-        logger.warning("[API] Validation error: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Enter a valid public Instagram Reel URL.",
-        )
-    except (RuntimeError, FileNotFoundError) as e:
-        logger.warning("[API] Reel download error: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="This Reel couldn't be accessed. Make sure it's publicly available.",
-        )
-    except Exception as e:
-        logger.error("[API] Unexpected error during extraction: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Travel AI couldn't analyze this Reel.",
-        )
+    video_path = None
 
-    video_path = provider_output.get("video_path") if provider_output else None
     try:
-        pipeline = get_pipeline()
-        return pipeline.run(
-            metadata=provider_output["metadata"],
-            video_path=video_path,
-            total_start=total_start,
-            provider_duration=provider_duration,
-        )
-    except Exception as e:
-        logger.error("[API] Pipeline execution error: %s", e)
+        try:
+            provider_start = time.perf_counter()
+            provider = get_provider()
+            provider_output = provider.extract(url)
+            provider_duration = time.perf_counter() - provider_start
+            video_path = provider_output.get("video_path") if isinstance(provider_output, dict) else None
+        except ValueError as e:
+            logger.warning("[API] Validation error: %s", type(e).__name__)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Enter a valid public Instagram Reel URL.",
+            )
+        except (RuntimeError, FileNotFoundError) as e:
+            logger.warning("[API] Reel download error: %s", type(e).__name__)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="This Reel couldn't be accessed. Make sure it's publicly available.",
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("[API] Unexpected error during extraction: %s", type(e).__name__)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Travel AI couldn't analyze this Reel.",
+            )
+
+        try:
+            pipeline = get_pipeline()
+            return pipeline.run(
+                metadata=provider_output["metadata"],
+                video_path=video_path,
+                total_start=total_start,
+                provider_duration=provider_duration,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error("[API] Pipeline execution error: %s", type(e).__name__)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Travel AI couldn't complete the analysis.",
+            )
+    finally:
+        # Guarantee video cleanup if not already unlinked by pipeline
         if video_path:
             try:
                 vp = Path(video_path)
-                if vp.exists() and vp.is_file():
+                if vp.is_file():
                     vp.unlink(missing_ok=True)
-            except Exception:
-                pass
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Travel AI couldn't complete the analysis.",
-        )
+            except Exception as exc:
+                logger.warning("[API] Failed to cleanup temp video %s: %s", video_path, type(exc).__name__)
 
 
 # ==================================================

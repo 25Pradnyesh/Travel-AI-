@@ -66,11 +66,15 @@ class WeatherService:
             data = response.json()
 
         except requests.RequestException as e:
-
+            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
             print(
-                f"❌ Weather API Error: {e}"
+                f"❌ Weather API Error: {type(e).__name__} (status: {status_code})"
             )
-
+            return self.empty()
+        except Exception as e:
+            print(
+                f"❌ Weather API Error: {type(e).__name__}"
+            )
             return self.empty()
 
         weather = data.get(

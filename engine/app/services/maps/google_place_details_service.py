@@ -105,11 +105,15 @@ class GooglePlaceDetailsService:
             response.raise_for_status()
 
         except requests.RequestException as e:
-
+            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
             print(
-                f"❌ Google Place Details Error: {e}"
+                f"❌ Google Place Details Error: {type(e).__name__} (status: {status_code})"
             )
-
+            return None
+        except Exception as e:
+            print(
+                f"❌ Google Place Details Error: {type(e).__name__}"
+            )
             return None
 
         data = response.json()

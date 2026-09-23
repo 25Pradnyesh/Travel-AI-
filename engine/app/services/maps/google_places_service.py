@@ -95,21 +95,20 @@ class GooglePlacesService:
             )
 
             if not response.ok:
-
                 print("\n========== GOOGLE SEARCH ERROR ==========")
-                print(f"Query : {query}")
                 print(f"Status: {response.status_code}")
-                print(response.text)
+                print(f"Error : Upstream request failed with status {response.status_code}")
                 print("=========================================\n")
-
                 return []
 
             data = response.json()
 
         except requests.RequestException as e:
-
-            print(f"❌ Google Places Error: {e}")
-
+            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
+            print(f"❌ Google Places Error: {type(e).__name__} (status: {status_code})")
+            return []
+        except Exception as e:
+            print(f"❌ Google Places Error: {type(e).__name__}")
             return []
 
         places = data.get("places", [])

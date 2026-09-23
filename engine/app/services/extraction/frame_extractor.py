@@ -202,6 +202,17 @@ class FrameExtractor:
             video_path,
         )
 
+        try:
+            return self._extract_with_cap(cap, output)
+        finally:
+            cap.release()
+
+    def _extract_with_cap(
+        self,
+        cap,
+        output: Path,
+    ):
+
         total_frames = int(
             cap.get(
                 cv2.CAP_PROP_FRAME_COUNT
@@ -236,9 +247,6 @@ class FrameExtractor:
         )
 
         if total_frames <= 0:
-
-            cap.release()
-
             raise Exception(
                 "Unable to read video."
             )
@@ -414,8 +422,6 @@ class FrameExtractor:
         print(
             "=================================\n"
         )
-
-        cap.release()
 
         print(
             f"🎞 Selected {len(saved)} intelligent frames."

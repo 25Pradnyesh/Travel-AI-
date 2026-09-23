@@ -45,28 +45,77 @@ app = FastAPI(
 
 
 # ==================================================
+# Configuration Validation
+# ==================================================
+
+def validate_configuration() -> dict[str, bool]:
+    """
+    Validates essential engine configuration without exposing secrets.
+    """
+    places_key = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
+    gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    status = {
+        "google_places_configured": bool(places_key),
+        "gemini_configured": bool(gemini_key),
+    }
+
+    if not places_key:
+        print("⚠️ CONFIGURATION WARNING: GOOGLE_PLACES_API_KEY is not set.")
+        print("   Destination candidate resolution and nearby search require this key.")
+    else:
+        print("✅ Google Places API configured.")
+
+    if not gemini_key:
+        print("ℹ️ GEMINI_API_KEY not set. Gemini verification running in fallback mode.")
+    else:
+        print("✅ Gemini API configured.")
+
+    return status
+
+validate_configuration()
+
+
+# ==================================================
 # CORS Configuration
 # ==================================================
 
-frontend_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
-]
+def configure_cors(env_cors: str | None = None) -> tuple[list[str], bool]:
+    """
+    Derives allowed CORS origins and credentials policy.
+    Hardens against credentialed wildcard access (allow_origins=['*'] + allow_credentials=True).
+    """
+    dev_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ]
 
-env_cors = os.getenv("CORS_ORIGINS")
-if env_cors:
-    frontend_origins.extend([o.strip() for o in env_cors.split(",") if o.strip()])
+    if env_cors is None:
+        env_cors = os.getenv("CORS_ORIGINS", "")
 
-# Deduplicate origins while preserving order
-allowed_origins = list(dict.fromkeys(frontend_origins))
+    raw = env_cors.strip()
+    if not raw:
+        return dev_origins, True
+
+    parsed = [o.strip() for o in raw.split(",") if o.strip()]
+    if "*" in parsed:
+        # Disallow wildcard origin with credentials per CORS specification
+        return ["*"], False
+
+    # Merge explicitly defined production origins with local dev origins
+    merged = list(dict.fromkeys(dev_origins + parsed))
+    return merged, True
+
+
+allowed_origins, allow_credentials = configure_cors()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=allow_credentials,
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
