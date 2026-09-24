@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Travel AI — System Architecture",
+    "subtitle": "Mobile Client, FastAPI Intelligence Engine, and External Service Boundaries",
+    "output": "docs/architecture/system-architecture.html",
+    "viewBox": [1600, 640]
+  },
+  "components": [
+    {
+      "id": "mobile_app",
+      "type": "frontend",
+      "label": "Mobile App UI",
+      "sublabel": "React Native · Expo SDK 57",
+      "tag": "iOS & Android",
+      "pos": [60, 260],
+      "size": [150, 64]
+    },
+    {
+      "id": "api_client",
+      "type": "frontend",
+      "label": "Travel AI Client API",
+      "sublabel": "180s budget · AbortSignal",
+      "tag": "Fetch Transport",
+      "pos": [310, 260],
+      "size": [150, 64]
+    },
+    {
+      "id": "fastapi_engine",
+      "type": "backend",
+      "label": "FastAPI Engine",
+      "sublabel": "Uvicorn · Python 3.11+",
+      "tag": "REST :8000",
+      "pos": [560, 260],
+      "size": [150, 64]
+    },
+    {
+      "id": "provider_manager",
+      "type": "backend",
+      "label": "Provider Manager",
+      "sublabel": "yt-dlp · Media Extraction",
+      "tag": "Extraction Layer",
+      "pos": [810, 130],
+      "size": [160, 64]
+    },
+    {
+      "id": "location_pipeline",
+      "type": "backend",
+      "label": "Location Pipeline",
+      "sublabel": "Caption → OCR → Speech",
+      "tag": "Pipeline Orchestrator",
+      "pos": [810, 260],
+      "size": [160, 64]
+    },
+    {
+      "id": "response_builder",
+      "type": "backend",
+      "label": "Response Builder",
+      "sublabel": "AnalysisResponse & Telemetry",
+      "tag": "Response Builder",
+      "pos": [810, 400],
+      "size": [160, 64]
+    },
+    {
+      "id": "location_resolver",
+      "type": "backend",
+      "label": "Candidate Resolver",
+      "sublabel": "Candidate Scoring & Ranking",
+      "tag": "Resolution Engine",
+      "pos": [1070, 130],
+      "size": [160, 64]
+    },
+    {
+      "id": "gemini_verifier",
+      "type": "backend",
+      "label": "Gemini Verifier",
+      "sublabel": "Multimodal Vision Match",
+      "tag": "Verification Engine",
+      "pos": [1070, 260],
+      "size": [160, 64]
+    },
+    {
+      "id": "travel_enrichment",
+      "type": "backend",
+      "label": "Travel Enrichment",
+      "sublabel": "Nearby POIs & Intelligence",
+      "tag": "Enrichment Engine",
+      "pos": [1070, 400],
+      "size": [160, 64]
+    },
+    {
+      "id": "places_api",
+      "type": "external",
+      "label": "Google Places API",
+      "sublabel": "Places / Text / Nearby / Photos",
+      "tag": "External API",
+      "pos": [1330, 130],
+      "size": [150, 64]
+    },
+    {
+      "id": "gemini_api",
+      "type": "external",
+      "label": "Gemini 2.5 Flash",
+      "sublabel": "Multimodal Vision Reasoning",
+      "tag": "Google AI",
+      "pos": [1330, 260],
+      "size": [150, 64]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Mobile Client Boundary",
+      "wraps": ["mobile_app", "api_client"]
+    },
+    {
+      "kind": "security-group",
+      "label": "FastAPI Intelligence Engine Boundary (:8000)",
+      "wraps": [
+        "fastapi_engine",
+        "provider_manager",
+        "location_pipeline",
+        "response_builder",
+        "location_resolver",
+        "gemini_verifier",
+        "travel_enrichment"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "mobile_app",
+      "to": "api_client",
+      "label": "analyze(url)",
+      "variant": "emphasis"
+    },
+    {
+      "from": "api_client",
+      "to": "fastapi_engine",
+      "label": "POST /analyze",
+      "variant": "emphasis"
+    },
+    {
+      "from": "fastapi_engine",
+      "to": "provider_manager",
+      "label": "extract(url)",
+      "fromSide": "top",
+      "toSide": "left",
+      "via": [[635, 162]]
+    },
+    {
+      "from": "fastapi_engine",
+      "to": "location_pipeline",
+      "label": "run pipeline",
+      "variant": "emphasis"
+    },
+    {
+      "from": "location_pipeline",
+      "to": "provider_manager",
+      "label": "get frames",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "from": "location_pipeline",
+      "to": "location_resolver",
+      "label": "resolve candidate",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [[1040, 292], [1040, 162]]
+    },
+    {
+      "from": "location_pipeline",
+      "to": "gemini_verifier",
+      "label": "verify winner",
+      "variant": "emphasis"
+    },
+    {
+      "from": "location_pipeline",
+      "to": "travel_enrichment",
+      "label": "enrich context",
+      "fromSide": "right",
+      "toSide": "left",
+      "via": [[1040, 292], [1040, 432]]
+    },
+    {
+      "from": "location_resolver",
+      "to": "places_api",
+      "label": "places search"
+    },
+    {
+      "from": "gemini_verifier",
+      "to": "gemini_api",
+      "label": "vision prompt",
+      "variant": "security"
+    },
+    {
+      "from": "travel_enrichment",
+      "to": "places_api",
+      "label": "nearby search",
+      "fromSide": "right",
+      "toSide": "right",
+      "via": [[1510, 432], [1510, 162]],
+      "labelAt": [1510, 360]
+    },
+    {
+      "from": "location_pipeline",
+      "to": "response_builder",
+      "label": "synthesize",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [890, 362]
+    },
+    {
+      "from": "response_builder",
+      "to": "fastapi_engine",
+      "label": "JSON response",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "via": [[635, 432]]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Mobile Client Boundary",
+      "items": [
+        "React Native + Expo SDK 57 native application for iOS and Android",
+        "Extended 180s fetch timeout with AbortController cancellation",
+        "Zero API keys stored in client bundle; all third-party calls routed server-side"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "FastAPI Intelligence Engine",
+      "items": [
+        "Stateless Python 3.11+ async service exposing /analyze and /health",
+        "Multi-stage fallback pipeline: Caption -> Frame OCR -> Speech transcription",
+        "Deterministic local cleanup of downloaded videos and extracted frames"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "External Service Integrations",
+      "items": [
+        "Google Places API for authoritative coordinates, place IDs, and nearby POIs",
+        "Google Gemini 2.5 Flash for multimodal vision verification against video frames",
+        "Graceful fallback if vision verification fails or rate limits occur"
+      ]
+    }
+  ]
+}

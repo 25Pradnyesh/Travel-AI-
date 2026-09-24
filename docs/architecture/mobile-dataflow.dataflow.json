@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Travel AI — Mobile Request & Data Flow",
+    "subtitle": "Analysis Request Lifecycle, In-Memory State, and Offline Storage Persistence",
+    "output": "docs/architecture/mobile-dataflow.html",
+    "viewBox": [1280, 680]
+  },
+  "stages": [
+    { "label": "User Interface" },
+    { "label": "Client API Layer" },
+    { "label": "Transport & Storage" },
+    { "label": "State Management" },
+    { "label": "Display Surfaces" }
+  ],
+  "nodes": [
+    {
+      "id": "analyze_ui",
+      "type": "frontend",
+      "label": "Analyze Screen",
+      "sublabel": "URL input & clipboard",
+      "stage": 0,
+      "row": 0,
+      "tag": "Tab 1"
+    },
+    {
+      "id": "place_ui",
+      "type": "frontend",
+      "label": "Place Actions",
+      "sublabel": "Bookmark & directions",
+      "stage": 0,
+      "row": 1,
+      "tag": "Modals"
+    },
+    {
+      "id": "travelai_svc",
+      "type": "frontend",
+      "label": "travel-ai Service",
+      "sublabel": "180s budget & abort",
+      "stage": 1,
+      "row": 0,
+      "tag": "API Client"
+    },
+    {
+      "id": "saved_svc",
+      "type": "frontend",
+      "label": "Saved Places Store",
+      "sublabel": "Serialized write queue",
+      "stage": 1,
+      "row": 1,
+      "tag": "Storage Service"
+    },
+    {
+      "id": "fastapi_engine",
+      "type": "backend",
+      "label": "FastAPI Engine",
+      "sublabel": "POST /analyze endpoint",
+      "stage": 2,
+      "row": 0,
+      "tag": "Backend :8000"
+    },
+    {
+      "id": "async_storage",
+      "type": "database",
+      "label": "AsyncStorage",
+      "sublabel": "Local JSON key-value",
+      "stage": 2,
+      "row": 1,
+      "tag": "Device Disk"
+    },
+    {
+      "id": "analysis_store",
+      "type": "database",
+      "label": "Analysis Store",
+      "sublabel": "In-memory session state",
+      "stage": 3,
+      "row": 0,
+      "tag": "Memory Cache"
+    },
+    {
+      "id": "saved_cache",
+      "type": "database",
+      "label": "Saved Places State",
+      "sublabel": "Optimistic reactive list",
+      "stage": 3,
+      "row": 1,
+      "tag": "Memory Cache"
+    },
+    {
+      "id": "results_screen",
+      "type": "frontend",
+      "label": "Results Dossier",
+      "sublabel": "Destination briefing",
+      "stage": 4,
+      "row": 0,
+      "tag": "Screen"
+    },
+    {
+      "id": "map_surface",
+      "type": "frontend",
+      "label": "TravelMap Canvas",
+      "sublabel": "Pins & PlaceBottomSheet",
+      "stage": 4,
+      "row": 1,
+      "tag": "Screen"
+    },
+    {
+      "id": "saved_screen",
+      "type": "frontend",
+      "label": "Saved Locker",
+      "sublabel": "Filtered bookmark list",
+      "stage": 4,
+      "row": 2,
+      "tag": "Tab 3"
+    }
+  ],
+  "flows": [
+    {
+      "from": "analyze_ui",
+      "to": "travelai_svc",
+      "label": "analyze(url)",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "place_ui",
+      "to": "saved_svc",
+      "label": "toggleBookmark()",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "travelai_svc",
+      "to": "fastapi_engine",
+      "label": "POST /analyze",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "saved_svc",
+      "to": "async_storage",
+      "label": "persistQueue",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "fastapi_engine",
+      "to": "analysis_store",
+      "label": "AnalysisResponse",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "async_storage",
+      "to": "saved_cache",
+      "label": "hydrate on mount",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "analysis_store",
+      "to": "results_screen",
+      "label": "destination dossier",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "analysis_store",
+      "to": "map_surface",
+      "label": "POIs & coordinates",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "saved_cache",
+      "to": "saved_screen",
+      "label": "offline bookmarks",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Analysis Request Lifecycle",
+      "items": [
+        "180-second fetch timeout with AbortController for user-directed cancellation",
+        "Active execution ref acts as mutex to prevent accidental duplicate requests",
+        "Successful responses immediately populate analysisStore memory cache"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "In-Memory Session Store",
+      "items": [
+        "analysisStore retains current AnalysisResponse and indexed Map of nearby POIs",
+        "Enables O(1) place lookups when navigating to /place/[id] modal",
+        "Session cache purges automatically when starting new analysis"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Offline-Safe Persistence",
+      "items": [
+        "Serialized promise queue ensures atomic AsyncStorage write operations",
+        "Guarantees consistency during rapid bookmark toggling without write races",
+        "Places persist across app cold starts without server dependencies"
+      ]
+    }
+  ]
+}

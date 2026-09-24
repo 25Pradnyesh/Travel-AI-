@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Travel AI — Backend Analysis Pipeline Data Flow",
+    "subtitle": "Multi-Stage Fallback, Geographic Resolution, Gemini Vision, and Travel Synthesis",
+    "output": "docs/architecture/backend-pipeline.html",
+    "viewBox": [1280, 680]
+  },
+  "stages": [
+    { "label": "Media Ingestion" },
+    { "label": "Evidence Extraction" },
+    { "label": "Location Resolution" },
+    { "label": "Multimodal Verification" },
+    { "label": "Synthesis & Delivery" }
+  ],
+  "nodes": [
+    {
+      "id": "provider_mgr",
+      "type": "backend",
+      "label": "Provider Manager",
+      "sublabel": "yt-dlp extract & metadata",
+      "stage": 0,
+      "row": 1,
+      "tag": "Ingestion"
+    },
+    {
+      "id": "caption_extract",
+      "type": "backend",
+      "label": "Caption Evidence",
+      "sublabel": "Title, description, hashtags",
+      "stage": 1,
+      "row": 0,
+      "tag": "Stage 1 (Fast)"
+    },
+    {
+      "id": "ocr_extract",
+      "type": "backend",
+      "label": "Frame OCR Evidence",
+      "sublabel": "Tesseract on video frames",
+      "stage": 1,
+      "row": 1,
+      "tag": "Stage 2 (Visual)"
+    },
+    {
+      "id": "speech_extract",
+      "type": "backend",
+      "label": "Whisper Speech STT",
+      "sublabel": "Audio transcription clues",
+      "stage": 1,
+      "row": 2,
+      "tag": "Stage 3 (Audio)"
+    },
+    {
+      "id": "resolver_fast",
+      "type": "backend",
+      "label": "Caption Resolver",
+      "sublabel": "Candidate search & ranking",
+      "stage": 2,
+      "row": 0,
+      "tag": "Primary"
+    },
+    {
+      "id": "resolver_deep",
+      "type": "backend",
+      "label": "Multimodal Resolver",
+      "sublabel": "OCR & transcript fusion",
+      "stage": 2,
+      "row": 1,
+      "tag": "Fallback"
+    },
+    {
+      "id": "gemini_vision",
+      "type": "external",
+      "label": "Gemini 2.5 Flash",
+      "sublabel": "Visual landmark verification",
+      "stage": 3,
+      "row": 0,
+      "tag": "Vision AI"
+    },
+    {
+      "id": "confidence_fusion",
+      "type": "backend",
+      "label": "Confidence Fusion",
+      "sublabel": "VERIFIED / PARTIAL / FAILED",
+      "stage": 3,
+      "row": 1,
+      "tag": "Verdict"
+    },
+    {
+      "id": "nearby_enrichment",
+      "type": "backend",
+      "label": "Nearby POIs",
+      "sublabel": "Google Places radius search",
+      "stage": 4,
+      "row": 0,
+      "tag": "POIs"
+    },
+    {
+      "id": "travel_intel",
+      "type": "backend",
+      "label": "Travel Intelligence",
+      "sublabel": "Seasonality, budget, tips",
+      "stage": 4,
+      "row": 1,
+      "tag": "Intelligence"
+    },
+    {
+      "id": "response_builder",
+      "type": "backend",
+      "label": "Response Builder",
+      "sublabel": "AnalysisResponse JSON",
+      "stage": 4,
+      "row": 2,
+      "tag": "Delivery"
+    }
+  ],
+  "flows": [
+    {
+      "from": "provider_mgr",
+      "to": "caption_extract",
+      "label": "caption metadata",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "provider_mgr",
+      "to": "ocr_extract",
+      "label": "extracted frames",
+      "route": "straight"
+    },
+    {
+      "from": "provider_mgr",
+      "to": "speech_extract",
+      "label": "audio track",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "caption_extract",
+      "to": "resolver_fast",
+      "label": "caption clues",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "ocr_extract",
+      "to": "resolver_deep",
+      "label": "OCR tokens",
+      "route": "straight"
+    },
+    {
+      "from": "speech_extract",
+      "to": "resolver_deep",
+      "label": "transcripts",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "resolver_fast",
+      "to": "gemini_vision",
+      "label": "winner & keyframe",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "resolver_deep",
+      "to": "gemini_vision",
+      "label": "fallback winner",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "gemini_vision",
+      "to": "confidence_fusion",
+      "label": "vision score",
+      "variant": "security",
+      "route": "vertical-channel",
+      "labelDy": 25
+    },
+    {
+      "from": "confidence_fusion",
+      "to": "nearby_enrichment",
+      "label": "verified coords",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "confidence_fusion",
+      "to": "travel_intel",
+      "label": "location context",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "confidence_fusion",
+      "to": "response_builder",
+      "label": "verdict & metrics",
+      "variant": "dashed",
+      "route": "vertical-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Progressive Fallback Strategy",
+      "items": [
+        "Stage 1 tests caption clues first to resolve simple posts in under 3 seconds",
+        "Stage 2 extracts video frames for OCR when caption clues are ambiguous",
+        "Stage 3 transcribes audio via Whisper if text cues fail to resolve"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Multimodal Verification Pipeline",
+      "items": [
+        "Selects the sharpest candidate video frame for Gemini 2.5 Flash analysis",
+        "Gemini verifies whether visual landmarks match Google Places entity data",
+        "Assigns VERIFIED, PARTIAL, or FAILED status truthfully"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Enrichment & Cleanup",
+      "items": [
+        "Google Places nearby search clusters POIs into 4 distinct categories",
+        "Travel Intelligence synthesizes seasonality, budget tiers, and local tips",
+        "Deterministic unlink removes temporary video and extracted frame files"
+      ]
+    }
+  ]
+}
