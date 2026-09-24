@@ -12,41 +12,18 @@ import { apiClient } from './client';
 class AnalysisStore {
   private currentResult: AnalysisResponse | null = null;
   private currentSourceUrl: string = '';
+  private placeMap = new Map<string, NearbyPlace>();
+  private photoMap = new Map<string, string>();
 
   public setAnalysisResult(data: AnalysisResponse, sourceUrl: string): void {
     this.currentResult = data;
     this.currentSourceUrl = sourceUrl;
-  }
+    this.placeMap.clear();
+    this.photoMap.clear();
 
-  public getAnalysisResult(): { data: AnalysisResponse | null; sourceUrl: string } {
-    return {
-      data: this.currentResult,
-      sourceUrl: this.currentSourceUrl,
-    };
-  }
-
-  public clearAnalysisResult(): void {
-    this.currentResult = null;
-    this.currentSourceUrl = '';
-  }
-
-  public getPlaceById(placeId: string): NearbyPlace | null {
-    // 1. Check nearby places in current session
-    if (this.currentResult?.nearby_places) {
-      const nearby = this.currentResult.nearby_places.find((p) => p.place_id === placeId);
-      if (nearby) return nearby;
-    }
-
-    // 2. Check primary destination in current session
-    const bg = this.currentResult?.best_guess;
-    if (
-      bg &&
-      (bg.place_id === placeId ||
-        placeId === 'primary_destination' ||
-        placeId === 'primary' ||
-        placeId === bg.name)
-    ) {
-      return {
+    const bg = data.best_guess;
+    if (bg) {
+      const primaryPlace: NearbyPlace = {
         place_id: bg.place_id || 'primary_destination',
         name: bg.name,
         formatted_address: bg.formatted_address,
@@ -59,9 +36,66 @@ class AnalysisStore {
         maps_url: bg.maps_url,
         category: 'Primary Destination',
       };
+      this.placeMap.set('primary_destination', primaryPlace);
+      this.placeMap.set('primary', primaryPlace);
+      if (bg.place_id) this.placeMap.set(bg.place_id, primaryPlace);
+      if (bg.name) this.placeMap.set(bg.name, primaryPlace);
+
+      const heroUrl = this.resolvePhotoUrl(bg.photos?.[0]?.url);
+      if (heroUrl) {
+        this.photoMap.set('primary_destination', heroUrl);
+        this.photoMap.set('primary', heroUrl);
+        if (bg.place_id) this.photoMap.set(bg.place_id, heroUrl);
+        if (bg.name) this.photoMap.set(bg.name, heroUrl);
+      }
     }
 
-    // 3. Fallback: Check persisted saved places
+    if (Array.isArray(data.nearby_places)) {
+      data.nearby_places.forEach((p) => {
+        if (p) {
+          if (p.place_id) this.placeMap.set(p.place_id, p);
+          if (p.name) this.placeMap.set(p.name, p);
+
+          let photo: string | undefined;
+          if (Array.isArray((p as any).photos) && (p as any).photos[0]?.url) {
+            photo = (p as any).photos[0].url;
+          } else if (typeof (p as any).photo === 'string') {
+            photo = (p as any).photo;
+          }
+          if (photo) {
+            const resolved = this.resolvePhotoUrl(photo);
+            if (resolved) {
+              if (p.place_id) this.photoMap.set(p.place_id, resolved);
+              if (p.name) this.photoMap.set(p.name, resolved);
+            }
+          }
+        }
+      });
+    }
+  }
+
+  public getAnalysisResult(): { data: AnalysisResponse | null; sourceUrl: string } {
+    return {
+      data: this.currentResult,
+      sourceUrl: this.currentSourceUrl,
+    };
+  }
+
+  public clearAnalysisResult(): void {
+    this.currentResult = null;
+    this.currentSourceUrl = '';
+    this.placeMap.clear();
+    this.photoMap.clear();
+  }
+
+  public getPlaceById(placeId: string): NearbyPlace | null {
+    if (!placeId) return null;
+
+    // 1. O(1) in-memory session index lookup
+    const indexed = this.placeMap.get(placeId);
+    if (indexed) return indexed;
+
+    // 2. Fallback: Check persisted saved places
     const saved = getSavedPlaceByIdSync(placeId);
     if (saved) {
       return {
@@ -83,47 +117,17 @@ class AnalysisStore {
   }
 
   public getPrimaryPlace(): NearbyPlace | null {
-    const bg = this.currentResult?.best_guess;
-    if (!bg) return null;
-    return {
-      place_id: bg.place_id || 'primary_destination',
-      name: bg.name,
-      formatted_address: bg.formatted_address,
-      latitude: bg.latitude,
-      longitude: bg.longitude,
-      rating: bg.rating,
-      user_ratings_total: bg.user_ratings_total,
-      types: bg.types,
-      distance_km: 0,
-      maps_url: bg.maps_url,
-      category: 'Primary Destination',
-    };
+    return this.placeMap.get('primary_destination') || null;
   }
 
   public getPlacePhotoUrl(placeId: string): string | undefined {
-    const bg = this.currentResult?.best_guess;
-    if (
-      bg &&
-      (bg.place_id === placeId ||
-        placeId === 'primary_destination' ||
-        placeId === 'primary' ||
-        placeId === bg.name)
-    ) {
-      return this.resolvePhotoUrl(bg.photos?.[0]?.url);
-    }
+    if (!placeId) return undefined;
 
-    // Check nearby places in current session
-    if (this.currentResult?.nearby_places) {
-      const nearby = this.currentResult.nearby_places.find((p) => p.place_id === placeId);
-      if (nearby && Array.isArray((nearby as any).photos) && (nearby as any).photos[0]?.url) {
-        return this.resolvePhotoUrl((nearby as any).photos[0].url);
-      }
-      if (nearby && typeof (nearby as any).photo === 'string') {
-        return this.resolvePhotoUrl((nearby as any).photo);
-      }
-    }
+    // 1. O(1) in-memory photo index lookup
+    const indexed = this.photoMap.get(placeId);
+    if (indexed) return indexed;
 
-    // Fallback: Check saved places photo
+    // 2. Fallback: Check saved places photo
     const saved = getSavedPlaceByIdSync(placeId);
     if (saved?.photo) {
       return this.resolvePhotoUrl(saved.photo);

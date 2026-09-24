@@ -1,5 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  FlatList,
+  ListRenderItem,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -10,7 +18,7 @@ import {
   SectionHeader,
   TopBar,
 } from '@/components/ui';
-import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { Colors, Spacing, Typography } from '@/constants/theme';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
@@ -76,9 +84,27 @@ export default function ExploreScreen() {
     // Filter to categories that either have items or are 'All'
     return merged.filter((cat) => {
       if (cat === 'All') return true;
-      if (cat === 'Destinations') return allDiscoveredPlaces.some((p) => p.category === 'Destinations' || p.category === 'Primary Destination');
+      if (cat === 'Destinations') {
+        return allDiscoveredPlaces.some(
+          (p) => p.category === 'Destinations' || p.category === 'Primary Destination'
+        );
+      }
       return allDiscoveredPlaces.some((p) => p.category?.toLowerCase() === cat.toLowerCase());
     });
+  }, [allDiscoveredPlaces]);
+
+  // Single-pass memoized category counts O(N)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: allDiscoveredPlaces.length };
+    allDiscoveredPlaces.forEach((p) => {
+      const cat = p.category;
+      if (cat === 'Destinations' || cat === 'Primary Destination') {
+        counts['Destinations'] = (counts['Destinations'] || 0) + 1;
+      } else if (cat) {
+        counts[cat] = (counts[cat] || 0) + 1;
+      }
+    });
+    return counts;
   }, [allDiscoveredPlaces]);
 
   // Filter places based on search query and category
@@ -111,7 +137,7 @@ export default function ExploreScreen() {
     });
   }, [allDiscoveredPlaces, selectedCategory, search]);
 
-  const handleOpenPlace = (place: NearbyPlace) => {
+  const handleOpenPlace = useCallback((place: NearbyPlace) => {
     router.push({
       pathname: '/place/[id]',
       params: {
@@ -119,9 +145,9 @@ export default function ExploreScreen() {
         name: place.name,
       },
     });
-  };
+  }, []);
 
-  const handleOpenPlaceDirections = async (place: NearbyPlace) => {
+  const handleOpenPlaceDirections = useCallback(async (place: NearbyPlace) => {
     await openInExternalMaps({
       latitude: place.latitude,
       longitude: place.longitude,
@@ -129,134 +155,140 @@ export default function ExploreScreen() {
       formattedAddress: place.formatted_address,
       fallbackUrl: place.maps_url,
     });
-  };
+  }, []);
 
   const hasAnyDiscoveries = allDiscoveredPlaces.length > 0;
+
+  const renderPlaceItem: ListRenderItem<NearbyPlace> = useCallback(
+    ({ item: place }) => {
+      const photo =
+        analysisStore.getPlacePhotoUrl(place.place_id) ||
+        (place.place_id === bestGuess?.place_id ? bestGuess?.photos?.[0]?.url : undefined);
+
+      return (
+        <PlaceCard
+          key={place.place_id || place.name}
+          name={place.name}
+          category={place.category || 'POI'}
+          formattedAddress={place.formatted_address}
+          rating={place.rating}
+          userRatingsTotal={place.user_ratings_total}
+          distanceKm={place.distance_km}
+          photoUrl={analysisStore.resolvePhotoUrl(photo)}
+          isSaved={isSaved(place.place_id)}
+          onPress={() => handleOpenPlace(place)}
+          onSavePress={() => toggleSave(place, photo)}
+          onDirectionsPress={() => handleOpenPlaceDirections(place)}
+        />
+      );
+    },
+    [bestGuess, isSaved, toggleSave, handleOpenPlace, handleOpenPlaceDirections]
+  );
+
+  const renderListHeader = () => (
+    <View>
+      {/* Editorial Subtitle */}
+      <View style={styles.editorialHeader}>
+        <Text style={styles.eyebrow}>DISCOVERY FEED</Text>
+        <Text style={styles.editorialTitle}>Discovered Destinations & Places</Text>
+        <Text style={styles.editorialSubtitle}>
+          Verified locations and points of interest extracted from travel reels.
+        </Text>
+      </View>
+
+      {hasAnyDiscoveries ? (
+        <>
+          {/* Search Input */}
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search places, categories, addresses..."
+            style={styles.searchBar}
+          />
+
+          {/* Category Chips Carousel */}
+          {availableCategories.length > 1 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesRow}
+            >
+              {availableCategories.map((category) => (
+                <Chip
+                  key={category}
+                  label={category}
+                  selected={selectedCategory === category}
+                  onPress={() => {
+                    hapticFeedback.selection();
+                    setSelectedCategory(category);
+                  }}
+                  count={categoryCounts[category] ?? 0}
+                />
+              ))}
+            </ScrollView>
+          )}
+
+          {/* Results Counter / Section Header */}
+          <SectionHeader
+            eyebrow="CURRENT SESSION"
+            title="Discovered Highlights"
+            rightActionLabel={`${filteredPlaces.length} ${
+              filteredPlaces.length === 1 ? 'place' : 'places'
+            }`}
+          />
+        </>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <EmptyState
+            icon={<Ionicons name="compass-outline" size={32} color={Colors.textMuted} />}
+            eyebrow="SESSION DISCOVERY"
+            title="No Analyzed Destinations Yet"
+            description="Analyze an Instagram travel reel to extract verified coordinates, highlights, and surrounding points of interest into your Explore stream."
+            actionLabel="Analyze a Reel"
+            onActionPress={() => router.push('/')}
+          />
+        </View>
+      )}
+    </View>
+  );
+
+  const renderListEmpty = () => {
+    if (!hasAnyDiscoveries) return null;
+    return (
+      <EmptyState
+        icon={<Ionicons name="search-outline" size={28} color={Colors.textMuted} />}
+        eyebrow="NO MATCHES"
+        title={`No places match "${search}"`}
+        description="Try searching with a different name or switch category filters to see more places."
+        actionLabel="Clear Search"
+        onActionPress={() => {
+          hapticFeedback.light();
+          setSearch('');
+          setSelectedCategory('All');
+        }}
+      />
+    );
+  };
 
   return (
     <View style={styles.screen}>
       <TopBar brandTitle="Explore" />
 
-      <ScrollView
+      <FlatList
+        data={hasAnyDiscoveries ? filteredPlaces : []}
+        keyExtractor={(item, index) => item.place_id || item.name || String(index)}
+        renderItem={renderPlaceItem}
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={renderListEmpty}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-      >
-        {/* Editorial Subtitle */}
-        <View style={styles.editorialHeader}>
-          <Text style={styles.eyebrow}>DISCOVERY FEED</Text>
-          <Text style={styles.editorialTitle}>Discovered Destinations & Places</Text>
-          <Text style={styles.editorialSubtitle}>
-            Verified locations and points of interest extracted from travel reels.
-          </Text>
-        </View>
-
-        {hasAnyDiscoveries ? (
-          <>
-            {/* Search Input */}
-            <SearchBar
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search places, categories, addresses..."
-              style={styles.searchBar}
-            />
-
-            {/* Category Chips Carousel */}
-            {availableCategories.length > 1 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.categoriesRow}
-              >
-                {availableCategories.map((category) => (
-                  <Chip
-                    key={category}
-                    label={category}
-                    selected={selectedCategory === category}
-                    onPress={() => {
-                      hapticFeedback.selection();
-                      setSelectedCategory(category);
-                    }}
-                    count={
-                      category === 'All'
-                        ? allDiscoveredPlaces.length
-                        : allDiscoveredPlaces.filter((p) => {
-                            if (category === 'Destinations') {
-                              return (
-                                p.category === 'Destinations' ||
-                                p.category === 'Primary Destination'
-                              );
-                            }
-                            return p.category?.toLowerCase() === category.toLowerCase();
-                          }).length
-                    }
-                  />
-                ))}
-              </ScrollView>
-            )}
-
-            {/* Results Counter / Section Header */}
-            <SectionHeader
-              eyebrow="CURRENT SESSION"
-              title="Discovered Highlights"
-              rightActionLabel={`${filteredPlaces.length} ${
-                filteredPlaces.length === 1 ? 'place' : 'places'
-              }`}
-            />
-
-            {/* Place Cards List */}
-            {filteredPlaces.length > 0 ? (
-              filteredPlaces.map((place) => {
-                const photo =
-                  analysisStore.getPlacePhotoUrl(place.place_id) ||
-                  (place.place_id === bestGuess?.place_id ? bestGuess?.photos?.[0]?.url : undefined);
-
-                return (
-                  <PlaceCard
-                    key={place.place_id || place.name}
-                    name={place.name}
-                    category={place.category || 'POI'}
-                    formattedAddress={place.formatted_address}
-                    rating={place.rating}
-                    userRatingsTotal={place.user_ratings_total}
-                    distanceKm={place.distance_km}
-                    photoUrl={analysisStore.resolvePhotoUrl(photo)}
-                    isSaved={isSaved(place.place_id)}
-                    onPress={() => handleOpenPlace(place)}
-                    onSavePress={() => toggleSave(place, photo)}
-                    onDirectionsPress={() => handleOpenPlaceDirections(place)}
-                  />
-                );
-              })
-            ) : (
-              <EmptyState
-                icon={<Ionicons name="search-outline" size={28} color={Colors.textMuted} />}
-                eyebrow="NO MATCHES"
-                title={`No places match "${search}"`}
-                description="Try searching with a different name or switch category filters to see more places."
-                actionLabel="Clear Search"
-                onActionPress={() => {
-                  hapticFeedback.light();
-                  setSearch('');
-                  setSelectedCategory('All');
-                }}
-              />
-            )}
-          </>
-        ) : (
-          <View style={styles.emptyContainer}>
-            <EmptyState
-              icon={<Ionicons name="compass-outline" size={32} color={Colors.textMuted} />}
-              eyebrow="SESSION DISCOVERY"
-              title="No Analyzed Destinations Yet"
-              description="Analyze an Instagram travel reel to extract verified coordinates, highlights, and surrounding points of interest into your Explore stream."
-              actionLabel="Analyze a Reel"
-              onActionPress={() => router.push('/')}
-            />
-          </View>
-        )}
-      </ScrollView>
+        initialNumToRender={6}
+        maxToRenderPerBatch={8}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'android'}
+      />
     </View>
   );
 }

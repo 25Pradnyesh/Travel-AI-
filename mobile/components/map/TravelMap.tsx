@@ -44,11 +44,14 @@ export interface TravelMapRef {
   animateToPlace: (latitude: number, longitude: number) => void;
 }
 
+const MARKER_ANCHOR = { x: 0.5, y: 0.5 };
+
 interface ValidMarkerItem {
   id: string;
   name: string;
   latitude: number;
   longitude: number;
+  coordinate: LatLng;
   isPrimary: boolean;
   rawPlace?: NearbyPlace;
 }
@@ -87,6 +90,10 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           name: bestGuess.name || 'Destination',
           latitude: bestGuess.latitude,
           longitude: bestGuess.longitude,
+          coordinate: {
+            latitude: bestGuess.latitude,
+            longitude: bestGuess.longitude,
+          },
           isPrimary: true,
         });
       }
@@ -110,6 +117,10 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
             name: place.name || 'Point of Interest',
             latitude: place.latitude,
             longitude: place.longitude,
+            coordinate: {
+              latitude: place.latitude,
+              longitude: place.longitude,
+            },
             isPrimary: false,
             rawPlace: place,
           });
@@ -286,11 +297,8 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
             return (
               <Marker
                 key={marker.id}
-                coordinate={{
-                  latitude: marker.latitude,
-                  longitude: marker.longitude,
-                }}
-                anchor={{ x: 0.5, y: 0.5 }}
+                coordinate={marker.coordinate}
+                anchor={MARKER_ANCHOR}
                 zIndex={marker.isPrimary ? (isSelected ? 1100 : 1000) : isSelected ? 950 : 500}
                 onPress={() => {
                   hapticFeedback.selection();

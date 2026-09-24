@@ -27,7 +27,7 @@ export interface PlaceCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const PlaceCard: React.FC<PlaceCardProps> = ({
+export const PlaceCard: React.FC<PlaceCardProps> = React.memo(({
   name,
   category = 'Highlight',
   formattedAddress,
@@ -44,6 +44,15 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   const [imageError, setImageError] = useState(false);
   const formattedDist = formatDistance(distanceKm);
   const hasRating = rating != null && rating > 0;
+
+  // Reset image error if URL changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [photoUrl]);
+
+  const imageSource = React.useMemo(() => {
+    return photoUrl ? { uri: photoUrl } : undefined;
+  }, [photoUrl]);
 
   const handleSavePress = (e: any) => {
     e?.stopPropagation?.();
@@ -64,9 +73,9 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
       style={({ pressed }) => [styles.container, pressed && styles.pressed, style]}
     >
       <View style={styles.thumbnailContainer}>
-        {photoUrl && !imageError ? (
+        {imageSource && !imageError ? (
           <Image
-            source={{ uri: photoUrl }}
+            source={imageSource}
             style={styles.thumbnail}
             resizeMode="cover"
             onError={() => setImageError(true)}
@@ -153,7 +162,9 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
       </View>
     </Pressable>
   );
-};
+});
+
+PlaceCard.displayName = 'PlaceCard';
 
 const styles = StyleSheet.create({
   container: {

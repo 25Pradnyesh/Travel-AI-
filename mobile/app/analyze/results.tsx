@@ -67,21 +67,32 @@ export default function ResultsScreen() {
     return ['All', ...Array.from(set)];
   }, [nearbyPlaces]);
 
+  // Pre-compute single-pass category counts O(N)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: nearbyPlaces.length };
+    nearbyPlaces.forEach((p) => {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [nearbyPlaces]);
+
   // Filtered places
   const filteredPlaces = useMemo(() => {
     if (activeCategory === 'All') return nearbyPlaces;
     return nearbyPlaces.filter((p) => p.category === activeCategory);
   }, [nearbyPlaces, activeCategory]);
 
-  const handleBack = () => {
+  const handleBack = React.useCallback(() => {
     router.replace('/');
-  };
+  }, []);
 
-  const handleOpenMap = () => {
+  const handleOpenMap = React.useCallback(() => {
     router.push('/analyze/map');
-  };
+  }, []);
 
-  const handleOpenDestinationMaps = async () => {
+  const handleOpenDestinationMaps = React.useCallback(async () => {
     if (!bestGuess) return;
     await openInExternalMaps({
       latitude: bestGuess.latitude,
@@ -90,9 +101,9 @@ export default function ResultsScreen() {
       formattedAddress: bestGuess.formatted_address,
       fallbackUrl: bestGuess.maps_url,
     });
-  };
+  }, [bestGuess]);
 
-  const handleOpenPlaceDirections = async (place: NearbyPlace) => {
+  const handleOpenPlaceDirections = React.useCallback(async (place: NearbyPlace) => {
     await openInExternalMaps({
       latitude: place.latitude,
       longitude: place.longitude,
@@ -100,9 +111,9 @@ export default function ResultsScreen() {
       formattedAddress: place.formatted_address,
       fallbackUrl: place.maps_url,
     });
-  };
+  }, []);
 
-  const handleOpenSourceReel = async () => {
+  const handleOpenSourceReel = React.useCallback(async () => {
     if (!sourceUrl) return;
     try {
       const canOpen = await Linking.canOpenURL(sourceUrl);
@@ -112,9 +123,9 @@ export default function ResultsScreen() {
     } catch {
       // Ignore link open failure
     }
-  };
+  }, [sourceUrl]);
 
-  const handleOpenPlace = (place: NearbyPlace) => {
+  const handleOpenPlace = React.useCallback((place: NearbyPlace) => {
     router.push({
       pathname: '/place/[id]',
       params: {
@@ -122,7 +133,7 @@ export default function ResultsScreen() {
         name: place.name,
       },
     });
-  };
+  }, []);
 
   // If no analysis is available in memory
   if (!data || !bestGuess) {
@@ -144,26 +155,31 @@ export default function ResultsScreen() {
   }
 
   // Resolve hero image
-  const primaryPhoto = Array.isArray(bestGuess.photos) ? bestGuess.photos[0] : undefined;
-  const heroImageUrl = analysisStore.resolvePhotoUrl(primaryPhoto?.url);
+  const heroImageUrl = useMemo(() => {
+    const primaryPhoto = Array.isArray(bestGuess?.photos) ? bestGuess.photos[0] : undefined;
+    return analysisStore.resolvePhotoUrl(primaryPhoto?.url);
+  }, [bestGuess?.photos]);
 
   // Normalize travel tips
-  const tipsList: string[] = [];
-  if (Array.isArray(ti.travel_tips)) {
-    ti.travel_tips.forEach((t) => {
-      if (typeof t === 'string' && t.trim()) tipsList.push(t.trim());
-    });
-  } else if (ti.travel_tips && typeof ti.travel_tips === 'object') {
-    const rawTips = ti.travel_tips as Record<string, unknown>;
-    ['travel_tips', 'local_tips', 'safety_tips'].forEach((k) => {
-      const arr = rawTips[k];
-      if (Array.isArray(arr)) {
-        arr.forEach((t) => {
-          if (typeof t === 'string' && t.trim()) tipsList.push(t.trim());
-        });
-      }
-    });
-  }
+  const tipsList = useMemo(() => {
+    const list: string[] = [];
+    if (Array.isArray(ti.travel_tips)) {
+      ti.travel_tips.forEach((t) => {
+        if (typeof t === 'string' && t.trim()) list.push(t.trim());
+      });
+    } else if (ti.travel_tips && typeof ti.travel_tips === 'object') {
+      const rawTips = ti.travel_tips as Record<string, unknown>;
+      ['travel_tips', 'local_tips', 'safety_tips'].forEach((k) => {
+        const arr = rawTips[k];
+        if (Array.isArray(arr)) {
+          arr.forEach((t) => {
+            if (typeof t === 'string' && t.trim()) list.push(t.trim());
+          });
+        }
+      });
+    }
+    return list;
+  }, [ti.travel_tips]);
 
   return (
     <View style={styles.screen}>
@@ -486,11 +502,7 @@ export default function ResultsScreen() {
                       hapticFeedback.selection();
                       setActiveCategory(cat);
                     }}
-                    count={
-                      cat === 'All'
-                        ? nearbyPlaces.length
-                        : nearbyPlaces.filter((p) => p.category === cat).length
-                    }
+                    count={categoryCounts[cat] ?? 0}
                   />
                 ))}
               </ScrollView>

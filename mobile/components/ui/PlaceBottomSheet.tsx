@@ -31,7 +31,7 @@ export interface PlaceBottomSheetProps {
 const PEEK_HEIGHT = 185;
 const EXPANDED_HEIGHT = 420;
 
-export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
+export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
   place,
   photoUrl,
   isPrimary = false,
@@ -45,6 +45,10 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
 
   useEffect(() => {
     setImageError(false);
+  }, [photoUrl]);
+
+  const imageSource = React.useMemo(() => {
+    return photoUrl ? { uri: photoUrl } : undefined;
   }, [photoUrl]);
 
   const totalExpandedHeight = EXPANDED_HEIGHT + insets.bottom;
@@ -221,9 +225,9 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
       {/* Peek Content Row */}
       <Pressable onPress={toggleExpand} style={styles.peekSummaryRow}>
         <View style={styles.thumbnailContainer}>
-          {photoUrl && !imageError ? (
+          {imageSource && !imageError ? (
             <Image
-              source={{ uri: photoUrl }}
+              source={imageSource}
               style={styles.thumbnail}
               resizeMode="cover"
               onError={() => setImageError(true)}
@@ -346,7 +350,9 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
       )}
     </Animated.View>
   );
-};
+});
+
+PlaceBottomSheet.displayName = 'PlaceBottomSheet';
 
 const styles = StyleSheet.create({
   sheetContainer: {

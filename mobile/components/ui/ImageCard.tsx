@@ -22,7 +22,7 @@ export interface ImageCardProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const ImageCard: React.FC<ImageCardProps> = ({
+export const ImageCard: React.FC<ImageCardProps> = React.memo(({
   imageUrl,
   title,
   subtitle,
@@ -34,11 +34,19 @@ export const ImageCard: React.FC<ImageCardProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
+  React.useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  const imageSource = React.useMemo(() => {
+    return imageUrl ? { uri: imageUrl } : undefined;
+  }, [imageUrl]);
+
   const content = (
     <View style={[styles.container, { aspectRatio }, style]}>
-      {imageUrl && !imageError ? (
+      {imageSource && !imageError ? (
         <Image
-          source={{ uri: imageUrl }}
+          source={imageSource}
           style={styles.image}
           resizeMode="cover"
           onError={() => setImageError(true)}
@@ -96,7 +104,9 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   }
 
   return content;
-};
+});
+
+ImageCard.displayName = 'ImageCard';
 
 const styles = StyleSheet.create({
   container: {

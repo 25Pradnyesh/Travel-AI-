@@ -1,5 +1,13 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import {
+  FlatList,
+  ListRenderItem,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -30,6 +38,17 @@ export default function SavedScreen() {
     return ['All', ...Array.from(set)];
   }, [savedPlaces]);
 
+  // Single-pass memoized category counts O(N)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: savedPlaces.length };
+    savedPlaces.forEach((p) => {
+      if (p.category) {
+        counts[p.category] = (counts[p.category] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [savedPlaces]);
+
   // Filter saved places by category
   const filteredPlaces = useMemo(() => {
     if (selectedCategory === 'All') return savedPlaces;
@@ -38,7 +57,7 @@ export default function SavedScreen() {
     );
   }, [savedPlaces, selectedCategory]);
 
-  const handleOpenPlace = (place: SavedPlace) => {
+  const handleOpenPlace = useCallback((place: SavedPlace) => {
     router.push({
       pathname: '/place/[id]',
       params: {
@@ -46,9 +65,9 @@ export default function SavedScreen() {
         name: place.name,
       },
     });
-  };
+  }, []);
 
-  const handleOpenMaps = async (place: SavedPlace) => {
+  const handleOpenMaps = useCallback(async (place: SavedPlace) => {
     await openInExternalMaps({
       latitude: place.latitude,
       longitude: place.longitude,
@@ -56,118 +75,130 @@ export default function SavedScreen() {
       formattedAddress: place.address,
       fallbackUrl: place.maps_url,
     });
+  }, []);
+
+  const renderPlaceItem: ListRenderItem<SavedPlace> = useCallback(
+    ({ item: place }) => (
+      <PlaceCard
+        key={place.id}
+        name={place.name}
+        category={place.category || 'Saved Place'}
+        formattedAddress={place.address}
+        rating={place.rating}
+        userRatingsTotal={place.review_count}
+        distanceKm={place.distance}
+        photoUrl={analysisStore.resolvePhotoUrl(place.photo)}
+        isSaved={true}
+        onPress={() => handleOpenPlace(place)}
+        onSavePress={() => toggleSave(place)}
+        onDirectionsPress={() => handleOpenMaps(place)}
+      />
+    ),
+    [handleOpenPlace, toggleSave, handleOpenMaps]
+  );
+
+  const renderListHeader = () => (
+    <View>
+      {/* Editorial Header */}
+      <View style={styles.header}>
+        <View style={styles.titleRow}>
+          <View>
+            <Text style={styles.eyebrow}>TRAVEL LOCKER</Text>
+            <Text style={styles.title}>Your Places</Text>
+          </View>
+          {savedCount > 0 && (
+            <View style={styles.countBadge}>
+              <Ionicons name="bookmark" size={13} color={Colors.surfaceDark} />
+              <Text style={styles.countText}>{savedCount}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={styles.subtitle}>
+          Offline collection of verified destinations and points of interest.
+        </Text>
+      </View>
+
+      {savedPlaces.length > 0 ? (
+        <>
+          {/* Category Filter Chips */}
+          {categories.length > 2 && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterRow}
+            >
+              {categories.map((filter) => (
+                <Chip
+                  key={filter}
+                  label={filter}
+                  selected={selectedCategory === filter}
+                  onPress={() => {
+                    hapticFeedback.selection();
+                    setSelectedCategory(filter);
+                  }}
+                  count={categoryCounts[filter] ?? 0}
+                />
+              ))}
+            </ScrollView>
+          )}
+
+          <SectionHeader
+            eyebrow="SAVED REPOSITORY"
+            title="Bookmarked Places"
+            rightActionLabel={`${filteredPlaces.length} ${
+              filteredPlaces.length === 1 ? 'place' : 'places'
+            }`}
+          />
+        </>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <EmptyState
+            icon={<Ionicons name="bookmark-outline" size={32} color={Colors.textMuted} />}
+            eyebrow="NO SAVED PLACES YET"
+            title="Your travel locker is empty."
+            description="Analyze a Reel and bookmark places or destinations you want to remember. All saved places are kept offline on your device."
+            actionLabel="Start Analyzing"
+            onActionPress={() => router.push('/')}
+          />
+        </View>
+      )}
+    </View>
+  );
+
+  const renderListEmpty = () => {
+    if (savedPlaces.length === 0) return null;
+    return (
+      <EmptyState
+        icon={<Ionicons name="filter-outline" size={28} color={Colors.textMuted} />}
+        eyebrow="CATEGORY FILTER"
+        title={`No places saved under "${selectedCategory}"`}
+        description="Select another category or view All to see your saved collection."
+        actionLabel="Show All Places"
+        onActionPress={() => {
+          hapticFeedback.light();
+          setSelectedCategory('All');
+        }}
+      />
+    );
   };
 
   return (
     <View style={styles.screen}>
       <TopBar brandTitle="Saved" />
 
-      <ScrollView
+      <FlatList
+        data={savedPlaces.length > 0 ? filteredPlaces : []}
+        keyExtractor={(item) => item.id}
+        renderItem={renderPlaceItem}
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={renderListEmpty}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Editorial Header */}
-        <View style={styles.header}>
-          <View style={styles.titleRow}>
-            <View>
-              <Text style={styles.eyebrow}>TRAVEL LOCKER</Text>
-              <Text style={styles.title}>Your Places</Text>
-            </View>
-            {savedCount > 0 && (
-              <View style={styles.countBadge}>
-                <Ionicons name="bookmark" size={13} color={Colors.surfaceDark} />
-                <Text style={styles.countText}>{savedCount}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={styles.subtitle}>
-            Offline collection of verified destinations and points of interest.
-          </Text>
-        </View>
-
-        {savedPlaces.length > 0 ? (
-          <>
-            {/* Category Filter Chips */}
-            {categories.length > 2 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filterRow}
-              >
-                {categories.map((filter) => (
-                  <Chip
-                    key={filter}
-                    label={filter}
-                    selected={selectedCategory === filter}
-                    onPress={() => {
-                      hapticFeedback.selection();
-                      setSelectedCategory(filter);
-                    }}
-                    count={
-                      filter === 'All'
-                        ? savedPlaces.length
-                        : savedPlaces.filter(
-                            (p) => p.category?.toLowerCase() === filter.toLowerCase()
-                          ).length
-                    }
-                  />
-                ))}
-              </ScrollView>
-            )}
-
-            <SectionHeader
-              eyebrow="SAVED REPOSITORY"
-              title="Bookmarked Places"
-              rightActionLabel={`${filteredPlaces.length} ${
-                filteredPlaces.length === 1 ? 'place' : 'places'
-              }`}
-            />
-
-            {/* Saved Place Cards */}
-            {filteredPlaces.length > 0 ? (
-              filteredPlaces.map((place) => (
-                <PlaceCard
-                  key={place.id}
-                  name={place.name}
-                  category={place.category || 'Saved Place'}
-                  formattedAddress={place.address}
-                  rating={place.rating}
-                  userRatingsTotal={place.review_count}
-                  distanceKm={place.distance}
-                  photoUrl={analysisStore.resolvePhotoUrl(place.photo)}
-                  isSaved={true}
-                  onPress={() => handleOpenPlace(place)}
-                  onSavePress={() => toggleSave(place)}
-                  onDirectionsPress={() => handleOpenMaps(place)}
-                />
-              ))
-            ) : (
-              <EmptyState
-                icon={<Ionicons name="filter-outline" size={28} color={Colors.textMuted} />}
-                eyebrow="CATEGORY FILTER"
-                title={`No places saved under "${selectedCategory}"`}
-                description="Select another category or view All to see your saved collection."
-                actionLabel="Show All Places"
-                onActionPress={() => {
-                  hapticFeedback.light();
-                  setSelectedCategory('All');
-                }}
-              />
-            )}
-          </>
-        ) : (
-          <View style={styles.emptyContainer}>
-            <EmptyState
-              icon={<Ionicons name="bookmark-outline" size={32} color={Colors.textMuted} />}
-              eyebrow="NO SAVED PLACES YET"
-              title="Your travel locker is empty."
-              description="Analyze a Reel and bookmark places or destinations you want to remember. All saved places are kept offline on your device."
-              actionLabel="Start Analyzing"
-              onActionPress={() => router.push('/')}
-            />
-          </View>
-        )}
-      </ScrollView>
+        initialNumToRender={8}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'android'}
+      />
     </View>
   );
 }

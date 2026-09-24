@@ -6,7 +6,7 @@
  * reactive subscriber notification.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
@@ -36,12 +36,14 @@ export type SaveablePlaceInput =
 
 // In-memory cache for synchronous reads and responsive rendering
 let memoryCache: SavedPlace[] = [];
+let memoryCacheMap = new Map<string, SavedPlace>();
 let isLoaded = false;
 let initPromise: Promise<SavedPlace[]> | null = null;
 let persistQueue = Promise.resolve();
 const listeners = new Set<(places: SavedPlace[]) => void>();
 
 function notifyListeners() {
+  memoryCacheMap = new Map(memoryCache.map((p) => [p.id, p]));
   const snapshot = [...memoryCache];
   listeners.forEach((listener) => {
     try {
@@ -228,7 +230,7 @@ export function getSavedPlacesSync(): SavedPlace[] {
  */
 export function isPlaceSavedSync(id: string): boolean {
   if (!id) return false;
-  return memoryCache.some((p) => p.id === id);
+  return memoryCacheMap.has(id);
 }
 
 /**
@@ -236,7 +238,7 @@ export function isPlaceSavedSync(id: string): boolean {
  */
 export function getSavedPlaceByIdSync(id: string): SavedPlace | null {
   if (!id) return null;
-  return memoryCache.find((p) => p.id === id) || null;
+  return memoryCacheMap.get(id) || null;
 }
 
 /**
@@ -336,13 +338,6 @@ export function useSavedPlaces() {
   useEffect(() => {
     let mounted = true;
 
-    initializeSavedStorage().then((data) => {
-      if (mounted) {
-        setPlaces(data);
-        setLoading(false);
-      }
-    });
-
     const unsubscribe = subscribeToSavedPlaces((updated) => {
       if (mounted) {
         setPlaces(updated);
@@ -350,27 +345,41 @@ export function useSavedPlaces() {
       }
     });
 
+    if (!isLoaded) {
+      initializeSavedStorage().then((data) => {
+        if (mounted) {
+          setPlaces(data);
+          setLoading(false);
+        }
+      });
+    }
+
     return () => {
       mounted = false;
       unsubscribe();
     };
   }, []);
 
-  const isSaved = (id?: string | null): boolean => {
-    if (!id) return false;
-    return places.some((p) => p.id === id);
-  };
+  const savedIdsSet = useMemo(() => new Set(places.map((p) => p.id)), [places]);
 
-  const handleToggle = async (
-    place: SaveablePlaceInput,
-    photoUrl?: string
-  ): Promise<boolean> => {
-    return await toggleSavedPlace(place, photoUrl);
-  };
+  const isSaved = useCallback(
+    (id?: string | null): boolean => {
+      if (!id) return false;
+      return savedIdsSet.has(id);
+    },
+    [savedIdsSet]
+  );
 
-  const handleRemove = async (id: string): Promise<void> => {
+  const handleToggle = useCallback(
+    async (place: SaveablePlaceInput, photoUrl?: string): Promise<boolean> => {
+      return await toggleSavedPlace(place, photoUrl);
+    },
+    []
+  );
+
+  const handleRemove = useCallback(async (id: string): Promise<void> => {
     await removeSavedPlace(id);
-  };
+  }, []);
 
   return {
     savedPlaces: places,

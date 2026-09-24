@@ -56,23 +56,31 @@ export default function PlaceDetailScreen() {
     return analysisStore.resolvePhotoUrl(foundSaved?.photo);
   }, [id, savedPlaces]);
 
+  React.useEffect(() => {
+    setImageError(false);
+  }, [photoUrl]);
+
+  const imageSource = useMemo(() => {
+    return photoUrl ? { uri: photoUrl } : undefined;
+  }, [photoUrl]);
+
   const isBookmarked = isSaved(place?.place_id || id);
 
-  const handleDismiss = () => {
+  const handleDismiss = React.useCallback(() => {
     hapticFeedback.light();
     if (router.canGoBack()) {
       router.back();
     } else {
       router.replace('/');
     }
-  };
+  }, []);
 
-  const handleToggleSave = async () => {
+  const handleToggleSave = React.useCallback(async () => {
     if (!place) return;
     await toggleSave(place, photoUrl);
-  };
+  }, [place, photoUrl, toggleSave]);
 
-  const handleOpenMaps = async () => {
+  const handleOpenMaps = React.useCallback(async () => {
     if (!place) return;
     hapticFeedback.light();
     await openInExternalMaps({
@@ -82,12 +90,12 @@ export default function PlaceDetailScreen() {
       formattedAddress: place.formatted_address,
       fallbackUrl: place.maps_url,
     });
-  };
+  }, [place, displayName]);
 
-  const handleViewOnMap = () => {
+  const handleViewOnMap = React.useCallback(() => {
     hapticFeedback.light();
     router.push('/analyze/map');
-  };
+  }, []);
 
   if (!place) {
     return (
@@ -150,10 +158,10 @@ export default function PlaceDetailScreen() {
         </View>
 
         {/* Hero Imagery if available */}
-        {photoUrl && !imageError && (
+        {imageSource && !imageError && (
           <View style={styles.heroWrapper}>
             <Image
-              source={{ uri: photoUrl }}
+              source={imageSource}
               style={styles.heroImage}
               resizeMode="cover"
               onError={() => setImageError(true)}

@@ -19,7 +19,7 @@ export interface LoadingStateProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const LoadingState: React.FC<LoadingStateProps> = ({
+export const LoadingState: React.FC<LoadingStateProps> = React.memo(({
   title = 'Processing...',
   subtitle = 'Travel AI is analyzing geographic clues and candidate landmarks.',
   onCancel,
@@ -93,7 +93,9 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       </View>
     </View>
   );
-};
+});
+
+LoadingState.displayName = 'LoadingState';
 
 const styles = StyleSheet.create({
   container: {
