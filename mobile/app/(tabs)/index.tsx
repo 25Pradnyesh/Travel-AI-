@@ -16,6 +16,7 @@ import { Button, TopBar, URLInput } from '@/components/ui';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { validateReelUrl } from '@/lib/utils';
 import { hapticFeedback } from '@/lib/haptics';
+import { analysisStore } from '@/lib/api/analysis-store';
 
 const EXAMPLE_REELS = [
   {
@@ -44,9 +45,9 @@ export default function AnalyzeScreen() {
   };
 
   const handleAnalyze = () => {
+    if (isSubmitting) return;
     Keyboard.dismiss();
-    const trimmed = url.trim();
-    const validation = validateReelUrl(trimmed);
+    const validation = validateReelUrl(url);
 
     if (!validation.isValid) {
       hapticFeedback.medium();
@@ -54,16 +55,20 @@ export default function AnalyzeScreen() {
       return;
     }
 
+    const targetUrl = validation.normalizedUrl || url.trim();
     hapticFeedback.light();
     setError('');
     setIsSubmitting(true);
+
+    // Clear stale analysis state so results from a previous Reel cannot leak
+    analysisStore.clearAnalysisResult();
 
     // Transition to structural processing route
     setTimeout(() => {
       setIsSubmitting(false);
       router.push({
         pathname: '/analyze/processing',
-        params: { url: trimmed },
+        params: { url: targetUrl },
       });
     }, 200);
   };

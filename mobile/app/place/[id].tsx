@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -18,16 +18,53 @@ import { hapticFeedback } from '@/lib/haptics';
 
 export default function PlaceDetailScreen() {
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
-  const { isSaved, toggleSave } = useSavedPlaces();
+  const { isSaved, toggleSave, savedPlaces } = useSavedPlaces();
+  const [imageError, setImageError] = useState(false);
 
-  const place = id ? analysisStore.getPlaceById(id) : null;
+  // Look up place from active analysis session first, then reactive savedPlaces for cold-start resilience
+  const place = useMemo(() => {
+    if (!id) return null;
+    const storePlace = analysisStore.getPlaceById(id);
+    if (storePlace) return storePlace;
+
+    const foundSaved = savedPlaces.find((p) => p.id === id);
+    if (foundSaved) {
+      return {
+        place_id: foundSaved.id,
+        name: foundSaved.name,
+        formatted_address: foundSaved.address || '',
+        latitude: foundSaved.latitude,
+        longitude: foundSaved.longitude,
+        rating: foundSaved.rating || 0,
+        user_ratings_total: foundSaved.review_count || 0,
+        types: foundSaved.tags || [],
+        distance_km: foundSaved.distance,
+        maps_url: foundSaved.maps_url || '',
+        category: foundSaved.category || 'Saved Place',
+      };
+    }
+    return null;
+  }, [id, savedPlaces]);
+
   const displayName = place?.name || paramName || 'Place Details';
-  const photoUrl = id ? analysisStore.getPlacePhotoUrl(id) : undefined;
+
+  const photoUrl = useMemo(() => {
+    if (!id) return undefined;
+    const storePhoto = analysisStore.getPlacePhotoUrl(id);
+    if (storePhoto) return storePhoto;
+    const foundSaved = savedPlaces.find((p) => p.id === id);
+    return analysisStore.resolvePhotoUrl(foundSaved?.photo);
+  }, [id, savedPlaces]);
+
   const isBookmarked = isSaved(place?.place_id || id);
 
   const handleDismiss = () => {
     hapticFeedback.light();
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const handleToggleSave = async () => {
@@ -52,16 +89,16 @@ export default function PlaceDetailScreen() {
     router.push('/analyze/map');
   };
 
-  if (!place && !paramName) {
+  if (!place) {
     return (
       <View style={styles.screen}>
-        <TopBar title="Place Detail" showBack onBackPress={handleDismiss} />
+        <TopBar title={displayName} showBack onBackPress={handleDismiss} />
         <View style={styles.emptyContainer}>
           <EmptyState
             icon={<Ionicons name="map-outline" size={32} color={Colors.textMuted} />}
             title="Place Details Unavailable"
-            description="Could not locate details for this point of interest."
-            actionLabel="Return to Results"
+            description="Could not locate details for this point of interest. It may not exist in the active session or your saved collection."
+            actionLabel="Go Back"
             onActionPress={handleDismiss}
           />
         </View>
@@ -69,10 +106,10 @@ export default function PlaceDetailScreen() {
     );
   }
 
-  const coordinatesFormatted = formatCoordinates(place?.latitude, place?.longitude);
-  const distanceFormatted = formatDistance(place?.distance_km);
-  const hasRating = place?.rating != null && place.rating > 0;
-  const isPrimary = place?.category === 'Primary Destination';
+  const coordinatesFormatted = formatCoordinates(place.latitude, place.longitude);
+  const distanceFormatted = formatDistance(place.distance_km);
+  const hasRating = place.rating != null && place.rating > 0;
+  const isPrimary = place.category === 'Primary Destination';
 
   return (
     <View style={styles.screen}>
@@ -113,9 +150,14 @@ export default function PlaceDetailScreen() {
         </View>
 
         {/* Hero Imagery if available */}
-        {photoUrl && (
+        {photoUrl && !imageError && (
           <View style={styles.heroWrapper}>
-            <Image source={{ uri: photoUrl }} style={styles.heroImage} resizeMode="cover" />
+            <Image
+              source={{ uri: photoUrl }}
+              style={styles.heroImage}
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
           </View>
         )}
 

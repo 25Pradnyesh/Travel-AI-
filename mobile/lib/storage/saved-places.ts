@@ -38,6 +38,7 @@ export type SaveablePlaceInput =
 let memoryCache: SavedPlace[] = [];
 let isLoaded = false;
 let initPromise: Promise<SavedPlace[]> | null = null;
+let persistQueue = Promise.resolve();
 const listeners = new Set<(places: SavedPlace[]) => void>();
 
 function notifyListeners() {
@@ -51,6 +52,17 @@ function notifyListeners() {
   });
 }
 
+function persistCacheToStorage(): Promise<void> {
+  persistQueue = persistQueue.then(async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(memoryCache));
+    } catch {
+      // Storage write error tolerated in memory
+    }
+  });
+  return persistQueue;
+}
+
 /**
  * Normalizes input place into canonical SavedPlace structure.
  */
@@ -62,52 +74,72 @@ export function normalizeToSavedPlace(
   const isNearby = 'distance_km' in input;
   const isExistingSaved = 'saved_at' in input;
 
-  const id =
+  const rawId =
     (input as any).place_id ||
     (input as any).id ||
-    input.name ||
-    `place_${Date.now()}`;
+    input.name;
 
-  const name = input.name || 'Unnamed Place';
+  const id =
+    typeof rawId === 'string' && rawId.trim()
+      ? rawId.trim()
+      : `place_${Date.now()}`;
 
-  const address =
+  const rawName = input.name;
+  const name = typeof rawName === 'string' && rawName.trim() ? rawName.trim() : 'Saved Location';
+
+  const rawAddress =
     (input as any).formatted_address ||
-    (input as any).address ||
-    '';
+    (input as any).address;
+  const address = typeof rawAddress === 'string' ? rawAddress.trim() : '';
 
-  const latitude = input.latitude ?? null;
-  const longitude = input.longitude ?? null;
+  const rawLat = input.latitude;
+  const rawLng = input.longitude;
+  const latitude = typeof rawLat === 'number' && Number.isFinite(rawLat) ? rawLat : null;
+  const longitude = typeof rawLng === 'number' && Number.isFinite(rawLng) ? rawLng : null;
 
   let category = 'Highlight';
-  if ((input as any).category) {
-    category = (input as any).category;
+  if (typeof (input as any).category === 'string' && (input as any).category.trim()) {
+    category = (input as any).category.trim();
   } else if (isBestGuess) {
     category = 'Primary Destination';
   }
 
-  const rating = typeof input.rating === 'number' ? input.rating : 0;
-  const reviewCount =
+  const rawRating = typeof input.rating === 'number' ? input.rating : typeof (input as any).rating === 'string' ? parseFloat((input as any).rating) : 0;
+  const rating = Number.isFinite(rawRating) && rawRating >= 0 ? Math.min(rawRating, 5) : 0;
+
+  const rawReviewCount =
     typeof (input as any).user_ratings_total === 'number'
       ? (input as any).user_ratings_total
       : typeof (input as any).review_count === 'number'
       ? (input as any).review_count
       : 0;
+  const reviewCount = Number.isFinite(rawReviewCount) && rawReviewCount >= 0 ? Math.floor(rawReviewCount) : 0;
 
-  const distance =
+  const rawDist =
     isNearby && (input as NearbyPlace).distance_km != null
       ? (input as NearbyPlace).distance_km
-      : (input as any).distance ?? null;
+      : (input as any).distance;
+  const distance = typeof rawDist === 'number' && Number.isFinite(rawDist) && rawDist >= 0 ? rawDist : null;
 
   let photo = photoOverride;
-  if (!photo && (input as any).photo) {
+  if (!photo && typeof (input as any).photo === 'string') {
     photo = (input as any).photo;
-  } else if (!photo && (input as any).photos?.[0]?.url) {
+  } else if (!photo && Array.isArray((input as any).photos) && (input as any).photos[0]?.url) {
     photo = (input as any).photos[0].url;
   }
 
-  const mapsUrl = input.maps_url || '';
+  const rawMapsUrl = input.maps_url;
+  const mapsUrl = typeof rawMapsUrl === 'string' ? rawMapsUrl : '';
+
   const rawTypes = 'types' in input ? (input as any).types : undefined;
-  const tags = Array.isArray(rawTypes) ? rawTypes : (input as any).tags || [];
+  const tags = Array.isArray(rawTypes)
+    ? rawTypes.filter((t): t is string => typeof t === 'string')
+    : Array.isArray((input as any).tags)
+    ? (input as any).tags.filter((t: any): t is string => typeof t === 'string')
+    : [];
+
+  const rawSavedAt = (input as SavedPlace).saved_at;
+  const savedAt = isExistingSaved && typeof rawSavedAt === 'number' ? rawSavedAt : Date.now();
 
   return {
     id,
@@ -122,12 +154,13 @@ export function normalizeToSavedPlace(
     photo,
     maps_url: mapsUrl,
     tags,
-    saved_at: isExistingSaved ? (input as SavedPlace).saved_at : Date.now(),
+    saved_at: savedAt,
   };
 }
 
 /**
  * Initializes and hydrates the in-memory cache from AsyncStorage.
+ * Resilient against corrupted JSON and invalid schema objects.
  */
 export async function initializeSavedStorage(): Promise<SavedPlace[]> {
   if (isLoaded) return memoryCache;
@@ -137,9 +170,26 @@ export async function initializeSavedStorage(): Promise<SavedPlace[]> {
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          memoryCache = parsed;
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            const seenIds = new Set<string>();
+            const sanitized: SavedPlace[] = [];
+            for (const item of parsed) {
+              if (item && typeof item === 'object' && typeof item.id === 'string' && item.id.trim()) {
+                const cleanId = item.id.trim();
+                if (!seenIds.has(cleanId)) {
+                  seenIds.add(cleanId);
+                  sanitized.push(normalizeToSavedPlace(item));
+                }
+              }
+            }
+            memoryCache = sanitized;
+          } else {
+            memoryCache = [];
+          }
+        } catch {
+          memoryCache = [];
         }
       }
     } catch {
@@ -220,12 +270,7 @@ export async function savePlace(
     memoryCache = [normalized, ...memoryCache];
   }
 
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(memoryCache));
-  } catch {
-    // Persistence error tolerated in memory
-  }
-
+  persistCacheToStorage();
   notifyListeners();
   hapticFeedback.selection();
   return normalized;
@@ -240,11 +285,7 @@ export async function removeSavedPlace(id: string): Promise<void> {
   memoryCache = memoryCache.filter((p) => p.id !== id);
 
   if (memoryCache.length !== initialLength) {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(memoryCache));
-    } catch {
-      // Persistence error tolerated
-    }
+    persistCacheToStorage();
     notifyListeners();
     hapticFeedback.light();
   }

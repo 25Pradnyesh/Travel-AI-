@@ -71,6 +71,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
     // 1. Filter and normalize valid geographic coordinates
     const validMarkers = useMemo<ValidMarkerItem[]>(() => {
       const list: ValidMarkerItem[] = [];
+      const seenIds = new Set<string>();
 
       // Primary destination marker
       if (
@@ -79,9 +80,11 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
         typeof bestGuess.longitude === 'number' &&
         isValidCoordinate(bestGuess.latitude, bestGuess.longitude)
       ) {
+        const primaryId = bestGuess.place_id || 'primary_destination';
+        seenIds.add(primaryId);
         list.push({
-          id: bestGuess.place_id || 'primary_destination',
-          name: bestGuess.name,
+          id: primaryId,
+          name: bestGuess.name || 'Destination',
           latitude: bestGuess.latitude,
           longitude: bestGuess.longitude,
           isPrimary: true,
@@ -96,9 +99,15 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           typeof place.longitude === 'number' &&
           isValidCoordinate(place.latitude, place.longitude)
         ) {
+          let uniqueId = place.place_id || `nearby_${index}`;
+          if (seenIds.has(uniqueId)) {
+            uniqueId = `${uniqueId}_${index}`;
+          }
+          seenIds.add(uniqueId);
+
           list.push({
-            id: place.place_id || `nearby_${index}`,
-            name: place.name,
+            id: uniqueId,
+            name: place.name || 'Point of Interest',
             latitude: place.latitude,
             longitude: place.longitude,
             isPrimary: false,
@@ -152,7 +161,23 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
     const handleRecenter = useCallback(() => {
       if (!mapRef.current || validMarkers.length === 0) return;
 
-      if (validMarkers.length === 1) {
+      let minLat = 90;
+      let maxLat = -90;
+      let minLng = 180;
+      let maxLng = -180;
+
+      validMarkers.forEach((m) => {
+        if (m.latitude < minLat) minLat = m.latitude;
+        if (m.latitude > maxLat) maxLat = m.latitude;
+        if (m.longitude < minLng) minLng = m.longitude;
+        if (m.longitude > maxLng) maxLng = m.longitude;
+      });
+
+      const isSinglePoint =
+        validMarkers.length === 1 ||
+        (Math.abs(maxLat - minLat) < 0.0001 && Math.abs(maxLng - minLng) < 0.0001);
+
+      if (isSinglePoint) {
         mapRef.current.animateToRegion(
           {
             latitude: validMarkers[0].latitude,

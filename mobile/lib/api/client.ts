@@ -161,7 +161,9 @@ export class HttpClient {
       return responseData as T;
     } catch (err: unknown) {
       if (callerSignal?.aborted) {
-        throw callerSignal.reason || new Error('Request cancelled');
+        const abortErr = new Error('Request cancelled');
+        abortErr.name = 'AbortError';
+        throw callerSignal.reason || abortErr;
       }
 
       if (timeoutController.signal.aborted) {

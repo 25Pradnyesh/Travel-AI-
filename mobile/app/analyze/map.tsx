@@ -45,7 +45,11 @@ export default function ExplorationMapScreen() {
   }, [bestGuess, selectedPlace]);
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/analyze/results');
+    }
   };
 
   const handleSelectPlace = (placeId: string) => {

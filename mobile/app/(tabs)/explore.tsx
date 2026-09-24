@@ -32,7 +32,7 @@ export default function ExploreScreen() {
     const list: NearbyPlace[] = [];
 
     // Add primary destination as first place if available
-    if (bestGuess) {
+    if (bestGuess && bestGuess.name) {
       list.push({
         place_id: bestGuess.place_id || 'primary_destination',
         name: bestGuess.name,
@@ -48,10 +48,14 @@ export default function ExploreScreen() {
       });
     }
 
-    // Add nearby places
-    nearbyPlaces.forEach((p) => {
-      list.push(p);
-    });
+    // Add nearby places defensively
+    if (Array.isArray(nearbyPlaces)) {
+      nearbyPlaces.forEach((p) => {
+        if (p && typeof p === 'object' && p.name) {
+          list.push(p);
+        }
+      });
+    }
 
     return list;
   }, [bestGuess, nearbyPlaces]);
@@ -97,7 +101,7 @@ export default function ExploreScreen() {
       let matchesSearch = true;
       if (search.trim()) {
         const query = search.trim().toLowerCase();
-        const inName = place.name.toLowerCase().includes(query);
+        const inName = (place.name || '').toLowerCase().includes(query);
         const inAddress = (place.formatted_address || '').toLowerCase().includes(query);
         const inCategory = (place.category || '').toLowerCase().includes(query);
         matchesSearch = inName || inAddress || inCategory;

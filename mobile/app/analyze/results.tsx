@@ -46,7 +46,7 @@ export default function ResultsScreen() {
 
   const bestGuess = data?.best_guess;
   const ti = (data?.travel_intelligence || {}) as TravelIntelligence;
-  const nearbyPlaces = data?.nearby_places || [];
+  const nearbyPlaces = Array.isArray(data?.nearby_places) ? data.nearby_places : [];
   const gemini = data?.gemini;
   const performance = data?.performance;
 
@@ -54,7 +54,7 @@ export default function ResultsScreen() {
   const locationSubtitle = useMemo(() => {
     if (!bestGuess) return '';
     return [bestGuess.city, bestGuess.region, bestGuess.country]
-      .filter(Boolean)
+      .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
       .join(', ');
   }, [bestGuess]);
 
@@ -144,7 +144,7 @@ export default function ResultsScreen() {
   }
 
   // Resolve hero image
-  const primaryPhoto = bestGuess.photos?.[0];
+  const primaryPhoto = Array.isArray(bestGuess.photos) ? bestGuess.photos[0] : undefined;
   const heroImageUrl = analysisStore.resolvePhotoUrl(primaryPhoto?.url);
 
   // Normalize travel tips
@@ -227,7 +227,7 @@ export default function ResultsScreen() {
               imageUrl={heroImageUrl}
               title={bestGuess.name}
               subtitle={locationSubtitle || 'Identified Travel Destination'}
-              photoCount={bestGuess.photos?.length || 0}
+              photoCount={Array.isArray(bestGuess.photos) ? bestGuess.photos.length : 0}
               badge={
                 <ConfidenceBadge
                   status={bestGuess.verification_status}
@@ -362,7 +362,7 @@ export default function ResultsScreen() {
                   label="Optimal Window"
                   value={ti.best_season}
                   subtitle={
-                    ti.peak_months?.length
+                    Array.isArray(ti.peak_months) && ti.peak_months.length > 0
                       ? `Peak: ${ti.peak_months.join(', ')}`
                       : 'Recommended time'
                   }
@@ -444,7 +444,7 @@ export default function ResultsScreen() {
             ) : null}
 
             {/* Performance Telemetry Diagnostics */}
-            {performance?.total_seconds != null ? (
+            {typeof performance?.total_seconds === 'number' && Number.isFinite(performance.total_seconds) ? (
               <View style={styles.telemetryFooter}>
                 <Text style={styles.telemetryText}>
                   Engine Resolution Time: {performance.total_seconds.toFixed(2)}s

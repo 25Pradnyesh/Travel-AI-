@@ -40,7 +40,12 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const animatedTranslateY = useRef(new Animated.Value(EXPANDED_HEIGHT + insets.bottom + 50)).current;
+
+  useEffect(() => {
+    setImageError(false);
+  }, [photoUrl]);
 
   const totalExpandedHeight = EXPANDED_HEIGHT + insets.bottom;
   const peekTranslateY = totalExpandedHeight - (PEEK_HEIGHT + insets.bottom);
@@ -216,8 +221,13 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = ({
       {/* Peek Content Row */}
       <Pressable onPress={toggleExpand} style={styles.peekSummaryRow}>
         <View style={styles.thumbnailContainer}>
-          {photoUrl ? (
-            <Image source={{ uri: photoUrl }} style={styles.thumbnail} resizeMode="cover" />
+          {photoUrl && !imageError ? (
+            <Image
+              source={{ uri: photoUrl }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+              onError={() => setImageError(true)}
+            />
           ) : (
             <View style={styles.thumbnailFallback}>
               <Ionicons

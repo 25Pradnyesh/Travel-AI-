@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -41,6 +41,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
   onDirectionsPress,
   style,
 }) => {
+  const [imageError, setImageError] = useState(false);
   const formattedDist = formatDistance(distanceKm);
   const hasRating = rating != null && rating > 0;
 
@@ -63,8 +64,13 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({
       style={({ pressed }) => [styles.container, pressed && styles.pressed, style]}
     >
       <View style={styles.thumbnailContainer}>
-        {photoUrl ? (
-          <Image source={{ uri: photoUrl }} style={styles.thumbnail} resizeMode="cover" />
+        {photoUrl && !imageError ? (
+          <Image
+            source={{ uri: photoUrl }}
+            style={styles.thumbnail}
+            resizeMode="cover"
+            onError={() => setImageError(true)}
+          />
         ) : (
           <View style={styles.thumbnailPlaceholder}>
             <Ionicons name="location-outline" size={24} color={Colors.textMuted} />

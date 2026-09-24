@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   Pressable,
@@ -32,10 +32,17 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   aspectRatio = 16 / 10,
   style,
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   const content = (
     <View style={[styles.container, { aspectRatio }, style]}>
-      {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+      {imageUrl && !imageError ? (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.image}
+          resizeMode="cover"
+          onError={() => setImageError(true)}
+        />
       ) : (
         <View style={styles.placeholder}>
           <Ionicons name="image-outline" size={36} color={Colors.textMuted} />

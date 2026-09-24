@@ -36,9 +36,15 @@ export default function ProcessingScreen() {
   const [errorTitle, setErrorTitle] = useState<string>('Analysis Unavailable');
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isAnalyzingRef = useRef(false);
   const reassuranceFade = useRef(new Animated.Value(0)).current;
 
   const runAnalysis = useCallback(async (targetUrl: string) => {
+    if (isAnalyzingRef.current) return;
+    isAnalyzingRef.current = true;
+
+    // Immediately purge any previous analysis result to eliminate stale state leaks
+    analysisStore.clearAnalysisResult();
     setIsLoading(true);
     setErrorMessage(null);
     setElapsedSeconds(0);
@@ -90,12 +96,15 @@ export default function ProcessingScreen() {
         params: { url: targetUrl },
       });
     } catch (err: unknown) {
-      if ((err as Error)?.name === 'AbortError') {
+      const errObj = err as Error | undefined;
+      if (errObj?.name === 'AbortError' || errObj?.message === 'Request cancelled') {
         return;
       }
 
       hapticFeedback.medium();
-      console.warn('[PROCESSING] Analysis failed:', err);
+      if (__DEV__) {
+        console.warn('[PROCESSING] Analysis failed:', err);
+      }
       const friendlyMsg = getFriendlyErrorMessage(err);
 
       if (friendlyMsg.includes('timed out')) {
@@ -110,6 +119,8 @@ export default function ProcessingScreen() {
 
       setErrorMessage(friendlyMsg);
       setIsLoading(false);
+    } finally {
+      isAnalyzingRef.current = false;
     }
   }, []);
 
@@ -149,18 +160,25 @@ export default function ProcessingScreen() {
   }, [isLoading]);
 
   const handleCancel = () => {
+    isAnalyzingRef.current = false;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     analysisStore.clearAnalysisResult();
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const handleRetry = () => {
     if (url) {
       runAnalysis(url);
-    } else {
+    } else if (router.canGoBack()) {
       router.back();
+    } else {
+      router.replace('/');
     }
   };
 

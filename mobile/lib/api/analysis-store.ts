@@ -112,6 +112,17 @@ class AnalysisStore {
       return this.resolvePhotoUrl(bg.photos?.[0]?.url);
     }
 
+    // Check nearby places in current session
+    if (this.currentResult?.nearby_places) {
+      const nearby = this.currentResult.nearby_places.find((p) => p.place_id === placeId);
+      if (nearby && Array.isArray((nearby as any).photos) && (nearby as any).photos[0]?.url) {
+        return this.resolvePhotoUrl((nearby as any).photos[0].url);
+      }
+      if (nearby && typeof (nearby as any).photo === 'string') {
+        return this.resolvePhotoUrl((nearby as any).photo);
+      }
+    }
+
     // Fallback: Check saved places photo
     const saved = getSavedPlaceByIdSync(placeId);
     if (saved?.photo) {

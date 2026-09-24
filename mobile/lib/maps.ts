@@ -21,19 +21,22 @@ export interface OpenMapsOptions {
  * Validates whether latitude and longitude are valid numbers within geographic limits.
  */
 export function isValidCoordinate(
-  lat?: number | null,
-  lng?: number | null
+  lat?: number | null | string,
+  lng?: number | null | string
 ): lat is number {
+  if (lat == null || lng == null) return false;
+  const numLat = typeof lat === 'string' ? parseFloat(lat) : lat;
+  const numLng = typeof lng === 'string' ? parseFloat(lng) : lng;
   return (
-    typeof lat === 'number' &&
-    typeof lng === 'number' &&
-    !isNaN(lat) &&
-    !isNaN(lng) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lng >= -180 &&
-    lng <= 180 &&
-    (lat !== 0 || lng !== 0) // Null Island exclusion
+    typeof numLat === 'number' &&
+    typeof numLng === 'number' &&
+    Number.isFinite(numLat) &&
+    Number.isFinite(numLng) &&
+    numLat >= -90 &&
+    numLat <= 90 &&
+    numLng >= -180 &&
+    numLng <= 180 &&
+    (Math.abs(numLat) > 0.0001 || Math.abs(numLng) > 0.0001) // Null Island exclusion
   );
 }
 
