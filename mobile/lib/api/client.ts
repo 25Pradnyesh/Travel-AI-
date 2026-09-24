@@ -87,6 +87,12 @@ export class HttpClient {
       params,
     } = options;
 
+    if (!this.baseUrl) {
+      throw new NetworkError(
+        'Travel AI backend URL is not configured. Please set EXPO_PUBLIC_API_URL for production builds.'
+      );
+    }
+
     const url = this.buildUrl(path, params);
 
     const headers: Record<string, string> = {

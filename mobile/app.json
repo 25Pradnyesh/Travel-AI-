@@ -8,17 +8,33 @@
     "scheme": "travelai",
     "userInterfaceStyle": "light",
     "ios": {
+      "bundleIdentifier": "com.travelai.mobile",
+      "buildNumber": "1",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.travelai.mobile",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#F7F7F5",
-        "foregroundImage": "./assets/images/android-icon-foreground.png"
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
+      "permissions": [],
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F7F5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

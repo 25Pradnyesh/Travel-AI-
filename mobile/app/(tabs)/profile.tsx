@@ -18,6 +18,11 @@ export default function ProfileScreen() {
     hapticFeedback.light();
     setIsCheckingHealth(true);
     setHealthError(null);
+    if (!apiClient.getBaseUrl()) {
+      setHealthError('Not Configured');
+      setIsCheckingHealth(false);
+      return;
+    }
     try {
       const res = await travelAiApi.checkHealth();
       setHealth(res);
@@ -201,7 +206,7 @@ export default function ProfileScreen() {
                 <Text style={styles.metaLabel}>Configured Base URL</Text>
               </View>
               <Text style={styles.metaValue} numberOfLines={1}>
-                {apiClient.getBaseUrl()}
+                {apiClient.getBaseUrl() || 'Not Configured (Production)'}
               </Text>
             </View>
           </View>

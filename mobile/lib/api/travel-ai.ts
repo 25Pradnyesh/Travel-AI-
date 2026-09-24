@@ -21,7 +21,11 @@ export function getFriendlyErrorMessage(err: unknown): string {
   }
 
   if (err instanceof NetworkError) {
-    return `Travel AI engine is unreachable at ${apiClient.getBaseUrl()}. Please ensure the backend is running.`;
+    const baseUrl = apiClient.getBaseUrl();
+    if (!baseUrl) {
+      return 'Travel AI backend URL is not configured. Please configure EXPO_PUBLIC_API_URL for release builds.';
+    }
+    return `Travel AI engine is unreachable at ${baseUrl}. Please ensure the backend is running.`;
   }
 
   if (err instanceof ApiError) {
