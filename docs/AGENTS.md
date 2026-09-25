@@ -23,7 +23,7 @@ The mobile application is the primary product surface.
 ```text
 The mobile application (mobile/) is the primary product surface.
 
-Do not treat the old Next.js web application (app/, components/) as the default place for new product work unless the task explicitly targets the web application.
+Do not treat the old Next.js web application (web/) as the default place for new product work unless the task explicitly targets the web application.
 ```
 
 The core product loop operates across native mobile and backend layers:
@@ -108,8 +108,14 @@ The standalone Python FastAPI service orchestrating video ingestion, intelligenc
 * `docs/DATABASE.md` — Authoritative data architecture and storage management guide.
 * `docs/API.md` — Authoritative API and integration communication guide.
 
-### 5. Legacy Web Prototype (`app/`, `components/`, `lib/`, `services/`, `pipelines/` at workspace root)
-* Legacy Next.js web application. Preserved as a secondary desktop prototype. Do not touch or treat as the primary product unless a user request explicitly targets the web client.
+### 5. Web Application Prototype (`web/`)
+* Next.js web application (`web/app/`, `web/components/`, `web/lib/`, `web/types/`, `web/public/`). Preserved as a secondary desktop prototype. Do not touch or treat as the primary product unless a user request explicitly targets the web client.
+
+### 6. Processing Pipelines (`pipelines/`)
+* Baseline processing pipeline definitions (`pipelines/analysis_pipeline.py`). Production pipeline execution is actively orchestrated by `engine/app/pipelines/location_pipeline.py`.
+
+### 7. Static Assets (`assets/`)
+* Project static assets (`assets/frames/`). Temporary runtime extraction artifacts remain isolated under `engine/assets/`.
 
 ---
 

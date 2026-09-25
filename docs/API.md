@@ -26,7 +26,7 @@ External Services & APIs
   └── Multimodal Verification (Google Gemini 2.5 Flash Vision)
 ```
 
-The mobile client is the **primary product consumer** of this API. The legacy Next.js web application (`app/api/analyze/route.ts`) acts as a secondary server-side proxy to the same FastAPI backend.
+The mobile client is the **primary product consumer** of this API. The legacy Next.js web application (`web/app/api/analyze/route.ts`) acts as a secondary server-side proxy to the same FastAPI backend.
 
 ---
 

@@ -159,7 +159,7 @@ For comprehensive technical specifications and dataflow models, see [docs/ARCHIT
 ## Repository Structure
 
 ```text
-travel-ai/
+Travel-AI/
 ├── mobile/                  # React Native + Expo mobile application (primary client)
 │   ├── app/                 # Expo Router navigation routes
 │   │   ├── (tabs)/          # Persistent 4-tab bottom navigation shell
@@ -173,6 +173,15 @@ travel-ai/
 │   ├── eas.json             # EAS cloud build profiles (development, preview, production)
 │   └── package.json         # Mobile dependencies and npm scripts
 │
+├── web/                     # Next.js web application (desktop prototype)
+│   ├── app/                 # App Router pages and API routes
+│   ├── components/          # Web React components (destination, landing, analysis)
+│   ├── lib/                 # Web client API and context utilities
+│   ├── types/               # Web TypeScript definitions
+│   ├── public/              # Static SVG and web icons
+│   ├── next.config.ts       # Next.js compiler and build configuration
+│   └── package.json         # Web dependencies and scripts
+│
 ├── engine/                  # FastAPI intelligence engine & pipelines (backend service)
 │   ├── app/                 # FastAPI application, API routes (/analyze, /health), pipelines
 │   │   ├── api/             # HTTP route handlers
@@ -182,7 +191,10 @@ travel-ai/
 │   ├── tests/               # Pytest automated test suites
 │   └── requirements.txt     # Python dependencies
 │
-├── docs/                    # Project documentation
+├── pipelines/               # Processing pipelines & pipeline prototypes
+│   └── analysis_pipeline.py # Baseline location analysis pipeline
+│
+├── docs/                    # Authoritative engineering & product documentation
 │   ├── PRD.md               # Product Requirements Document & MVP Acceptance Criteria
 │   ├── AGENTS.md            # Operating guide for AI coding agents
 │   ├── DESIGN_SYSTEM.md     # Authoritative Mobile Design System Specification
@@ -194,6 +206,14 @@ travel-ai/
 │   ├── architecture/        # Source-grounded Archify architecture & dataflow specifications
 │   └── mobile/              # Mobile UX roadmap and screen specifications
 │
+├── assets/                  # Project static assets
+│   └── frames/              # Sample extraction video frames
+│
+├── .gitignore               # Repository-wide ignore rules
+├── .env.example             # Template environment variables
+├── LICENSE                  # Repository license
+├── package.json             # Root monorepo workspace configuration
+├── pnpm-workspace.yaml      # Monorepo workspace package definitions
 └── README.md                # Public overview and developer entry point
 ```
 
