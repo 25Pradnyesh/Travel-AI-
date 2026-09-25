@@ -1,26 +1,20 @@
 <div align="center">
 
-# TRAVEL AI
+# Travel AI
 
-### Discover it. Save it. Go there.
+### AI-powered travel discovery from Instagram Reels.
 
-Turn Instagram travel Reels into real-world destinations.
-
-<br />
-
-[![Next.js](https://img.shields.io/badge/Next.js%2016-18181B?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-18181B?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Python](https://img.shields.io/badge/Python%203.12-18181B?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-18181B?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Google Places](https://img.shields.io/badge/Google%20Places-18181B?style=for-the-badge&logo=googlemaps&logoColor=white)](https://developers.google.com/maps)
-[![Gemini](https://img.shields.io/badge/Gemini%20Verification-18181B?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+Turn short-form travel video inspiration into verified real-world destinations, interactive cartography, and offline bookmarks.
 
 <br />
 
-<p align="center">
-  <strong>TRAVEL DISCOVERY</strong><br />
-  <em>Your next trip is hiding in your feed.</em>
-</p>
+[![React Native](https://img.shields.io/badge/React%20Native-0.86-18181B?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2057-18181B?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-18181B?style=for-the-badge&logo=typescript&logoColor=3178C6)](https://www.typescriptlang.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-18181B?style=for-the-badge&logo=fastapi&logoColor=009688)](https://fastapi.tiangolo.com)
+[![Python](https://img.shields.io/badge/Python-3.11+-18181B?style=for-the-badge&logo=python&logoColor=3776AB)](https://www.python.org)
+[![Google Places](https://img.shields.io/badge/Google%20Places-API-18181B?style=for-the-badge&logo=googlemaps&logoColor=EA4335)](https://developers.google.com/maps)
+[![Google Gemini](https://img.shields.io/badge/Gemini%202.5-Flash%20Vision-18181B?style=for-the-badge&logo=googlegemini&logoColor=8E75B2)](https://ai.google.dev)
 
 </div>
 
@@ -28,235 +22,137 @@ Turn Instagram travel Reels into real-world destinations.
 
 ## What is Travel AI?
 
-People discover extraordinary places through Instagram Reels every day: a hidden cove in Mallorca, a cliffside espresso bar in Amalfi, a mountain hut in the Dolomites.
+Travelers discover extraordinary destinations through short-form social video every day: a secluded cove in Mallorca, a cliffside cafe in Amalfi, or an alpine refuge in the Dolomites. However, these videos are geographically opaque: creators omit coordinates, location tags are vague, and audio tracks rarely provide standardized addresses.
 
-Yet the actual destination is almost impossible to identify and save. Captions are often cryptic, location tags are omitted, and audio tracks rarely provide geographic context. Saved collections quietly become graveyards of unnamed locations.
+**Travel AI bridges social media inspiration and real-world travel.**
 
-**Travel AI reverses this experience.**
+The primary product is a native mobile application (**React Native · Expo SDK 57 · TypeScript**) backed by a multimodal Python intelligence engine (**FastAPI**). The system reverse-engineers public Instagram Reels by extracting audio speech, on-screen text (OCR), video frames, and caption clues, resolving candidates against the Google Places directory, verifying visual landmark features using Google Gemini, and presenting actionable travel dossiers on an interactive native map.
 
-When you paste a public Instagram Reel URL, the system reverse-engineers the video—combining on-screen signage, spoken audio, visual landmarks, and caption clues—to identify the exact real-world place.
+---
 
-Instead of guessing or returning vague regions, Travel AI anchors every discovery to verified Google Places coordinates, explains why the place was matched, and synthesizes practical travel intelligence so you can actually visit.
+## What Travel AI Does
 
 ```text
-Discover  ──►  Understand  ──►  Save  ──►  Go
+1. Paste an Instagram Reel URL
+      ↓
+2. Travel AI analyzes the Reel
+      ↓
+3. Extracts location evidence (Whisper audio, OCR frames, caption entities)
+      ↓
+4. Resolves the destination (Google Places candidate matching & ranking)
+      ↓
+5. Verifies and enriches the result (Gemini multimodal vision verification)
+      ↓
+6. Shows travel intelligence (Seasonality, budget tier, recommended duration, tips)
+      ↓
+7. Finds nearby places (Clustered attractions, dining, cafes, hotels)
+      ↓
+8. Displays them on an interactive map (Native cartography with bottom sheet preview)
+      ↓
+9. Lets the user save places (Resilient offline travel locker)
 ```
 
 ---
 
-## Reel → Destination
-
-Travel AI does not prompt an LLM with *"Where is this video?"* and hope for a plausible answer.
-
-Instead, the system follows an evidence-based pipeline: extracting multimodal signals, grounding candidates in geographic databases, scoring them against evidence, and verifying the winner with Gemini:
+## Product Flow
 
 ```text
-               PUBLIC INSTAGRAM REEL
-                         │
-                         ▼
-                  EXTRACT EVIDENCE
-      Caption · Hashtags · OCR · Speech · Frames
-                         │
-                         ▼
-                GENERATE CANDIDATES
-          Entity Mining & Normalization
-                         │
-                         ▼
-                   GOOGLE PLACES
-            Place Search & Details API
-                         │
-                         ▼
-                  RANK & ENRICH
-        Multi-Factor Scoring & Context
-                         │
-                         ▼
-                GEMINI VERIFICATION
-          Text & Keyframe Cross-Checking
-                         │
-                         ▼
-              DESTINATION EXPERIENCE
-     Hero · Verification · Intelligence · Maps
+Instagram Reel URL
+        │
+        ▼
+   Mobile App (mobile/app/(tabs)/index.tsx)
+        │  POST /analyze { reel_url }
+        ▼
+   FastAPI Engine (engine/app/api/analyze.py)
+        │
+        ▼
+Location Intelligence Pipeline (engine/app/pipelines/location_pipeline.py)
+[ProviderManager → Media Extraction → Whisper / OCR → Google Places → Gemini Vision]
+        │
+        ▼
+Structured Travel Result (AnalysisResponse)
+        │
+        ▼
+Mobile Presentation & Persistence
+[Results Dossier → Interactive Map → Surrounding Places → Offline Saved Locker]
 ```
 
 ---
 
-## Destination Experience
+## Current Features
 
-When analysis completes, Travel AI presents a cinematic, editorial destination experience built to turn social media inspiration into trip planning.
+* **Instagram Reel Analysis:** Client-side URL validation, protocol normalization, and clipboard auto-detection for public Reels.
+* **Evidence-Based Identification:** Multimodal extraction combining OpenAI Whisper speech transcription, frame OCR text extraction, and caption entity mining.
+* **Destination Verification:** Truthful verification tiers (`VERIFIED`, `PARTIAL`, `SKIPPED`) backed by Google Gemini 2.5 Flash multimodal vision.
+* **Travel Intelligence:** Practical metrics including optimal visit season, daily budget tier, recommended stay duration, and curated local guidance tips.
+* **Nearby Places Discovery:** Automatically clusters surrounding points of interest categorized into Attractions, Dining, Cafes, and Hotels with ratings and distances.
+* **Interactive Cartography:** Native map canvas powered by `react-native-maps` featuring custom markers, zero-delta camera protection, and gesture-driven place bottom sheets.
+* **Place Detail Inspection:** Dedicated inspection modal (`/place/[id]`) with dual resolution across active session memory and offline storage.
+* **Explore Surface:** Aggregated discovery feed with real-time search filtering, dynamic category chips, and virtualized `<FlatList>` rendering.
+* **Saved Places Locker:** Offline bookmarking backed by `@react-native-async-storage/async-storage` with optimistic bookmark removal.
+* **Local Persistence Resilience:** Serialized asynchronous write queue (`persistQueue`) preventing race conditions and corrupted storage recovery.
+* **Production-Safe API Configuration:** Centralized environment configuration with strict loopback isolation guards in production release builds.
+* **Native Mobile Ergonomics:** Single-thumb mobile layout, platform-aware external navigation handoffs (Apple Maps vs. Google Maps), and native tactile haptics.
+
+---
+
+## Mobile Application
+
+The native mobile client in `mobile/` is the primary application surface for Travel AI.
+
+### Navigation Architecture
+
+The mobile app implements a persistent 4-tab thumb navigation shell combined with focused stack and modal screens:
 
 ```text
-┌─────────────────────────────────────────────────────────────┐
-│ DESTINATION                                                 │
-│                                                             │
-│ [ CINEMATIC DESTINATION PHOTO ]                             │
-│                                                             │
-│ Lake Como                                                   │
-│ Como, Lombardy, Italy                                       │
-│                                                             │
-│ VERIFIED MATCH · 94% CONFIDENCE                             │
-│                                                             │
-│ "Why This Place: Matched caption Italian keywords and      │
-│  verified visual alpine shoreline features."                │
-│                                                             │
-│ BEST SEASON         DAILY BUDGET         DURATION           │
-│ May to September    $150 - $250          2-4 Days           │
-│                                                             │
-│ [ Open in Google Maps → ]                                   │
-└─────────────────────────────────────────────────────────────┘
+Travel AI App Shell
+├── Tabs (Bottom Navigation)
+│   ├── Analyze    — Reel URL input, clipboard detection, pipeline trigger
+│   ├── Explore    — Aggregated discoveries feed with search & category filtering
+│   ├── Saved      — Resilient offline travel locker with instant bookmark access
+│   └── Profile    — Navigation preferences (Apple vs Google Maps), engine diagnostics
+│
+└── Stack & Modal Screens
+    ├── /analyze/processing — Truthful multi-stage pipeline status & elapsed timer
+    ├── /analyze/results    — Editorial destination dossier & travel intelligence
+    ├── /analyze/map        — Full-screen interactive cartography canvas
+    └── /place/[id]         — Place detail inspection modal
 ```
 
-### The Core Product Moment
-- **Cinematic Imagery**: Displays high-resolution Google Places photography with author attribution, backed by a neutral topographic fallback when photos are unavailable.
-- **Typographic Hierarchy**: The verified destination name is the primary visual anchor, accompanied by country, region, and formatted address.
-- **Verification Badge & Confidence**: Clear status indicators (`VERIFIED`, `PARTIAL`, `SKIPPED`, `FAILED`) paired with an accessible match confidence meter.
-- **Editorial Rationale**: The "Why this place" section provides the exact reasoning behind the destination match without exposing internal scoring math.
-- **Travel Intelligence**: Actionable details including best visiting window, peak months, months to avoid, and recommended duration.
-- **Trip Budget**: Estimated daily expenses and budget tiers tailored to the destination style.
-- **Curated Travel Tips**: Practical local advice presented in concise, readable cards.
-- **Nearby Places**: Discovered surrounding attractions and viewpoints with ratings, categories, and distances.
-- **Google Maps Action**: One-click jump to Google Maps for immediate navigation and saving.
+### Key Technologies
+* **Framework:** React Native (`0.86.x`), Expo (SDK 57)
+* **Routing:** Expo Router (`~57.0.x`, file-based typed routing)
+* **Language:** TypeScript (`~6.0.x`, strict mode)
+* **Cartography:** `react-native-maps` (`1.27.x`, Apple MapKit on iOS, Google Play Services on Android)
+* **Storage:** `@react-native-async-storage/async-storage` (`2.2.x`)
+* **Gestures & Motion:** `react-native-safe-area-context`, `react-native-gesture-handler`, `react-native-reanimated`
+* **Device Capabilities:** `expo-clipboard`, `expo-haptics`, `expo-image`
+
+For visual specifications and component tokens, see [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
 
 ---
 
-## What It Can Do
-
-### Reel Analysis
-- Ingest public Instagram Reel URLs with client and server validation
-- Extract caption text, hashtags, and creator metadata
-- Scan video keyframes for on-screen signage, subtitles, and watermarks via EasyOCR
-- Transcribe speech and ambient spoken mentions via OpenAI Whisper
-
-### Location Intelligence
-- Mine geographic candidate strings and deduplicate regional references
-- Query Google Places API to establish verified entity ground truth
-- Fetch official coordinates, place types, user ratings, and reviews
-- Enrich administrative hierarchy (city, region, country)
-- Discover nearby attractions, landmarks, and lodging
-
-### Verification
-- Gemini text verification against extracted caption, OCR, and speech clues
-- Gemini vision verification cross-referencing video keyframes against place visual features
-- Deterministic winner selection balancing scoring priors and multimodal reasoning
-- Transparent verification states (`VERIFIED`, `PARTIAL`, `SKIPPED`, `FAILED`)
-- Graceful fallbacks when verification cannot run or API limits occur
-
-### Destination Experience
-- Cinematic destination hero with responsive media containers
-- Neutral cartographic fallback for places without Google imagery
-- Match confidence percentage and accessible visual meter
-- Dedicated "Why this place" editorial quote card
-- About the Destination travel summary
-- Seasonal intelligence with peak and avoid month tags
-- Daily budget estimations and currency standards
-- Local travel tips formatted for clean reading
-- Surrounding attractions grid with distances and ratings
-- Direct Google Maps routing CTA
-
----
-
-## Development Status
-
-| Milestone | Area | Status |
-|---|---|:---:|
-| **Phase 1** — Location Extraction | Extraction | Completed |
-| **Phase 2** — Evidence Extraction | Multimodal Signals | Completed |
-| **Phase 3** — Candidate Generation | Entity Mining | Completed |
-| **Phase 4** — Google Places Grounding | Geographic Ground Truth | Completed |
-| **Phase 5** — Gemini Verification | Multimodal Verification | Completed |
-| **Phase 6** — Final Destination Response | Canonical Schema Builder | Completed |
-| **Phase 7** — Frontend Integration | Next.js ↔ FastAPI Proxy | Completed |
-| **Phase 8** — Destination Experience | Cinematic UI & Intelligence | Completed |
-| **Phase 9** — Saved Destinations & Memory | Personal Library | Planned |
-| **Phase 10** — Trips & Collections | Itineraries & Bucket Lists | Planned |
-| **Phase 11** — Google Maps List Sync | One-Click List Export | Planned |
-| **Phase 12** — Everywhere | Extension & Mobile Apps | Planned |
-
----
-
-## Architecture
+## Architecture Overview
 
 ```text
-                     ┌─────────────────────────┐
-                     │     NEXT.JS CLIENT      │
-                     │ React 19 · Framer Motion│
-                     └────────────┬────────────┘
-                                  │
-                                  │ POST /api/analyze
-                                  ▼
-                     ┌─────────────────────────┐
-                     │   NEXT.JS API PROXY     │
-                     │  Validation & Routing   │
-                     └────────────┬────────────┘
-                                  │
-                                  │ POST /analyze
-                                  ▼
-                     ┌─────────────────────────┐
-                     │     FASTAPI ENGINE      │
-                     │    Python 3.12 Core     │
-                     └────────────┬────────────┘
-                                  │
-             ┌────────────────────┼────────────────────┐
-             ▼                    ▼                    ▼
-      ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-      │  METADATA &  │     │   EASYOCR    │     │   WHISPER    │
-      │   CAPTION    │     │ FRAME VISION │     │ SPEECH AUDIO │
-      └──────┬───────┘     └──────┬───────┘     └──────┬───────┘
-             └────────────────────┼────────────────────┘
-                                  │
-                                  ▼
-                     ┌─────────────────────────┐
-                     │     LOCATION ENGINE     │
-                     │  Candidate Extraction   │
-                     │   Google Places Search  │
-                     │   Place Details & Geo   │
-                     │   Multi-Factor Scoring  │
-                     │    Candidate Ranking    │
-                     └────────────┬────────────┘
-                                  │
-                                  ▼
-                     ┌─────────────────────────┐
-                     │     GEMINI VERIFIER     │
-                     │  Gemini Text Check      │
-                     │  Gemini Vision Check    │
-                     └────────────┬────────────┘
-                                  │
-                                  ▼
-                     ┌─────────────────────────┐
-                     │   TRAVEL INTELLIGENCE   │
-                     │ Category · Season       │
-                     │ Budget · Tips · Timing  │
-                     └────────────┬────────────┘
-                                  │
-                                  ▼
-                     ┌─────────────────────────┐
-                     │    RESPONSE BUILDER     │
-                     │ Canonical Best Guess    │
-                     │ Nearby POIs · Summary   │
-                     └────────────┬────────────┘
-                                  │
-                                  ▼
-                     ┌─────────────────────────┐
-                     │ DESTINATION EXPERIENCE  │
-                     │  Hero · Why · Maps CTA  │
-                     └─────────────────────────┘
+Mobile App (React Native · Expo SDK 57)
+        │
+        ▼ HTTP REST (POST /analyze, GET /health)
+FastAPI Backend (Python 3.11+)
+        │
+        ▼ Orchestration
+Intelligence Pipeline (ProviderManager → Whisper → OCR → Google Places → Gemini Vision)
+        │
+        ▼ Upstream Services
+External Providers (yt-dlp, Google Places API, Gemini 2.5 Flash)
 ```
 
----
+The system strictly isolates responsibilities across architectural boundaries:
+* **Mobile Client (`mobile/`):** Owns UI rendering, touch ergonomics, native cartography, and offline bookmark persistence. It holds **zero** third-party API credentials.
+* **FastAPI Engine (`engine/`):** Manages video ingestion, media extraction, transcription, optical character recognition, places resolution, and multimodal verification.
+* **External Services:** Google Places API and Gemini Vision are proxied exclusively through FastAPI.
 
-## Tech Stack
-
-| Layer | Technologies | Role |
-|---|---|---|
-| **Frontend** | Next.js 16, React 19, TypeScript | App Router web application |
-| **Styling** | Tailwind CSS v4, Lucide React | Clean, high-contrast dark aesthetic |
-| **Motion** | Framer Motion | Subtle, cubic-bezier staggered animation |
-| **Backend Engine** | Python 3.12, FastAPI, Uvicorn | High-performance asynchronous API |
-| **Data Validation** | Pydantic v2 | Strict schema contracts and serialization |
-| **Multimodal Vision** | OpenCV, EasyOCR | Keyframe sampling and on-screen text recognition |
-| **Speech Processing** | OpenAI Whisper | Audio speech-to-text transcription |
-| **Media Ingestion** | yt-dlp | Reel audio, video, and metadata extraction |
-| **Geographic Grounding** | Google Places API | Text Search, Place Details, Nearby Search |
-| **AI Verification** | Google Gemini | Multimodal text reasoning & keyframe verification |
+For comprehensive technical specifications and dataflow models, see [docs/architecture.md](docs/architecture.md) and the interactive Archify specifications in [docs/architecture/](docs/architecture/).
 
 ---
 
@@ -264,207 +160,210 @@ When analysis completes, Travel AI presents a cinematic, editorial destination e
 
 ```text
 travel-ai/
-├── app/                          # Next.js App Router
-│   ├── api/analyze/route.ts      # API proxy forwarding requests to FastAPI
-│   ├── globals.css               # Tailwind CSS stylesheet
-│   ├── layout.tsx                # Root layout
-│   └── page.tsx                  # Landing page & destination experience orchestrator
-├── components/                   # React UI components
-│   ├── destination/              # Phase 8 Destination Experience
-│   │   ├── BudgetCard.tsx        # Daily budget, currency, and duration card
-│   │   ├── DestinationActions.tsx# Primary Google Maps CTA & reset button
-│   │   ├── DestinationExperience.tsx # Master container & motion orchestration
-│   │   ├── DestinationHero.tsx   # Cinematic photo, prominent title & rating
-│   │   ├── DestinationReason.tsx # "Why this place" editorial quote card
-│   │   ├── DestinationVerification.tsx # Status badge & confidence meter
-│   │   ├── NearbyPlaces.tsx      # Surrounding POIs grid with distances
-│   │   ├── TravelIntelligenceSection.tsx # Seasonal timing & peak month tags
-│   │   ├── TravelSummary.tsx     # Editorial destination summary
-│   │   └── TravelTips.tsx        # Concise local guidance cards
-│   ├── ui/                       # Primitive UI components
-│   ├── Background.tsx            # Ambient visual backdrop
-│   ├── FloatingCards.tsx         # Decorative visual accents
-│   ├── Hero.tsx                  # Reel URL input, validation & loading states
-│   └── Navbar.tsx                # Minimalist navigation bar
-├── engine/                       # FastAPI intelligence engine
-│   ├── app/
-│   │   ├── api/                  # API routers (analyze, health, test)
-│   │   ├── main.py               # FastAPI application entrypoint
-│   │   ├── pipelines/            # LocationPipeline execution controller
-│   │   └── services/             # Modular domain services
-│   │       ├── extraction/       # Video download, frames, evidence builder
-│   │       ├── gemini/           # Gemini verifier, prompt builders, parsers
-│   │       ├── location/         # Candidate mining & resolver
-│   │       ├── maps/             # Google Places API client & geo enrichment
-│   │       ├── ocr/              # EasyOCR text recognition
-│   │       ├── response/         # Canonical Phase 6 response builder
-│   │       ├── scoring/          # Multi-factor scoring matrix
-│   │       ├── speech/           # Whisper audio transcription
-│   │       └── travel/           # Travel intelligence synthesizer
-│   ├── domain/schemas/           # Pydantic schemas (AnalysisResponse, etc.)
-│   └── tests/                    # 31 automated unit & regression tests
-├── types/                        # TypeScript definitions
-│   └── analysis.ts               # Canonical response & request interfaces
-├── package.json                  # Frontend dependencies and scripts
-└── README.md
+├── mobile/                  # React Native + Expo mobile application (primary client)
+│   ├── app/                 # Expo Router navigation routes
+│   │   ├── (tabs)/          # Persistent 4-tab bottom navigation shell
+│   │   ├── analyze/         # Processing, results, and full-screen map screens
+│   │   └── place/[id].tsx   # Place detail inspection modal
+│   ├── components/          # Production UI & map components (buttons, badges, cards)
+│   ├── constants/           # Design tokens (theme.ts) & API configuration (config.ts)
+│   ├── lib/                 # HTTP client, analysis store, saved storage, maps handoff
+│   ├── types/               # TypeScript interfaces mirroring backend schemas
+│   ├── app.json             # Expo native manifest & application identifiers
+│   ├── eas.json             # EAS cloud build profiles (development, preview, production)
+│   └── package.json         # Mobile dependencies and npm scripts
+│
+├── engine/                  # FastAPI intelligence engine & pipelines (backend service)
+│   ├── app/                 # FastAPI application, API routes (/analyze, /health), pipelines
+│   │   ├── api/             # HTTP route handlers
+│   │   ├── pipelines/       # LocationPipeline execution controller
+│   │   └── services/        # Google Places, Gemini verifier, OCR, Whisper services
+│   ├── providers/           # Video metadata & extraction abstraction (ProviderManager)
+│   ├── tests/               # Pytest automated test suites
+│   └── requirements.txt     # Python dependencies
+│
+├── docs/                    # Supporting documentation
+│   ├── architecture/        # Source-grounded Archify architecture & dataflow specifications
+│   ├── architecture.md      # Core architecture overview
+│   └── mobile/              # Mobile UX roadmap and screen specifications
+│
+├── PRD.md                   # Product Requirements Document & MVP Acceptance Criteria
+├── DESIGN_SYSTEM.md         # Authoritative Mobile Design System Specification
+├── AGENTS.md                # Operating guide for AI coding agents
+└── README.md                # Public overview and developer entry point
 ```
-
----
-
-## Accuracy Philosophy
-
-Travel AI approaches destination identification as an **evidence-based ranking and verification problem**, not an unconstrained text generation prompt.
-
-```text
-Caption + OCR + Speech + Hashtags + Metadata + Geographic Context + Google Places + Scoring + Gemini + Vision
-= Best Supported Destination
-```
-
-The system does not generate:
-> *"Something that sounds plausible."*
-
-It resolves:
-> *"The verified real-world place that best accounts for all available evidence."*
-
-### Core Principles
-1. **Multiple Evidence Signals**: No single signal is trusted blindly. Evidence from captions, OCR, speech, and frames must align.
-2. **Ground Truth Anchor**: Every candidate must exist in the Google Places database with verified coordinates.
-3. **Transparent Uncertainty**: When confidence is moderate or partial, the UI clearly displays `PARTIAL` or `SKIPPED` rather than presenting an unverified guess as a certainty.
-4. **No Fabricated Destinations**: If a Reel cannot be confidently matched, the system returns a clean failure state rather than inventing a place.
-
----
-
-## Input & Privacy
-
-Travel AI processes **public Instagram Reel URLs**.
-
-- No Instagram account credentials or personal logins are required.
-- Video frames and audio tracks are processed ephemerally during analysis.
-- The system only reads publicly accessible content shared by travel creators.
 
 ---
 
 ## Local Development
 
 ### Prerequisites
-- **Node.js**: 18.0 or newer
-- **Python**: 3.12 or newer
-- **Google Places API Key**: Required for place search and details
-- **Gemini API Key**: Required for multimodal verification
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/25Pradnyesh/Travel-AI-.git
-cd travel-ai
-```
-
-### 2. Environment Variables
-
-Create `engine/.env`:
-```env
-GEMINI_API_KEY=your_gemini_api_key
-GOOGLE_PLACES_API_KEY=your_google_places_api_key
-```
-
-Create `.env.local` in the project root:
-```env
-ENGINE_API_URL=http://127.0.0.1:8000
-```
-
-### 3. Start the Python Engine
-
-Create and activate a virtual environment:
-```powershell
-# Windows (PowerShell)
-python -m venv engine/.venv
-.\engine\.venv\Scripts\Activate.ps1
-```
-
-```bash
-# macOS / Linux
-python3 -m venv engine/.venv
-source engine/.venv/bin/activate
-```
-
-Install engine dependencies:
-```bash
-pip install -r engine/requirements.txt
-```
-
-Start the FastAPI server:
-```powershell
-# Windows PowerShell (with UTF-8 support)
-$env:PYTHONUTF8="1"; python -m uvicorn engine.app.main:app --reload
-```
-
-```bash
-# macOS / Linux
-python -m uvicorn engine.app.main:app --reload
-```
-
-- Engine runs at `http://127.0.0.1:8000`
-- Interactive Swagger documentation is available at `http://127.0.0.1:8000/docs`
-
-### 4. Start the Frontend Client
-
-From the project root:
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### 5. Running Verification
-```bash
-# Frontend linting & production build
-npm run lint
-npm run build
-
-# Backend regression test suite (31 tests)
-$env:PYTHONUTF8="1"; engine\.venv\Scripts\python.exe -m unittest discover -s engine/tests -p "*test*.py"
-```
+* **Node.js**: 18.0 or newer
+* **Python**: 3.11 or newer
+* **Google Places API Key**: Required for candidate resolution and nearby highlights
+* **Gemini API Key**: Required for multimodal verification
 
 ---
 
-## Roadmap
+### 1. Backend Setup (FastAPI Engine)
 
-### Current Milestones `COMPLETED`
-- [x] **Phase 1–4**: Extraction, OCR, Whisper speech transcription, candidate mining, Google Places grounding
-- [x] **Phase 5**: Gemini multimodal text and vision verification
-- [x] **Phase 6**: Canonical destination response builder
-- [x] **Phase 7**: Next.js ↔ FastAPI proxy integration
-- [x] **Phase 8**: Cinematic Destination Experience (Hero, verification, why rationale, travel intelligence, budget, tips, nearby places, Google Maps CTA)
+1. Navigate to the `engine` directory and create a virtual environment:
+   ```bash
+   cd engine
+   python -m venv .venv
+   ```
 
-### Upcoming Milestones `PLANNED`
-- [ ] **Phase 9**: Saved Destinations & Memory (personal destination bookmarking, local database persistence)
-- [ ] **Phase 10**: Trips & Collections (custom trip itineraries, bucket lists, categorized collections)
-- [ ] **Phase 11**: Google Maps List Export (one-click synchronization to saved Google Maps lists)
-- [ ] **Phase 12**: Production Hardening & Rate Limiting (caching layer, production deployment configuration)
-- [ ] **Phase 13**: Everywhere (browser extension for one-click Reel analysis, YouTube Shorts & TikTok support)
+2. Activate the virtual environment:
+   * **Windows (PowerShell):**
+     ```powershell
+     .\.venv\Scripts\Activate.ps1
+     ```
+   * **macOS / Linux:**
+     ```bash
+     source .venv/bin/activate
+     ```
+
+3. Install Python dependencies:
+   ```bash
+   python -m pip install -r requirements.txt
+   ```
+
+4. Configure environment secrets in `engine/.env` (or root `.env`):
+   ```env
+   GOOGLE_PLACES_API_KEY=your_google_places_api_key
+   GEMINI_API_KEY=your_gemini_api_key
+   ```
+
+5. Start the FastAPI engine from the repository root:
+   ```bash
+   python -m uvicorn engine.app.main:app --reload --port 8000
+   ```
+   * Engine runs at `http://127.0.0.1:8000`
+   * Health status: `http://127.0.0.1:8000/health`
+   * Interactive API docs: `http://127.0.0.1:8000/docs`
+
+---
+
+### 2. Mobile Setup (React Native + Expo)
+
+1. Navigate to the `mobile` directory and install dependencies:
+   ```bash
+   cd mobile
+   npm install
+   ```
+
+2. Configure environment settings in `mobile/.env` (optional in development):
+   ```env
+   EXPO_PUBLIC_API_URL=http://localhost:8000
+   ```
+   *(Defaults to `http://localhost:8000` on iOS Simulator/Web and `http://10.0.2.2:8000` on Android Emulator).*
+
+3. Start the Expo development server:
+   ```bash
+   npm start
+   ```
+
+4. Run on your desired target:
+   * Press `i` to launch in the **iOS Simulator** (or `npm run ios`)
+   * Press `a` to launch in the **Android Emulator** (or `npm run android`)
+   * Press `w` to preview on the **Web** (or `npm run web`)
+
+5. Validate mobile health and types:
+   ```bash
+   # Run TypeScript strict typecheck
+   npx tsc --noEmit
+
+   # Check Expo project configuration & dependencies
+   npx expo-doctor
+   ```
+
+---
+
+## Environment Configuration
+
+API endpoints and credentials follow a strict separation of concerns:
+
+| Variable | Scope | Target | Purpose |
+| :--- | :--- | :--- | :--- |
+| `EXPO_PUBLIC_API_URL` | Mobile (`mobile/.env`) | Client | Base URL pointing to the FastAPI engine. Required for production release builds. |
+| `GOOGLE_PLACES_API_KEY` | Backend (`engine/.env`) | Server | Google Places API (New & Legacy) for location candidate resolution and nearby highlights. |
+| `GEMINI_API_KEY` | Backend (`engine/.env`) | Server | Google Gemini API for multimodal vision verification and travel synthesis. |
+
+> [!IMPORTANT]
+> Third-party credentials (`GOOGLE_PLACES_API_KEY`, `GEMINI_API_KEY`) remain strictly server-side. The mobile application never owns or transmits third-party API keys.
+>
+> In production builds (`__DEV__ = false`), silent loopback fallbacks are disabled. You must provide an explicit HTTPS `EXPO_PUBLIC_API_URL` pointing to your hosted FastAPI deployment.
+
+---
+
+## Production Builds
+
+The mobile application is configured for cloud compilation via **Expo Application Services (EAS)**:
+
+* **Bundle Identifier (iOS):** `com.travelai.mobile`
+* **Package Identifier (Android):** `com.travelai.mobile`
+* **Configuration:** Centralized in [mobile/app.json](mobile/app.json) and [mobile/eas.json](mobile/eas.json)
+
+### EAS Build Profiles (`mobile/eas.json`)
+
+* **`development`:** Standalone debug build with Expo Dev Client embedded.
+* **`preview`:** Internal distribution build (`.apk` / ad-hoc `.ipa`) for testing on physical devices.
+* **`production`:** Store-ready `.aab` (Android App Bundle) and `.ipa` (iOS Archive) with automated version increments.
+
+### Build Commands
+
+```bash
+# Install EAS CLI globally
+npm install -g eas-cli
+
+# Trigger a preview build for physical device testing
+eas build --profile preview --platform all
+
+# Trigger production release artifacts
+eas build --profile production --platform all
+```
+
+*Note: Production store releases require an active HTTPS FastAPI engine deployment and registered developer accounts with Apple and Google. The application is not yet published on the App Store or Google Play Store.*
+
+---
+
+## Documentation Map
+
+Detailed engineering, architecture, and design specifications are maintained in dedicated reference documents:
+
+* **[PRD.md](PRD.md):** Authoritative Product Requirements Document, core user journeys, technical boundaries, and MVP Definition of Done.
+* **[docs/architecture.md](docs/architecture.md):** Core architecture overview and system flow documentation.
+* **[docs/architecture/](docs/architecture/):** Source-grounded Archify architecture artifacts, interactive system topologies, and pipeline dataflow diagrams.
+* **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md):** Authoritative Mobile Design System, Swiss editorial styling, design tokens, typography, and component specifications.
+* **[AGENTS.md](AGENTS.md):** Canonical operating guide, change-scope rules, security boundaries, and validation protocols for AI coding agents.
+* **[docs/mobile/](docs/mobile/):** Mobile UX roadmap ([mobile-ux-roadmap.md](docs/mobile/mobile-ux-roadmap.md)) and complete 10-screen specifications ([mobile-screen-spec.md](docs/mobile/mobile-screen-spec.md)).
+
+---
+
+## Development Principles
+
+* **Source-Grounded Implementation:** Active source code and verified repository evidence are the ultimate ground truth.
+* **Mobile-First Priority:** The React Native mobile client is the primary application surface for all user-facing product features.
+* **Truthful System State:** No simulated AI progress percentages or fabricated thinking counters. Processing shows actual elapsed timers and rotating status milestones.
+* **Zero Fabricated Data:** Locations must resolve to real geographic coordinates verified against the Google Places directory.
+* **Server-Side Secrets:** Third-party credentials remain strictly isolated on the backend server.
+* **Disciplined Design Tokens:** UI components strictly consume tokens from [mobile/constants/theme.ts](mobile/constants/theme.ts) without ad-hoc styling.
+* **Minimal Change Surface:** Edits are focused, atomic, and verified before completion.
+* **Architecture Before Abstraction:** Speculative microservices, databases, or state-management frameworks are rejected in favor of simple, working native patterns.
+
+---
+
+## Current Status
+
+* **Mobile MVP Implementation:** Substantially complete across all 10 core screens (Analyze, Processing, Results, Map, Place Detail, Explore, Saved, Profile).
+* **Native Configuration:** Expo manifest (`app.json`) and EAS profiles (`eas.json`) are configured with canonical bundle identifiers and zero-permission footprints.
+* **Backend Intelligence Engine:** Fully functional FastAPI service with multimodal media ingestion, transcription, OCR, Places resolution, and Gemini vision verification.
+* **Deployment Readiness:** Requires a publicly accessible HTTPS backend deployment before production store release. App Store and Google Play Store submissions are pending backend hosting and developer account credentials.
 
 ---
 
 <div align="center">
 
-### Built by
-
-**Pradnyesh**
-
-*Connecting creative direction with autonomous agent architectures.*
-
-<br />
-
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/25Pradnyesh)
-&nbsp;&nbsp;
-[![X](https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/Pradnyesh_25)
-
-<br />
-
-[@25Pradnyesh](https://github.com/25Pradnyesh) &nbsp;·&nbsp; [@Pradnyesh_25](https://x.com/Pradnyesh_25)
-
-<br />
-
-**TRAVEL AI** · *Discover it. Save it. Go there.*
+**Travel AI** · *AI-native travel discovery from social media video.*
 
 </div>
