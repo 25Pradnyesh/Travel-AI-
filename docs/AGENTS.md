@@ -95,13 +95,18 @@ The standalone Python FastAPI service orchestrating video ingestion, intelligenc
   * `system-architecture.architecture.json` + `system-architecture.html` — Interactive system topology.
   * `backend-pipeline.dataflow.json` + `backend-pipeline.html` — Backend intelligence pipeline dataflow.
   * `mobile-dataflow.dataflow.json` + `mobile-dataflow.html` — Mobile client dataflow and state transitions.
-* `docs/architecture.md` — Core architecture overview.
+* `docs/ARCHITECTURE.md` — Core architecture overview.
 * `docs/mobile/` — Mobile UX roadmap (`mobile-ux-roadmap.md`) and screen specifications (`mobile-screen-spec.md`).
 
-### 4. Authoritative Root Documents
-* `PRD.md` — Authoritative Product Requirements Document (features, scope, user journeys, MVP DoD).
-* `DESIGN_SYSTEM.md` — Authoritative Mobile Design System (tokens, components, typography, layout rules).
-* `AGENTS.md` — Authoritative Operating Guide for AI Coding Agents (this document).
+### 4. Authoritative Project Documents (`docs/`)
+* `docs/PRD.md` — Authoritative Product Requirements Document (features, scope, user journeys, MVP DoD).
+* `docs/AGENTS.md` — Authoritative Operating Guide for AI Coding Agents (this document).
+* `docs/DESIGN_SYSTEM.md` — Authoritative Mobile Design System (tokens, components, typography, layout rules).
+* `docs/ARCHITECTURE.md` — Core architecture overview and component boundaries.
+* `docs/SECURITY.md` — Authoritative security and secrets-handling guide.
+* `docs/CODE_STYLE.md` — Authoritative coding standards and maintainability guide.
+* `docs/DATABASE.md` — Authoritative data architecture and storage management guide.
+* `docs/API.md` — Authoritative API and integration communication guide.
 
 ### 5. Legacy Web Prototype (`app/`, `components/`, `lib/`, `services/`, `pipelines/` at workspace root)
 * Legacy Next.js web application. Preserved as a secondary desktop prototype. Do not touch or treat as the primary product unless a user request explicitly targets the web client.
@@ -140,7 +145,7 @@ Only use established, verified technologies in this repository:
 
 1. **Inspect source before modifying code:** Always use directory listings, file views, and ripgrep searches to inspect active code before formulating edits.
 2. **Prefer actual implementation over assumptions:** If documentation and source code disagree, working source code is the ultimate ground truth.
-3. **Read relevant architecture/product/design docs before structural changes:** Review `ARCHITECTURE.md` (and `docs/architecture/`), `DESIGN_SYSTEM.md`, and `PRD.md` before making cross-module modifications.
+3. **Read relevant architecture/product/design docs before structural changes:** Review `docs/ARCHITECTURE.md` (and `docs/architecture/`), `docs/DESIGN_SYSTEM.md`, and `docs/PRD.md` before making cross-module modifications.
 4. **Do not infer undocumented APIs:** Verify endpoint signatures, query parameters, and payload schemas from `engine/app/api/` and `mobile/lib/api/`.
 5. **Do not invent files or modules:** Place new functionality inside existing architectural structures following established naming conventions.
 6. **Do not rewrite working systems unnecessarily:** Never refactor working production logic, helpers, or services without explicit instructions or failing test evidence.
@@ -157,24 +162,24 @@ Actual source code
       ↓
 Architecture / implementation evidence
       ↓
-ARCHITECTURE.md (and docs/architecture/)
+docs/ARCHITECTURE.md (and docs/architecture/)
       ↓
-DESIGN_SYSTEM.md
+docs/DESIGN_SYSTEM.md
       ↓
-PRD.md
+docs/PRD.md
       ↓
-AGENTS.md operational guidance
+docs/AGENTS.md operational guidance
 ```
 
 ### Document Responsibilities
 * **Source Code & Implementation Evidence:** The ultimate ground truth of runtime behavior and system contracts.
-* **`ARCHITECTURE.md` (and `docs/architecture/`):** Defines *how the system is technically structured*, component boundaries, data flow, and pipeline stages.
-* **`DESIGN_SYSTEM.md`:** Defines *how the product looks and behaves visually*, tokens, layout, typography, and UI rules.
-* **`PRD.md`:** Defines *what the product is and must do*, feature boundaries, user journeys, and acceptance criteria.
-* **`AGENTS.md`:** Defines *how coding agents must operate*, inspect, modify, validate, and report changes within this repository.
+* **`docs/ARCHITECTURE.md` (and `docs/architecture/`):** Defines *how the system is technically structured*, component boundaries, data flow, and pipeline stages.
+* **`docs/DESIGN_SYSTEM.md`:** Defines *how the product looks and behaves visually*, tokens, layout, typography, and UI rules.
+* **`docs/PRD.md`:** Defines *what the product is and must do*, feature boundaries, user journeys, and acceptance criteria.
+* **`docs/AGENTS.md`:** Defines *how coding agents must operate*, inspect, modify, validate, and report changes within this repository.
 
 ### Conflict Resolution Protocol
-If a documented statement in `PRD.md`, `ARCHITECTURE.md`, or `DESIGN_SYSTEM.md` conflicts with working source code, agents must:
+If a documented statement in `docs/PRD.md`, `docs/ARCHITECTURE.md`, or `docs/DESIGN_SYSTEM.md` conflicts with working source code, agents must:
 1. Inspect the active source code to understand current runtime behavior.
 2. Formulate changes that respect the working source implementation.
 3. Explicitly report the documentation discrepancy in the task report rather than blindly following stale documentation or breaking working code.
@@ -262,7 +267,7 @@ External Services (Google Places, Gemini, yt-dlp)
 
 ## K. Design-System Rules
 
-Adhere strictly to `DESIGN_SYSTEM.md`:
+Adhere strictly to `docs/DESIGN_SYSTEM.md`:
 * **Prohibited practices:**
   * Arbitrary hex / rgba colors (e.g. random `#3b82f6` or `#ff0000`).
   * Arbitrary typography styles, unvetted fonts, or non-standard weights.
@@ -277,7 +282,7 @@ Adhere strictly to `DESIGN_SYSTEM.md`:
 
 ## L. Architecture Rules
 
-Adhere strictly to `ARCHITECTURE.md` and existing architecture artifacts:
+Adhere strictly to `docs/ARCHITECTURE.md` and existing architecture artifacts:
 * **Pre-change architectural checklist:**
   1. Inspect the current implementation and established patterns.
   2. Identify all affected layer boundaries (Mobile, FastAPI, Pipeline, Providers).
@@ -455,7 +460,7 @@ Standard operating workflows for coding agents in Travel AI:
 ```text
 1. Understand the task & requirements
 2. Inspect relevant files & existing patterns
-3. Read applicable documentation (PRD.md / ARCHITECTURE.md / DESIGN_SYSTEM.md)
+3. Read applicable documentation (docs/PRD.md / docs/ARCHITECTURE.md / docs/DESIGN_SYSTEM.md)
 4. Identify exact change surface (list target files)
 5. Implement the smallest correct change
 6. Validate (run layer-specific validation commands)

@@ -128,7 +128,7 @@ Travel AI App Shell
 * **Gestures & Motion:** `react-native-safe-area-context`, `react-native-gesture-handler`, `react-native-reanimated`
 * **Device Capabilities:** `expo-clipboard`, `expo-haptics`, `expo-image`
 
-For visual specifications and component tokens, see [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md).
+For visual specifications and component tokens, see [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
 ---
 
@@ -152,7 +152,7 @@ The system strictly isolates responsibilities across architectural boundaries:
 * **FastAPI Engine (`engine/`):** Manages video ingestion, media extraction, transcription, optical character recognition, places resolution, and multimodal verification.
 * **External Services:** Google Places API and Gemini Vision are proxied exclusively through FastAPI.
 
-For comprehensive technical specifications and dataflow models, see [docs/architecture.md](docs/architecture.md) and the interactive Archify specifications in [docs/architecture/](docs/architecture/).
+For comprehensive technical specifications and dataflow models, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the interactive Archify specifications in [docs/architecture/](docs/architecture/).
 
 ---
 
@@ -182,14 +182,18 @@ travel-ai/
 │   ├── tests/               # Pytest automated test suites
 │   └── requirements.txt     # Python dependencies
 │
-├── docs/                    # Supporting documentation
+├── docs/                    # Project documentation
+│   ├── PRD.md               # Product Requirements Document & MVP Acceptance Criteria
+│   ├── AGENTS.md            # Operating guide for AI coding agents
+│   ├── DESIGN_SYSTEM.md     # Authoritative Mobile Design System Specification
+│   ├── ARCHITECTURE.md      # Core architecture overview
+│   ├── SECURITY.md          # Security policy and secrets handling guide
+│   ├── CODE_STYLE.md        # Coding standards and style guide
+│   ├── DATABASE.md          # Data architecture and management guide
+│   ├── API.md               # API & integration communication guide
 │   ├── architecture/        # Source-grounded Archify architecture & dataflow specifications
-│   ├── architecture.md      # Core architecture overview
 │   └── mobile/              # Mobile UX roadmap and screen specifications
 │
-├── PRD.md                   # Product Requirements Document & MVP Acceptance Criteria
-├── DESIGN_SYSTEM.md         # Authoritative Mobile Design System Specification
-├── AGENTS.md                # Operating guide for AI coding agents
 └── README.md                # Public overview and developer entry point
 ```
 
@@ -331,11 +335,15 @@ eas build --profile production --platform all
 
 Detailed engineering, architecture, and design specifications are maintained in dedicated reference documents:
 
-* **[PRD.md](PRD.md):** Authoritative Product Requirements Document, core user journeys, technical boundaries, and MVP Definition of Done.
-* **[docs/architecture.md](docs/architecture.md):** Core architecture overview and system flow documentation.
+* **[docs/PRD.md](docs/PRD.md):** Authoritative Product Requirements Document, core user journeys, technical boundaries, and MVP Definition of Done.
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):** Core architecture overview and system flow documentation.
 * **[docs/architecture/](docs/architecture/):** Source-grounded Archify architecture artifacts, interactive system topologies, and pipeline dataflow diagrams.
-* **[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md):** Authoritative Mobile Design System, Swiss editorial styling, design tokens, typography, and component specifications.
-* **[AGENTS.md](AGENTS.md):** Canonical operating guide, change-scope rules, security boundaries, and validation protocols for AI coding agents.
+* **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md):** Authoritative Mobile Design System, Swiss editorial styling, design tokens, typography, and component specifications.
+* **[docs/AGENTS.md](docs/AGENTS.md):** Canonical operating guide, change-scope rules, security boundaries, and validation protocols for AI coding agents.
+* **[docs/SECURITY.md](docs/SECURITY.md):** Authoritative security and secrets-handling guide.
+* **[docs/CODE_STYLE.md](docs/CODE_STYLE.md):** Authoritative coding standards and maintainability guide.
+* **[docs/DATABASE.md](docs/DATABASE.md):** Authoritative data architecture and storage management guide.
+* **[docs/API.md](docs/API.md):** Authoritative API and integration communication guide.
 * **[docs/mobile/](docs/mobile/):** Mobile UX roadmap ([mobile-ux-roadmap.md](docs/mobile/mobile-ux-roadmap.md)) and complete 10-screen specifications ([mobile-screen-spec.md](docs/mobile/mobile-screen-spec.md)).
 
 ---
