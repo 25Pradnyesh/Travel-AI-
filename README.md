@@ -213,7 +213,6 @@ Travel-AI/
 ├── .env.example             # Template environment variables
 ├── LICENSE                  # Repository license
 ├── package.json             # Root monorepo workspace configuration
-├── pnpm-workspace.yaml      # Monorepo workspace package definitions
 └── README.md                # Public overview and developer entry point
 ```
 
@@ -284,7 +283,13 @@ Travel-AI/
 
 3. Start the Expo development server:
    ```bash
+   # From mobile/ directory:
    npm start
+   # or: npx expo start
+
+   # Or from the repository root:
+   npm run mobile:start
+   # or: npm --workspace mobile exec expo start
    ```
 
 4. Run on your desired target:

@@ -14,8 +14,9 @@
     "web:dev": "npm run dev --prefix web",
     "web:build": "npm run build --prefix web",
     "web:lint": "npm run lint --prefix web",
-    "mobile:start": "npm run start --prefix mobile",
-    "mobile:android": "npm run android --prefix mobile",
-    "mobile:ios": "npm run ios --prefix mobile"
+    "mobile": "npm --workspace mobile run start",
+    "mobile:start": "npm --workspace mobile run start",
+    "mobile:android": "npm --workspace mobile run android",
+    "mobile:ios": "npm --workspace mobile run ios"
   }
 }
