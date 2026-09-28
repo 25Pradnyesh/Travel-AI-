@@ -268,184 +268,62 @@ class NearbySearchService:
 
         location = place.get(
 
-            "location",
-
-            {},
-
+            "location"
         )
+        location = location_obj if isinstance(location_obj, dict) else {}
 
-        photos = place.get(
+        raw_photos = place.get("photos")
+        photos = raw_photos if isinstance(raw_photos, list) else []
 
-            "photos",
+        raw_opening = place.get("currentOpeningHours")
+        opening = raw_opening if isinstance(raw_opening, dict) else {}
 
-            [],
+        display_obj = place.get("displayName")
+        display_name = ""
+        if isinstance(display_obj, dict):
+            display_name = str(display_obj.get("text") or "").strip()
 
-        )
+        editorial_obj = place.get("editorialSummary")
+        editorial_summary = ""
+        if isinstance(editorial_obj, dict):
+            editorial_summary = str(editorial_obj.get("text") or "").strip()
 
-        opening = place.get(
+        photo_ref = None
+        if photos and isinstance(photos[0], dict):
+            photo_ref = photos[0].get("name")
 
-            "currentOpeningHours",
+        raw_types = place.get("types")
+        types = [str(t) for t in raw_types if t] if isinstance(raw_types, list) else []
 
-            {},
+        raw_weekday = opening.get("weekdayDescriptions")
+        opening_hours = [str(d) for d in raw_weekday if d] if isinstance(raw_weekday, list) else []
 
-        )
+        lat = location.get("latitude")
+        lng = location.get("longitude")
 
         return {
-
             "id": place.get("id"),
-
-            "name": place.get(
-
-                "displayName",
-
-                {},
-
-            ).get(
-
-                "text",
-
-                "",
-
-            ),
-
-            "address": place.get(
-
-                "formattedAddress",
-
-                "",
-
-            ),
-
-            "latitude": location.get(
-
-                "latitude"
-
-            ),
-
-            "longitude": location.get(
-
-                "longitude"
-
-            ),
-
+            "name": display_name,
+            "address": str(place.get("formattedAddress") or ""),
+            "latitude": lat,
+            "longitude": lng,
             "distance_km": self.distance_km(
-
                 latitude,
-
                 longitude,
-
-                location.get(
-
-                    "latitude"
-
-                ),
-
-                location.get(
-
-                    "longitude"
-
-                ),
-
+                lat,
+                lng,
             ),
-
-            "primary_type": place.get(
-
-                "primaryType",
-
-                "",
-
-            ),
-
-            "types": place.get(
-
-                "types",
-
-                [],
-
-            ),
-
-            "rating": place.get(
-
-                "rating",
-
-                0,
-
-            ),
-
-            "user_rating_count": place.get(
-
-                "userRatingCount",
-
-                0,
-
-            ),
-
-            "google_maps_url": place.get(
-
-                "googleMapsUri",
-
-                "",
-
-            ),
-
-            "website": place.get(
-
-                "websiteUri",
-
-                "",
-
-            ),
-
-            "editorial_summary": place.get(
-
-                "editorialSummary",
-
-                {},
-
-            ).get(
-
-                "text",
-
-                "",
-
-            ),
-
-            "opening_hours": opening.get(
-
-                "weekdayDescriptions",
-
-                [],
-
-            ),
-
-            "open_now": opening.get(
-
-                "openNow"
-
-            ),
-
-            "price_level": place.get(
-
-                "priceLevel",
-
-                "",
-
-            ),
-
-            "photo_reference": (
-
-                photos[0].get(
-
-                    "name"
-
-                )
-
-                if photos
-
-                else None
-
-            ),
-
+            "primary_type": str(place.get("primaryType") or ""),
+            "types": types,
+            "rating": float(place.get("rating") or 0.0),
+            "user_rating_count": int(place.get("userRatingCount") or 0),
+            "google_maps_url": str(place.get("googleMapsUri") or ""),
+            "website": str(place.get("websiteUri") or ""),
+            "editorial_summary": editorial_summary,
+            "opening_hours": opening_hours,
+            "open_now": opening.get("openNow"),
+            "price_level": str(place.get("priceLevel") or ""),
+            "photo_reference": photo_ref,
         }
 
 

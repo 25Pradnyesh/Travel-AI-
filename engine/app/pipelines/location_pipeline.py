@@ -97,10 +97,15 @@ class LocationPipeline:
                 "total_seconds": round(time.perf_counter() - total_start, 2),
                 "stages": stages,
             }
+            raw_err = getattr(self.resolver, "last_resolver_error", None)
+            err_msg = str(raw_err) if isinstance(raw_err, str) else "No verified destination candidate resolved."
+            raw_cands = getattr(self.resolver, "last_attempted_candidates", [])
+            attempted = [str(c) for c in raw_cands if isinstance(c, str)] if isinstance(raw_cands, list) else []
             return self.response_builder.build_unresolved(
                 stage=stage,
-                error="No verified destination candidate resolved.",
+                error=err_msg,
                 performance=perf,
+                extracted_candidates=attempted,
             ).model_dump()
 
         resp = self.response_builder.build(
@@ -358,10 +363,21 @@ class LocationPipeline:
                 "total_seconds": round(time.perf_counter() - total_start, 2),
                 "stages": stages,
             }
+            raw_cands = getattr(self.resolver, "last_attempted_candidates", [])
+            attempted = [str(c) for c in raw_cands if isinstance(c, str)] if isinstance(raw_cands, list) else []
+            raw_err = getattr(self.resolver, "last_resolver_error", None)
+            if isinstance(raw_err, str):
+                err_msg = raw_err
+            elif attempted:
+                err_msg = "Google Places returned no verified destinations."
+            else:
+                err_msg = "No destination candidates found from the Reel."
+
             return self.response_builder.build_unresolved(
                 stage="failed",
-                error="No destination candidates found from the Reel.",
+                error=err_msg,
                 performance=perf,
+                extracted_candidates=attempted,
             ).model_dump()
 
         finally:

@@ -528,9 +528,15 @@ class ResponseBuilder:
         stage: str = "failed",
         error: str = "No destination could be verified from the provided Reel.",
         performance: dict | None = None,
+        extracted_candidates: list[str] | None = None,
     ) -> AnalysisResponse:
 
-        logger.info("[RESPONSE] Building unresolved destination response: %s", error)
+        clean_error = str(error) if isinstance(error, str) else "No destination could be verified from the provided Reel."
+        logger.info("[RESPONSE] Building unresolved destination response: %s", clean_error)
+
+        clean_candidates = [
+            str(c) for c in extracted_candidates if isinstance(c, str)
+        ] if isinstance(extracted_candidates, list) else []
 
         return AnalysisResponse(
             success=False,
@@ -541,9 +547,10 @@ class ResponseBuilder:
                 used=False,
                 status="FAILED",
                 confidence=0.0,
-                reason=error,
+                reason=clean_error,
             ),
             stage=stage,
             performance=performance,
-            error=error,
+            error=clean_error,
+            extracted_candidates=clean_candidates,
         )

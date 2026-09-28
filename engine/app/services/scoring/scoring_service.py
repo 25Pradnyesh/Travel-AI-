@@ -95,22 +95,73 @@ GOOD_PLACE_TYPES = {
 
 
 BAD_PLACE_TYPES = {
+    # Food & Dining
     "restaurant",
     "food",
     "cafe",
     "bar",
     "bakery",
+    "meal_takeaway",
+    "meal_delivery",
+
+    # Lodging
     "hotel",
     "lodging",
+    "motel",
+
+    # Retail & Commercial
     "store",
     "shopping_mall",
+    "supermarket",
+    "convenience_store",
+    "grocery_store",
+    "clothing_store",
+    "shoe_store",
+    "electronics_store",
+    "home_goods_store",
+    "furniture_store",
+    "hardware_store",
+    "florist",
+    "pet_store",
+    "liquor_store",
+
+    # Healthcare & Education
     "hospital",
+    "doctor",
+    "dentist",
+    "pharmacy",
+    "veterinary_care",
     "school",
+    "university",
+    "preschool",
+
+    # Fitness & Beauty
     "gym",
+    "beauty_salon",
+    "hair_care",
+    "spa",
+
+    # Financial & Legal
     "bank",
+    "atm",
+    "accounting",
+    "insurance_agency",
+    "lawyer",
+    "real_estate_agency",
+
+    # Automotive & Utility
     "gas_station",
     "car_dealer",
-    "supermarket",
+    "car_repair",
+    "car_wash",
+    "car_rental",
+    "laundry",
+    "dry_cleaning",
+    "storage",
+    "moving_company",
+    "plumber",
+    "electrician",
+    "roofing_contractor",
 }
 
 
@@ -372,7 +423,12 @@ class ScoringService:
 
         ranked = []
 
-        for place in places:
+        for raw_item in places:
+            if not isinstance(raw_item, dict):
+                continue
+            place = raw_item.get("place", raw_item)
+            if not isinstance(place, dict):
+                continue
 
             score = 0
 
@@ -670,33 +726,39 @@ class ScoringService:
                 ocr,
             ])
 
-            place_country = (country or "").lower().strip()
+            # Extract distinct mentioned countries with word boundary matching
+            evidence_countries = set()
             for known_country in COUNTRIES:
-                if known_country in combined_sources:
-                    is_match = (known_country == place_country) or (
-                        known_country in ("usa", "united states") and place_country in ("usa", "united states")
-                    ) or (
-                        known_country in ("uk", "united kingdom", "england") and place_country in ("uk", "united kingdom", "england")
-                    )
-                    if is_match:
-                        score += 20
-                    elif place_country:
-                        score -= 90
+                pattern = r"\b" + re.escape(known_country) + r"\b"
+                if re.search(pattern, combined_sources):
+                    evidence_countries.add(known_country)
+
+            place_country = (country or "").lower().strip()
+            place_aliases = {place_country} if place_country else set()
+            if place_country in ("usa", "united states"):
+                place_aliases.update({"usa", "united states"})
+            elif place_country in ("uk", "united kingdom", "england"):
+                place_aliases.update({"uk", "united kingdom", "england"})
+
+            if evidence_countries and place_country:
+                # If the place's country matches ANY country mentioned in evidence
+                if evidence_countries.intersection(place_aliases):
+                    score += 25
+                else:
+                    # Evidence explicitly mentions other country/countries and this place does not match
+                    score -= 90
 
             # ==========================================================
             # Tourism Bias
             # ==========================================================
 
             if primary_type in GOOD_PLACE_TYPES:
-
                 score += GOOD_PLACE_TYPES[
                     primary_type
                 ]
 
             for t in types:
-
                 if t in GOOD_PLACE_TYPES:
-
                     score += (
                         GOOD_PLACE_TYPES[t] * 0.4
                     )
@@ -718,8 +780,17 @@ class ScoringService:
                     "place_of_worship",
                     "church",
                     "shrine",
+                    "synagogue",
+                    "monastery",
+                    "temple",
+                    "botanical_garden",
+                    "campground",
+                    "mountain_peak",
+                    "viewpoint",
+                    "state_park",
                     "natural_feature",
                     "locality",
+                    "park",
                 )
                 for t in types
             )
@@ -868,6 +939,7 @@ class ScoringService:
                 x.get("raw_score", 0),
                 min(x["place"].get("user_rating_count", 0), 10000),
                 x["place"].get("rating", 0),
+                str(x["place"].get("id", "")),
             ),
             reverse=True,
         )

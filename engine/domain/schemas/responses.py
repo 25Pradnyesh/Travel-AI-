@@ -64,4 +64,6 @@ class AnalysisResponse(BaseModel):
     stage: str | None = None
     performance: dict[str, Any] | None = None
     error: str | None = None
+    extracted_candidates: list[str] = Field(default_factory=list)
+
 
