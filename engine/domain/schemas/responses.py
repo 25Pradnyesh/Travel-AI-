@@ -57,9 +57,11 @@ class GeminiInfo(BaseModel):
 class AnalysisResponse(BaseModel):
     success: bool = False
     best_guess: BestGuess | None = None
+    locations: list[BestGuess] = Field(default_factory=list)
     travel_intelligence: dict[str, Any] = Field(default_factory=dict)
     nearby_places: list[NearbyPlace] = Field(default_factory=list)
     gemini: GeminiInfo = Field(default_factory=GeminiInfo)
     stage: str | None = None
     performance: dict[str, Any] | None = None
     error: str | None = None
+

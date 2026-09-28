@@ -1,6 +1,8 @@
 import re
 import logging
 
+from engine.app.services.scoring.scoring_service import COUNTRIES
+
 logger = logging.getLogger(__name__)
 
 # ==================================================
@@ -120,6 +122,7 @@ STOP_WORDS = {
     "canon",
     "reel",
     "instagram",
+    "stationery",
 }
 
 COMMON_VERBS_AND_PARTICIPLES = {
@@ -396,7 +399,7 @@ KNOWN_GEOGRAPHIC_ENTITIES = {
 KEYWORD_PATTERNS = [
     r"((?:(?:[A-Z][A-Za-z0-9']+|St\.|Mt\.)(?:\s+[A-Z][A-Za-z0-9']+)*\s+)?National\s+Park)",
     r"((?:Mount|Mt\.?|Lake|Cape|Point|Bay|River|Gulf|Loch|Isle)\s+[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+)*)",
-    r"((?:St\.?\s+)?[A-Z][A-Za-z0-9']+(?:'s)?(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Cathedral|Cathederal|Shrine|Church|Basilica|Abbey|Monastery))",
+    r"((?:St\.?\s+)?[A-Z][A-Za-z0-9']+(?:'s)?(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Cathedral|Cathederal|Shrine|Church|Basilica|Abbey|Monastery)(?:\s*\([A-Za-z0-9'\s\.]+\))?)",
     r"((?:The\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Mill|Bridge|Tower|Castle|Palace|Fort|Waterfall|Falls|Beach|Island|Forest|Rainforest|Valley|Peak|Pass|Canyon|Gorge|Recreation\s+Area))",
     r"(Lago\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
     r"(Val\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
@@ -480,9 +483,9 @@ class CandidateService:
             .replace("—", "-")
         )
 
-        # Preserve word characters, whitespace, newlines, commas, periods, hyphens, single quotes, pin
+        # Preserve word characters, whitespace, newlines, commas, periods, hyphens, single quotes, pin, parentheses
         text = re.sub(
-            r"[^\w\s,\.\n📍\'-]",
+            r"[^\w\s,\.\n📍\'\(\)-]",
             " ",
             text,
         )
@@ -710,11 +713,15 @@ class CandidateService:
             )
             for cm in comma_matches:
                 cm_parts = [pt.strip() for pt in cm.split(",")]
-                # Reject multi-part candidate if any segment is a generic/invalid single word
-                # (e.g. "Mountains, Red Rocks, Beaches, USA" or "Planning, India")
-                has_invalid = any(
-                    pt.lower() in INVALID_SINGLE_WORDS or pt.lower() in GENERIC_LOCATION_WORDS
-                    for pt in cm_parts
+                # Reject multi-part candidate if:
+                # 1. Any segment is an invalid single word or generic descriptor
+                # 2. Any non-final segment is a country name (e.g. "Cathedral, Germany, Mysore")
+                has_invalid = (
+                    any(
+                        pt.lower() in INVALID_SINGLE_WORDS or pt.lower() in GENERIC_LOCATION_WORDS
+                        for pt in cm_parts
+                    )
+                    or any(pt.lower() in COUNTRIES for pt in cm_parts[:-1])
                 )
                 if not has_invalid:
                     candidates.append(cm)

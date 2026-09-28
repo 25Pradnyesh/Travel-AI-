@@ -503,6 +503,14 @@ class ScoringService:
                 matched_sources.add("caption")
                 matched_terms.add(city)
 
+            # Caption Primacy Bonus: Primary subjects are introduced in the opening hook
+            pos = caption.find(verified_query) if verified_query else -1
+            if pos == -1 and travel_name:
+                first_part = travel_name.split(",")[0].strip()
+                pos = caption.find(first_part)
+            if pos != -1 and pos < 120:
+                score += 25
+
             if travel_name and travel_name in speech:
                 score += 30
                 matched_sources.add("speech")
@@ -550,7 +558,7 @@ class ScoringService:
             # Token Matching
             # ==========================================================
 
-            for token in self.tokenize(searchable):
+            for token in set(self.tokenize(searchable)):
 
                 if len(token) <= 3:
                     continue
@@ -695,15 +703,34 @@ class ScoringService:
 
             # ==========================================================
             # Business Penalty
+            # Only penalize commercial types if the place has no tourist/cultural/landmark status
             # ==========================================================
 
-            if primary_type in BAD_PLACE_TYPES:
-                score -= 120
+            has_landmark_status = any(
+                t in GOOD_PLACE_TYPES
+                or t in (
+                    "tourist_attraction",
+                    "historical_landmark",
+                    "art_gallery",
+                    "museum",
+                    "cultural_center",
+                    "performing_arts_theater",
+                    "place_of_worship",
+                    "church",
+                    "shrine",
+                    "natural_feature",
+                    "locality",
+                )
+                for t in types
+            )
 
-            for t in types:
+            if not has_landmark_status:
+                if primary_type in BAD_PLACE_TYPES:
+                    score -= 120
 
-                if t in BAD_PLACE_TYPES:
-                    score -= 60
+                for t in types:
+                    if t in BAD_PLACE_TYPES:
+                        score -= 60
 
             if (
                 business_status ==

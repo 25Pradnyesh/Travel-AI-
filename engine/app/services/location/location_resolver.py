@@ -136,7 +136,22 @@ class LocationResolver:
 
         # Recognized destinations/landmarks should not be filtered as generic businesses
         if any(
-            t in ("tourist_attraction", "historical_landmark", "natural_feature", "locality")
+            t in (
+                "tourist_attraction",
+                "historical_landmark",
+                "natural_feature",
+                "locality",
+                "art_gallery",
+                "museum",
+                "cultural_center",
+                "performing_arts_theater",
+                "national_park",
+                "place_of_worship",
+                "church",
+                "hindu_temple",
+                "mosque",
+                "shrine",
+            )
             for t in types
         ):
             return False
