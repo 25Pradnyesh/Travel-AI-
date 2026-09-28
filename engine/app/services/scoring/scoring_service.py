@@ -16,6 +16,27 @@ COUNTRIES = {
     "iceland",
     "spain",
     "austria",
+    "slovenia",
+    "kazakhstan",
+    "usa",
+    "united states",
+    "uk",
+    "united kingdom",
+    "england",
+    "china",
+    "australia",
+    "canada",
+    "indonesia",
+    "thailand",
+    "vietnam",
+    "mexico",
+    "brazil",
+    "portugal",
+    "greece",
+    "turkey",
+    "egypt",
+    "morocco",
+    "south africa",
 }
 
 
@@ -63,6 +84,9 @@ GOOD_PLACE_TYPES = {
     "national_park": 60,
     "mountain_peak": 60,
     "locality": 55,
+    "church": 50,
+    "place_of_worship": 50,
+    "historical_landmark": 50,
     "park": 45,
     "campground": 20,
     "administrative_area_level_1": 15,
@@ -460,7 +484,12 @@ class ScoringService:
             # ==========================================================
 
             if verified_query and verified_query in caption:
-                score += 50
+                if len(verified_query.split()) > 1:
+                    score += 50
+                elif primary_type in GOOD_PLACE_TYPES or any(t in GOOD_PLACE_TYPES for t in types):
+                    score += 35
+                else:
+                    score += 15
                 matched_sources.add("caption")
                 matched_terms.add(verified_query)
 
@@ -517,105 +546,104 @@ class ScoringService:
                 matched_sources.add("caption")
                 matched_terms.add(city)
 
-                # ==========================================================
-                # Token Matching
-                # ==========================================================
+            # ==========================================================
+            # Token Matching
+            # ==========================================================
 
-                for token in self.tokenize(searchable):
+            for token in self.tokenize(searchable):
 
-                    if len(token) <= 3:
-                        continue
+                if len(token) <= 3:
+                    continue
 
-                    # ----------------------------
-                    # Title
-                    # ----------------------------
+                # ----------------------------
+                # Title
+                # ----------------------------
 
-                    gained = self.score_index(
-                        token,
-                        title_index,
-                        15,
-                        8,
-                        4,
-                    )
+                gained = self.score_index(
+                    token,
+                    title_index,
+                    15,
+                    8,
+                    4,
+                )
 
-                    if gained:
-                        matched_sources.add("title")
-                        matched_terms.add(token)
+                if gained:
+                    matched_sources.add("title")
+                    matched_terms.add(token)
 
-                    score += gained
+                score += gained
 
-                    # ----------------------------
-                    # Caption
-                    # ----------------------------
+                # ----------------------------
+                # Caption
+                # ----------------------------
 
-                    gained = self.score_index(
-                        token,
-                        caption_index,
-                        20,
-                        12,
-                        6,
-                    )
+                gained = self.score_index(
+                    token,
+                    caption_index,
+                    20,
+                    12,
+                    6,
+                )
 
-                    if gained:
-                        matched_sources.add("caption")
-                        matched_terms.add(token)
+                if gained:
+                    matched_sources.add("caption")
+                    matched_terms.add(token)
 
-                    score += gained
+                score += gained
 
-                    # ----------------------------
-                    # Speech
-                    # ----------------------------
+                # ----------------------------
+                # Speech
+                # ----------------------------
 
-                    gained = self.score_index(
-                        token,
-                        speech_index,
-                        18,
-                        10,
-                        5,
-                    )
+                gained = self.score_index(
+                    token,
+                    speech_index,
+                    18,
+                    10,
+                    5,
+                )
 
-                    if gained:
-                        matched_sources.add("speech")
-                        matched_terms.add(token)
+                if gained:
+                    matched_sources.add("speech")
+                    matched_terms.add(token)
 
-                    score += gained
+                score += gained
 
-                    # ----------------------------
-                    # OCR
-                    # ----------------------------
+                # ----------------------------
+                # OCR
+                # ----------------------------
 
-                    gained = self.score_index(
-                        token,
-                        ocr_index,
-                        15,
-                        8,
-                        4,
-                    )
+                gained = self.score_index(
+                    token,
+                    ocr_index,
+                    15,
+                    8,
+                    4,
+                )
 
-                    if gained:
-                        matched_sources.add("ocr")
-                        matched_terms.add(token)
+                if gained:
+                    matched_sources.add("ocr")
+                    matched_terms.add(token)
 
-                    score += gained
+                score += gained
 
-                    # ----------------------------
-                    # Hashtags
-                    # ----------------------------
+                # ----------------------------
+                # Hashtags
+                # ----------------------------
 
-                    gained = self.score_index(
-                        token,
-                        hashtag_index,
-                        10,
-                        6,
-                        3,
-                    )
+                gained = self.score_index(
+                    token,
+                    hashtag_index,
+                    10,
+                    6,
+                    3,
+                )
 
-                    if gained:
-                        matched_sources.add("hashtags")
-                        matched_terms.add(token)
+                if gained:
+                    matched_sources.add("hashtags")
+                    matched_terms.add(token)
 
-                    score += gained
-
+                score += gained
 
             # ==========================================================
             # Country Consistency
@@ -634,14 +662,18 @@ class ScoringService:
                 ocr,
             ])
 
+            place_country = (country or "").lower().strip()
             for known_country in COUNTRIES:
-
                 if known_country in combined_sources:
-
-                    if known_country == country:
-                        score += 10
-                    else:
-                        score -= 8
+                    is_match = (known_country == place_country) or (
+                        known_country in ("usa", "united states") and place_country in ("usa", "united states")
+                    ) or (
+                        known_country in ("uk", "united kingdom", "england") and place_country in ("uk", "united kingdom", "england")
+                    )
+                    if is_match:
+                        score += 20
+                    elif place_country:
+                        score -= 90
 
             # ==========================================================
             # Tourism Bias
@@ -806,14 +838,9 @@ class ScoringService:
         ranked.sort(
             key=lambda x: (
                 x["score"],
-                x["place"].get(
-                    "rating",
-                    0,
-                ),
-                x["place"].get(
-                    "user_rating_count",
-                    0,
-                ),
+                x.get("raw_score", 0),
+                min(x["place"].get("user_rating_count", 0), 10000),
+                x["place"].get("rating", 0),
             ),
             reverse=True,
         )

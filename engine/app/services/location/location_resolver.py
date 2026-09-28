@@ -134,16 +134,19 @@ class LocationResolver:
 
         ]
 
-        if primary in BUSINESS_TYPES:
+        # Recognized destinations/landmarks should not be filtered as generic businesses
+        if any(
+            t in ("tourist_attraction", "historical_landmark", "natural_feature", "locality")
+            for t in types
+        ):
+            return False
 
+        if primary in BUSINESS_TYPES:
             return True
 
         return any(
-
             t in BUSINESS_TYPES
-
             for t in types
-
         )
 
     # ==================================================
@@ -626,7 +629,7 @@ class LocationResolver:
         # Keep only Top Candidates
         # --------------------------------------------------
 
-        ranked = ranked[:5]
+        ranked = ranked[:20]
 
         candidate_res_duration = time.perf_counter() - res_start
 

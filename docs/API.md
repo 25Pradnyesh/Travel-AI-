@@ -135,8 +135,9 @@ Analyzes a public Instagram Reel URL and returns structured geographic intellige
 
 #### Request Validation Rules
 * Validated server-side via Pydantic `@model_validator`:
-  `^https?://(?:www\.)?instagram\.com/(?:reel|reels)/([A-Za-z0-9_-]+)`
-* Non-Reel URLs (photo posts `/p/`, expiring stories `/stories/`, user profiles) are rejected with HTTP 400 Bad Request before downloading media.
+  `^https?://(?:www\.)?instagram\.com/(?:reel|reels|p)/([A-Za-z0-9_-]+)`
+* Supports Instagram Reels (`/reel/`, `/reels/`) and compatible video/post URLs (`/p/`).
+* Unsupported Instagram URLs (expiring stories `/stories/`, IGTV `/tv/`, user profiles) are rejected before downloading media.
 
 ---
 
@@ -177,6 +178,28 @@ Analyzes a public Instagram Reel URL and returns structured geographic intellige
     "gemini_reason": "Visual keyframe confirms alpine turquoise lake framed by distinctive limestone peaks matching Seebensee.",
     "why": "Identified through on-screen German signage and verified via Gemini multimodal vision against alpine keyframes."
   },
+  "locations": [
+    {
+      "place_id": "ChIJ_3jP9EabmUcR5kCgX_X1AAA",
+      "name": "Seebensee",
+      "formatted_address": "Ehrwald 6632, Tyrol, Austria",
+      "country": "Austria",
+      "city": "Ehrwald",
+      "region": "Tyrol",
+      "latitude": 47.368912,
+      "longitude": 10.923456,
+      "rating": 4.9,
+      "user_ratings_total": 850,
+      "types": [
+        "natural_feature",
+        "tourist_attraction"
+      ],
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=47.368912,10.923456&query_place_id=ChIJ_3jP9EabmUcR5kCgX_X1AAA",
+      "confidence": 94,
+      "confidence_level": "VERY_HIGH",
+      "verification_status": "VERIFIED"
+    }
+  ],
   "travel_intelligence": {
     "category": "Nature",
     "category_emoji": "🏔️",

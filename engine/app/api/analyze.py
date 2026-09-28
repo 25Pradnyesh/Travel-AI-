@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Analysis"])
 
 INSTAGRAM_REEL_REGEX = re.compile(
-    r"^https?://(?:www\.)?instagram\.com/(?:reel|reels)/([A-Za-z0-9_-]+)",
+    r"^https?://(?:www\.)?instagram\.com/(?:reel|reels|p)/([A-Za-z0-9_-]+)",
     re.IGNORECASE,
 )
 

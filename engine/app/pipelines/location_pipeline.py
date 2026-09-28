@@ -108,6 +108,7 @@ class LocationPipeline:
             gemini_result=gemini_result,
             stage=stage,
             performance=None,
+            ranked_places=resolver_result.get("ranked_places", []) if isinstance(resolver_result, dict) else None,
         )
         build_sec = time.perf_counter() - t_build_start
 

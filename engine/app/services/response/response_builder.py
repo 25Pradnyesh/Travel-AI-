@@ -430,6 +430,7 @@ class ResponseBuilder:
         gemini_result: dict | None = None,
         stage: str = "completed",
         performance: dict | None = None,
+        ranked_places: list[dict] | None = None,
     ) -> AnalysisResponse:
 
         logger.info("[RESPONSE] Building final destination response")
@@ -442,6 +443,37 @@ class ResponseBuilder:
         logger.info("[RESPONSE] Destination: %s", best_guess.name)
         logger.info("[RESPONSE] Confidence: %d (%s)", best_guess.confidence, best_guess.confidence_level)
         logger.info("[RESPONSE] Verification: %s", best_guess.verification_status)
+
+        # Multi-location collection: best_guess is primary, followed by other verified destinations
+        locations: list[BestGuess] = [best_guess]
+        if ranked_places and isinstance(ranked_places, list):
+            seen_ids = {best_guess.place_id} if best_guess.place_id else set()
+            seen_names = {best_guess.name.lower()} if best_guess.name else set()
+
+            for item in ranked_places:
+                if not isinstance(item, dict):
+                    continue
+                p = item.get("place", item)
+                pid = p.get("place_id") or p.get("id") or ""
+                pname = (p.get("travel_name") or p.get("display_name") or p.get("name") or "").strip()
+                if not pname:
+                    continue
+                if pid and pid in seen_ids:
+                    continue
+                if pname.lower() in seen_names:
+                    continue
+
+                # Include legitimate candidates with positive score
+                if item.get("score", 0) > 20 or p.get("verification_status") in ("VERIFIED", "PARTIAL"):
+                    try:
+                        bg = self.build_best_guess(winner=item, gemini_result=None)
+                        if bg.name:
+                            locations.append(bg)
+                            if pid:
+                                seen_ids.add(pid)
+                            seen_names.add(pname.lower())
+                    except Exception as err:
+                        logger.debug("[RESPONSE] Error adding candidate to locations: %s", err)
 
         place = winner.get("place", winner)
 
@@ -476,6 +508,7 @@ class ResponseBuilder:
         response = AnalysisResponse(
             success=True,
             best_guess=best_guess,
+            locations=locations,
             travel_intelligence=travel_intelligence,
             nearby_places=nearby_places,
             gemini=gemini_info,
@@ -483,7 +516,7 @@ class ResponseBuilder:
             performance=performance,
         )
 
-        logger.info("[RESPONSE] Response validation: passed")
+        logger.info("[RESPONSE] Response validation: passed (locations count: %d)", len(locations))
         return response
 
     # ==================================================

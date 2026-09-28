@@ -27,7 +27,7 @@ class TestPhase5ProductionHardening(unittest.TestCase):
             "not-a-url",
             "https://example.com/video.mp4",
             "https://youtube.com/watch?v=12345",
-            "https://www.instagram.com/p/post_id_not_a_reel/",
+            "https://instagram.com/tv/post_id_not_supported/",
             "https://instagram.com/stories/username/12345/",
             "ftp://instagram.com/reel/123",
         ]
@@ -38,12 +38,13 @@ class TestPhase5ProductionHardening(unittest.TestCase):
                     AnalyzeRequest(reel_url=bad_url)
                 self.assertIn("Enter a valid public Instagram Reel URL", str(ctx.exception))
 
-        # Valid Reel URLs should pass validation
+        # Valid Reel and Post URLs should pass validation
         valid_urls = [
             "https://www.instagram.com/reel/DN2XxxY2O7-/",
             "https://instagram.com/reel/DN2XxxY2O7-",
             "https://www.instagram.com/reels/C_xyz123-ABC/",
             "http://instagram.com/reel/1234567890_test",
+            "https://www.instagram.com/p/DbAvsNRsvX0/",
         ]
         for good_url in valid_urls:
             with self.subTest(url=good_url):
