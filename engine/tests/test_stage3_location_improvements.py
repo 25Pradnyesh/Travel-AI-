@@ -240,8 +240,6 @@ class TestStage3LocationImprovements(unittest.TestCase):
         self.assertIn("Katmai National Park and Preserve", names)
         self.assertIn("Yellowstone National Park", names)
         self.assertIn("Glacier Bay National Park and Preserve", names)
-        self.assertIn("Yellowstone National Park", names)
-        self.assertIn("Glacier Bay National Park and Preserve", names)
 
     # ==================================================
     # 6. /reel/ URLs Continue to Work
