@@ -521,6 +521,27 @@ class TestStage5GooglePlacesHardening(unittest.TestCase):
         self.assertEqual(resp.locations[0].name, "Grand Teton National Park, Wyoming, USA")
         self.assertEqual(resp.locations[1].name, "Yellowstone National Park, Wyoming, USA")
 
+    # ==================================================
+    # 12. Nearby Search Null Safety
+    # ==================================================
+
+    def test_nearby_search_null_safety(self):
+        """NearbySearchService format_place handles null location and null displayName without crashing."""
+        raw_place = {
+            "id": "nearby_1",
+            "displayName": None,
+            "formattedAddress": None,
+            "location": None,
+            "photos": None,
+            "currentOpeningHours": None,
+            "types": None,
+        }
+        res = self.resolver.nearby.normalize_place(raw_place, 45.0, 9.0)
+        self.assertEqual(res["id"], "nearby_1")
+        self.assertEqual(res["name"], "")
+        self.assertIsNone(res["latitude"])
+        self.assertIsNone(res["distance_km"])
+
 
 if __name__ == "__main__":
     unittest.main()

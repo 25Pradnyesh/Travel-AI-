@@ -266,8 +266,7 @@ class NearbySearchService:
 
     ):
 
-        location = place.get(
-
+        location_obj = place.get(
             "location"
         )
         location = location_obj if isinstance(location_obj, dict) else {}
