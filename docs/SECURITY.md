@@ -77,7 +77,9 @@ Travel AI transforms unstructured public Instagram Reels into verified real-worl
 | **Media Hygiene** | Ephemeral Temp Cleanup | **Implemented** | Deterministic unlinking in pipeline `finally` blocks. |
 | **Error Sanitization** | Leakage Prevention | **Implemented** | `mobile/lib/api/travel-ai.ts` strips stack traces & keys. |
 | **CORS Policy** | Origin Hardening | **Implemented** | Wildcard `*` disables `allow_credentials` in `main.py`. |
-| **Rate Limiting** | Abuse Prevention | **Not Implemented** | Must be enforced via reverse proxy in production. |
+| **Rate Limiting** | Abuse Prevention | **Implemented** | In-memory sliding-window limiter (`60 req/min`, `burst 15`) in `engine/core/security.py`. |
+| **Concurrency Guard** | Server Protection | **Implemented** | Max 4 simultaneous heavy analyses in `engine/core/security.py`. |
+| **Security Headers** | Browser Hardening | **Implemented** | `nosniff`, `DENY`, `strict-origin-when-cross-origin`, `Permissions-Policy`. |
 | **Transport Security** | Network Encryption | **Safeguarded** | `__DEV__` guard in `config.ts` rejects non-HTTPS in release. |
 
 ---

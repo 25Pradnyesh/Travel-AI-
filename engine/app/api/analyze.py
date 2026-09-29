@@ -160,7 +160,18 @@ def analyze(payload: AnalyzeRequest, request: Request = None):
         if video_path:
             try:
                 vp = Path(video_path)
-                if vp.is_file():
+                file_stem = vp.stem
+                if file_stem and vp.parent.exists():
+                    for sibling in vp.parent.glob(f"{file_stem}*"):
+                        if sibling.is_file():
+                            for attempt in range(3):
+                                try:
+                                    sibling.unlink(missing_ok=True)
+                                    break
+                                except (PermissionError, OSError):
+                                    if attempt < 2:
+                                        time.sleep(0.05)
+                elif vp.is_file():
                     vp.unlink(missing_ok=True)
             except Exception as exc:
                 logger.warning("[API] Failed to cleanup temp video %s: %s", video_path, type(exc).__name__)

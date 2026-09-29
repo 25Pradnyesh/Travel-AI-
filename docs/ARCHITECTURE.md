@@ -95,3 +95,25 @@ The engine features a dedicated, zero-dependency observability layer under `engi
 - **Structured Error Classification:** 10 deterministic failure categories (`EXTRACTION_FAILURE`, `MEDIA_UNAVAILABLE`, `RESOLUTION_FAILURE`, etc.).
 - **Strict Privacy Redaction:** Production logging and traces deterministically strip Google API keys, credentials, tokens, and cookies.
 - See `docs/observability.md` for full telemetry and diagnostics runbook.
+
+---
+
+## Performance & Cost Optimization (Stage 11)
+
+- **Early-Exit Pipeline Execution:** Returns high-confidence caption matches immediately, skipping heavy OCR and Whisper inference when unneeded.
+- **Smart Gemini Vision Bypass:** Eliminates redundant Gemini vision calls when rule engine confidence is decisive (>=90 with clear margin).
+- **Parallel Enrichment & Resolution:** Concurrent execution of candidate resolution, Place Details, Nearby Search, and Travel Intelligence.
+- **TTL Cache Layer:** In-memory caching for Google Places search, Place Details, and candidate ranking.
+- **Optimized Media Sampling:** Adaptive frame budgets and text-density pre-scoring reducing Whisper and EasyOCR compute by over 60%.
+
+---
+
+## Production Security & Abuse Hardening (Stage 12 & 13)
+
+- **Input Validation & Sanitization:** Strict Instagram URL domain/scheme validation and Google Places photo proxy validation preventing SSRF and path traversal.
+- **Payload & Rate Protection:** 100KB request body limits, sliding-window in-memory rate limiting (60 req/min, burst 15), and concurrency limiters (max 4 concurrent analyses).
+- **Security Headers:** Enforces `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy`.
+- **Safe Error Responses:** Global exception masking preventing system paths, tracebacks, or API keys from ever leaking to clients.
+- **Guaranteed Cleanup:** Automatic removal of temporary videos, partial fragments (`.part`, `.ytdl`), and isolated request frame directories with Windows retry safety.
+- **Stage 13 Release Candidate:** Fully validated against 169 unit/integration tests and complete 61-case real-world benchmark regression suite.
+

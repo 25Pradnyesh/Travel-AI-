@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
 import time
+import uuid
 
 from engine.app.services.extraction.evidence_builder import (
     EvidenceBuilder,
@@ -246,20 +247,49 @@ class LocationPipeline:
         """
         Safely removes temporary video and extracted frame files after all
         pipeline stages (including Gemini vision) have completed or failed.
+        Handles Windows transient file locks, residual .part/.ytdl fragments,
+        and request-scoped frame directories.
         """
         if frame_paths:
+            parent_dirs = set()
             for fp in frame_paths:
                 try:
                     p = Path(fp)
                     if p.is_file():
-                        p.unlink(missing_ok=True)
+                        for attempt in range(3):
+                            try:
+                                p.unlink(missing_ok=True)
+                                break
+                            except (PermissionError, OSError):
+                                if attempt < 2:
+                                    time.sleep(0.05)
+                    if p.parent.name not in ("frames", "assets"):
+                        parent_dirs.add(p.parent)
                 except Exception as exc:
                     logger.warning("[PIPELINE] Failed to remove temp frame %s: %s", fp, type(exc).__name__)
+
+            for pdir in parent_dirs:
+                try:
+                    if pdir.exists() and not any(pdir.iterdir()):
+                        pdir.rmdir()
+                except Exception:
+                    pass
 
         if video_path:
             try:
                 vp = Path(video_path)
-                if vp.is_file():
+                file_stem = vp.stem
+                if file_stem and vp.parent.exists():
+                    for sibling in vp.parent.glob(f"{file_stem}*"):
+                        if sibling.is_file():
+                            for attempt in range(3):
+                                try:
+                                    sibling.unlink(missing_ok=True)
+                                    break
+                                except (PermissionError, OSError):
+                                    if attempt < 2:
+                                        time.sleep(0.05)
+                elif vp.is_file():
                     vp.unlink(missing_ok=True)
             except Exception as exc:
                 logger.warning("[PIPELINE] Failed to remove temp video %s: %s", video_path, type(exc).__name__)
@@ -395,10 +425,12 @@ class LocationPipeline:
             t_ext = time.perf_counter()
             if video_path and Path(video_path).exists():
                 try:
+                    req_folder = (ctx.request_id if (ctx and ctx.request_id) else uuid.uuid4().hex).replace(":", "_")
+                    frames_dir = Path("engine/assets/frames") / req_folder
                     with measure_stage(PipelineStage.FRAME_EXTRACTION):
                         frame_paths = self.frames.extract(
                             video_path,
-                            "engine/assets/frames",
+                            str(frames_dir),
                         )
                 except Exception as e:
                     obs_logger.warning("frame_extraction", f"Frame extraction failed: {type(e).__name__}")

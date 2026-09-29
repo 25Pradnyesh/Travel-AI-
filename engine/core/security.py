@@ -86,7 +86,7 @@ def validate_instagram_url(url: str) -> tuple[bool, str, str | None]:
       2. Valid HTTP/HTTPS scheme only (rejects ftp, file, javascript, data).
       3. Strict hostname matching (disallows port manipulation, userinfo, IP addresses, SSRF).
       4. Strict path matching (must be /reel/, /reels/, or /p/ with a valid shortcode).
-    
+
     Returns:
       (is_valid: bool, normalized_url: str, shortcode_or_error: str | None)
     """
