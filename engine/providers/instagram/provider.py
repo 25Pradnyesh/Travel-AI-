@@ -39,7 +39,7 @@ class InstagramYtDlpProvider(BaseProvider):
 
             "outtmpl": output_template,
 
-            "format": "bestvideo+bestaudio/best",
+            "format": "best[height<=720]/bestvideo[height<=720]+bestaudio/best[height<=1080]/best",
 
             "merge_output_format": "mp4",
 

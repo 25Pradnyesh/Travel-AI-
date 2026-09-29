@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 import re
 import time
@@ -269,10 +270,42 @@ class LocationResolver:
         item: dict,
     ) -> tuple[dict, float, float]:
         """
-        Enriches a single candidate with nearby places and travel intelligence.
+        Enriches a single candidate with place details (if not yet fetched), nearby places, and travel intelligence.
         Returns: (enriched_item, nearby_duration_seconds, travel_duration_seconds)
         """
         place = item["place"]
+        place_id = place.get("id")
+
+        # ------------------------------------------
+        # Deferred Place Details (Stage 11 Optimization)
+        # Fetch full place details only for the winning destination
+        # ------------------------------------------
+        if place_id and not place.get("photos"):
+            ctx = get_current_context()
+            t_d = time.perf_counter()
+            details = self.details.get_details(place_id)
+            d_dur = time.perf_counter() - t_d
+            if ctx:
+                ctx.record_external_call("google_places_details", d_dur)
+                ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, d_dur)
+            if details:
+                for k in (
+                    "website",
+                    "phone",
+                    "opening_hours",
+                    "current_opening_hours",
+                    "price_level",
+                    "photos",
+                    "accessibility",
+                    "plus_code",
+                    "utc_offset_minutes",
+                ):
+                    val = details.get(k)
+                    if val:
+                        place[k] = val
+                if details.get("editorial_summary"):
+                    place["editorial_summary"] = details["editorial_summary"]
+
         latitude = place.get("latitude")
         longitude = place.get("longitude")
 
@@ -460,38 +493,42 @@ class LocationResolver:
         # Candidate Search Loop
         # ==================================================
 
-        for index, candidate in enumerate(
-            candidates,
+        search_candidates = candidates[:8]
+
+        def _search_candidate_with_fallbacks(cand: str) -> tuple[str, list[dict], float, str]:
+            t_start = time.perf_counter()
+            res = self.search.search(cand)
+            dur = time.perf_counter() - t_start
+            resolved_q = cand
+            if not res:
+                fallbacks = self._generate_query_fallbacks(cand)
+                for fb in fallbacks:
+                    t_fb = time.perf_counter()
+                    fb_res = self.search.search(fb)
+                    dur += (time.perf_counter() - t_fb)
+                    if fb_res:
+                        res = fb_res
+                        resolved_q = fb
+                        break
+            return cand, res, dur, resolved_q
+
+        # Concurrent candidate search if multiple candidates
+        if len(search_candidates) > 1:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(search_candidates))) as executor:
+                search_outputs = list(executor.map(_search_candidate_with_fallbacks, search_candidates))
+        else:
+            search_outputs = [_search_candidate_with_fallbacks(search_candidates[0])]
+
+        for index, (candidate, search_results, s_dur, resolved_query) in enumerate(
+            search_outputs,
             start=1,
         ):
             print(
-                f"\n[{index}/{len(candidates)}] {candidate}"
+                f"\n[{index}/{len(search_candidates)}] {candidate}"
             )
-
-            t_s = time.perf_counter()
-            search_results = self.search.search(candidate)
-            s_dur = time.perf_counter() - t_s
             if ctx:
                 ctx.record_external_call("google_places_search", s_dur)
                 ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_SEARCH, s_dur)
-            resolved_query = candidate
-
-            # Zero-result fallback via deterministic query relaxation
-            if not search_results:
-                fallbacks = self._generate_query_fallbacks(candidate)
-                for fb in fallbacks:
-                    self.log(f"Zero results for '{candidate}'. Trying relaxed query: '{fb}'")
-                    t_fb = time.perf_counter()
-                    fb_results = self.search.search(fb)
-                    fb_dur = time.perf_counter() - t_fb
-                    if ctx:
-                        ctx.record_external_call("google_places_search", fb_dur)
-                        ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_SEARCH, fb_dur)
-                    if fb_results:
-                        search_results = fb_results
-                        resolved_query = fb
-                        self.log(f"Relaxed query '{fb}' succeeded with {len(fb_results)} result(s).")
-                        break
 
             if not search_results:
                 self.log(
@@ -540,44 +577,33 @@ class LocationResolver:
                     continue
 
                 # --------------------------------------
-                # Details with graceful search fallback
+                # Defer Place Details: Use search result data for candidate scoring & ranking
+                # Full place details (photos, hours, website) are fetched only for the winner
                 # --------------------------------------
-                t_d = time.perf_counter()
-                details = self.details.get_details(
-                    place_id,
-                )
-                d_dur = time.perf_counter() - t_d
-                if ctx:
-                    ctx.record_external_call("google_places_details", d_dur)
-                    ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, d_dur)
-                if not details:
-                    self.log(
-                        f"Place Details unavailable for '{result.get('display_name')}' ({place_id}); using search result data."
-                    )
-                    details = {
-                        "id": place_id,
-                        "display_name": result.get("display_name", ""),
-                        "formatted_address": result.get("formatted_address", ""),
-                        "latitude": result.get("latitude"),
-                        "longitude": result.get("longitude"),
-                        "primary_type": result.get("primary_type", ""),
-                        "types": result.get("types", []),
-                        "rating": result.get("rating", 0.0),
-                        "user_rating_count": result.get("user_rating_count", 0),
-                        "google_maps_url": result.get("google_maps_url", ""),
-                        "business_status": result.get("business_status", ""),
-                        "viewport": result.get("viewport", {}),
-                        "website": "",
-                        "phone": "",
-                        "opening_hours": [],
-                        "current_opening_hours": [],
-                        "price_level": "",
-                        "editorial_summary": "",
-                        "photos": [],
-                        "accessibility": {},
-                        "plus_code": {},
-                        "utc_offset_minutes": 0,
-                    }
+                details = {
+                    "id": place_id,
+                    "display_name": result.get("display_name", ""),
+                    "formatted_address": result.get("formatted_address", ""),
+                    "latitude": result.get("latitude"),
+                    "longitude": result.get("longitude"),
+                    "primary_type": result.get("primary_type", ""),
+                    "types": result.get("types", []),
+                    "rating": result.get("rating", 0.0),
+                    "user_rating_count": result.get("user_rating_count", 0),
+                    "google_maps_url": result.get("google_maps_url", ""),
+                    "business_status": result.get("business_status", ""),
+                    "viewport": result.get("viewport", {}),
+                    "website": "",
+                    "phone": "",
+                    "opening_hours": [],
+                    "current_opening_hours": [],
+                    "price_level": "",
+                    "editorial_summary": "",
+                    "photos": [],
+                    "accessibility": {},
+                    "plus_code": {},
+                    "utc_offset_minutes": 0,
+                }
 
                 # --------------------------------------
                 # Formatter

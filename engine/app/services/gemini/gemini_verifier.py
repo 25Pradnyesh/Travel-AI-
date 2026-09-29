@@ -42,15 +42,17 @@ class GeminiVerifier:
         if not ranked_places:
             return False
 
-        # If a valid image is supplied, vision verification is valuable
-        if image_path and Path(image_path).exists():
+        has_vision = bool(image_path and Path(image_path).exists() and getattr(self.vision_model, "available", False))
+
+        # If a valid image is supplied and vision is available, vision verification is valuable
+        if has_vision:
             return True
 
         # Only one candidate available
         if len(ranked_places) == 1:
             top_score = ranked_places[0].get("score", 0)
-            # If already extremely confident, no verification needed
-            if top_score >= 95:
+            # If already confident with no competing candidate, skip verification
+            if top_score >= 80:
                 return False
             return True
 
@@ -58,12 +60,15 @@ class GeminiVerifier:
         second_score = ranked_places[1].get("score", 0)
         gap = top_score - second_score
 
-        # Rule engine is decisively confident
-        if top_score >= 97 and gap >= 15:
+        # Rule engine is decisively confident with clear margin
+        if top_score >= 95 and gap >= 10:
             return False
 
-        # Close call or moderate confidence
-        if gap <= 10 or top_score < 92:
+        if top_score >= 90 and gap >= 15:
+            return False
+
+        # Close call or moderate confidence requires verification
+        if gap <= 10 or top_score < 90:
             return True
 
         return True

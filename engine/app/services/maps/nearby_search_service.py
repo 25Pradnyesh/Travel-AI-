@@ -1,8 +1,20 @@
 import concurrent.futures
+import copy
 import math
 import os
+import threading
 
 import requests
+
+_nearby_cache: dict[tuple, dict] = {}
+_nearby_cache_lock = threading.Lock()
+MAX_NEARBY_CACHE_SIZE = 256
+
+
+def clear_nearby_cache():
+    """Clears the in-memory nearby places cache."""
+    with _nearby_cache_lock:
+        _nearby_cache.clear()
 
 
 # ==========================================================
@@ -163,6 +175,10 @@ class NearbySearchService:
             ]
 
         )
+
+    @classmethod
+    def clear_cache(cls):
+        clear_nearby_cache()
 
     # ==========================================================
     # Distance (Haversine)
@@ -763,6 +779,11 @@ class NearbySearchService:
 
             }
 
+        cache_key = (round(float(latitude), 3), round(float(longitude), 3))
+        with _nearby_cache_lock:
+            if cache_key in _nearby_cache:
+                return copy.deepcopy(_nearby_cache[cache_key])
+
         print(
 
             "\n"
@@ -868,7 +889,7 @@ class NearbySearchService:
         # Final Payload
         # --------------------------------------------------
 
-        return {
+        result_payload = {
 
             "statistics": statistics,
 
@@ -921,4 +942,11 @@ class NearbySearchService:
             ),
 
         }
+
+        with _nearby_cache_lock:
+            if len(_nearby_cache) >= MAX_NEARBY_CACHE_SIZE:
+                _nearby_cache.pop(next(iter(_nearby_cache)))
+            _nearby_cache[cache_key] = copy.deepcopy(result_payload)
+
+        return result_payload
 

@@ -364,8 +364,15 @@ class FrameExtractor:
             remaining.sort(key=lambda x: x["metrics"]["score"], reverse=True)
             selected.extend(remaining[: max_frames - len(selected)])
 
+        # Performance optimization (Stage 11):
+        # Order selected frames by text density (and overall frame quality) descending
+        # so OCR and vision process the most informative/legible frames first.
         selected.sort(
-            key=lambda x: x["frame_no"]
+            key=lambda x: (
+                x["metrics"].get("text_density", 0.0),
+                x["metrics"].get("score", 0.0),
+            ),
+            reverse=True,
         )
 
         saved = []

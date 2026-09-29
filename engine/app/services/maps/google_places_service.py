@@ -1,9 +1,21 @@
+import copy
 import logging
 import os
 import re
+import threading
 import requests
 
 logger = logging.getLogger(__name__)
+
+_places_search_cache: dict[str, list[dict]] = {}
+_places_cache_lock = threading.Lock()
+MAX_SEARCH_CACHE_SIZE = 512
+
+
+def clear_places_search_cache():
+    """Clears the in-memory Google Places search cache."""
+    with _places_cache_lock:
+        _places_search_cache.clear()
 
 
 class GooglePlacesService:
@@ -13,6 +25,10 @@ class GooglePlacesService:
         self.url = "https://places.googleapis.com/v1/places:searchText"
         self.max_results = 5
         self.last_error: dict | None = None
+
+    @classmethod
+    def clear_cache(cls):
+        clear_places_search_cache()
 
     # ==================================================
     # Query Normalization
@@ -50,6 +66,12 @@ class GooglePlacesService:
         # Must have at least one alphanumeric character
         if not re.search(r"[A-Za-z0-9]", query):
             return []
+
+        # Check in-memory cache
+        cache_key = query.lower()
+        with _places_cache_lock:
+            if cache_key in _places_search_cache:
+                return copy.deepcopy(_places_search_cache[cache_key])
 
         if not self.api_key:
             self.last_error = {
@@ -190,5 +212,10 @@ class GooglePlacesService:
                     ),
                 }
             )
+
+        with _places_cache_lock:
+            if len(_places_search_cache) >= MAX_SEARCH_CACHE_SIZE:
+                _places_search_cache.pop(next(iter(_places_search_cache)))
+            _places_search_cache[cache_key] = copy.deepcopy(results)
 
         return results

@@ -1,43 +1,43 @@
 {
-  "timestamp": "2026-09-29T12:56:17.587518+00:00",
+  "timestamp": "2026-09-29T13:49:54.073225+00:00",
   "summary": {
-    "total_cases": 9,
-    "completed_cases": 9,
-    "scored_cases": 9,
-    "untested_cases": 0,
-    "passed_cases": 9,
-    "failed_cases": 0,
+    "total_cases": 61,
+    "completed_cases": 61,
+    "scored_cases": 47,
+    "untested_cases": 14,
+    "passed_cases": 45,
+    "failed_cases": 2,
     "error_cases": 0,
-    "accuracy": 100.0,
+    "accuracy": 95.7,
     "performance": {
-      "average_seconds": 18.5,
-      "p95_seconds": 76.2,
-      "min_seconds": 6.3,
-      "max_seconds": 76.2,
-      "total_seconds": 166.1
+      "average_seconds": 17.5,
+      "p95_seconds": 35.5,
+      "min_seconds": 3.7,
+      "max_seconds": 265.2,
+      "total_seconds": 1067.6
     },
     "evidence_breakdown": {
       "caption": {
-        "total_scored": 5,
-        "passed": 5,
-        "failed": 0,
-        "accuracy": 100.0
+        "total_scored": 42,
+        "passed": 40,
+        "failed": 2,
+        "accuracy": 95.2
       },
       "ocr": {
-        "total_scored": 2,
-        "passed": 2,
+        "total_scored": 3,
+        "passed": 3,
         "failed": 0,
         "accuracy": 100.0
       },
       "speech": {
-        "total_scored": 6,
-        "passed": 6,
+        "total_scored": 9,
+        "passed": 9,
         "failed": 0,
         "accuracy": 100.0
       },
       "multi_location": {
-        "total_scored": 1,
-        "passed": 1,
+        "total_scored": 7,
+        "passed": 7,
         "failed": 0,
         "accuracy": 100.0
       }
@@ -58,7 +58,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'varenna' in detected output ('Varenna, Lake Como, Italy')",
-      "duration_seconds": 15.09,
+      "duration_seconds": 17.22,
       "http_status": 200,
       "detected": {
         "name": "Varenna, Lake Como, Italy",
@@ -77,40 +77,40 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 15.06,
+          "total_seconds": 17.19,
           "stages": {
-            "provider": 7.54,
+            "provider": 4.34,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.55,
-            "verification": 0.51,
-            "nearby_places": 1.48,
+            "candidate_resolution": 1.44,
+            "verification": 1.12,
+            "nearby_places": 6.93,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "f0491b1f-656c-43cb-b03b-b64b6d530115",
+          "request_id": "6569b0c6-bb2d-46b4-8c21-e69e551ad51a",
           "metrics": {
-            "request_id": "f0491b1f-656c-43cb-b03b-b64b6d530115",
-            "total_request_duration_seconds": 15.068,
+            "request_id": "6569b0c6-bb2d-46b4-8c21-e69e551ad51a",
+            "total_request_duration_seconds": 17.198,
             "stage_durations": {
-              "instagram_extraction": 15.074,
+              "instagram_extraction": 8.676,
               "evidence_caption": 0.0,
-              "candidate_generation": 0.007,
-              "google_places_search": 1.678,
-              "google_places_details": 1.856,
-              "scoring": 0.005,
-              "enrichment": 1.484,
-              "gemini_verification": 0.506,
-              "response_construction": 0.002
+              "candidate_generation": 0.008,
+              "google_places_search": 2.645,
+              "scoring": 0.014,
+              "google_places_details": 1.122,
+              "enrichment": 8.05,
+              "gemini_verification": 1.119,
+              "response_construction": 0.001
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 7.537,
-              "google_places_search": 1.678,
-              "google_places_details": 1.856,
-              "google_places_nearby": 1.484,
-              "gemini_verification": 0.504
+              "instagram_download": 4.338,
+              "google_places_search": 2.645,
+              "google_places_details": 1.122,
+              "google_places_nearby": 6.928,
+              "gemini_verification": 1.117
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -141,7 +141,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Correctly produced no resolved destination (Location Not Found).",
-      "duration_seconds": 76.23,
+      "duration_seconds": 65.99,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -149,33 +149,33 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 76.21,
+          "total_seconds": 65.98,
           "stages": {
-            "provider": 3.74,
-            "location_extraction": 72.47,
+            "provider": 4.96,
+            "location_extraction": 61.02,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "99d4a419-dd84-466a-86c4-811275572362",
+          "request_id": "ab15264f-3931-49ec-a7e0-fc1f598c7de4",
           "metrics": {
-            "request_id": "99d4a419-dd84-466a-86c4-811275572362",
-            "total_request_duration_seconds": 76.208,
+            "request_id": "ab15264f-3931-49ec-a7e0-fc1f598c7de4",
+            "total_request_duration_seconds": 65.986,
             "stage_durations": {
-              "instagram_extraction": 7.472,
+              "instagram_extraction": 9.922,
               "evidence_caption": 0.0,
               "candidate_generation": 0.0,
-              "frame_extraction": 2.457,
-              "evidence_ocr": 20.193,
-              "evidence_speech": 49.818
+              "frame_extraction": 1.775,
+              "evidence_ocr": 11.73,
+              "evidence_speech": 47.517
             },
             "success": false,
             "failure_stage": "location_resolution",
             "error_category": "RESOLUTION_FAILURE",
             "external_service_latency": {
-              "instagram_download": 3.736
+              "instagram_download": 4.961
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -210,7 +210,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Chennai, India'",
-      "duration_seconds": 6.42,
+      "duration_seconds": 6.0,
       "http_status": 200,
       "detected": {
         "name": "Chennai, India",
@@ -220,49 +220,48 @@
         "region": "Tamil Nadu",
         "latitude": 13.057057,
         "longitude": 80.209822,
-        "confidence": 87,
+        "confidence": 80,
         "confidence_level": "HIGH",
-        "verification_status": "FAILED"
+        "verification_status": "SKIPPED"
       },
       "detected_display": "Chennai, India",
       "pipeline": {
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 6.41,
+          "total_seconds": 5.99,
           "stages": {
-            "provider": 3.41,
+            "provider": 2.88,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.11,
-            "verification": 0.28,
-            "nearby_places": 1.61,
+            "candidate_resolution": 0.82,
+            "verification": 0.0,
+            "nearby_places": 1.6,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "15e1f2d4-8354-40e2-99cb-7f6695d84b40",
+          "request_id": "597f2f1a-b320-4979-a807-de50f9bdfaf8",
           "metrics": {
-            "request_id": "15e1f2d4-8354-40e2-99cb-7f6695d84b40",
-            "total_request_duration_seconds": 6.412,
+            "request_id": "597f2f1a-b320-4979-a807-de50f9bdfaf8",
+            "total_request_duration_seconds": 5.991,
             "stage_durations": {
-              "instagram_extraction": 6.824,
+              "instagram_extraction": 5.764,
               "evidence_caption": 0.0,
               "candidate_generation": 0.0,
-              "google_places_search": 0.582,
-              "google_places_details": 0.509,
+              "google_places_search": 0.821,
               "scoring": 0.0,
-              "enrichment": 1.613,
-              "gemini_verification": 0.279,
-              "response_construction": 0.001
+              "google_places_details": 0.686,
+              "enrichment": 2.283,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 3.412,
-              "google_places_search": 0.582,
-              "google_places_details": 0.509,
-              "google_places_nearby": 1.612,
-              "gemini_verification": 0.278
+              "instagram_download": 2.882,
+              "google_places_search": 0.821,
+              "google_places_details": 0.686,
+              "google_places_nearby": 1.596
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -270,10 +269,10 @@
             ],
             "candidate_count": 1,
             "selected_candidate": "Chennai, India",
-            "confidence": 86.8,
+            "confidence": 80.4,
             "confidence_level": "HIGH",
             "google_places_resolution_status": "FOUND",
-            "gemini_verification_status": "FAILED",
+            "gemini_verification_status": "SKIPPED",
             "final_pipeline_stage": "caption"
           }
         },
@@ -295,7 +294,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Austria'",
-      "duration_seconds": 6.33,
+      "duration_seconds": 7.66,
       "http_status": 200,
       "detected": {
         "name": "Austria",
@@ -305,8 +304,8 @@
         "region": null,
         "latitude": 47.516231,
         "longitude": 14.550072,
-        "confidence": 85,
-        "confidence_level": "HIGH",
+        "confidence": 79,
+        "confidence_level": "MEDIUM",
         "verification_status": "FAILED"
       },
       "detected_display": "Austria",
@@ -314,39 +313,39 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 6.32,
+          "total_seconds": 7.65,
           "stages": {
-            "provider": 3.19,
+            "provider": 3.85,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.26,
+            "candidate_resolution": 0.95,
             "verification": 0.28,
-            "nearby_places": 1.58,
+            "nearby_places": 1.76,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "1cecef9c-2876-419f-a0aa-5cb98b793628",
+          "request_id": "d9bc7a2d-6be5-4797-9e8d-1c1295b56da1",
           "metrics": {
-            "request_id": "1cecef9c-2876-419f-a0aa-5cb98b793628",
-            "total_request_duration_seconds": 6.32,
+            "request_id": "d9bc7a2d-6be5-4797-9e8d-1c1295b56da1",
+            "total_request_duration_seconds": 7.652,
             "stage_durations": {
-              "instagram_extraction": 6.374,
+              "instagram_extraction": 7.696,
               "evidence_caption": 0.0,
               "candidate_generation": 0.0,
-              "google_places_search": 0.649,
-              "google_places_details": 0.613,
-              "scoring": 0.001,
-              "enrichment": 1.583,
-              "gemini_verification": 0.284,
-              "response_construction": 0.001
+              "google_places_search": 0.945,
+              "scoring": 0.0,
+              "google_places_details": 0.812,
+              "enrichment": 2.574,
+              "gemini_verification": 0.283,
+              "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 3.187,
-              "google_places_search": 0.649,
-              "google_places_details": 0.613,
-              "google_places_nearby": 1.582,
+              "instagram_download": 3.848,
+              "google_places_search": 0.945,
+              "google_places_details": 0.812,
+              "google_places_nearby": 1.762,
               "gemini_verification": 0.283
             },
             "retry_counts": {},
@@ -355,8 +354,8 @@
             ],
             "candidate_count": 1,
             "selected_candidate": "Austria",
-            "confidence": 85.2,
-            "confidence_level": "HIGH",
+            "confidence": 78.8,
+            "confidence_level": "MEDIUM",
             "google_places_resolution_status": "FOUND",
             "gemini_verification_status": "FAILED",
             "final_pipeline_stage": "caption"
@@ -381,7 +380,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Detected location is within expected Meghalaya region: 'Meghalaya, India'",
-      "duration_seconds": 15.94,
+      "duration_seconds": 10.72,
       "http_status": 200,
       "detected": {
         "name": "Meghalaya, India",
@@ -391,49 +390,48 @@
         "region": "Meghalaya",
         "latitude": 25.467031,
         "longitude": 91.366216,
-        "confidence": 93,
-        "confidence_level": "VERY_HIGH",
-        "verification_status": "FAILED"
+        "confidence": 88,
+        "confidence_level": "HIGH",
+        "verification_status": "SKIPPED"
       },
       "detected_display": "Meghalaya, India",
       "pipeline": {
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 15.92,
+          "total_seconds": 10.71,
           "stages": {
-            "provider": 12.6,
+            "provider": 8.04,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.52,
-            "verification": 0.4,
-            "nearby_places": 1.41,
+            "candidate_resolution": 0.78,
+            "verification": 0.0,
+            "nearby_places": 1.23,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "1589ec8d-26cc-4678-a98c-1bc769b90d53",
+          "request_id": "0948bee0-886e-4e77-9adb-e83c6fccfe42",
           "metrics": {
-            "request_id": "1589ec8d-26cc-4678-a98c-1bc769b90d53",
-            "total_request_duration_seconds": 15.922,
+            "request_id": "0948bee0-886e-4e77-9adb-e83c6fccfe42",
+            "total_request_duration_seconds": 10.714,
             "stage_durations": {
-              "instagram_extraction": 25.194,
+              "instagram_extraction": 16.084,
               "evidence_caption": 0.0,
               "candidate_generation": 0.0,
-              "google_places_search": 0.641,
-              "google_places_details": 0.863,
-              "scoring": 0.011,
-              "enrichment": 1.41,
-              "gemini_verification": 0.397,
-              "response_construction": 0.001
+              "google_places_search": 0.774,
+              "scoring": 0.0,
+              "google_places_details": 0.662,
+              "enrichment": 1.896,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 12.597,
-              "google_places_search": 0.641,
-              "google_places_details": 0.863,
-              "google_places_nearby": 1.41,
-              "gemini_verification": 0.396
+              "instagram_download": 8.042,
+              "google_places_search": 0.774,
+              "google_places_details": 0.662,
+              "google_places_nearby": 1.233
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -441,10 +439,10 @@
             ],
             "candidate_count": 1,
             "selected_candidate": "Meghalaya, India",
-            "confidence": 92.8,
-            "confidence_level": "VERY_HIGH",
+            "confidence": 88.0,
+            "confidence_level": "HIGH",
             "google_places_resolution_status": "FOUND",
-            "gemini_verification_status": "FAILED",
+            "gemini_verification_status": "SKIPPED",
             "final_pipeline_stage": "caption"
           }
         },
@@ -467,7 +465,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'itoya' in detected output ('Itoya, Ginza, Tokyo, Japan')",
-      "duration_seconds": 11.36,
+      "duration_seconds": 10.84,
       "http_status": 200,
       "detected": {
         "name": "Itoya, Ginza, Tokyo, Japan",
@@ -486,39 +484,39 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.35,
+          "total_seconds": 10.83,
           "stages": {
-            "provider": 7.22,
+            "provider": 7.78,
             "location_extraction": 0.0,
-            "candidate_resolution": 2.68,
+            "candidate_resolution": 0.84,
             "verification": 0.0,
-            "nearby_places": 1.45,
+            "nearby_places": 1.53,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "012f593a-413a-4cbe-a4ae-d9f8ef9df694",
+          "request_id": "a2994299-6ed6-4b83-91cd-375e8c933409",
           "metrics": {
-            "request_id": "012f593a-413a-4cbe-a4ae-d9f8ef9df694",
-            "total_request_duration_seconds": 11.354,
+            "request_id": "a2994299-6ed6-4b83-91cd-375e8c933409",
+            "total_request_duration_seconds": 10.833,
             "stage_durations": {
-              "instagram_extraction": 14.436,
+              "instagram_extraction": 15.552,
               "evidence_caption": 0.0,
-              "candidate_generation": 0.002,
-              "google_places_search": 1.268,
-              "google_places_details": 1.401,
-              "scoring": 0.013,
-              "enrichment": 1.449,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.462,
+              "scoring": 0.005,
+              "google_places_details": 0.686,
+              "enrichment": 2.219,
               "gemini_verification": 0.001,
-              "response_construction": 0.001
+              "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 7.218,
-              "google_places_search": 1.268,
-              "google_places_details": 1.401,
-              "google_places_nearby": 1.449
+              "instagram_download": 7.776,
+              "google_places_search": 1.462,
+              "google_places_details": 0.686,
+              "google_places_nearby": 1.534
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -552,7 +550,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'houtouwan china' in detected output ('Houtouwan China, China')",
-      "duration_seconds": 12.23,
+      "duration_seconds": 13.37,
       "http_status": 200,
       "detected": {
         "name": "Houtouwan China, China",
@@ -571,39 +569,39 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 12.21,
+          "total_seconds": 13.36,
           "stages": {
-            "provider": 9.32,
+            "provider": 10.81,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.65,
+            "candidate_resolution": 0.76,
             "verification": 0.0,
-            "nearby_places": 1.25,
+            "nearby_places": 1.13,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "fb8cf720-545c-42cd-ab04-d48fe26d00fb",
+          "request_id": "814ada66-2c1c-42bf-9980-c6d9c31fd3c6",
           "metrics": {
-            "request_id": "fb8cf720-545c-42cd-ab04-d48fe26d00fb",
-            "total_request_duration_seconds": 12.215,
+            "request_id": "814ada66-2c1c-42bf-9980-c6d9c31fd3c6",
+            "total_request_duration_seconds": 13.36,
             "stage_durations": {
-              "instagram_extraction": 18.642,
+              "instagram_extraction": 21.63,
               "evidence_caption": 0.0,
               "candidate_generation": 0.0,
-              "google_places_search": 0.864,
-              "google_places_details": 0.78,
-              "scoring": 0.001,
-              "enrichment": 1.245,
-              "gemini_verification": 0.001,
+              "google_places_search": 0.757,
+              "scoring": 0.0,
+              "google_places_details": 0.659,
+              "enrichment": 1.786,
+              "gemini_verification": 0.0,
               "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 9.321,
-              "google_places_search": 0.864,
-              "google_places_details": 0.78,
-              "google_places_nearby": 1.245
+              "instagram_download": 10.815,
+              "google_places_search": 0.757,
+              "google_places_details": 0.659,
+              "google_places_nearby": 1.127
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -637,7 +635,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Forte IX, Lithuania'",
-      "duration_seconds": 10.7,
+      "duration_seconds": 6.07,
       "http_status": 200,
       "detected": {
         "name": "Forte IX, Lithuania",
@@ -656,39 +654,39 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.69,
+          "total_seconds": 6.07,
           "stages": {
-            "provider": 4.42,
+            "provider": 2.82,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.23,
+            "candidate_resolution": 1.01,
             "verification": 0.0,
-            "nearby_places": 2.03,
+            "nearby_places": 1.52,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "b3902e44-86b9-444e-a2f8-a20013c19ed1",
+          "request_id": "db79143f-86b1-4a81-9d03-acee1aba35bd",
           "metrics": {
-            "request_id": "b3902e44-86b9-444e-a2f8-a20013c19ed1",
-            "total_request_duration_seconds": 10.69,
+            "request_id": "db79143f-86b1-4a81-9d03-acee1aba35bd",
+            "total_request_duration_seconds": 6.069,
             "stage_durations": {
-              "instagram_extraction": 8.834,
+              "instagram_extraction": 5.64,
               "evidence_caption": 0.0,
               "candidate_generation": 0.001,
-              "google_places_search": 2.779,
-              "google_places_details": 1.439,
-              "scoring": 0.016,
-              "enrichment": 2.034,
+              "google_places_search": 2.258,
+              "scoring": 0.002,
+              "google_places_details": 0.724,
+              "enrichment": 2.239,
               "gemini_verification": 0.001,
-              "response_construction": 0.001
+              "response_construction": 0.0
             },
             "success": true,
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 4.417,
-              "google_places_search": 2.779,
-              "google_places_details": 1.439,
-              "google_places_nearby": 2.034
+              "instagram_download": 2.82,
+              "google_places_search": 2.258,
+              "google_places_details": 0.724,
+              "google_places_nearby": 1.515
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -722,7 +720,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Forte IX, Lithuania'",
-      "duration_seconds": 11.82,
+      "duration_seconds": 3.74,
       "http_status": 200,
       "detected": {
         "name": "Forte IX, Lithuania",
@@ -741,28 +739,28 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.81,
+          "total_seconds": 3.73,
           "stages": {
-            "provider": 4.94,
+            "provider": 2.92,
             "location_extraction": 0.0,
-            "candidate_resolution": 5.08,
+            "candidate_resolution": 0.81,
             "verification": 0.0,
-            "nearby_places": 1.79,
+            "nearby_places": 0.0,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           },
-          "request_id": "4d11b86d-7ad5-44a7-9487-70e1688d722f",
+          "request_id": "9e23fbd0-a201-4271-bd53-4ec55c6b3606",
           "metrics": {
-            "request_id": "4d11b86d-7ad5-44a7-9487-70e1688d722f",
-            "total_request_duration_seconds": 11.812,
+            "request_id": "9e23fbd0-a201-4271-bd53-4ec55c6b3606",
+            "total_request_duration_seconds": 3.733,
             "stage_durations": {
-              "instagram_extraction": 9.877,
+              "instagram_extraction": 5.844,
               "evidence_caption": 0.0,
               "candidate_generation": 0.001,
-              "google_places_search": 3.199,
-              "google_places_details": 1.877,
-              "scoring": 0.005,
-              "enrichment": 1.789,
+              "google_places_search": 0.802,
+              "scoring": 0.003,
+              "google_places_details": 0.0,
+              "enrichment": 0.001,
               "gemini_verification": 0.001,
               "response_construction": 0.001
             },
@@ -770,10 +768,10 @@
             "failure_stage": null,
             "error_category": null,
             "external_service_latency": {
-              "instagram_download": 4.939,
-              "google_places_search": 3.199,
-              "google_places_details": 1.877,
-              "google_places_nearby": 1.788
+              "instagram_download": 2.922,
+              "google_places_search": 0.802,
+              "google_places_details": 0.0,
+              "google_places_nearby": 0.001
             },
             "retry_counts": {},
             "evidence_sources_used": [
@@ -785,6 +783,4439 @@
             "confidence_level": "VERY_HIGH",
             "google_places_resolution_status": "FOUND",
             "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 10,
+      "url": "https://www.instagram.com/reel/DaxYL5YPwMg/",
+      "expected": "Pingshan Grand Canyon, Enshi, China",
+      "expected_display": "Pingshan Grand Canyon, Enshi, China",
+      "evidence": [
+        "speech",
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'pingshan grand canyon' in detected output ('Pingshan Grand Canyon, Enshi, China, China')",
+      "duration_seconds": 8.35,
+      "http_status": 200,
+      "detected": {
+        "name": "Pingshan Grand Canyon, Enshi, China, China",
+        "formatted_address": "W3JG+R5V, Hefeng County, Enshi City, Hubei, China, 445800",
+        "country": "China",
+        "city": "Pingshan Grand Canyon",
+        "region": "Enshi, China",
+        "latitude": 29.93211,
+        "longitude": 110.07543,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Pingshan Grand Canyon, Enshi, China, China",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.34,
+          "stages": {
+            "provider": 5.44,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.82,
+            "verification": 0.0,
+            "nearby_places": 1.14,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "2136e5b9-4a6d-461c-8ade-2fabba3a3556",
+          "metrics": {
+            "request_id": "2136e5b9-4a6d-461c-8ade-2fabba3a3556",
+            "total_request_duration_seconds": 8.337,
+            "stage_durations": {
+              "instagram_extraction": 10.872,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 0.819,
+              "scoring": 0.001,
+              "google_places_details": 0.94,
+              "enrichment": 2.079,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.436,
+              "google_places_search": 0.819,
+              "google_places_details": 0.94,
+              "google_places_nearby": 1.138
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Pingshan Grand Canyon, Enshi, China, China",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 11,
+      "url": "https://www.instagram.com/reel/Dbnub_HxMi7/",
+      "expected": "Monument Valley, Arizona",
+      "expected_display": "Monument Valley, Arizona",
+      "evidence": [
+        "speech",
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'monument valley' in detected output ('Monument Valley, Arizona, USA')",
+      "duration_seconds": 7.38,
+      "http_status": 200,
+      "detected": {
+        "name": "Monument Valley, Arizona, USA",
+        "formatted_address": "Oljato-Monument Valley, AZ 84536, USA",
+        "country": "USA",
+        "city": "Monument Valley",
+        "region": "Arizona",
+        "latitude": 36.991838,
+        "longitude": -110.178295,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Monument Valley, Arizona, USA",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.38,
+          "stages": {
+            "provider": 4.14,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.0,
+            "verification": 0.28,
+            "nearby_places": 1.22,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "f3026f9f-b398-4fac-a936-3e03b4adf3d8",
+          "metrics": {
+            "request_id": "f3026f9f-b398-4fac-a936-3e03b4adf3d8",
+            "total_request_duration_seconds": 7.379,
+            "stage_durations": {
+              "instagram_extraction": 8.28,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 3.598,
+              "scoring": 0.008,
+              "google_places_details": 0.739,
+              "enrichment": 1.957,
+              "gemini_verification": 0.282,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.14,
+              "google_places_search": 3.598,
+              "google_places_details": 0.739,
+              "google_places_nearby": 1.218,
+              "gemini_verification": 0.281
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 4,
+            "selected_candidate": "Monument Valley, Arizona, USA",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 12,
+      "url": "https://www.instagram.com/reel/DbEFu5SyML_/",
+      "expected": [
+        "Confusion Hill, California",
+        "Confusion Hill",
+        "California, USA"
+      ],
+      "expected_display": "Confusion Hill, California, Confusion Hill, California, USA",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Confusion Hill, California",
+        "California, USA"
+      ],
+      "notes": "Roadside attraction Confusion Hill in Piercy, CA",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 3 expected locations: Confusion Hill, California, California, USA",
+      "duration_seconds": 7.25,
+      "http_status": 200,
+      "detected": {
+        "name": "California, USA",
+        "formatted_address": "California, USA",
+        "country": "USA",
+        "city": "California",
+        "region": "California",
+        "latitude": 36.778261,
+        "longitude": -119.417932,
+        "confidence": 74,
+        "confidence_level": "MEDIUM",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "California, USA",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.25,
+          "stages": {
+            "provider": 4.25,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.89,
+            "verification": 0.26,
+            "nearby_places": 1.16,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "7f79055d-f5e3-42f5-b6d3-4a52b895a92d",
+          "metrics": {
+            "request_id": "7f79055d-f5e3-42f5-b6d3-4a52b895a92d",
+            "total_request_duration_seconds": 7.247,
+            "stage_durations": {
+              "instagram_extraction": 8.498,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.89,
+              "scoring": 0.0,
+              "google_places_details": 0.682,
+              "enrichment": 1.842,
+              "gemini_verification": 0.264,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.249,
+              "google_places_search": 0.89,
+              "google_places_details": 0.682,
+              "google_places_nearby": 1.159,
+              "gemini_verification": 0.262
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "California, USA",
+            "confidence": 74.0,
+            "confidence_level": "MEDIUM",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 13,
+      "url": "https://www.instagram.com/reel/DZUzzx3zAMU/",
+      "expected": "St. Joseph's Cathederal (St. Philomena's shrine)",
+      "expected_display": "St. Joseph's Cathederal (St. Philomena's shrine)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'st joseph s cathederal' in detected output ('St. Joseph's Cathederal (St. Philomena's shrine), India')",
+      "duration_seconds": 8.99,
+      "http_status": 200,
+      "detected": {
+        "name": "St. Joseph's Cathederal (St. Philomena's shrine), India",
+        "formatted_address": "3042/1, Sawday Rd, near St. Chnilomina Church, Lashkar Mohalla, Lourdu Nagar, Mandi Mohalla, Mysuru, Karnataka 570001, India",
+        "country": "India",
+        "city": "St. Joseph's Cathederal (St. Philomena's shrine)",
+        "region": "Karnataka 570001",
+        "latitude": 12.321039,
+        "longitude": 76.658056,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "St. Joseph's Cathederal (St. Philomena's shrine), India",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.98,
+          "stages": {
+            "provider": 4.72,
+            "location_extraction": 0.0,
+            "candidate_resolution": 2.05,
+            "verification": 0.26,
+            "nearby_places": 1.21,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "a5135245-1b75-4bd9-ab18-08678de67161",
+          "metrics": {
+            "request_id": "a5135245-1b75-4bd9-ab18-08678de67161",
+            "total_request_duration_seconds": 8.981,
+            "stage_durations": {
+              "instagram_extraction": 9.449,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 7.832,
+              "scoring": 0.037,
+              "google_places_details": 0.735,
+              "enrichment": 1.947,
+              "gemini_verification": 0.257,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.725,
+              "google_places_search": 7.832,
+              "google_places_details": 0.735,
+              "google_places_nearby": 1.212,
+              "gemini_verification": 0.256
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 20,
+            "selected_candidate": "St. Joseph's Cathederal (St. Philomena's shrine), India",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 14,
+      "url": "https://www.instagram.com/reel/Dbt23SbOaVl/",
+      "expected": [
+        "Katmai National Park, Alaska",
+        "Yellowstone National Park, Wyoming",
+        "Glacier Bay National Park, Alaska",
+        "Moab, Utah",
+        "Kauai, Hawaii",
+        "Seward, Alaska",
+        "Redwoods National Park, California",
+        "Sequoia National Park, California",
+        "Hanksville, Utah",
+        "Everglades National Park, Florida",
+        "Grand Teton National Park, Wyoming",
+        "Juneau, Alaska",
+        "Oahu, Hawaii",
+        "Glacier National Park, Montana",
+        "Sedona, Arizona",
+        "Maui, Hawaii",
+        "Yosemite National Park, California",
+        "Zion National Park, Utah"
+      ],
+      "expected_display": "Katmai National Park, Alaska, Yellowstone National Park, Wyoming ... (18 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Yellowstone National Park, Wyoming",
+        "Grand Teton National Park, Wyoming"
+      ],
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 18 expected locations: Yellowstone National Park, Wyoming, Grand Teton National Park, Wyoming",
+      "duration_seconds": 10.88,
+      "http_status": 200,
+      "detected": {
+        "name": "Grand Teton National Park, Wyoming, USA",
+        "formatted_address": "Wyoming, USA",
+        "country": "USA",
+        "city": "Grand Teton National Park",
+        "region": "Wyoming",
+        "latitude": 43.790428,
+        "longitude": -110.681763,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Grand Teton National Park, Wyoming, USA",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 10.87,
+          "stages": {
+            "provider": 6.32,
+            "location_extraction": 0.0,
+            "candidate_resolution": 2.08,
+            "verification": 0.29,
+            "nearby_places": 1.48,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "ebca881b-666d-4591-a13b-0c904c0f4c4e",
+          "metrics": {
+            "request_id": "ebca881b-666d-4591-a13b-0c904c0f4c4e",
+            "total_request_duration_seconds": 10.874,
+            "stage_durations": {
+              "instagram_extraction": 12.64,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.005,
+              "google_places_search": 7.287,
+              "scoring": 0.013,
+              "google_places_details": 0.705,
+              "enrichment": 2.187,
+              "gemini_verification": 0.286,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 6.32,
+              "google_places_search": 7.287,
+              "google_places_details": 0.705,
+              "google_places_nearby": 1.481,
+              "gemini_verification": 0.285
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 21,
+            "selected_candidate": "Grand Teton National Park, Wyoming, USA",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 15,
+      "url": "https://www.instagram.com/reel/DZUvFn1iA_m/",
+      "expected": "Lago di Predil , Italy",
+      "expected_display": "Lago di Predil , Italy",
+      "evidence": [
+        "speech",
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Lago di Predil, Italy'",
+      "duration_seconds": 6.96,
+      "http_status": 200,
+      "detected": {
+        "name": "Lago di Predil, Italy",
+        "formatted_address": "Lago del Predil, 33018 Tarvisio, Province of Udine, Italy",
+        "country": "Italy",
+        "city": "Lago di Predil",
+        "region": "Province of Udine",
+        "latitude": 46.41881,
+        "longitude": 13.565132,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Lago di Predil, Italy",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.95,
+          "stages": {
+            "provider": 3.84,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.94,
+            "verification": 0.26,
+            "nearby_places": 1.25,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "da4e7307-984a-4d16-b3ab-21f5fc9fc523",
+          "metrics": {
+            "request_id": "da4e7307-984a-4d16-b3ab-21f5fc9fc523",
+            "total_request_duration_seconds": 6.951,
+            "stage_durations": {
+              "instagram_extraction": 7.672,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 3.152,
+              "scoring": 0.006,
+              "google_places_details": 0.668,
+              "enrichment": 1.916,
+              "gemini_verification": 0.258,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.836,
+              "google_places_search": 3.152,
+              "google_places_details": 0.668,
+              "google_places_nearby": 1.248,
+              "gemini_verification": 0.257
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 4,
+            "selected_candidate": "Lago di Predil, Italy",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 16,
+      "url": "https://www.instagram.com/reel/DbJTbyFN6Ps/",
+      "expected": [
+        "Castle Combe, England",
+        "Castle Combe",
+        "Castle Combe, Cotswolds",
+        "England, UK"
+      ],
+      "expected_display": "Castle Combe, England, Castle Combe ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Castle Combe, England",
+        "England, UK"
+      ],
+      "notes": "Village of Castle Combe, England",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 4 expected locations: Castle Combe, England, England, UK",
+      "duration_seconds": 6.58,
+      "http_status": 200,
+      "detected": {
+        "name": "England, UK",
+        "formatted_address": "England, UK",
+        "country": "UK",
+        "city": "England",
+        "region": "England",
+        "latitude": 52.838164,
+        "longitude": -2.327481,
+        "confidence": 84,
+        "confidence_level": "HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "England, UK",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.58,
+          "stages": {
+            "provider": 3.8,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.7,
+            "verification": 0.0,
+            "nearby_places": 1.55,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "1df10376-0b70-4588-925b-14c9b3a985a3",
+          "metrics": {
+            "request_id": "1df10376-0b70-4588-925b-14c9b3a985a3",
+            "total_request_duration_seconds": 6.577,
+            "stage_durations": {
+              "instagram_extraction": 7.594,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.695,
+              "scoring": 0.001,
+              "google_places_details": 0.535,
+              "enrichment": 2.082,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.797,
+              "google_places_search": 0.695,
+              "google_places_details": 0.535,
+              "google_places_nearby": 1.547
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "England, UK",
+            "confidence": 84.0,
+            "confidence_level": "HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 17,
+      "url": "https://www.instagram.com/reel/Dbqzr7Ax0eG/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption/metadata)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 35.47,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 35.47,
+          "stages": {
+            "provider": 3.24,
+            "location_extraction": 27.94,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "05aeeb25-3418-4ace-9b10-2e778f18989c",
+          "metrics": {
+            "request_id": "05aeeb25-3418-4ace-9b10-2e778f18989c",
+            "total_request_duration_seconds": 35.467,
+            "stage_durations": {
+              "instagram_extraction": 6.484,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.003,
+              "frame_extraction": 1.331,
+              "evidence_ocr": 14.213,
+              "evidence_speech": 12.398,
+              "google_places_search": 0.589,
+              "scoring": 0.0,
+              "google_places_details": 0.895,
+              "enrichment": 2.588,
+              "gemini_verification": 1.098
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.242,
+              "google_places_search": 0.589,
+              "google_places_details": 0.895,
+              "google_places_nearby": 1.693,
+              "gemini_verification": 1.097
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No credible travel destination found (candidates lacked sufficient confidence)."
+      },
+      "error": null
+    },
+    {
+      "id": 18,
+      "url": "https://www.instagram.com/reel/Db4DGFqT2dc/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Insufficient evidence (personal video without geographic anchors)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 16.35,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 16.34,
+          "stages": {
+            "provider": 2.98,
+            "location_extraction": 13.36,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "60b59349-d8c3-44c5-a1f3-11f192897bd3",
+          "metrics": {
+            "request_id": "60b59349-d8c3-44c5-a1f3-11f192897bd3",
+            "total_request_duration_seconds": 16.344,
+            "stage_durations": {
+              "instagram_extraction": 5.96,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.005,
+              "frame_extraction": 0.852,
+              "evidence_ocr": 9.055,
+              "evidence_speech": 3.449
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 2.98
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 19,
+      "url": "https://www.instagram.com/reel/DZNJ_7wtP4v/",
+      "expected": "Mangystau, Kazakhstan",
+      "expected_display": "Mangystau, Kazakhstan",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Mangystau, Kazakhstan'",
+      "duration_seconds": 5.98,
+      "http_status": 200,
+      "detected": {
+        "name": "Mangystau, Kazakhstan",
+        "formatted_address": "Mangistau, Kazakhstan",
+        "country": "Kazakhstan",
+        "city": "Mangystau",
+        "region": "Kazakhstan",
+        "latitude": 43.682592,
+        "longitude": 51.307285,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Mangystau, Kazakhstan",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 5.97,
+          "stages": {
+            "provider": 3.19,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.82,
+            "verification": 0.0,
+            "nearby_places": 1.25,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "79e5db8d-3ed3-4e4f-9c5f-6a3c836e6068",
+          "metrics": {
+            "request_id": "79e5db8d-3ed3-4e4f-9c5f-6a3c836e6068",
+            "total_request_duration_seconds": 5.968,
+            "stage_durations": {
+              "instagram_extraction": 6.38,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.822,
+              "scoring": 0.0,
+              "google_places_details": 0.707,
+              "enrichment": 1.952,
+              "gemini_verification": 0.001,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.19,
+              "google_places_search": 0.822,
+              "google_places_details": 0.707,
+              "google_places_nearby": 1.245
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Mangystau, Kazakhstan",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 20,
+      "url": "https://www.instagram.com/reel/DbYymykNiS2/",
+      "expected": "Matera",
+      "expected_display": "Matera",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'matera' in detected output ('Matera, Italy')",
+      "duration_seconds": 6.5,
+      "http_status": 200,
+      "detected": {
+        "name": "Matera, Italy",
+        "formatted_address": "75100 Matera, Province of Matera, Italy",
+        "country": "Italy",
+        "city": "Matera",
+        "region": "Province of Matera",
+        "latitude": 40.66636,
+        "longitude": 16.604445,
+        "confidence": 94,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Matera, Italy",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.49,
+          "stages": {
+            "provider": 3.36,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.65,
+            "verification": 0.27,
+            "nearby_places": 1.7,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "547f6a35-6ca2-441e-9416-ab481c39cd82",
+          "metrics": {
+            "request_id": "547f6a35-6ca2-441e-9416-ab481c39cd82",
+            "total_request_duration_seconds": 6.495,
+            "stage_durations": {
+              "instagram_extraction": 6.728,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.27,
+              "scoring": 0.002,
+              "google_places_details": 0.51,
+              "enrichment": 2.212,
+              "gemini_verification": 0.271,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.364,
+              "google_places_search": 1.27,
+              "google_places_details": 0.51,
+              "google_places_nearby": 1.702,
+              "gemini_verification": 0.27
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Matera, Italy",
+            "confidence": 94.4,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 21,
+      "url": "https://www.instagram.com/reel/DbYvC24gEUW/",
+      "expected": [
+        "Cape Flattery",
+        "Hoh Rainforest",
+        "Shi Shi Beach",
+        "Rialto Beach",
+        "Forks",
+        "Lake Crescent",
+        "Marymere Falls",
+        "Mt. Storm King",
+        "Tree of Life",
+        "Sol Duc Falls",
+        "Ruby Beach",
+        "La Push",
+        "Second Beach",
+        "Tongue Point",
+        "Port Angeles",
+        "Devils Punch Bowl",
+        "Quinault Rainforest",
+        "Hurricane Ridge",
+        "Madison Falls",
+        "Salt Creek Recreation Area",
+        "Kalaloch Beach",
+        "High Steel Bridge"
+      ],
+      "expected_display": "Cape Flattery, Hoh Rainforest ... (22 places)",
+      "evidence": [
+        "ocr",
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Port Angeles",
+        "Salt Creek Recreation Area"
+      ],
+      "notes": "Location in OCR and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 22 expected locations: Port Angeles, Salt Creek Recreation Area",
+      "duration_seconds": 8.99,
+      "http_status": 200,
+      "detected": {
+        "name": "Salt Creek Recreation Area, USA",
+        "formatted_address": "3506 Camp Hayden Rd, Port Angeles, WA 98363, USA",
+        "country": "USA",
+        "city": "Salt Creek Recreation Area",
+        "region": "WA 98363",
+        "latitude": 48.161638,
+        "longitude": -123.698746,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Salt Creek Recreation Area, USA",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.99,
+          "stages": {
+            "provider": 4.75,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.95,
+            "verification": 0.27,
+            "nearby_places": 1.26,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "f9a0933e-b2aa-4e35-b531-0828fb87e2e8",
+          "metrics": {
+            "request_id": "f9a0933e-b2aa-4e35-b531-0828fb87e2e8",
+            "total_request_duration_seconds": 8.987,
+            "stage_durations": {
+              "instagram_extraction": 9.502,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.003,
+              "google_places_search": 6.997,
+              "scoring": 0.038,
+              "google_places_details": 0.756,
+              "enrichment": 2.014,
+              "gemini_verification": 0.27,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.751,
+              "google_places_search": 6.997,
+              "google_places_details": 0.756,
+              "google_places_nearby": 1.258,
+              "gemini_verification": 0.269
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 25,
+            "selected_candidate": "Salt Creek Recreation Area, USA",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 22,
+      "url": "https://www.instagram.com/reel/DbIWL_zsCcp/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Insufficient evidence (aesthetic lifestyle clip without geographic anchor)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 21.29,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 21.28,
+          "stages": {
+            "provider": 4.68,
+            "location_extraction": 16.6,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "fd521d5a-25ed-4cd6-9828-4d4bc47f24b2",
+          "metrics": {
+            "request_id": "fd521d5a-25ed-4cd6-9828-4d4bc47f24b2",
+            "total_request_duration_seconds": 21.281,
+            "stage_durations": {
+              "instagram_extraction": 9.366,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "frame_extraction": 1.353,
+              "evidence_ocr": 8.74,
+              "evidence_speech": 6.502
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 4.683
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 23,
+      "url": "https://www.instagram.com/reel/DY42ecOIi_2/",
+      "expected": "The Fulling Mill, Alresford, Hampshire",
+      "expected_display": "The Fulling Mill, Alresford, Hampshire",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'alresford' in detected output ('Watercress Line, UK')",
+      "duration_seconds": 8.47,
+      "http_status": 200,
+      "detected": {
+        "name": "Watercress Line, UK",
+        "formatted_address": "The Railway Station, Station Road, New Alresford, Alresford SO24 9JG, UK",
+        "country": "UK",
+        "city": "Watercress Line",
+        "region": "Alresford SO24 9JG",
+        "latitude": 51.088381,
+        "longitude": -1.160656,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Watercress Line, UK",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.46,
+          "stages": {
+            "provider": 3.9,
+            "location_extraction": 0.0,
+            "candidate_resolution": 2.21,
+            "verification": 0.28,
+            "nearby_places": 1.45,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "98b4cd5e-049b-4694-b37a-e23a4b84b27e",
+          "metrics": {
+            "request_id": "98b4cd5e-049b-4694-b37a-e23a4b84b27e",
+            "total_request_duration_seconds": 8.465,
+            "stage_durations": {
+              "instagram_extraction": 7.804,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 6.738,
+              "scoring": 0.023,
+              "google_places_details": 0.628,
+              "enrichment": 2.076,
+              "gemini_verification": 0.276,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.902,
+              "google_places_search": 6.738,
+              "google_places_details": 0.628,
+              "google_places_nearby": 1.448,
+              "gemini_verification": 0.275
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 6,
+            "selected_candidate": "Watercress Line, UK",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 24,
+      "url": "https://www.instagram.com/reel/DZPuQXRsJU8/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 12.24,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 12.23,
+          "stages": {
+            "provider": 4.35,
+            "location_extraction": 7.88,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "be1627e9-71c2-40ba-9f97-3e73ad8fa2c7",
+          "metrics": {
+            "request_id": "be1627e9-71c2-40ba-9f97-3e73ad8fa2c7",
+            "total_request_duration_seconds": 12.234,
+            "stage_durations": {
+              "instagram_extraction": 8.694,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "frame_extraction": 0.689,
+              "evidence_ocr": 2.182,
+              "evidence_speech": 5.013
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 4.347
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 25,
+      "url": "https://www.instagram.com/reel/Db4Dpc9R6_C/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 32.69,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 32.68,
+          "stages": {
+            "provider": 11.14,
+            "location_extraction": 21.53,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "01a633d8-bdec-4430-a2da-92f49defdde8",
+          "metrics": {
+            "request_id": "01a633d8-bdec-4430-a2da-92f49defdde8",
+            "total_request_duration_seconds": 32.681,
+            "stage_durations": {
+              "instagram_extraction": 22.28,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.007,
+              "frame_extraction": 1.746,
+              "evidence_ocr": 15.068,
+              "evidence_speech": 4.717
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 11.14
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 26,
+      "url": "https://www.instagram.com/reel/DbUuKZEBmyE/",
+      "expected": [
+        "Nikola-Lenivets, Russia",
+        "Nikola-Lenivets",
+        "Никола-Ленивец"
+      ],
+      "expected_display": "Nikola-Lenivets, Russia, Nikola-Lenivets, Никола-Ленивец",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption (Nikola-Lenivets Art Park, Russia)",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Destination missing: No location candidates generated from evidence.",
+      "duration_seconds": 28.02,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 28.01,
+          "stages": {
+            "provider": 4.65,
+            "location_extraction": 23.36,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "5131d908-5835-4392-8ed5-f8b3cfa0ae51",
+          "metrics": {
+            "request_id": "5131d908-5835-4392-8ed5-f8b3cfa0ae51",
+            "total_request_duration_seconds": 28.011,
+            "stage_durations": {
+              "instagram_extraction": 9.298,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.003,
+              "frame_extraction": 1.237,
+              "evidence_ocr": 15.941,
+              "evidence_speech": 6.18
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 4.649
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": "No location candidates generated from evidence."
+    },
+    {
+      "id": 27,
+      "url": "https://www.instagram.com/p/DbAvsNRsvX0/",
+      "expected": "Deqin",
+      "expected_display": "Deqin",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'deqin' in detected output ('Deqin, China')",
+      "duration_seconds": 7.58,
+      "http_status": 200,
+      "detected": {
+        "name": "Deqin, China",
+        "formatted_address": "Deqen, Diqing Tibetan Autonomous Prefecture, Yunnan, China",
+        "country": "China",
+        "city": "Deqin",
+        "region": "Yunnan",
+        "latitude": 28.46357,
+        "longitude": 98.91699,
+        "confidence": 66,
+        "confidence_level": "LOW",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Deqin, China",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.57,
+          "stages": {
+            "provider": 4.45,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.6,
+            "verification": 0.31,
+            "nearby_places": 1.42,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "196fd69f-ea1c-410f-b8a0-ea9aaf25a280",
+          "metrics": {
+            "request_id": "196fd69f-ea1c-410f-b8a0-ea9aaf25a280",
+            "total_request_duration_seconds": 7.574,
+            "stage_durations": {
+              "instagram_extraction": 8.902,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.597,
+              "scoring": 0.001,
+              "google_places_details": 0.794,
+              "enrichment": 2.217,
+              "gemini_verification": 0.306,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.451,
+              "google_places_search": 0.597,
+              "google_places_details": 0.794,
+              "google_places_nearby": 1.422,
+              "gemini_verification": 0.306
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Deqin, China",
+            "confidence": 66.0,
+            "confidence_level": "LOW",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 28,
+      "url": "https://www.instagram.com/reel/DbAhbcQPhcA/",
+      "expected": "Lake Louise, Canada",
+      "expected_display": "Lake Louise, Canada",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Lake Louise in Banff, Alberta, Canada",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Lake Louise, Canada'",
+      "duration_seconds": 6.95,
+      "http_status": 200,
+      "detected": {
+        "name": "Lake Louise, Canada",
+        "formatted_address": "Lake Louise, AB T0L 1E0, Canada",
+        "country": "Canada",
+        "city": "Lake Louise",
+        "region": "AB T0L 1E0",
+        "latitude": 51.42537,
+        "longitude": -116.177255,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Lake Louise, Canada",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.94,
+          "stages": {
+            "provider": 3.68,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.94,
+            "verification": 0.0,
+            "nearby_places": 1.61,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "7926cdbb-5915-43d8-8332-3471c7328a21",
+          "metrics": {
+            "request_id": "7926cdbb-5915-43d8-8332-3471c7328a21",
+            "total_request_duration_seconds": 6.939,
+            "stage_durations": {
+              "instagram_extraction": 7.36,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.943,
+              "scoring": 0.001,
+              "google_places_details": 0.7,
+              "enrichment": 2.312,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.68,
+              "google_places_search": 0.943,
+              "google_places_details": 0.7,
+              "google_places_nearby": 1.612
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Lake Louise, Canada",
+            "confidence": 99.6,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 29,
+      "url": "https://www.instagram.com/reel/DbqBWqnxoKa/",
+      "expected": [
+        "Salto Golondrina, Venezuela",
+        "Canaima National Park, Venezuela",
+        "Salto Golondrina",
+        "Venezuela"
+      ],
+      "expected_display": "Salto Golondrina, Venezuela, Canaima National Park, Venezuela ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Salto Golondrina, Venezuela",
+        "Canaima National Park, Venezuela",
+        "Venezuela"
+      ],
+      "notes": "Salto Golondrina in Canaima National Park, Venezuela",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 4 expected locations: Salto Golondrina, Venezuela, Canaima National Park, Venezuela, Venezuela",
+      "duration_seconds": 6.57,
+      "http_status": 200,
+      "detected": {
+        "name": "Venezuela",
+        "formatted_address": "Venezuela",
+        "country": "Venezuela",
+        "city": "Venezuela",
+        "region": null,
+        "latitude": 6.42375,
+        "longitude": -66.58973,
+        "confidence": 79,
+        "confidence_level": "MEDIUM",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Venezuela",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.57,
+          "stages": {
+            "provider": 3.12,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.12,
+            "verification": 0.25,
+            "nearby_places": 1.38,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "6e5eea1b-c2e9-4324-84e8-ecb2e6e76f22",
+          "metrics": {
+            "request_id": "6e5eea1b-c2e9-4324-84e8-ecb2e6e76f22",
+            "total_request_duration_seconds": 6.569,
+            "stage_durations": {
+              "instagram_extraction": 6.232,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 3.23,
+              "scoring": 0.001,
+              "google_places_details": 0.706,
+              "enrichment": 2.084,
+              "gemini_verification": 0.247,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.116,
+              "google_places_search": 3.23,
+              "google_places_details": 0.706,
+              "google_places_nearby": 1.378,
+              "gemini_verification": 0.246
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Venezuela",
+            "confidence": 78.8,
+            "confidence_level": "MEDIUM",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 30,
+      "url": "https://www.instagram.com/reel/Darl-_jT5jW/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (Sanctuary of Truth visually depicted but unstated in text/speech)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 54.07,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 54.06,
+          "stages": {
+            "provider": 3.05,
+            "location_extraction": 44.69,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "d09c4e76-0574-4934-8ff9-98808371ba12",
+          "metrics": {
+            "request_id": "d09c4e76-0574-4934-8ff9-98808371ba12",
+            "total_request_duration_seconds": 54.059,
+            "stage_durations": {
+              "instagram_extraction": 6.1,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.018,
+              "frame_extraction": 1.187,
+              "evidence_ocr": 10.199,
+              "google_places_search": 0.997,
+              "scoring": 0.002,
+              "google_places_details": 0.84,
+              "enrichment": 2.62,
+              "gemini_verification": 2.677,
+              "evidence_speech": 33.305
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.05,
+              "google_places_search": 0.997,
+              "google_places_details": 0.84,
+              "google_places_nearby": 1.78,
+              "gemini_verification": 2.674
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No credible travel destination found (candidates lacked sufficient confidence)."
+      },
+      "error": null
+    },
+    {
+      "id": 31,
+      "url": "https://www.instagram.com/reel/DZAWrjook3k/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 18.73,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 18.72,
+          "stages": {
+            "provider": 4.26,
+            "location_extraction": 14.45,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "6a962128-5d82-4824-895f-93ecb2622ec6",
+          "metrics": {
+            "request_id": "6a962128-5d82-4824-895f-93ecb2622ec6",
+            "total_request_duration_seconds": 18.718,
+            "stage_durations": {
+              "instagram_extraction": 8.514,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.006,
+              "frame_extraction": 0.945,
+              "evidence_ocr": 9.248,
+              "evidence_speech": 4.258
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 4.257
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 32,
+      "url": "https://www.instagram.com/reel/DZXbCC3t_4-/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Insufficient evidence ('gotta sub', unanchored)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 23.03,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 23.03,
+          "stages": {
+            "provider": 7.75,
+            "location_extraction": 15.28,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "35f724d4-1b56-4063-88dd-d03373df73e9",
+          "metrics": {
+            "request_id": "35f724d4-1b56-4063-88dd-d03373df73e9",
+            "total_request_duration_seconds": 23.028,
+            "stage_durations": {
+              "instagram_extraction": 15.496,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "frame_extraction": 1.436,
+              "evidence_ocr": 9.556,
+              "evidence_speech": 4.284
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 7.748
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 33,
+      "url": "https://www.instagram.com/reel/DYhZEHczkvq/",
+      "expected": "Chongqing Yuzhong Peninsula, China",
+      "expected_display": "Chongqing Yuzhong Peninsula, China",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Chongqing Yuzhong Peninsula, China",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Chongqing Yuzhong Peninsula, China'",
+      "duration_seconds": 5.72,
+      "http_status": 200,
+      "detected": {
+        "name": "Chongqing Yuzhong Peninsula, China",
+        "formatted_address": "Yuzhong District, Chongqing, China",
+        "country": "China",
+        "city": "Chongqing Yuzhong Peninsula",
+        "region": "Chongqing",
+        "latitude": 29.55314,
+        "longitude": 106.5686,
+        "confidence": 97,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Chongqing Yuzhong Peninsula, China",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 5.72,
+          "stages": {
+            "provider": 2.76,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.9,
+            "verification": 0.0,
+            "nearby_places": 1.34,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "3e15e7e0-b11b-408a-8d11-ba564ff442a2",
+          "metrics": {
+            "request_id": "3e15e7e0-b11b-408a-8d11-ba564ff442a2",
+            "total_request_duration_seconds": 5.717,
+            "stage_durations": {
+              "instagram_extraction": 5.528,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.899,
+              "scoring": 0.0,
+              "google_places_details": 0.711,
+              "enrichment": 2.05,
+              "gemini_verification": 0.001,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 2.764,
+              "google_places_search": 0.899,
+              "google_places_details": 0.711,
+              "google_places_nearby": 1.338
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Chongqing Yuzhong Peninsula, China",
+            "confidence": 96.8,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 34,
+      "url": "https://www.instagram.com/reel/DbyI67-tgfo/",
+      "expected": [
+        "Lugard Road Lookout, Victoria Peak, Hong Kong",
+        "Victoria Peak, Hong Kong",
+        "Lugard Road Lookout"
+      ],
+      "expected_display": "Lugard Road Lookout, Victoria Peak, Hong Kong, Victoria Peak, Hong Kong, Lugard Road Lookout",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Lugard Road Lookout, Victoria Peak, Hong Kong",
+        "Victoria Peak, Hong Kong",
+        "Lugard Road Lookout"
+      ],
+      "notes": "Lugard Road Lookout at Victoria Peak, Hong Kong",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Lugard Road Lookout, Victoria Peak, Hong Kong, Victoria Peak, Hong Kong, Lugard Road Lookout",
+      "duration_seconds": 7.06,
+      "http_status": 200,
+      "detected": {
+        "name": "Pin Lugard Road Lookout, Victoria Peak, Hong, Hong Kong",
+        "formatted_address": "31 Lugard Rd, The Peak, Hong Kong Island, Hong Kong",
+        "country": "Hong Kong",
+        "city": "Pin Lugard Road Lookout",
+        "region": "Victoria Peak, Hong",
+        "latitude": 22.278145,
+        "longitude": 114.146778,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Pin Lugard Road Lookout, Victoria Peak, Hong, Hong Kong",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.06,
+          "stages": {
+            "provider": 3.72,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.99,
+            "verification": 0.0,
+            "nearby_places": 1.59,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "771ae3dc-196c-4228-a389-861447d737cb",
+          "metrics": {
+            "request_id": "771ae3dc-196c-4228-a389-861447d737cb",
+            "total_request_duration_seconds": 7.058,
+            "stage_durations": {
+              "instagram_extraction": 7.45,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.87,
+              "scoring": 0.001,
+              "google_places_details": 0.748,
+              "enrichment": 2.339,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.725,
+              "google_places_search": 1.87,
+              "google_places_details": 0.748,
+              "google_places_nearby": 1.59
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Pin Lugard Road Lookout, Victoria Peak, Hong, Hong Kong",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 35,
+      "url": "https://www.instagram.com/reel/DZAMjBKvVjQ/",
+      "expected": [
+        "Abbotsford, Canada",
+        "Abbotsford, British Columbia",
+        "Abbotsford near Vancouver"
+      ],
+      "expected_display": "Abbotsford, Canada, Abbotsford, British Columbia, Abbotsford near Vancouver",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Abbotsford, Canada",
+        "Abbotsford, British Columbia",
+        "Abbotsford near Vancouver"
+      ],
+      "notes": "Abbotsford Tulip Garden, British Columbia, Canada",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Abbotsford, Canada, Abbotsford, British Columbia, Abbotsford near Vancouver",
+      "duration_seconds": 6.59,
+      "http_status": 200,
+      "detected": {
+        "name": "Abbotsford near Vancouver and see this beautiful tulip garden, Canada",
+        "formatted_address": "333 Gladwin Rd, Abbotsford, BC V2S 8A7, Canada",
+        "country": "Canada",
+        "city": "Abbotsford near Vancouver and see this beautiful tulip garden",
+        "region": "BC V2S 8A7",
+        "latitude": 49.008882,
+        "longitude": -122.316107,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Abbotsford near Vancouver and see this beautiful tulip garden, Canada",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.58,
+          "stages": {
+            "provider": 2.62,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.23,
+            "verification": 0.45,
+            "nearby_places": 1.58,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "d6af9fbb-b322-4e62-a26a-3f86bf98bf6e",
+          "metrics": {
+            "request_id": "d6af9fbb-b322-4e62-a26a-3f86bf98bf6e",
+            "total_request_duration_seconds": 6.581,
+            "stage_durations": {
+              "instagram_extraction": 5.244,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.955,
+              "scoring": 0.012,
+              "google_places_details": 0.704,
+              "enrichment": 2.284,
+              "gemini_verification": 0.448,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 2.622,
+              "google_places_search": 1.955,
+              "google_places_details": 0.704,
+              "google_places_nearby": 1.579,
+              "gemini_verification": 0.447
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Abbotsford near Vancouver and see this beautiful tulip garden, Canada",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 36,
+      "url": "https://www.instagram.com/reel/DbWbDidTZ47/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Genuinely ambiguous ('Fairy Tale town, Switzerland' without naming village)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 8.4,
+      "http_status": 200,
+      "detected": {
+        "name": "Switzerland",
+        "formatted_address": "Switzerland",
+        "country": "Switzerland",
+        "city": "Switzerland",
+        "region": null,
+        "latitude": 46.818188,
+        "longitude": 8.227512,
+        "confidence": 79,
+        "confidence_level": "MEDIUM",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Switzerland",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.39,
+          "stages": {
+            "provider": 5.31,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.86,
+            "verification": 0.28,
+            "nearby_places": 1.23,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "71e6b351-4ddb-493c-a359-d4a38bb339af",
+          "metrics": {
+            "request_id": "71e6b351-4ddb-493c-a359-d4a38bb339af",
+            "total_request_duration_seconds": 8.395,
+            "stage_durations": {
+              "instagram_extraction": 10.622,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 1.512,
+              "scoring": 0.0,
+              "google_places_details": 0.717,
+              "enrichment": 1.946,
+              "gemini_verification": 0.28,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.311,
+              "google_places_search": 1.512,
+              "google_places_details": 0.717,
+              "google_places_nearby": 1.229,
+              "gemini_verification": 0.278
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Switzerland",
+            "confidence": 78.8,
+            "confidence_level": "MEDIUM",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 37,
+      "url": "https://www.instagram.com/reel/DbQZ2cJvF7G/",
+      "expected": [
+        "Truso Valley, Georgia",
+        "Kazbegi, Georgia",
+        "Juta, Georgia"
+      ],
+      "expected_display": "Truso Valley, Georgia, Kazbegi, Georgia, Juta, Georgia",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Truso Valley, Georgia",
+        "Kazbegi, Georgia",
+        "Juta, Georgia"
+      ],
+      "notes": "Truso Valley and Kazbegi, Georgia",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Truso Valley, Georgia, Kazbegi, Georgia, Juta, Georgia",
+      "duration_seconds": 7.69,
+      "http_status": 200,
+      "detected": {
+        "name": "Truso Valley, Georgia",
+        "formatted_address": "Trusso-Schlucht, Georgia",
+        "country": "Georgia",
+        "city": "Truso Valley",
+        "region": "Trusso-Schlucht",
+        "latitude": 42.603889,
+        "longitude": 44.381111,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Truso Valley, Georgia",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.68,
+          "stages": {
+            "provider": 4.45,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.02,
+            "verification": 0.26,
+            "nearby_places": 1.23,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "d67dfeb9-dd7f-46e9-84b4-a47cfe09b34e",
+          "metrics": {
+            "request_id": "d67dfeb9-dd7f-46e9-84b4-a47cfe09b34e",
+            "total_request_duration_seconds": 7.68,
+            "stage_durations": {
+              "instagram_extraction": 8.906,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.896,
+              "scoring": 0.003,
+              "google_places_details": 0.717,
+              "enrichment": 1.945,
+              "gemini_verification": 0.258,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.453,
+              "google_places_search": 2.896,
+              "google_places_details": 0.717,
+              "google_places_nearby": 1.228,
+              "gemini_verification": 0.257
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Truso Valley, Georgia",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 38,
+      "url": "https://www.instagram.com/reel/DZVyhEHyzYy/",
+      "expected": [
+        "Espresso Chalet, Stevens Pass Hwy, WA",
+        "Espresso Chalet, Washington",
+        "Espresso Chalet"
+      ],
+      "expected_display": "Espresso Chalet, Stevens Pass Hwy, WA, Espresso Chalet, Washington, Espresso Chalet",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Espresso Chalet on Stevens Pass Highway, Washington",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Destination missing: No credible travel destination found (candidates lacked sufficient confidence).",
+      "duration_seconds": 31.56,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 31.55,
+          "stages": {
+            "provider": 3.36,
+            "location_extraction": 23.95,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "cf2f9e28-376f-4244-9b92-3ffbac2cd721",
+          "metrics": {
+            "request_id": "cf2f9e28-376f-4244-9b92-3ffbac2cd721",
+            "total_request_duration_seconds": 31.553,
+            "stage_durations": {
+              "instagram_extraction": 6.72,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.023,
+              "google_places_search": 2.815,
+              "frame_extraction": 1.145,
+              "evidence_ocr": 9.899,
+              "evidence_speech": 12.905,
+              "scoring": 0.0,
+              "google_places_details": 0.0,
+              "enrichment": 0.001,
+              "gemini_verification": 1.399
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.36,
+              "google_places_search": 2.815,
+              "google_places_details": 0.0,
+              "google_places_nearby": 0.001,
+              "gemini_verification": 1.398
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No credible travel destination found (candidates lacked sufficient confidence)."
+      },
+      "error": "No credible travel destination found (candidates lacked sufficient confidence)."
+    },
+    {
+      "id": 39,
+      "url": "https://www.instagram.com/reel/DZ8a_PdSXi6/",
+      "expected": "Iceland",
+      "expected_display": "Iceland",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Iceland road trip itinerary",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Iceland'",
+      "duration_seconds": 8.15,
+      "http_status": 200,
+      "detected": {
+        "name": "Iceland",
+        "formatted_address": "Iceland",
+        "country": "Iceland",
+        "city": "Iceland",
+        "region": null,
+        "latitude": 64.963051,
+        "longitude": -19.020835,
+        "confidence": 69,
+        "confidence_level": "LOW",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Iceland",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.14,
+          "stages": {
+            "provider": 4.74,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.0,
+            "verification": 0.28,
+            "nearby_places": 1.31,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "45373a26-a8da-421e-b819-c4b118f4d8ca",
+          "metrics": {
+            "request_id": "45373a26-a8da-421e-b819-c4b118f4d8ca",
+            "total_request_duration_seconds": 8.142,
+            "stage_durations": {
+              "instagram_extraction": 9.488,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.002,
+              "scoring": 0.001,
+              "google_places_details": 0.804,
+              "enrichment": 2.112,
+              "gemini_verification": 0.28,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.744,
+              "google_places_search": 1.002,
+              "google_places_details": 0.804,
+              "google_places_nearby": 1.308,
+              "gemini_verification": 0.279
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Iceland",
+            "confidence": 68.8,
+            "confidence_level": "LOW",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 40,
+      "url": "http://instagram.com/reel/Dbt1RyjhYO0/",
+      "expected": [
+        "Mt. Kishima, Japan",
+        "Yonezuka, Aso, Kumamoto",
+        "Aso, Kumamoto, Japan",
+        "Mt. Kishima"
+      ],
+      "expected_display": "Mt. Kishima, Japan, Yonezuka, Aso, Kumamoto ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Mt. Kishima, Japan",
+        "Yonezuka, Aso, Kumamoto",
+        "Aso, Kumamoto, Japan",
+        "Mt. Kishima"
+      ],
+      "notes": "Mt. Kishima and Yonezuka in Aso, Kumamoto, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Mt. Kishima, Japan, Yonezuka, Aso, Kumamoto, Aso, Kumamoto, Japan",
+      "duration_seconds": 9.79,
+      "http_status": 200,
+      "detected": {
+        "name": "Mt. Kishima, Japan",
+        "formatted_address": "Mt. Kishima, Otohime, Aso, Kumamoto 869-2226, Japan",
+        "country": "Japan",
+        "city": "Mt. Kishima",
+        "region": "Kumamoto 869-2226",
+        "latitude": 32.893818,
+        "longitude": 131.057741,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Mt. Kishima, Japan",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 9.78,
+          "stages": {
+            "provider": 5.04,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.96,
+            "verification": 0.31,
+            "nearby_places": 1.74,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "9b355b10-baed-4b3c-a2a9-7b0f14712bca",
+          "metrics": {
+            "request_id": "9b355b10-baed-4b3c-a2a9-7b0f14712bca",
+            "total_request_duration_seconds": 9.785,
+            "stage_durations": {
+              "instagram_extraction": 10.082,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 6.049,
+              "scoring": 0.01,
+              "google_places_details": 0.726,
+              "enrichment": 2.467,
+              "gemini_verification": 0.312,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.041,
+              "google_places_search": 6.049,
+              "google_places_details": 0.726,
+              "google_places_nearby": 1.741,
+              "gemini_verification": 0.311
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 8,
+            "selected_candidate": "Mt. Kishima, Japan",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 41,
+      "url": "https://www.instagram.com/reel/DZgflJsv-ga/",
+      "expected": [
+        "Mount Wugong, China",
+        "Mount Wugong",
+        "Wugong Mountain"
+      ],
+      "expected_display": "Mount Wugong, China, Mount Wugong, Wugong Mountain",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Mount Wugong, China",
+        "Mount Wugong",
+        "Wugong Mountain"
+      ],
+      "notes": "Mount Wugong, Jiangxi, China",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Mount Wugong, China, Mount Wugong, Wugong Mountain",
+      "duration_seconds": 6.82,
+      "http_status": 200,
+      "detected": {
+        "name": "Mount Wugong, China",
+        "formatted_address": "Wugong Mountain, Luxi County, Jiangxi, Pingxiang, China, 343206",
+        "country": "China",
+        "city": "Mount Wugong",
+        "region": "Pingxiang",
+        "latitude": 27.455,
+        "longitude": 114.173333,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Mount Wugong, China",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.81,
+          "stages": {
+            "provider": 4.13,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.61,
+            "verification": 0.0,
+            "nearby_places": 1.26,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "bdf1d0f4-38eb-49c5-8171-4479189ba7e7",
+          "metrics": {
+            "request_id": "bdf1d0f4-38eb-49c5-8171-4479189ba7e7",
+            "total_request_duration_seconds": 6.813,
+            "stage_durations": {
+              "instagram_extraction": 8.268,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.61,
+              "scoring": 0.0,
+              "google_places_details": 0.808,
+              "enrichment": 2.066,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.134,
+              "google_places_search": 0.61,
+              "google_places_details": 0.808,
+              "google_places_nearby": 1.258
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Mount Wugong, China",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 42,
+      "url": "https://www.instagram.com/reel/Da-okBCxFV4/",
+      "expected": "Faroe Islands",
+      "expected_display": "Faroe Islands",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Faroe Islands camper van tour",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Faroe Islands'",
+      "duration_seconds": 6.14,
+      "http_status": 200,
+      "detected": {
+        "name": "Faroe Islands",
+        "formatted_address": "Faroe Islands",
+        "country": "Faroe Islands",
+        "city": "Faroe Islands",
+        "region": null,
+        "latitude": 61.892635,
+        "longitude": -6.911806,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Faroe Islands",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.13,
+          "stages": {
+            "provider": 2.98,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.06,
+            "verification": 0.0,
+            "nearby_places": 1.36,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "234d8c18-9f13-42a5-9fe9-dcab8da97a35",
+          "metrics": {
+            "request_id": "234d8c18-9f13-42a5-9fe9-dcab8da97a35",
+            "total_request_duration_seconds": 6.133,
+            "stage_durations": {
+              "instagram_extraction": 5.956,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.022,
+              "scoring": 0.001,
+              "google_places_details": 0.73,
+              "enrichment": 2.092,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 2.978,
+              "google_places_search": 2.022,
+              "google_places_details": 0.73,
+              "google_places_nearby": 1.362
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Faroe Islands",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 43,
+      "url": "https://www.instagram.com/reel/DZh--Kev2Rd/",
+      "expected": [
+        "Bailey Trail Trek, Arunachal Pradesh, India",
+        "Bailey Trail Trek",
+        "Tungri, Arunachal Pradesh, India",
+        "Dirang, Arunachal Pradesh"
+      ],
+      "expected_display": "Bailey Trail Trek, Arunachal Pradesh, India, Bailey Trail Trek ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Bailey Trail Trek, Arunachal Pradesh, India",
+        "Bailey Trail Trek"
+      ],
+      "notes": "Bailey Trail Trek in Arunachal Pradesh, India",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 4 expected locations: Bailey Trail Trek, Arunachal Pradesh, India, Bailey Trail Trek",
+      "duration_seconds": 8.76,
+      "http_status": 200,
+      "detected": {
+        "name": "Bailey Trail Trek, 790104",
+        "formatted_address": "790104",
+        "country": "790104",
+        "city": "Bailey Trail Trek",
+        "region": null,
+        "latitude": 27.794895,
+        "longitude": 92.387552,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Bailey Trail Trek, 790104",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.75,
+          "stages": {
+            "provider": 5.22,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.1,
+            "verification": 0.29,
+            "nearby_places": 1.35,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "7f92853d-ee52-497e-a82c-251e2f89b214",
+          "metrics": {
+            "request_id": "7f92853d-ee52-497e-a82c-251e2f89b214",
+            "total_request_duration_seconds": 8.754,
+            "stage_durations": {
+              "instagram_extraction": 10.442,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.521,
+              "scoring": 0.003,
+              "google_places_details": 0.791,
+              "enrichment": 2.139,
+              "gemini_verification": 0.293,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.221,
+              "google_places_search": 2.521,
+              "google_places_details": 0.791,
+              "google_places_nearby": 1.348,
+              "gemini_verification": 0.293
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Bailey Trail Trek, 790104",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 44,
+      "url": "https://www.instagram.com/reel/Db2wwVGuTjt/",
+      "expected": "Bath, UK",
+      "expected_display": "Bath, UK",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "City of Bath, England, UK",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Bath, UK'",
+      "duration_seconds": 8.67,
+      "http_status": 200,
+      "detected": {
+        "name": "Bath, UK",
+        "formatted_address": "Bath, UK",
+        "country": "UK",
+        "city": "Bath",
+        "region": "UK",
+        "latitude": 51.378102,
+        "longitude": -2.359683,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Bath, UK",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.66,
+          "stages": {
+            "provider": 5.16,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.15,
+            "verification": 0.0,
+            "nearby_places": 1.55,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "8b45fe01-a32a-4faf-86bc-0c820477bc25",
+          "metrics": {
+            "request_id": "8b45fe01-a32a-4faf-86bc-0c820477bc25",
+            "total_request_duration_seconds": 8.666,
+            "stage_durations": {
+              "instagram_extraction": 10.326,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 3.217,
+              "scoring": 0.001,
+              "google_places_details": 0.803,
+              "enrichment": 2.353,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.163,
+              "google_places_search": 3.217,
+              "google_places_details": 0.803,
+              "google_places_nearby": 1.55
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Bath, UK",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 45,
+      "url": "https://www.instagram.com/reel/Db40ocsoikH/",
+      "expected": [
+        "Beyazgul Street, Istanbul, Turkey",
+        "Beyazgul Street, Türkiye",
+        "Arnavutköy, Istanbul",
+        "Beyazgul Street"
+      ],
+      "expected_display": "Beyazgul Street, Istanbul, Turkey, Beyazgul Street, Türkiye ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Beyazgul Street, Istanbul, Turkey",
+        "Beyazgul Street, Türkiye",
+        "Beyazgul Street"
+      ],
+      "notes": "Beyazgul Street in Istanbul, Turkey",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 4 expected locations: Beyazgul Street, Istanbul, Turkey, Beyazgul Street, Türkiye, Beyazgul Street",
+      "duration_seconds": 6.38,
+      "http_status": 200,
+      "detected": {
+        "name": "Beyazgul Street, Türkiye",
+        "formatted_address": "Arnavutköy, Beyazgül Sk., 34345 Beşiktaş/İstanbul, Türkiye",
+        "country": "Türkiye",
+        "city": "Beyazgul Street",
+        "region": "34345 Beşiktaş/İstanbul",
+        "latitude": 41.0691,
+        "longitude": 29.041765,
+        "confidence": 96,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Beyazgul Street, Türkiye",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.38,
+          "stages": {
+            "provider": 2.87,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.06,
+            "verification": 0.33,
+            "nearby_places": 1.68,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "ce115042-8428-4e8b-9504-80cab2bd2738",
+          "metrics": {
+            "request_id": "ce115042-8428-4e8b-9504-80cab2bd2738",
+            "total_request_duration_seconds": 6.377,
+            "stage_durations": {
+              "instagram_extraction": 5.734,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 1.981,
+              "scoring": 0.003,
+              "google_places_details": 0.439,
+              "enrichment": 2.12,
+              "gemini_verification": 0.332,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 2.867,
+              "google_places_search": 1.981,
+              "google_places_details": 0.439,
+              "google_places_nearby": 1.682,
+              "gemini_verification": 0.331
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Beyazgul Street, Türkiye",
+            "confidence": 96.4,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 46,
+      "url": "https://www.instagram.com/reel/Db4TPsNN7pi/",
+      "expected": [
+        "Arches National Park",
+        "Canyonlands National Park",
+        "Capitol Reef National Park",
+        "Hanksville",
+        "Bryce Canyon National Park",
+        "Zion National Park",
+        "Dead Horse Point State Park",
+        "Utah, USA"
+      ],
+      "expected_display": "Arches National Park, Canyonlands National Park ... (8 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Utah, USA"
+      ],
+      "notes": "7 planetary places in Utah, USA",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 1 of 8 expected locations: Utah, USA",
+      "duration_seconds": 9.57,
+      "http_status": 200,
+      "detected": {
+        "name": "Places in Utah that feel like stepping on a different planet, USA",
+        "formatted_address": "Utah, USA",
+        "country": "USA",
+        "city": "Places in Utah that feel like stepping on a different planet",
+        "region": "Utah",
+        "latitude": 37.593038,
+        "longitude": -112.187089,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Places in Utah that feel like stepping on a different planet, USA",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 9.56,
+          "stages": {
+            "provider": 4.5,
+            "location_extraction": 0.0,
+            "candidate_resolution": 2.31,
+            "verification": 0.27,
+            "nearby_places": 1.33,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "9136dee0-b052-478f-9684-6db07a191ff8",
+          "metrics": {
+            "request_id": "9136dee0-b052-478f-9684-6db07a191ff8",
+            "total_request_duration_seconds": 9.56,
+            "stage_durations": {
+              "instagram_extraction": 9.0,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 8.127,
+              "scoring": 0.014,
+              "google_places_details": 1.14,
+              "enrichment": 2.475,
+              "gemini_verification": 0.268,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.5,
+              "google_places_search": 8.127,
+              "google_places_details": 1.14,
+              "google_places_nearby": 1.335,
+              "gemini_verification": 0.268
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 9,
+            "selected_candidate": "Places in Utah that feel like stepping on a different planet, USA",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 47,
+      "url": "https://www.instagram.com/reel/DbkXHUnsMb8/",
+      "expected": [
+        "Kyrgyzstan",
+        "Skazka Canyon",
+        "Barskoon Waterfall",
+        "Seven Bulls Rock",
+        "Chong-Kemin",
+        "Bishkek",
+        "Issyk-Kul",
+        "Karakol",
+        "Song Kul",
+        "Arabel Plateau"
+      ],
+      "expected_display": "Kyrgyzstan, Skazka Canyon ... (10 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Kyrgyzstan",
+        "Skazka Canyon",
+        "Barskoon Waterfall",
+        "Bishkek"
+      ],
+      "notes": "Kyrgyzstan travel itinerary guide",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 10 expected locations: Kyrgyzstan, Skazka Canyon, Barskoon Waterfall",
+      "duration_seconds": 265.2,
+      "http_status": 200,
+      "detected": {
+        "name": "Skazka Canyon, Barskoon Waterfall, Seven, Kyrgyzstan",
+        "formatted_address": "2J55+X2X, Jety Oguz Alley, Bishkek, Kyrgyzstan",
+        "country": "Kyrgyzstan",
+        "city": "Skazka Canyon",
+        "region": "Barskoon Waterfall, Seven",
+        "latitude": 42.009986,
+        "longitude": 77.607624,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Skazka Canyon, Barskoon Waterfall, Seven, Kyrgyzstan",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 265.19,
+          "stages": {
+            "provider": 3.61,
+            "location_extraction": 0.0,
+            "candidate_resolution": 258.71,
+            "verification": 0.43,
+            "nearby_places": 1.43,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "799baa6a-9ffd-4f35-ab5b-af09d7ac59eb",
+          "metrics": {
+            "request_id": "799baa6a-9ffd-4f35-ab5b-af09d7ac59eb",
+            "total_request_duration_seconds": 265.19,
+            "stage_durations": {
+              "instagram_extraction": 7.212,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.003,
+              "google_places_search": 1033.868,
+              "scoring": 0.091,
+              "google_places_details": 1.023,
+              "enrichment": 2.449,
+              "gemini_verification": 0.429,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.606,
+              "google_places_search": 1033.868,
+              "google_places_details": 1.023,
+              "google_places_nearby": 1.425,
+              "gemini_verification": 0.428
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 13,
+            "selected_candidate": "Skazka Canyon, Barskoon Waterfall, Seven, Kyrgyzstan",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 48,
+      "url": "https://www.instagram.com/reel/DbI018hoAuZ/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Genuinely ambiguous ('Yep, Japan again' without landmark)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 7.57,
+      "http_status": 200,
+      "detected": {
+        "name": "Yep, Japan, 1-chōme−33−１８ 白山ＮＴビル 3階",
+        "formatted_address": "Japan, 〒113-0001 Tokyo, Bunkyo City, Hakusan, 1-chōme−33−１８ 白山ＮＴビル 3階",
+        "country": "1-chōme−33−１８ 白山ＮＴビル 3階",
+        "city": "Yep",
+        "region": "Japan",
+        "latitude": 35.720926,
+        "longitude": 139.752316,
+        "confidence": 55,
+        "confidence_level": "VERY_LOW",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Yep, Japan, 1-chōme−33−１８ 白山ＮＴビル 3階",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.56,
+          "stages": {
+            "provider": 4.16,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.7,
+            "verification": 0.4,
+            "nearby_places": 1.68,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "8ae88e6e-7464-4f9a-9d03-ccb522b2f90a",
+          "metrics": {
+            "request_id": "8ae88e6e-7464-4f9a-9d03-ccb522b2f90a",
+            "total_request_duration_seconds": 7.56,
+            "stage_durations": {
+              "instagram_extraction": 8.329,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.701,
+              "scoring": 0.0,
+              "google_places_details": 0.615,
+              "enrichment": 2.296,
+              "gemini_verification": 0.397,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.165,
+              "google_places_search": 0.701,
+              "google_places_details": 0.615,
+              "google_places_nearby": 1.681,
+              "gemini_verification": 0.396
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Yep, Japan, 1-chōme−33−１８ 白山ＮＴビル 3階",
+            "confidence": 55.4,
+            "confidence_level": "VERY_LOW",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 49,
+      "url": "https://www.instagram.com/reel/Dbz4-NliX3_/",
+      "expected": [
+        "Echizen Daibutsu Temple, Japan",
+        "Echizen Daibutsu, Fukui",
+        "Seidaiji Temple, Fukui",
+        "Echizen Daibutsu"
+      ],
+      "expected_display": "Echizen Daibutsu Temple, Japan, Echizen Daibutsu, Fukui ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Echizen Daibutsu Temple, Japan",
+        "Echizen Daibutsu, Fukui",
+        "Seidaiji Temple, Fukui",
+        "Echizen Daibutsu"
+      ],
+      "notes": "Echizen Daibutsu Temple in Fukui Prefecture, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Echizen Daibutsu Temple, Japan, Echizen Daibutsu, Fukui, Seidaiji Temple, Fukui",
+      "duration_seconds": 6.96,
+      "http_status": 200,
+      "detected": {
+        "name": "Echizen Daibutsu Temple, Japan",
+        "formatted_address": "50-1-1 Katase, Katsuyama, Fukui 911-0811, Japan",
+        "country": "Japan",
+        "city": "Echizen Daibutsu Temple",
+        "region": "Fukui 911-0811",
+        "latitude": 36.053649,
+        "longitude": 136.519213,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Echizen Daibutsu Temple, Japan",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.95,
+          "stages": {
+            "provider": 3.9,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.87,
+            "verification": 0.29,
+            "nearby_places": 1.25,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "093b9b14-9dce-495b-afee-01c68c6faddb",
+          "metrics": {
+            "request_id": "093b9b14-9dce-495b-afee-01c68c6faddb",
+            "total_request_duration_seconds": 6.951,
+            "stage_durations": {
+              "instagram_extraction": 7.79,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.843,
+              "scoring": 0.002,
+              "google_places_details": 0.649,
+              "enrichment": 1.899,
+              "gemini_verification": 0.289,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.895,
+              "google_places_search": 2.843,
+              "google_places_details": 0.649,
+              "google_places_nearby": 1.25,
+              "gemini_verification": 0.288
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 4,
+            "selected_candidate": "Echizen Daibutsu Temple, Japan",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 50,
+      "url": "https://www.instagram.com/reel/DVGc6JIiApW/",
+      "expected": [
+        "Arashiyama, Kyoto, Japan",
+        "Arashiyama, Japan",
+        "Arashiyama"
+      ],
+      "expected_display": "Arashiyama, Kyoto, Japan, Arashiyama, Japan, Arashiyama",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Arashiyama, Kyoto, Japan",
+        "Arashiyama, Japan"
+      ],
+      "notes": "Arashiyama area in Kyoto, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 3 expected locations: Arashiyama, Kyoto, Japan, Arashiyama, Japan",
+      "duration_seconds": 29.12,
+      "http_status": 200,
+      "detected": {
+        "name": "NENBUTSUJI MUSEUM, Japan",
+        "formatted_address": "2-5 Sagatoriimoto Fukatanichō, Ukyo Ward, Kyoto, 616-8439, Japan",
+        "country": "Japan",
+        "city": "NENBUTSUJI MUSEUM",
+        "region": "616-8439",
+        "latitude": 35.031143,
+        "longitude": 135.661555,
+        "confidence": 88,
+        "confidence_level": "HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "NENBUTSUJI MUSEUM, Japan",
+      "pipeline": {
+        "success": true,
+        "stage": "ocr",
+        "performance": {
+          "total_seconds": 29.11,
+          "stages": {
+            "provider": 8.74,
+            "location_extraction": 16.31,
+            "candidate_resolution": 0.94,
+            "verification": 1.16,
+            "nearby_places": 1.53,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "a2695d68-a268-4e80-a153-96bbd331a200",
+          "metrics": {
+            "request_id": "a2695d68-a268-4e80-a153-96bbd331a200",
+            "total_request_duration_seconds": 29.107,
+            "stage_durations": {
+              "instagram_extraction": 17.486,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.008,
+              "frame_extraction": 1.832,
+              "evidence_ocr": 14.473,
+              "google_places_search": 2.726,
+              "scoring": 0.003,
+              "google_places_details": 0.426,
+              "enrichment": 1.958,
+              "gemini_verification": 1.163,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 8.743,
+              "google_places_search": 2.726,
+              "google_places_details": 0.426,
+              "google_places_nearby": 1.532,
+              "gemini_verification": 1.162
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "NENBUTSUJI MUSEUM, Japan",
+            "confidence": 87.9,
+            "confidence_level": "HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "ocr"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 51,
+      "url": "https://www.instagram.com/reel/DaNhZE-Ijw8/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 23.1,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 23.09,
+          "stages": {
+            "provider": 2.96,
+            "location_extraction": 16.35,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "5ca1328e-c77e-4a29-b272-b56ba2cefc8e",
+          "metrics": {
+            "request_id": "5ca1328e-c77e-4a29-b272-b56ba2cefc8e",
+            "total_request_duration_seconds": 23.091,
+            "stage_durations": {
+              "instagram_extraction": 5.92,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.016,
+              "frame_extraction": 0.373,
+              "evidence_ocr": 2.003,
+              "evidence_speech": 13.97,
+              "google_places_search": 0.543,
+              "scoring": 0.0,
+              "google_places_details": 0.709,
+              "enrichment": 2.276,
+              "gemini_verification": 0.947
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 2.96,
+              "google_places_search": 0.543,
+              "google_places_details": 0.709,
+              "google_places_nearby": 1.566,
+              "gemini_verification": 0.946
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No credible travel destination found (candidates lacked sufficient confidence)."
+      },
+      "error": null
+    },
+    {
+      "id": 52,
+      "url": "https://www.instagram.com/reel/DVGmDjVjNJY/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Insufficient evidence (inspirational text without geographic anchors)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 23.38,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 23.38,
+          "stages": {
+            "provider": 2.79,
+            "location_extraction": 20.58,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "2be7ff6f-e487-4452-a4c9-a844741b1af3",
+          "metrics": {
+            "request_id": "2be7ff6f-e487-4452-a4c9-a844741b1af3",
+            "total_request_duration_seconds": 23.377,
+            "stage_durations": {
+              "instagram_extraction": 5.586,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.004,
+              "frame_extraction": 0.739,
+              "evidence_ocr": 8.849,
+              "evidence_speech": 10.989
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 2.793
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 53,
+      "url": "https://www.instagram.com/reel/DbP7MQMxfcD/",
+      "expected": "Jeju Island, South Korea",
+      "expected_display": "Jeju Island, South Korea",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Jeju Island, South Korea",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Jeju Island, South Korea'",
+      "duration_seconds": 6.04,
+      "http_status": 200,
+      "detected": {
+        "name": "Jeju Island, South Korea",
+        "formatted_address": "Jeju-do, South Korea",
+        "country": "South Korea",
+        "city": "Jeju Island",
+        "region": "Jeju-do",
+        "latitude": 33.378561,
+        "longitude": 126.566191,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Jeju Island, South Korea",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.03,
+          "stages": {
+            "provider": 2.96,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.09,
+            "verification": 0.0,
+            "nearby_places": 1.26,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "7b3ebc26-0531-47de-97ae-8ef4c1015948",
+          "metrics": {
+            "request_id": "7b3ebc26-0531-47de-97ae-8ef4c1015948",
+            "total_request_duration_seconds": 6.031,
+            "stage_durations": {
+              "instagram_extraction": 5.92,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 1.645,
+              "scoring": 0.001,
+              "google_places_details": 0.725,
+              "enrichment": 1.983,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 2.96,
+              "google_places_search": 1.645,
+              "google_places_details": 0.725,
+              "google_places_nearby": 1.258
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Jeju Island, South Korea",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 54,
+      "url": "https://www.instagram.com/reel/Db_BKP2xBVh/",
+      "expected": [
+        "Faroe Islands",
+        "Múlafossur Waterfall",
+        "Gásadalur",
+        "Trælanípa",
+        "Lake Sørvágsvatn",
+        "Drangarnir",
+        "Saksun",
+        "Gjógv",
+        "Kallur Lighthouse"
+      ],
+      "expected_display": "Faroe Islands, Múlafossur Waterfall ... (9 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Faroe Islands",
+        "Drangarnir"
+      ],
+      "notes": "Faroe Islands bucket list destinations",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 9 expected locations: Faroe Islands, Drangarnir",
+      "duration_seconds": 7.66,
+      "http_status": 200,
+      "detected": {
+        "name": "Drangarnir Sea Arch, Faroe Islands",
+        "formatted_address": "3HGP+69, Bøur, Faroe Islands",
+        "country": "Faroe Islands",
+        "city": "Drangarnir Sea Arch",
+        "region": "Bøur",
+        "latitude": 62.075542,
+        "longitude": -7.414102,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Drangarnir Sea Arch, Faroe Islands",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 7.65,
+          "stages": {
+            "provider": 3.68,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.74,
+            "verification": 0.27,
+            "nearby_places": 1.26,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "185e7403-36b7-4eb9-b918-53bc70fd21a0",
+          "metrics": {
+            "request_id": "185e7403-36b7-4eb9-b918-53bc70fd21a0",
+            "total_request_duration_seconds": 7.653,
+            "stage_durations": {
+              "instagram_extraction": 7.36,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 5.133,
+              "scoring": 0.063,
+              "google_places_details": 0.695,
+              "enrichment": 1.958,
+              "gemini_verification": 0.274,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.68,
+              "google_places_search": 5.133,
+              "google_places_details": 0.695,
+              "google_places_nearby": 1.263,
+              "gemini_verification": 0.273
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 22,
+            "selected_candidate": "Drangarnir Sea Arch, Faroe Islands",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 55,
+      "url": "https://www.instagram.com/reel/DavlUH4uck9/",
+      "expected": "Faroe Islands",
+      "expected_display": "Faroe Islands",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Faroe Islands itinerary and guide",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'faroe islands' in detected output ('The Faroe Islands, Faroe Islands')",
+      "duration_seconds": 5.09,
+      "http_status": 200,
+      "detected": {
+        "name": "The Faroe Islands, Faroe Islands",
+        "formatted_address": "Faroe Islands",
+        "country": "Faroe Islands",
+        "city": "The Faroe Islands",
+        "region": null,
+        "latitude": 61.892635,
+        "longitude": -6.911806,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "The Faroe Islands, Faroe Islands",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 5.08,
+          "stages": {
+            "provider": 4.16,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.92,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "8c593e82-22ff-4c2e-9676-30516511bec8",
+          "metrics": {
+            "request_id": "8c593e82-22ff-4c2e-9676-30516511bec8",
+            "total_request_duration_seconds": 5.086,
+            "stage_durations": {
+              "instagram_extraction": 8.324,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.537,
+              "scoring": 0.004,
+              "google_places_details": 0.0,
+              "enrichment": 0.0,
+              "gemini_verification": 0.0,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.162,
+              "google_places_search": 2.537,
+              "google_places_details": 0.0,
+              "google_places_nearby": 0.0
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 4,
+            "selected_candidate": "The Faroe Islands, Faroe Islands",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 56,
+      "url": "https://www.instagram.com/reel/Dbu0q-FSrYY/",
+      "expected": "Location Not Found",
+      "expected_display": "Location Not Found",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Negative test: Video editing tutorial reel (no travel location)",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Correctly produced no resolved destination (Location Not Found).",
+      "duration_seconds": 13.09,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 13.08,
+          "stages": {
+            "provider": 3.25,
+            "location_extraction": 8.14,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "7f3f6ea0-879f-4e8a-bf76-981f9b9ff23b",
+          "metrics": {
+            "request_id": "7f3f6ea0-879f-4e8a-bf76-981f9b9ff23b",
+            "total_request_duration_seconds": 13.084,
+            "stage_durations": {
+              "instagram_extraction": 6.498,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.012,
+              "frame_extraction": 1.437,
+              "evidence_ocr": 3.263,
+              "google_places_search": 3.303,
+              "evidence_speech": 3.439
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.249,
+              "google_places_search": 3.303
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "Google Places returned no verified destinations for 2 candidate(s)."
+      },
+      "error": null
+    },
+    {
+      "id": 57,
+      "url": "https://www.instagram.com/reel/Dckwua4oavt/",
+      "expected": [
+        "Paisupok Lake, Indonesia",
+        "Paisupok Lake, Central Sulawesi",
+        "Paisupok Lake"
+      ],
+      "expected_display": "Paisupok Lake, Indonesia, Paisupok Lake, Central Sulawesi, Paisupok Lake",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Paisupok Lake, Indonesia",
+        "Paisupok Lake, Central Sulawesi",
+        "Paisupok Lake"
+      ],
+      "notes": "Paisupok Lake in Central Sulawesi, Indonesia",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Paisupok Lake, Indonesia, Paisupok Lake, Central Sulawesi, Paisupok Lake",
+      "duration_seconds": 8.28,
+      "http_status": 200,
+      "detected": {
+        "name": "Paisupok Lake, Indonesia",
+        "formatted_address": "Luk Panenteng, Bulagi Utara, Banggai Islands Regency, Central Sulawesi 94882, Indonesia",
+        "country": "Indonesia",
+        "city": "Paisupok Lake",
+        "region": "Central Sulawesi 94882",
+        "latitude": -1.216402,
+        "longitude": 122.97273,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Paisupok Lake, Indonesia",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.27,
+          "stages": {
+            "provider": 4.44,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.31,
+            "verification": 0.27,
+            "nearby_places": 1.56,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "05ac26db-5d14-456b-bf54-97f29eef4f6b",
+          "metrics": {
+            "request_id": "05ac26db-5d14-456b-bf54-97f29eef4f6b",
+            "total_request_duration_seconds": 8.273,
+            "stage_durations": {
+              "instagram_extraction": 8.884,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 3.927,
+              "scoring": 0.013,
+              "google_places_details": 0.686,
+              "enrichment": 2.244,
+              "gemini_verification": 0.275,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.442,
+              "google_places_search": 3.927,
+              "google_places_details": 0.686,
+              "google_places_nearby": 1.558,
+              "gemini_verification": 0.274
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 5,
+            "selected_candidate": "Paisupok Lake, Indonesia",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 58,
+      "url": "https://www.instagram.com/reel/Dc6UrAbS7DP/",
+      "expected": [
+        "Gaztelugatxe, Spain",
+        "San Juan de Gaztelugatxe, Spain",
+        "Gaztelugatxe, Basque Country",
+        "San Juan de Gaztelugatxe"
+      ],
+      "expected_display": "Gaztelugatxe, Spain, San Juan de Gaztelugatxe, Spain ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "matched_locations": [
+        "Gaztelugatxe, Spain",
+        "San Juan de Gaztelugatxe, Spain",
+        "Gaztelugatxe, Basque Country",
+        "San Juan de Gaztelugatxe"
+      ],
+      "notes": "San Juan de Gaztelugatxe, Basque Country, Spain",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Gaztelugatxe, Spain, San Juan de Gaztelugatxe, Spain, Gaztelugatxe, Basque Country",
+      "duration_seconds": 10.5,
+      "http_status": 200,
+      "detected": {
+        "name": "Gaztelugatxe officially San Juan de in Spain's Basque Country, Spain",
+        "formatted_address": "Carretera de Gaztelugatxe, s/n, 48130 Gaztelugatxeko Doniene, Bizkaia, Spain",
+        "country": "Spain",
+        "city": "Gaztelugatxe officially San Juan de in Spain's Basque Country",
+        "region": "Bizkaia",
+        "latitude": 43.447457,
+        "longitude": -2.784353,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Gaztelugatxe officially San Juan de in Spain's Basque Country, Spain",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 10.5,
+          "stages": {
+            "provider": 6.41,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.53,
+            "verification": 0.28,
+            "nearby_places": 1.62,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "b46c2607-43a7-44ab-8b62-29359b1df739",
+          "metrics": {
+            "request_id": "b46c2607-43a7-44ab-8b62-29359b1df739",
+            "total_request_duration_seconds": 10.499,
+            "stage_durations": {
+              "instagram_extraction": 12.83,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 4.348,
+              "scoring": 0.033,
+              "google_places_details": 0.649,
+              "enrichment": 2.272,
+              "gemini_verification": 0.276,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 6.415,
+              "google_places_search": 4.348,
+              "google_places_details": 0.649,
+              "google_places_nearby": 1.622,
+              "gemini_verification": 0.275
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 5,
+            "selected_candidate": "Gaztelugatxe officially San Juan de in Spain's Basque Country, Spain",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 59,
+      "url": "https://www.instagram.com/reel/DaCPOIDifhQ/",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Requires manual ground-truth verification ('wow' caption)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 24.29,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 24.28,
+          "stages": {
+            "provider": 3.56,
+            "location_extraction": 20.71,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "457bff30-665c-464b-ad66-5b0713859265",
+          "metrics": {
+            "request_id": "457bff30-665c-464b-ad66-5b0713859265",
+            "total_request_duration_seconds": 24.283,
+            "stage_durations": {
+              "instagram_extraction": 7.126,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.006,
+              "frame_extraction": 1.105,
+              "evidence_ocr": 8.778,
+              "evidence_speech": 10.829
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.563
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 60,
+      "url": "https://www.instagram.com/reel/DXzTtwwtoOw",
+      "expected": null,
+      "expected_display": "unspecified",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "Unscored: Genuinely ambiguous ('Game of Thrones universe in Spain' without specific filming sites)",
+      "scored": false,
+      "status": "untested",
+      "match_type": "untested",
+      "match_details": "Case has no expected value specified.",
+      "duration_seconds": 8.62,
+      "http_status": 200,
+      "detected": {
+        "name": "Spain",
+        "formatted_address": "Spain",
+        "country": "Spain",
+        "city": "Spain",
+        "region": null,
+        "latitude": 40.463667,
+        "longitude": -3.74922,
+        "confidence": 79,
+        "confidence_level": "MEDIUM",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Spain",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 8.61,
+          "stages": {
+            "provider": 4.98,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.91,
+            "verification": 0.31,
+            "nearby_places": 1.74,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "9ba015dc-2fc0-437c-8690-2e9c03f91522",
+          "metrics": {
+            "request_id": "9ba015dc-2fc0-437c-8690-2e9c03f91522",
+            "total_request_duration_seconds": 8.616,
+            "stage_durations": {
+              "instagram_extraction": 9.964,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 1.747,
+              "scoring": 0.0,
+              "google_places_details": 0.672,
+              "enrichment": 2.411,
+              "gemini_verification": 0.312,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.982,
+              "google_places_search": 1.747,
+              "google_places_details": 0.672,
+              "google_places_nearby": 1.739,
+              "gemini_verification": 0.311
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Spain",
+            "confidence": 78.8,
+            "confidence_level": "MEDIUM",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 61,
+      "url": "https://www.instagram.com/reel/DcyIef7MqjY/",
+      "expected": "Switzerland",
+      "expected_display": "Switzerland",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Switzerland budget travel guide",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Switzerland'",
+      "duration_seconds": 6.51,
+      "http_status": 200,
+      "detected": {
+        "name": "Switzerland",
+        "formatted_address": "Switzerland",
+        "country": "Switzerland",
+        "city": "Switzerland",
+        "region": null,
+        "latitude": 46.818188,
+        "longitude": 8.227512,
+        "confidence": 79,
+        "confidence_level": "MEDIUM",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Switzerland",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.51,
+          "stages": {
+            "provider": 5.34,
+            "location_extraction": 0.0,
+            "candidate_resolution": 0.9,
+            "verification": 0.27,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "75cf43fc-4b4e-4097-be48-5b51d16cd704",
+          "metrics": {
+            "request_id": "75cf43fc-4b4e-4097-be48-5b51d16cd704",
+            "total_request_duration_seconds": 6.506,
+            "stage_durations": {
+              "instagram_extraction": 10.678,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.895,
+              "scoring": 0.001,
+              "google_places_details": 0.0,
+              "enrichment": 0.001,
+              "gemini_verification": 0.267,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 5.339,
+              "google_places_search": 0.895,
+              "google_places_details": 0.0,
+              "google_places_nearby": 0.001,
+              "gemini_verification": 0.266
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Switzerland",
+            "confidence": 78.8,
+            "confidence_level": "MEDIUM",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
             "final_pipeline_stage": "caption"
           }
         },

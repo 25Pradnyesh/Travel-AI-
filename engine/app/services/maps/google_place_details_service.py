@@ -1,6 +1,18 @@
+import copy
 import os
+import threading
 
 import requests
+
+_place_details_cache: dict[str, dict] = {}
+_details_cache_lock = threading.Lock()
+MAX_DETAILS_CACHE_SIZE = 512
+
+
+def clear_place_details_cache():
+    """Clears the in-memory Google Place Details cache."""
+    with _details_cache_lock:
+        _place_details_cache.clear()
 
 
 class GooglePlaceDetailsService:
@@ -63,6 +75,10 @@ class GooglePlaceDetailsService:
             ]
         )
 
+    @classmethod
+    def clear_cache(cls):
+        clear_place_details_cache()
+
     # ==================================================
     # Fetch Place Details
     # ==================================================
@@ -75,6 +91,11 @@ class GooglePlaceDetailsService:
 
         if not place_id:
             return None
+
+        # Check in-memory cache
+        with _details_cache_lock:
+            if place_id in _place_details_cache:
+                return copy.deepcopy(_place_details_cache[place_id])
 
         if not self.api_key:
             self.last_error = {
@@ -211,7 +232,7 @@ class GooglePlaceDetailsService:
         except (ValueError, TypeError):
             pass
 
-        return {
+        details_dict = {
             # =====================================
             # Identity
             # =====================================
@@ -294,3 +315,10 @@ class GooglePlaceDetailsService:
             # =====================================
             "utc_offset_minutes": utc_offset,
         }
+
+        with _details_cache_lock:
+            if len(_place_details_cache) >= MAX_DETAILS_CACHE_SIZE:
+                _place_details_cache.pop(next(iter(_place_details_cache)))
+            _place_details_cache[place_id] = copy.deepcopy(details_dict)
+
+        return details_dict
