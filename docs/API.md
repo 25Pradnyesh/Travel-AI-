@@ -401,11 +401,13 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
 | HTTP Status | Trigger Condition | Engine Response Detail | Mobile User-Facing Copy |
 | :--- | :--- | :--- | :--- |
 | **`200 OK`** | Pipeline executed successfully | `AnalysisResponse` object | Renders Results or Unresolved notice |
-| **`400 Bad Request`** | Malformed or non-Reel URL | `"Enter a valid public Instagram Reel URL."` | *"Invalid Instagram Reel URL."* |
-| **`422 Unprocessable`** | Private, deleted, or blocked Reel | `"This Reel couldn't be accessed. Make sure it's publicly available."` | *"The Reel could not be accessed. Make sure it is public and available."* |
-| **`500 Internal Error`** | Unexpected engine crash | `"Travel AI couldn't analyze this Reel."` | *"Travel AI couldn't complete the analysis. Please try again."* |
+| **`400 Bad Request`** | Malformed/unsupported URL or invalid photo reference | `"Enter a valid public Instagram Reel URL."` or `"Invalid photo reference name."` | *"Invalid Instagram Reel URL."* |
+| **`413 Content Too Large`** | Request payload exceeds maximum allowable size (100KB) | `"Request payload exceeds maximum allowed size of 100KB."` | *"Request payload too large."* |
+| **`422 Unprocessable`** | Private, deleted, or blocked Reel, or schema validation failure | `"This Reel couldn't be accessed. Make sure it's publicly available."` | *"The Reel could not be accessed. Make sure it is public and available."* |
+| **`429 Too Many Requests`** | Client IP exceeded request quota or burst rate limit | `"Rate limit exceeded. Please try again in X seconds."` (`Retry-After: X`) | *"Too many requests. Please wait a moment and try again."* |
+| **`500 Internal Error`** | Unexpected engine crash (sanitized of stack traces/paths) | `"Travel AI couldn't complete the analysis."` | *"Travel AI couldn't complete the analysis. Please try again."* |
 | **`502 Bad Gateway`** | Upstream extraction or Places failure | Upstream network failure detail | *"Travel AI engine is temporarily degraded or restarting. Please try again."* |
-| **`503 Service Unavail`** | Missing `GOOGLE_PLACES_API_KEY` for photo | `"Google Places service not configured."` | Subdued placeholder image fallback |
+| **`503 Service Unavail`** | Concurrency capacity reached or unconfigured service | `"Server is currently processing maximum concurrent analyses."` (`Retry-After: 5`) | *"Server is busy. Please try again in a few moments."* |
 | **`504 Timeout`** | Analysis exceeded engine time budget | Engine timeout error | *"The analysis timed out. Please try again."* |
 
 ---
@@ -430,6 +432,10 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
 * When a user submits a new Reel or cancels an active request, `analysisStore.clearAnalysisResult()` is invoked immediately.
 * Results from a previous destination query cannot leak into the subsequent analysis session.
 
+### 6.5 Server-Side Concurrency Protection
+* The FastAPI engine enforces `MAX_CONCURRENT_ANALYSIS` (default: 4 simultaneous heavy analyses).
+* Requests arriving when all slots are occupied receive `503 Service Unavailable` with `Retry-After: 5` headers to prevent memory thrashing and CPU starvation.
+
 ---
 
 ## 7. External Service Integration Details
@@ -438,7 +444,8 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
 * **Package:** `yt-dlp>=2024.4.0` via `InstagramYtDlpProvider` (`engine/providers/instagram/provider.py`).
 * **Authentication:** **Zero credentials.** Accesses public Instagram Reels only.
 * **Storage Scratchpad:** Downloads video to `engine/assets/downloads/{uuid}.mp4` using randomized UUIDs.
-* **Socket Timeout:** Capped at 30 seconds.
+* **Socket Timeout:** Capped at 15 seconds.
+* **Filesize Cap:** Enforces `max_filesize: 50MB` to prevent disk flooding attacks.
 * **Cleanup:** Partial chunks (`.part`, `.ytdl`) and downloaded files are unlinked in `finally` blocks.
 
 ### 7.2 Google Places API (New & Legacy)
@@ -447,15 +454,17 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
   * Place Details: `https://places.googleapis.com/v1/places/{id}`
   * Search Nearby: `https://places.googleapis.com/v1/places:searchNearby`
 * **Authentication:** `X-Goog-Api-Key` HTTP header (never exposed via URL query parameters).
-* **Timeout:** Enforced at 15 seconds.
-* **Photo Proxying:** All photo references (`places/.../photos/...`) are proxied via `GET /places/photo`.
+* **Timeout:** Enforced at 15s for Search and 10s for Details and Nearby.
+* **Graceful Degradation:** Failures in Place Details or Nearby Search do not crash the pipeline; the winning destination is preserved with core metadata.
+* **Photo Proxying:** All photo references (`places/.../photos/...`) are proxied via `GET /places/photo` with strict regex validation against path traversal.
 
 ### 7.3 Google Gemini (Multimodal Vision Verifier)
 * **Package:** `google-generativeai>=0.5.0`
 * **Model:** Configured via `GEMINI_MODEL` (default: `gemini-2.5-flash`).
 * **Authentication:** Server-side `GEMINI_API_KEY`.
 * **Payload:** Text evidence prompt + raw video keyframe image stream.
-* **Fallback Behavior:** If Gemini returns an error or is unconfigured, the pipeline cleanly falls back to rule-based scoring (`verification_status = 'SKIPPED'` or `'FAILED'`), preserving candidate resolution.
+* **Timeout:** 15s request timeout enforced.
+* **Fallback Behavior:** If Gemini times out, returns an error, or is unconfigured, the pipeline cleanly falls back to rule-based scoring (`verification_status = 'SKIPPED'` or `'FAILED'`), preserving candidate resolution.
 
 ---
 
@@ -464,14 +473,23 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
 1. **Client Credential Isolation:**
    The mobile client never contains or receives backend API keys.
 2. **Error Masking & Sanitization:**
-   `mobile/lib/api/travel-ai.ts` filters all backend error strings via `isLeakingInternal`:
-   * Suppresses messages containing `Traceback`, `File "`, `AIzaSy`, `key=`, or raw `500:` codes.
-   * Replaces internal stack traces with safe, actionable user copy.
-3. **SSRF Defense on Photo Proxy:**
-   `GET /places/photo` validates that `name` begins with `"places/"` after URL-decoding, preventing arbitrary internal network requests.
-4. **CORS Hardening:**
-   Configured in `engine/app/main.py`. Wildcard origin (`*`) forces `allow_credentials = False` to prevent credentialed cross-origin attacks.
-5. **Production HTTPS Mandate:**
+   Global exception handlers in `engine/app/main.py` sanitize all 500 error responses:
+   * Suppresses tracebacks, local filesystem paths (`D:\...`), and internal class names.
+   * Logs full context server-side with structured `request_id`.
+3. **SSRF & Path Traversal Defense on Photo Proxy:**
+   `GET /places/photo` strictly validates that `name` matches `^places/[A-Za-z0-9_-]+/photos/[A-Za-z0-9_.-]+$`. Path traversal (`..`, `\`, `//`) and non-HTTP protocols are rejected with `400 Bad Request`.
+4. **HTTP Security Headers:**
+   All HTTP responses include:
+   * `X-Content-Type-Options: nosniff`
+   * `X-Frame-Options: DENY`
+   * `Referrer-Policy: strict-origin-when-cross-origin`
+   * `Permissions-Policy: geolocation=(), camera=(), microphone=()`
+   * `Cache-Control: no-store, no-cache, must-revalidate` for `/analyze` and error states.
+5. **In-Memory Rate Limiting:**
+   Sliding-window limiter protects public endpoints against request flooding (`RATE_LIMIT_PER_MINUTE=60`, burst 15), returning `429 Too Many Requests` with `Retry-After`.
+6. **Request Payload Limits:**
+   Body size limiter middleware rejects payloads larger than 100KB (`HTTP 413 Content Too Large`).
+7. **Production HTTPS Mandate:**
    `mobile/constants/config.ts` requires explicit HTTPS URLs in compiled production builds (`__DEV__ = false`). Localhost loopbacks are rejected.
 
 ---
@@ -480,10 +498,10 @@ The FastAPI engine and mobile client strictly adhere to standard HTTP status sem
 
 ### 9.1 Current Limitations
 * **No Authentication / User Sessions:** All endpoints are public and stateless.
-* **No Server-Side Request Caching:** Identical Reel URLs re-execute the full extraction and Google Places pipeline.
-* **No Server-Side Rate Limiting:** Rate limiting must be managed at an upstream reverse proxy (Cloudflare/NGINX).
+* **In-Memory Single-Process Rate Limiting & Concurrency:** The sliding-window rate limiter and concurrency guard are process-local. In horizontally scaled multi-worker / multi-container clusters, a distributed store (e.g., Redis) is required to synchronize quotas across nodes.
+* **In-Memory Response Caching:** Duplicate Reel URLs re-execute the pipeline unless cached at upstream reverse proxies (Cloudflare/CloudFront).
 
 ### 9.2 Future Considerations (Post-MVP)
-* **Reel Analysis Caching:** Hash incoming Reel URLs in Redis with a 7-day TTL to return cached `AnalysisResponse` JSON instantly for viral videos.
+* **Distributed Redis Rate Limiting & Caching:** Introduce Redis for cluster-wide rate limiting and caching resolved destinations with a 7-day TTL.
 * **WebSocket / Server-Sent Events (SSE):** Replace the static 180s polling request with a live SSE stream (`POST /analyze/stream`) to emit granular stage events (`extracting`, `transcribing`, `matching`, `verifying`).
 * **Authenticated Bookmarks Sync:** Add user JWT tokens to sync device `SavedPlace` bookmarks with a cloud database.

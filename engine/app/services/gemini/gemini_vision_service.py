@@ -108,9 +108,15 @@ Vegetation: {scene_info.get('vegetation', 'None')}
         try:
             with Image.open(path_obj) as pil_image:
                 pil_image.load()
-                response = self.model.generate_content(
-                    [prompt, pil_image],
-                )
+                try:
+                    response = self.model.generate_content(
+                        [prompt, pil_image],
+                        request_options={"timeout": 15.0},
+                    )
+                except TypeError:
+                    response = self.model.generate_content(
+                        [prompt, pil_image],
+                    )
 
             text = getattr(response, "text", "") or ""
             result = self.parser.parse(text)

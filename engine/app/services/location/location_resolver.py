@@ -283,7 +283,11 @@ class LocationResolver:
         if place_id and not place.get("photos"):
             ctx = get_current_context()
             t_d = time.perf_counter()
-            details = self.details.get_details(place_id)
+            details = None
+            try:
+                details = self.details.get_details(place_id)
+            except Exception as exc:
+                self.log(f"⚠️ Place details enrichment failed: {type(exc).__name__}: {exc}")
             d_dur = time.perf_counter() - t_d
             if ctx:
                 ctx.record_external_call("google_places_details", d_dur)
@@ -313,10 +317,14 @@ class LocationResolver:
         # Nearby Search
         # ------------------------------------------
         t_nb_start = time.perf_counter()
-        nearby = self.nearby.search(
-            latitude,
-            longitude,
-        ) or {}
+        nearby = {}
+        try:
+            nearby = self.nearby.search(
+                latitude,
+                longitude,
+            ) or {}
+        except Exception as exc:
+            self.log(f"⚠️ Nearby search enrichment failed: {type(exc).__name__}: {exc}")
         nearby_duration = time.perf_counter() - t_nb_start
 
         place = self.attach_nearby(
@@ -344,7 +352,10 @@ class LocationResolver:
         # AI Travel Intelligence
         # ------------------------------------------
         t_tr_start = time.perf_counter()
-        place = self.travel.enrich(place)
+        try:
+            place = self.travel.enrich(place)
+        except Exception as exc:
+            self.log(f"⚠️ Travel intelligence enrichment failed: {type(exc).__name__}: {exc}")
         travel_duration = time.perf_counter() - t_tr_start
 
         place.setdefault("editorial_summary", "")

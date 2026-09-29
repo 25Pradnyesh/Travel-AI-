@@ -76,10 +76,15 @@ class GeminiService:
             return None
 
         try:
-            response = self.model.generate_content(
-                prompt,
-            )
-
+            try:
+                response = self.model.generate_content(
+                    prompt,
+                    request_options={"timeout": 15.0},
+                )
+            except TypeError:
+                response = self.model.generate_content(
+                    prompt,
+                )
         except Exception as e:
             logger.error("[GEMINI] API Error: %s", type(e).__name__)
             return None

@@ -45,7 +45,9 @@ class InstagramYtDlpProvider(BaseProvider):
 
             "noplaylist": True,
 
-            "socket_timeout": 30,
+            "socket_timeout": 15,
+
+            "max_filesize": 50 * 1024 * 1024,  # 50MB maximum to prevent disk flooding
 
             "retries": 3,
 

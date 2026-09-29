@@ -245,20 +245,40 @@ Temporary files are aggressively purged across all execution paths:
 
 ---
 
-## 9. Current Limitations & Required Production Safeguards
+## 9. Abuse Prevention, Rate Limiting & Deployment Architecture
 
-### 9.1 Current Limitations
-1. **Unauthenticated Engine Endpoints:** Endpoints are currently open to any client capable of reaching the backend URL.
-2. **No Backend Rate Limiting:** The FastAPI engine does not currently contain internal token-bucket or IP rate limiters.
-3. **No Web Application Firewall (WAF):** Protection against distributed denial-of-service (DDoS) attacks is not natively handled in code.
+### 9.1 Stage 12 Security Hardening
+In Stage 12, the FastAPI backend was hardened with native protection mechanisms:
+1. **In-Memory Sliding-Window Rate Limiting:**
+   * Configured via `RATE_LIMIT_ENABLED` (default: `true`), `RATE_LIMIT_PER_MINUTE` (default: `60`), and `RATE_LIMIT_BURST` (default: `15`).
+   * Tracks requests per IP address across a 60-second sliding window without requiring an external database.
+   * Returns `429 Too Many Requests` with a calculated `Retry-After` header when quotas are exceeded.
+   * Whitelists loopback addresses (`127.0.0.1`, `::1`, `localhost`, `testclient`) for local development and benchmark execution.
+2. **Concurrency Limiter Guard:**
+   * Limits simultaneous heavy analysis pipelines via `MAX_CONCURRENT_ANALYSIS` (default: `4`).
+   * Rejects excess concurrent requests with `503 Service Unavailable` (`Retry-After: 5`) to prevent CPU starvation and memory exhaustion.
+3. **Request Body Size Limits:**
+   * Rejects POST/PUT payloads exceeding 100KB (`MAX_REQUEST_BODY_SIZE_BYTES=102400`) with `HTTP 413 Content Too Large`.
+4. **HTTP Security Headers:**
+   * Automatically adds `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Permissions-Policy: geolocation=(), camera=(), microphone=()`.
+   * Enforces `Cache-Control: no-store, no-cache, must-revalidate` for `/analyze` and error responses.
+5. **Upstream Timeout Enforcements & Graceful Degradation:**
+   * yt-dlp media retrieval capped at 15s socket timeout and 50MB maximum filesize.
+   * Google Places Search (15s), Place Details (10s), and Nearby Search (10s) timeouts enforced.
+   * Google Gemini calls bounded by 15s timeouts.
+   * Graceful degradation: Place Details or Nearby search failures do not crash the pipeline; the winning destination is preserved with core evidence.
 
-### 9.2 Required Production Safeguards
-Before deploying the FastAPI engine to a public production URL, the following infrastructure safeguards are required:
+### 9.2 Current Deployment Limitations
+1. **Unauthenticated Engine Endpoints:** Endpoints are public and stateless (authentication is out of scope for the current architecture).
+2. **Single-Process In-Memory State:** The sliding-window rate limiter and concurrency semaphore are process-local. In horizontally scaled deployments (e.g., multi-worker Uvicorn, Kubernetes pods), each instance maintains its own counters.
+3. **Cluster-Wide Coordination:** For large-scale distributed deployments, an external cache/store (e.g. Redis) is recommended to synchronize rate limit quotas and concurrency across all cluster nodes.
+
+### 9.3 Recommended Production Deployment Architecture
+Before exposing the FastAPI engine directly to public internet traffic:
 1. **Reverse Proxy / API Gateway:** Deploy FastAPI behind Cloudflare, AWS API Gateway, NGINX, or Caddy.
-2. **Edge Rate Limiting:** Enforce IP-based rate limiting (e.g., maximum 10 requests per minute per IP on `/analyze`) at the reverse proxy layer to prevent API key quota exhaustion.
+2. **Edge Rate Limiting & DDoS Protection:** Complement backend rate limits with edge DDoS mitigation (e.g. Cloudflare WAF).
 3. **SSL/TLS Termination:** Ensure modern TLS 1.3 encryption with automatic certificate renewal.
 4. **CORS Production Lockdown:** Restrict `CORS_ORIGINS` to verified production web domains if the legacy web client is deployed.
-5. **DDoS Protection:** Enable Cloudflare or cloud provider DDoS mitigation to absorb traffic surges.
 
 ---
 

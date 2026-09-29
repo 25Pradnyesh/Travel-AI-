@@ -1,11 +1,9 @@
 import logging
 import os
 from pathlib import Path
-import re
 import time
 import urllib.parse
-from fastapi import APIRouter, HTTPException, Response, status
-from pydantic import BaseModel, model_validator
+from fastapi import APIRouter, HTTPException, Request, Response, status
 import requests
 
 from engine.observability.context import (
@@ -18,16 +16,17 @@ from engine.observability.errors import ErrorCategory, categorize_error
 from engine.observability.logger import get_logger
 from engine.observability.metrics import get_metrics_aggregator
 from engine.observability.redactor import sanitize_url
+from engine.domain.schemas.request import AnalyzeRequest
+from engine.core.security import (
+    validate_place_photo_name,
+    rate_limiter,
+    concurrency_limiter,
+)
 
 logger = logging.getLogger(__name__)
 obs_logger = get_logger("engine.app.api.analyze")
 
 router = APIRouter(tags=["Analysis"])
-
-INSTAGRAM_REEL_REGEX = re.compile(
-    r"^https?://(?:www\.)?instagram\.com/(?:reel|reels|p)/([A-Za-z0-9_-]+)",
-    re.IGNORECASE,
-)
 
 _provider = None
 _pipeline = None
@@ -49,29 +48,41 @@ def get_pipeline():
     return _pipeline
 
 
-
-class AnalyzeRequest(BaseModel):
-    reel_url: str | None = None
-    url: str | None = None
-
-    @property
-    def target_url(self) -> str:
-        return (self.reel_url or self.url or "").strip()
-
-    @model_validator(mode="after")
-    def check_url(self):
-        if not self.target_url or not INSTAGRAM_REEL_REGEX.match(self.target_url):
-            raise ValueError("Enter a valid public Instagram Reel URL.")
-        return self
-
-
 # ==================================================
 # Full Pipeline Analysis
 # ==================================================
 
 @router.post("/analyze")
-def analyze(request: AnalyzeRequest):
-    url = request.target_url
+def analyze(payload: AnalyzeRequest, request: Request = None):
+    # 1. Extract Client IP and enforce rate limiting
+    client_ip = "127.0.0.1"
+    if request is not None:
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            client_ip = forwarded.split(",")[0].strip()
+        elif request.client and request.client.host:
+            client_ip = request.client.host
+
+    allowed, retry_after = rate_limiter.is_allowed(client_ip)
+    if not allowed:
+        obs_logger.warning("security", f"Rate limit exceeded for IP: {client_ip}")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded. Please try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    # 2. Concurrency Protection
+    slot_acquired = concurrency_limiter.acquire(timeout=2.0)
+    if not slot_acquired:
+        obs_logger.warning("security", "Server concurrency limit reached on /analyze")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Server is currently processing maximum concurrent analyses. Please try again shortly.",
+            headers={"Retry-After": "5"},
+        )
+
+    url = payload.target_url
 
     total_start = time.perf_counter()
     provider_duration = None
@@ -106,7 +117,7 @@ def analyze(request: AnalyzeRequest):
             ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, ErrorCategory.MEDIA_UNAVAILABLE, str(e))
             get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
                 detail="This Reel couldn't be accessed. Make sure it's publicly available.",
             )
         except HTTPException:
@@ -142,6 +153,9 @@ def analyze(request: AnalyzeRequest):
                 detail="Travel AI couldn't complete the analysis.",
             )
     finally:
+        # Guarantee concurrency slot is released
+        concurrency_limiter.release()
+
         # Guarantee video cleanup if not already unlinked by pipeline
         if video_path:
             try:
@@ -161,11 +175,12 @@ def get_place_photo(name: str):
     """
     Proxies Google Places photo media server-side so that
     GOOGLE_PLACES_API_KEY is never exposed to client bundles or browser logs.
+    Enforces strict format validation to prevent path traversal or SSRF.
     """
     clean_name = (name or "").strip()
     clean_name = urllib.parse.unquote(clean_name)
 
-    if not clean_name or not clean_name.startswith("places/"):
+    if not validate_place_photo_name(clean_name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid photo reference name.",
