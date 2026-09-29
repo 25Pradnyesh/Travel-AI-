@@ -13,6 +13,7 @@ from engine.domain.schemas.responses import (
 from engine.app.services.travel.travel_intelligence_service import (
     TravelIntelligenceService,
 )
+from engine.observability.context import get_current_context
 
 logger = logging.getLogger(__name__)
 
@@ -505,6 +506,14 @@ class ResponseBuilder:
                 scene=(gemini_result.get("vision") or {}).get("scene") if isinstance(gemini_result.get("vision"), dict) else None,
             )
 
+        ctx = get_current_context()
+        req_id = ctx.request_id if ctx else None
+        err_cat = ctx.error_category if ctx else None
+
+        if performance and isinstance(performance, dict) and ctx:
+            performance["request_id"] = req_id
+            performance["metrics"] = ctx.get_telemetry_dict()
+
         response = AnalysisResponse(
             success=True,
             best_guess=best_guess,
@@ -514,6 +523,8 @@ class ResponseBuilder:
             gemini=gemini_info,
             stage=stage,
             performance=performance,
+            request_id=req_id,
+            error_category=err_cat,
         )
 
         logger.info("[RESPONSE] Response validation: passed (locations count: %d)", len(locations))
@@ -529,6 +540,7 @@ class ResponseBuilder:
         error: str = "No destination could be verified from the provided Reel.",
         performance: dict | None = None,
         extracted_candidates: list[str] | None = None,
+        error_category: str | None = None,
     ) -> AnalysisResponse:
 
         clean_error = str(error) if isinstance(error, str) else "No destination could be verified from the provided Reel."
@@ -537,6 +549,14 @@ class ResponseBuilder:
         clean_candidates = [
             str(c) for c in extracted_candidates if isinstance(c, str)
         ] if isinstance(extracted_candidates, list) else []
+
+        ctx = get_current_context()
+        req_id = ctx.request_id if ctx else None
+        final_err_cat = error_category or (ctx.error_category if ctx else None) or "RESOLUTION_FAILURE"
+
+        if performance and isinstance(performance, dict) and ctx:
+            performance["request_id"] = req_id
+            performance["metrics"] = ctx.get_telemetry_dict()
 
         return AnalysisResponse(
             success=False,
@@ -553,4 +573,6 @@ class ResponseBuilder:
             performance=performance,
             error=clean_error,
             extracted_candidates=clean_candidates,
+            request_id=req_id,
+            error_category=final_err_cat,
         )

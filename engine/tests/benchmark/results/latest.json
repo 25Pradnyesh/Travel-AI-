@@ -1,23 +1,41 @@
 {
-  "timestamp": "2026-09-29T12:35:00.177568+00:00",
+  "timestamp": "2026-09-29T12:56:17.587518+00:00",
   "summary": {
-    "total_cases": 1,
-    "completed_cases": 1,
-    "scored_cases": 1,
+    "total_cases": 9,
+    "completed_cases": 9,
+    "scored_cases": 9,
     "untested_cases": 0,
-    "passed_cases": 1,
+    "passed_cases": 9,
     "failed_cases": 0,
     "error_cases": 0,
     "accuracy": 100.0,
     "performance": {
-      "average_seconds": 11.0,
-      "p95_seconds": 11.0,
-      "min_seconds": 11.0,
-      "max_seconds": 11.0,
-      "total_seconds": 11.0
+      "average_seconds": 18.5,
+      "p95_seconds": 76.2,
+      "min_seconds": 6.3,
+      "max_seconds": 76.2,
+      "total_seconds": 166.1
     },
     "evidence_breakdown": {
       "caption": {
+        "total_scored": 5,
+        "passed": 5,
+        "failed": 0,
+        "accuracy": 100.0
+      },
+      "ocr": {
+        "total_scored": 2,
+        "passed": 2,
+        "failed": 0,
+        "accuracy": 100.0
+      },
+      "speech": {
+        "total_scored": 6,
+        "passed": 6,
+        "failed": 0,
+        "accuracy": 100.0
+      },
+      "multi_location": {
         "total_scored": 1,
         "passed": 1,
         "failed": 0,
@@ -40,7 +58,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'varenna' in detected output ('Varenna, Lake Como, Italy')",
-      "duration_seconds": 10.98,
+      "duration_seconds": 15.09,
       "http_status": 200,
       "detected": {
         "name": "Varenna, Lake Como, Italy",
@@ -59,15 +77,715 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.97,
+          "total_seconds": 15.06,
           "stages": {
-            "provider": 4.4,
+            "provider": 7.54,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.24,
-            "verification": 0.31,
-            "nearby_places": 1.3,
+            "candidate_resolution": 3.55,
+            "verification": 0.51,
+            "nearby_places": 1.48,
             "travel_intelligence": 0.0,
             "response_building": 0.0
+          },
+          "request_id": "f0491b1f-656c-43cb-b03b-b64b6d530115",
+          "metrics": {
+            "request_id": "f0491b1f-656c-43cb-b03b-b64b6d530115",
+            "total_request_duration_seconds": 15.068,
+            "stage_durations": {
+              "instagram_extraction": 15.074,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.007,
+              "google_places_search": 1.678,
+              "google_places_details": 1.856,
+              "scoring": 0.005,
+              "enrichment": 1.484,
+              "gemini_verification": 0.506,
+              "response_construction": 0.002
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 7.537,
+              "google_places_search": 1.678,
+              "google_places_details": 1.856,
+              "google_places_nearby": 1.484,
+              "gemini_verification": 0.504
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Varenna, Lake Como, Italy",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 2,
+      "url": "https://www.instagram.com/reel/DaLCfAjyR6I/",
+      "expected": "Location Not Found",
+      "expected_display": "Location Not Found",
+      "evidence": [],
+      "multi_location": false,
+      "notes": "No location no OCR no Speech",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Correctly produced no resolved destination (Location Not Found).",
+      "duration_seconds": 76.23,
+      "http_status": 200,
+      "detected": null,
+      "detected_display": "None",
+      "pipeline": {
+        "success": false,
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 76.21,
+          "stages": {
+            "provider": 3.74,
+            "location_extraction": 72.47,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "99d4a419-dd84-466a-86c4-811275572362",
+          "metrics": {
+            "request_id": "99d4a419-dd84-466a-86c4-811275572362",
+            "total_request_duration_seconds": 76.208,
+            "stage_durations": {
+              "instagram_extraction": 7.472,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "frame_extraction": 2.457,
+              "evidence_ocr": 20.193,
+              "evidence_speech": 49.818
+            },
+            "success": false,
+            "failure_stage": "location_resolution",
+            "error_category": "RESOLUTION_FAILURE",
+            "external_service_latency": {
+              "instagram_download": 3.736
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption",
+              "ocr",
+              "speech"
+            ],
+            "candidate_count": 0,
+            "selected_candidate": null,
+            "confidence": null,
+            "confidence_level": null,
+            "google_places_resolution_status": "NOT_FOUND",
+            "gemini_verification_status": null,
+            "final_pipeline_stage": "failed"
+          }
+        },
+        "error": "No location candidates generated from evidence."
+      },
+      "error": null
+    },
+    {
+      "id": 3,
+      "url": "https://www.instagram.com/reel/DOgPodqjfiC/",
+      "expected": "Chennai , India",
+      "expected_display": "Chennai , India",
+      "evidence": [
+        "ocr"
+      ],
+      "multi_location": false,
+      "notes": "Location in OCR",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Chennai, India'",
+      "duration_seconds": 6.42,
+      "http_status": 200,
+      "detected": {
+        "name": "Chennai, India",
+        "formatted_address": "Chennai, Tamil Nadu, India",
+        "country": "India",
+        "city": "Chennai",
+        "region": "Tamil Nadu",
+        "latitude": 13.057057,
+        "longitude": 80.209822,
+        "confidence": 87,
+        "confidence_level": "HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Chennai, India",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.41,
+          "stages": {
+            "provider": 3.41,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.11,
+            "verification": 0.28,
+            "nearby_places": 1.61,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "15e1f2d4-8354-40e2-99cb-7f6695d84b40",
+          "metrics": {
+            "request_id": "15e1f2d4-8354-40e2-99cb-7f6695d84b40",
+            "total_request_duration_seconds": 6.412,
+            "stage_durations": {
+              "instagram_extraction": 6.824,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.582,
+              "google_places_details": 0.509,
+              "scoring": 0.0,
+              "enrichment": 1.613,
+              "gemini_verification": 0.279,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.412,
+              "google_places_search": 0.582,
+              "google_places_details": 0.509,
+              "google_places_nearby": 1.612,
+              "gemini_verification": 0.278
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Chennai, India",
+            "confidence": 86.8,
+            "confidence_level": "HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 4,
+      "url": "https://www.instagram.com/reel/DUoJDhZj6hv/",
+      "expected": "AUSTRIA",
+      "expected_display": "AUSTRIA",
+      "evidence": [
+        "speech"
+      ],
+      "multi_location": false,
+      "notes": "Location in SPEECH",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Austria'",
+      "duration_seconds": 6.33,
+      "http_status": 200,
+      "detected": {
+        "name": "Austria",
+        "formatted_address": "Austria",
+        "country": "Austria",
+        "city": "Austria",
+        "region": null,
+        "latitude": 47.516231,
+        "longitude": 14.550072,
+        "confidence": 85,
+        "confidence_level": "HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Austria",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 6.32,
+          "stages": {
+            "provider": 3.19,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.26,
+            "verification": 0.28,
+            "nearby_places": 1.58,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "1cecef9c-2876-419f-a0aa-5cb98b793628",
+          "metrics": {
+            "request_id": "1cecef9c-2876-419f-a0aa-5cb98b793628",
+            "total_request_duration_seconds": 6.32,
+            "stage_durations": {
+              "instagram_extraction": 6.374,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.649,
+              "google_places_details": 0.613,
+              "scoring": 0.001,
+              "enrichment": 1.583,
+              "gemini_verification": 0.284,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 3.187,
+              "google_places_search": 0.649,
+              "google_places_details": 0.613,
+              "google_places_nearby": 1.582,
+              "gemini_verification": 0.283
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Austria",
+            "confidence": 85.2,
+            "confidence_level": "HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 5,
+      "url": "https://www.instagram.com/reel/Db3Iw9dPZjT/",
+      "expected": "4 places in meghalay and their names respectively (all the names of the 4 places shou;d be extracted just 1 )",
+      "expected_display": "4 places in meghalay and their names respectively (all the names of the 4 places shou;d be extracted just 1 )",
+      "evidence": [
+        "ocr",
+        "speech"
+      ],
+      "multi_location": true,
+      "notes": "Location in OCR and Speech",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Detected location is within expected Meghalaya region: 'Meghalaya, India'",
+      "duration_seconds": 15.94,
+      "http_status": 200,
+      "detected": {
+        "name": "Meghalaya, India",
+        "formatted_address": "Meghalaya, India",
+        "country": "India",
+        "city": "Meghalaya",
+        "region": "Meghalaya",
+        "latitude": 25.467031,
+        "longitude": 91.366216,
+        "confidence": 93,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "FAILED"
+      },
+      "detected_display": "Meghalaya, India",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 15.92,
+          "stages": {
+            "provider": 12.6,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.52,
+            "verification": 0.4,
+            "nearby_places": 1.41,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "1589ec8d-26cc-4678-a98c-1bc769b90d53",
+          "metrics": {
+            "request_id": "1589ec8d-26cc-4678-a98c-1bc769b90d53",
+            "total_request_duration_seconds": 15.922,
+            "stage_durations": {
+              "instagram_extraction": 25.194,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.641,
+              "google_places_details": 0.863,
+              "scoring": 0.011,
+              "enrichment": 1.41,
+              "gemini_verification": 0.397,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 12.597,
+              "google_places_search": 0.641,
+              "google_places_details": 0.863,
+              "google_places_nearby": 1.41,
+              "gemini_verification": 0.396
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Meghalaya, India",
+            "confidence": 92.8,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "FAILED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 6,
+      "url": "https://www.instagram.com/reel/Db3CdalB5yU/",
+      "expected": "Itoya, Ginza, Tokyo - open since 1904",
+      "expected_display": "Itoya, Ginza, Tokyo - open since 1904",
+      "evidence": [
+        "speech",
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'itoya' in detected output ('Itoya, Ginza, Tokyo, Japan')",
+      "duration_seconds": 11.36,
+      "http_status": 200,
+      "detected": {
+        "name": "Itoya, Ginza, Tokyo, Japan",
+        "formatted_address": "2-chōme-7-15 Ginza, Chuo City, Tokyo 104-0061, Japan",
+        "country": "Japan",
+        "city": "Itoya",
+        "region": "Ginza, Tokyo",
+        "latitude": 35.673127,
+        "longitude": 139.767214,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Itoya, Ginza, Tokyo, Japan",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 11.35,
+          "stages": {
+            "provider": 7.22,
+            "location_extraction": 0.0,
+            "candidate_resolution": 2.68,
+            "verification": 0.0,
+            "nearby_places": 1.45,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "012f593a-413a-4cbe-a4ae-d9f8ef9df694",
+          "metrics": {
+            "request_id": "012f593a-413a-4cbe-a4ae-d9f8ef9df694",
+            "total_request_duration_seconds": 11.354,
+            "stage_durations": {
+              "instagram_extraction": 14.436,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.002,
+              "google_places_search": 1.268,
+              "google_places_details": 1.401,
+              "scoring": 0.013,
+              "enrichment": 1.449,
+              "gemini_verification": 0.001,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 7.218,
+              "google_places_search": 1.268,
+              "google_places_details": 1.401,
+              "google_places_nearby": 1.449
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 2,
+            "selected_candidate": "Itoya, Ginza, Tokyo, Japan",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 7,
+      "url": "https://www.instagram.com/reel/DbxOs7mTa_R/",
+      "expected": "Houtouwan China",
+      "expected_display": "Houtouwan China",
+      "evidence": [
+        "speech",
+        "caption"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Sufficient match: 'houtouwan china' in detected output ('Houtouwan China, China')",
+      "duration_seconds": 12.23,
+      "http_status": 200,
+      "detected": {
+        "name": "Houtouwan China, China",
+        "formatted_address": "Houtouwan, Shengsi County, Zhoushan, Zhejiang, China, 202457",
+        "country": "China",
+        "city": "Houtouwan China",
+        "region": "Zhejiang",
+        "latitude": 30.723994,
+        "longitude": 122.822593,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Houtouwan China, China",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 12.21,
+          "stages": {
+            "provider": 9.32,
+            "location_extraction": 0.0,
+            "candidate_resolution": 1.65,
+            "verification": 0.0,
+            "nearby_places": 1.25,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "fb8cf720-545c-42cd-ab04-d48fe26d00fb",
+          "metrics": {
+            "request_id": "fb8cf720-545c-42cd-ab04-d48fe26d00fb",
+            "total_request_duration_seconds": 12.215,
+            "stage_durations": {
+              "instagram_extraction": 18.642,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.0,
+              "google_places_search": 0.864,
+              "google_places_details": 0.78,
+              "scoring": 0.001,
+              "enrichment": 1.245,
+              "gemini_verification": 0.001,
+              "response_construction": 0.0
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 9.321,
+              "google_places_search": 0.864,
+              "google_places_details": 0.78,
+              "google_places_nearby": 1.245
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 1,
+            "selected_candidate": "Houtouwan China, China",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 8,
+      "url": "https://www.instagram.com/reel/DbqaMR-NKvN/",
+      "expected": "Forte IX, Lithuania",
+      "expected_display": "Forte IX, Lithuania",
+      "evidence": [
+        "caption",
+        "speech"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption (Forte IX, Kaunas, Lithuania)",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Forte IX, Lithuania'",
+      "duration_seconds": 10.7,
+      "http_status": 200,
+      "detected": {
+        "name": "Forte IX, Lithuania",
+        "formatted_address": "Žemaičių pl. 73, 47435 Kaunas, Lithuania",
+        "country": "Lithuania",
+        "city": "Forte IX",
+        "region": "47435 Kaunas",
+        "latitude": 54.944089,
+        "longitude": 23.875206,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Forte IX, Lithuania",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 10.69,
+          "stages": {
+            "provider": 4.42,
+            "location_extraction": 0.0,
+            "candidate_resolution": 4.23,
+            "verification": 0.0,
+            "nearby_places": 2.03,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "b3902e44-86b9-444e-a2f8-a20013c19ed1",
+          "metrics": {
+            "request_id": "b3902e44-86b9-444e-a2f8-a20013c19ed1",
+            "total_request_duration_seconds": 10.69,
+            "stage_durations": {
+              "instagram_extraction": 8.834,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 2.779,
+              "google_places_details": 1.439,
+              "scoring": 0.016,
+              "enrichment": 2.034,
+              "gemini_verification": 0.001,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.417,
+              "google_places_search": 2.779,
+              "google_places_details": 1.439,
+              "google_places_nearby": 2.034
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Forte IX, Lithuania",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
+          }
+        },
+        "error": null
+      },
+      "error": null
+    },
+    {
+      "id": 9,
+      "url": "https://www.instagram.com/reel/DbqaMR-NKvN/",
+      "expected": "Forte IX, Lithuania",
+      "expected_display": "Forte IX, Lithuania",
+      "evidence": [
+        "caption",
+        "speech"
+      ],
+      "multi_location": false,
+      "notes": "Location in Speech and Caption (Duplicate of Case 8)",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Forte IX, Lithuania'",
+      "duration_seconds": 11.82,
+      "http_status": 200,
+      "detected": {
+        "name": "Forte IX, Lithuania",
+        "formatted_address": "Žemaičių pl. 73, 47435 Kaunas, Lithuania",
+        "country": "Lithuania",
+        "city": "Forte IX",
+        "region": "47435 Kaunas",
+        "latitude": 54.944089,
+        "longitude": 23.875206,
+        "confidence": 100,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "SKIPPED"
+      },
+      "detected_display": "Forte IX, Lithuania",
+      "pipeline": {
+        "success": true,
+        "stage": "caption",
+        "performance": {
+          "total_seconds": 11.81,
+          "stages": {
+            "provider": 4.94,
+            "location_extraction": 0.0,
+            "candidate_resolution": 5.08,
+            "verification": 0.0,
+            "nearby_places": 1.79,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          },
+          "request_id": "4d11b86d-7ad5-44a7-9487-70e1688d722f",
+          "metrics": {
+            "request_id": "4d11b86d-7ad5-44a7-9487-70e1688d722f",
+            "total_request_duration_seconds": 11.812,
+            "stage_durations": {
+              "instagram_extraction": 9.877,
+              "evidence_caption": 0.0,
+              "candidate_generation": 0.001,
+              "google_places_search": 3.199,
+              "google_places_details": 1.877,
+              "scoring": 0.005,
+              "enrichment": 1.789,
+              "gemini_verification": 0.001,
+              "response_construction": 0.001
+            },
+            "success": true,
+            "failure_stage": null,
+            "error_category": null,
+            "external_service_latency": {
+              "instagram_download": 4.939,
+              "google_places_search": 3.199,
+              "google_places_details": 1.877,
+              "google_places_nearby": 1.788
+            },
+            "retry_counts": {},
+            "evidence_sources_used": [
+              "caption"
+            ],
+            "candidate_count": 3,
+            "selected_candidate": "Forte IX, Lithuania",
+            "confidence": 100.0,
+            "confidence_level": "VERY_HIGH",
+            "google_places_resolution_status": "FOUND",
+            "gemini_verification_status": "SKIPPED",
+            "final_pipeline_stage": "caption"
           }
         },
         "error": null

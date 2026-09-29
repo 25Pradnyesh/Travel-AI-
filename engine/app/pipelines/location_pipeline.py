@@ -20,8 +20,18 @@ from engine.app.services.travel.travel_intelligence_service import (
 from engine.app.services.response.response_builder import (
     ResponseBuilder,
 )
+from engine.observability.context import (
+    get_current_context,
+    start_request_context,
+    measure_stage,
+)
+from engine.observability.stages import PipelineStage
+from engine.observability.errors import ErrorCategory
+from engine.observability.logger import get_logger
+from engine.observability.metrics import get_metrics_aggregator
 
 logger = logging.getLogger(__name__)
+obs_logger = get_logger("engine.app.pipelines.location_pipeline")
 
 
 class LocationPipeline:
@@ -101,20 +111,47 @@ class LocationPipeline:
             err_msg = str(raw_err) if isinstance(raw_err, str) else "No verified destination candidate resolved."
             raw_cands = getattr(self.resolver, "last_attempted_candidates", [])
             attempted = [str(c) for c in raw_cands if isinstance(c, str)] if isinstance(raw_cands, list) else []
-            return self.response_builder.build_unresolved(
-                stage=stage,
-                error=err_msg,
-                performance=perf,
-                extracted_candidates=attempted,
-            ).model_dump()
 
-        resp = self.response_builder.build(
-            winner=winner,
-            gemini_result=gemini_result,
-            stage=stage,
-            performance=None,
-            ranked_places=resolver_result.get("ranked_places", []) if isinstance(resolver_result, dict) else None,
-        )
+            ctx = get_current_context()
+            if ctx:
+                ctx.final_stage = stage
+                ctx.success = False
+                ctx.failure_stage = "location_resolution"
+                ctx.error_category = str(ErrorCategory.RESOLUTION_FAILURE)
+                ctx.places_resolution_status = "NOT_FOUND"
+                perf["request_id"] = ctx.request_id
+                perf["metrics"] = ctx.get_telemetry_dict()
+                get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
+                obs_logger.warning("pipeline", f"Analysis unresolved at stage {stage}", error=err_msg)
+
+            with measure_stage(PipelineStage.RESPONSE_CONSTRUCTION):
+                return self.response_builder.build_unresolved(
+                    stage=stage,
+                    error=err_msg,
+                    performance=perf,
+                    extracted_candidates=attempted,
+                    error_category=str(ErrorCategory.RESOLUTION_FAILURE),
+                ).model_dump()
+
+        ctx = get_current_context()
+        if ctx:
+            ctx.final_stage = stage
+            ctx.success = True
+            p = winner.get("place", {}) if isinstance(winner, dict) else {}
+            ctx.selected_candidate = p.get("travel_name") or p.get("display_name")
+            ctx.confidence = winner.get("score")
+            ctx.confidence_level = winner.get("confidence") or p.get("confidence")
+            ctx.places_resolution_status = "FOUND"
+            ctx.gemini_verification_status = (gemini_result.get("verification_status") if gemini_result else None) or "SKIPPED"
+
+        with measure_stage(PipelineStage.RESPONSE_CONSTRUCTION):
+            resp = self.response_builder.build(
+                winner=winner,
+                gemini_result=gemini_result,
+                stage=stage,
+                performance=None,
+                ranked_places=resolver_result.get("ranked_places", []) if isinstance(resolver_result, dict) else None,
+            )
         build_sec = time.perf_counter() - t_build_start
 
         stages = {}
@@ -131,6 +168,18 @@ class LocationPipeline:
             "total_seconds": round(time.perf_counter() - total_start, 2),
             "stages": stages,
         }
+        if ctx:
+            perf["request_id"] = ctx.request_id
+            perf["metrics"] = ctx.get_telemetry_dict()
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
+            obs_logger.info(
+                "pipeline",
+                f"Analysis resolved successfully at stage '{stage}'",
+                winner=ctx.selected_candidate,
+                confidence=ctx.confidence,
+                confidence_level=ctx.confidence_level,
+            )
+
         resp.performance = perf
         return resp.model_dump()
 
@@ -285,10 +334,20 @@ class LocationPipeline:
         video_path: str | None = None,
         total_start: float | None = None,
         provider_duration: float | None = None,
+        request_id: str | None = None,
     ) -> dict:
 
         if total_start is None:
             total_start = time.perf_counter()
+
+        ctx = get_current_context()
+        if ctx is None:
+            ctx = start_request_context(request_id=request_id)
+        elif request_id and ctx.request_id != request_id:
+            ctx.request_id = request_id
+
+        if provider_duration is not None:
+            ctx.record_stage_duration(PipelineStage.INSTAGRAM_EXTRACTION, provider_duration)
 
         frame_paths = []
         extract_seconds = 0.0
@@ -299,19 +358,23 @@ class LocationPipeline:
             # ==================================================
             print("\n--- Stage 1: Caption ---")
             t_ext = time.perf_counter()
-            evidence = self.builder.build_caption(metadata)
-            evidence = self.builder.combine(evidence)
+            with measure_stage(PipelineStage.EVIDENCE_CAPTION):
+                evidence = self.builder.build_caption(metadata)
+                evidence = self.builder.combine(evidence)
             extract_seconds += (time.perf_counter() - t_ext)
+            if "caption" not in ctx.evidence_sources:
+                ctx.evidence_sources.append("caption")
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
                 t_ver = time.perf_counter()
-                gemini = self.verify_if_needed(
-                    evidence,
-                    resolver,
-                    frame_paths,
-                )
+                with measure_stage(PipelineStage.GEMINI_VERIFICATION):
+                    gemini = self.verify_if_needed(
+                        evidence,
+                        resolver,
+                        frame_paths,
+                    )
                 verify_seconds = time.perf_counter() - t_ver
                 if self._is_credible_destination(resolver, gemini, stage="caption"):
                     return self.build_response(
@@ -332,30 +395,35 @@ class LocationPipeline:
             t_ext = time.perf_counter()
             if video_path and Path(video_path).exists():
                 try:
-                    frame_paths = self.frames.extract(
-                        video_path,
-                        "engine/assets/frames",
-                    )
+                    with measure_stage(PipelineStage.FRAME_EXTRACTION):
+                        frame_paths = self.frames.extract(
+                            video_path,
+                            "engine/assets/frames",
+                        )
                 except Exception as e:
-                    logger.warning("[PIPELINE] Frame extraction failed: %s", type(e).__name__)
+                    obs_logger.warning("frame_extraction", f"Frame extraction failed: {type(e).__name__}")
                     frame_paths = []
 
-            evidence = self.builder.build_ocr(
-                evidence,
-                frame_paths,
-            )
-            evidence = self.builder.combine(evidence)
+            with measure_stage(PipelineStage.EVIDENCE_OCR):
+                evidence = self.builder.build_ocr(
+                    evidence,
+                    frame_paths,
+                )
+                evidence = self.builder.combine(evidence)
             extract_seconds += (time.perf_counter() - t_ext)
+            if "ocr" not in ctx.evidence_sources:
+                ctx.evidence_sources.append("ocr")
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
                 t_ver = time.perf_counter()
-                gemini = self.verify_if_needed(
-                    evidence,
-                    resolver,
-                    frame_paths,
-                )
+                with measure_stage(PipelineStage.GEMINI_VERIFICATION):
+                    gemini = self.verify_if_needed(
+                        evidence,
+                        resolver,
+                        frame_paths,
+                    )
                 verify_seconds = time.perf_counter() - t_ver
                 if self._is_credible_destination(resolver, gemini, stage="ocr"):
                     return self.build_response(
@@ -376,25 +444,29 @@ class LocationPipeline:
             t_ext = time.perf_counter()
             if video_path and Path(video_path).exists():
                 try:
-                    evidence = self.builder.build_speech(
-                        evidence,
-                        video_path,
-                    )
+                    with measure_stage(PipelineStage.EVIDENCE_SPEECH):
+                        evidence = self.builder.build_speech(
+                            evidence,
+                            video_path,
+                        )
                 except Exception as e:
-                    logger.warning("[PIPELINE] Speech extraction failed: %s", type(e).__name__)
+                    obs_logger.warning("evidence_speech", f"Speech extraction failed: {type(e).__name__}")
 
             evidence = self.builder.combine(evidence)
             extract_seconds += (time.perf_counter() - t_ext)
+            if "speech" not in ctx.evidence_sources:
+                ctx.evidence_sources.append("speech")
 
             resolver = self.resolver.resolve(evidence)
 
             if resolver:
                 t_ver = time.perf_counter()
-                gemini = self.verify_if_needed(
-                    evidence,
-                    resolver,
-                    frame_paths,
-                )
+                with measure_stage(PipelineStage.GEMINI_VERIFICATION):
+                    gemini = self.verify_if_needed(
+                        evidence,
+                        resolver,
+                        frame_paths,
+                    )
                 verify_seconds = time.perf_counter() - t_ver
                 if self._is_credible_destination(resolver, gemini, stage="speech"):
                     return self.build_response(
@@ -436,12 +508,25 @@ class LocationPipeline:
             else:
                 err_msg = "No destination candidates found from the Reel."
 
-            return self.response_builder.build_unresolved(
-                stage="failed",
-                error=err_msg,
-                performance=perf,
-                extracted_candidates=attempted,
-            ).model_dump()
+            if ctx:
+                ctx.final_stage = "failed"
+                ctx.success = False
+                ctx.failure_stage = "location_resolution"
+                ctx.error_category = str(ErrorCategory.RESOLUTION_FAILURE)
+                ctx.places_resolution_status = "NOT_FOUND"
+                perf["request_id"] = ctx.request_id
+                perf["metrics"] = ctx.get_telemetry_dict()
+                get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
+                obs_logger.warning("pipeline", "Analysis completed: no destination resolved", error=err_msg)
+
+            with measure_stage(PipelineStage.RESPONSE_CONSTRUCTION):
+                return self.response_builder.build_unresolved(
+                    stage="failed",
+                    error=err_msg,
+                    performance=perf,
+                    extracted_candidates=attempted,
+                    error_category=str(ErrorCategory.RESOLUTION_FAILURE),
+                ).model_dump()
 
         finally:
             self._cleanup_temp_files(video_path, frame_paths)

@@ -26,6 +26,9 @@ from engine.app.services.scoring.scoring_service import (
 from engine.app.services.travel.travel_intelligence_service import (
     TravelIntelligenceService,
 )
+from engine.observability.context import get_current_context, measure_stage
+from engine.observability.stages import PipelineStage
+from engine.observability.errors import ErrorCategory
 
 logger = logging.getLogger(__name__)
 
@@ -405,22 +408,26 @@ class LocationResolver:
         # Generate Search Candidates
         # ==================================================
 
-        candidates = self.candidates.generate(
-            metadata=evidence.get(
-                "metadata",
-                {},
-            ),
-            ocr_text=evidence.get(
-                "ocr_text",
-                "",
-            ),
-            speech_text=evidence.get(
-                "speech_text",
-                "",
-            ),
-        )
+        with measure_stage(PipelineStage.CANDIDATE_GENERATION):
+            candidates = self.candidates.generate(
+                metadata=evidence.get(
+                    "metadata",
+                    {},
+                ),
+                ocr_text=evidence.get(
+                    "ocr_text",
+                    "",
+                ),
+                speech_text=evidence.get(
+                    "speech_text",
+                    "",
+                ),
+            )
 
         self.last_attempted_candidates = list(candidates)
+        ctx = get_current_context()
+        if ctx:
+            ctx.candidate_count = len(candidates)
 
         print(
             "\n========================================"
@@ -438,6 +445,8 @@ class LocationResolver:
 
         if not candidates:
             self.last_resolver_error = "No location candidates generated from evidence."
+            if ctx:
+                ctx.places_resolution_status = "NO_CANDIDATES"
             print(
                 "❌ No candidates generated.\n"
             )
@@ -459,7 +468,12 @@ class LocationResolver:
                 f"\n[{index}/{len(candidates)}] {candidate}"
             )
 
+            t_s = time.perf_counter()
             search_results = self.search.search(candidate)
+            s_dur = time.perf_counter() - t_s
+            if ctx:
+                ctx.record_external_call("google_places_search", s_dur)
+                ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_SEARCH, s_dur)
             resolved_query = candidate
 
             # Zero-result fallback via deterministic query relaxation
@@ -467,7 +481,12 @@ class LocationResolver:
                 fallbacks = self._generate_query_fallbacks(candidate)
                 for fb in fallbacks:
                     self.log(f"Zero results for '{candidate}'. Trying relaxed query: '{fb}'")
+                    t_fb = time.perf_counter()
                     fb_results = self.search.search(fb)
+                    fb_dur = time.perf_counter() - t_fb
+                    if ctx:
+                        ctx.record_external_call("google_places_search", fb_dur)
+                        ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_SEARCH, fb_dur)
                     if fb_results:
                         search_results = fb_results
                         resolved_query = fb
@@ -523,9 +542,14 @@ class LocationResolver:
                 # --------------------------------------
                 # Details with graceful search fallback
                 # --------------------------------------
+                t_d = time.perf_counter()
                 details = self.details.get_details(
                     place_id,
                 )
+                d_dur = time.perf_counter() - t_d
+                if ctx:
+                    ctx.record_external_call("google_places_details", d_dur)
+                    ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, d_dur)
                 if not details:
                     self.log(
                         f"Place Details unavailable for '{result.get('display_name')}' ({place_id}); using search result data."
@@ -648,13 +672,11 @@ class LocationResolver:
         # Ranking Starts Here
         # ==================================================
 
-        ranked = self.scorer.rank_places(
-
-            verified_places,
-
-            evidence,
-
-        )
+        with measure_stage(PipelineStage.SCORING):
+            ranked = self.scorer.rank_places(
+                verified_places,
+                evidence,
+            )
 
         if not ranked:
 
@@ -691,7 +713,10 @@ class LocationResolver:
         # Only enrich the top candidate (ranked[0]). Non-winning candidates
         # remain available for Gemini comparison without incurring 5x Google Places calls.
         if ranked:
-            ranked[0], nearby_duration, travel_duration = self._enrich_candidate(ranked[0])
+            with measure_stage(PipelineStage.ENRICHMENT):
+                ranked[0], nearby_duration, travel_duration = self._enrich_candidate(ranked[0])
+            if ctx:
+                ctx.record_external_call("google_places_nearby", nearby_duration)
             for item in ranked[1:]:
                 p = item["place"]
                 p.setdefault("nearby", {})

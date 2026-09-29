@@ -8,7 +8,19 @@ from fastapi import APIRouter, HTTPException, Response, status
 from pydantic import BaseModel, model_validator
 import requests
 
+from engine.observability.context import (
+    get_current_context,
+    start_request_context,
+    measure_stage,
+)
+from engine.observability.stages import PipelineStage
+from engine.observability.errors import ErrorCategory, categorize_error
+from engine.observability.logger import get_logger
+from engine.observability.metrics import get_metrics_aggregator
+from engine.observability.redactor import sanitize_url
+
 logger = logging.getLogger(__name__)
+obs_logger = get_logger("engine.app.api.analyze")
 
 router = APIRouter(tags=["Analysis"])
 
@@ -66,21 +78,33 @@ def analyze(request: AnalyzeRequest):
     provider_output = None
     video_path = None
 
+    ctx = get_current_context()
+    if ctx is None:
+        ctx = start_request_context(url=url)
+
+    obs_logger.info("analyze", "Starting reel analysis", url=sanitize_url(url))
+
     try:
         try:
             provider_start = time.perf_counter()
-            provider = get_provider()
-            provider_output = provider.extract(url)
+            with measure_stage(PipelineStage.INSTAGRAM_EXTRACTION):
+                provider = get_provider()
+                provider_output = provider.extract(url)
             provider_duration = time.perf_counter() - provider_start
+            ctx.record_external_call("instagram_download", provider_duration)
             video_path = provider_output.get("video_path") if isinstance(provider_output, dict) else None
         except ValueError as e:
-            logger.warning("[API] Validation error: %s", type(e).__name__)
+            obs_logger.warning("instagram_extraction", f"Validation error: {type(e).__name__}")
+            ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, ErrorCategory.EXTRACTION_FAILURE, str(e))
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Enter a valid public Instagram Reel URL.",
             )
         except (RuntimeError, FileNotFoundError) as e:
-            logger.warning("[API] Reel download error: %s", type(e).__name__)
+            obs_logger.warning("instagram_extraction", f"Reel download error: {type(e).__name__}")
+            ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, ErrorCategory.MEDIA_UNAVAILABLE, str(e))
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="This Reel couldn't be accessed. Make sure it's publicly available.",
@@ -88,7 +112,10 @@ def analyze(request: AnalyzeRequest):
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("[API] Unexpected error during extraction: %s", type(e).__name__)
+            obs_logger.error("instagram_extraction", f"Unexpected error during extraction: {type(e).__name__}")
+            cat = categorize_error(e, stage=PipelineStage.INSTAGRAM_EXTRACTION)
+            ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, cat, str(e))
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Travel AI couldn't analyze this Reel.",
@@ -101,11 +128,15 @@ def analyze(request: AnalyzeRequest):
                 video_path=video_path,
                 total_start=total_start,
                 provider_duration=provider_duration,
+                request_id=ctx.request_id,
             )
         except HTTPException:
             raise
         except Exception as e:
-            logger.error("[API] Pipeline execution error: %s", type(e).__name__)
+            obs_logger.error("pipeline", f"Pipeline execution error: {type(e).__name__}")
+            cat = categorize_error(e, stage="pipeline")
+            ctx.record_failure("pipeline", cat, str(e))
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Travel AI couldn't complete the analysis.",

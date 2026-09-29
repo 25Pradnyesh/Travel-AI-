@@ -1,6 +1,7 @@
 import copy
 import logging
 from pathlib import Path
+import time
 
 from engine.app.services.gemini.gemini_service import (
     GeminiService,
@@ -14,6 +15,7 @@ from engine.app.services.gemini.text_prompt_builder import (
 from engine.app.services.gemini.text_response_parser import (
     ResponseParser,
 )
+from engine.observability.context import get_current_context
 
 logger = logging.getLogger(__name__)
 
@@ -350,6 +352,10 @@ class GeminiVerifier:
         # ------------------------------------------
         if not self.should_verify(top_candidates, image_path):
             logger.info("[GEMINI] Skipping verification (confidence already high)")
+            ctx = get_current_context()
+            if ctx:
+                ctx.record_event("gemini_verification", "skipped")
+                ctx.gemini_verification_status = "SKIPPED"
             winner = copy.deepcopy(top_candidates[0])
             winner["place"]["verification_status"] = "SKIPPED"
             winner["place"]["gemini_verified"] = False
@@ -374,6 +380,9 @@ class GeminiVerifier:
                 "vision": None,
             }
 
+        ctx = get_current_context()
+        t_gem_start = time.perf_counter()
+
         # ------------------------------------------
         # Text Verification
         # ------------------------------------------
@@ -396,6 +405,10 @@ class GeminiVerifier:
         else:
             logger.info("[GEMINI] Vision verification: skipped (no frame available)")
 
+        gem_duration = time.perf_counter() - t_gem_start
+        if ctx:
+            ctx.record_external_call("gemini_verification", gem_duration)
+
         # ------------------------------------------
         # Deterministic Decision Logic (Text + Vision + Scoring)
         # ------------------------------------------
@@ -404,6 +417,9 @@ class GeminiVerifier:
             text_result=text_result,
             vision_result=vision_result,
         )
+
+        if ctx:
+            ctx.gemini_verification_status = status
 
         winner = self.attach_verified_metadata(
             winner=winner,

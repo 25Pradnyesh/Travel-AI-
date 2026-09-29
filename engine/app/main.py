@@ -119,6 +119,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ==================================================
+# Tracing & Request ID Middleware
+# ==================================================
+
+import uuid
+from starlette.requests import Request
+from engine.observability.context import start_request_context
+from engine.observability.logger import get_logger
+
+obs_logger = get_logger("engine.app.main")
+
+
+@app.middleware("http")
+async def tracing_middleware(request: Request, call_next):
+    raw_trace_id = (
+        request.headers.get("X-Request-ID")
+        or request.headers.get("X-Trace-ID")
+        or request.headers.get("x-request-id")
+        or request.headers.get("x-trace-id")
+    )
+    req_id = raw_trace_id.strip() if (raw_trace_id and raw_trace_id.strip()) else str(uuid.uuid4())
+    start_request_context(request_id=req_id, url=str(request.url))
+    obs_logger.info("http", f"HTTP {request.method} {request.url.path} initiated")
+
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = req_id
+    obs_logger.info("http", f"HTTP {request.method} {request.url.path} completed with status {response.status_code}")
+    return response
+
+
 
 # ==================================================
 # Import Routers

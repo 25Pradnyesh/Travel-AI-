@@ -65,5 +65,7 @@ class AnalysisResponse(BaseModel):
     performance: dict[str, Any] | None = None
     error: str | None = None
     extracted_candidates: list[str] = Field(default_factory=list)
+    request_id: str | None = None
+    error_category: str | None = None
 
 

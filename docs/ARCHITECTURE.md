@@ -83,3 +83,15 @@ Each source contributes a confidence score before producing the final location.
 - Easily Extendable
 - Independent Components
 - Production Ready
+
+---
+
+## Observability & Reliability (Stage 10)
+
+The engine features a dedicated, zero-dependency observability layer under `engine/observability/`:
+
+- **Request & Trace Context:** Async-safe `RequestContext` tracking `X-Request-ID` across every pipeline stage.
+- **Granular Stage Telemetry:** Timing for ingestion, OCR, Whisper, candidate generation, Places queries, and Gemini vision.
+- **Structured Error Classification:** 10 deterministic failure categories (`EXTRACTION_FAILURE`, `MEDIA_UNAVAILABLE`, `RESOLUTION_FAILURE`, etc.).
+- **Strict Privacy Redaction:** Production logging and traces deterministically strip Google API keys, credentials, tokens, and cookies.
+- See `docs/observability.md` for full telemetry and diagnostics runbook.

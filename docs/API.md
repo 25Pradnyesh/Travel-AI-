@@ -277,7 +277,9 @@ Analyzes a public Instagram Reel URL and returns structured geographic intellige
       "response_building": 0.05
     }
   },
-  "error": null
+  "error": null,
+  "request_id": "9f2d1e0c-3b4a-4d7e-8f90-1a2b3c4d5e6f",
+  "error_category": null
 }
 ```
 
@@ -312,7 +314,9 @@ When the pipeline executes successfully but cannot verify a candidate destinatio
       "response_building": 0.01
     }
   },
-  "error": "No destination candidates found from the Reel."
+  "error": "No destination candidates found from the Reel.",
+  "request_id": "9f2d1e0c-3b4a-4d7e-8f90-1a2b3c4d5e6f",
+  "error_category": "RESOLUTION_FAILURE"
 }
 ```
 
