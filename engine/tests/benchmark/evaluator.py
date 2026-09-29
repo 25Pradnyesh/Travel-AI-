@@ -335,7 +335,7 @@ class BenchmarkEvaluator:
                 "expected": expected,
                 "expected_display": self._format_expected_display(expected),
                 "evidence": evidence,
-                "multi_location": True,
+                "multi_location": is_multi,
                 "matched_locations": matched_items,
                 "notes": notes,
                 "scored": True,

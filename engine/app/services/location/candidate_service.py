@@ -295,6 +295,52 @@ BOILERPLATE_WORDS = {
     "time",
     "escape",
     "money",
+    "brand",
+    "studio",
+    "tutorial",
+    "preset",
+    "presets",
+    "cinematic",
+    "spiderman",
+}
+
+TEMPORAL_WORDS = {
+    # Months
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    # Days
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    # Seasons & Time
+    "spring",
+    "summer",
+    "autumn",
+    "winter",
+    "morning",
+    "afternoon",
+    "evening",
+    "night",
+    "weekend",
+    "weekday",
+    "today",
+    "yesterday",
+    "tomorrow",
+    "tonight",
 }
 
 INVALID_SINGLE_WORDS = (
@@ -303,6 +349,7 @@ INVALID_SINGLE_WORDS = (
     | DEMONYM_ADJECTIVES
     | DETERMINERS_AND_PRONOUNS
     | BOILERPLATE_WORDS
+    | TEMPORAL_WORDS
 )
 
 
@@ -419,6 +466,11 @@ KNOWN_GEOGRAPHIC_ENTITIES = {
     "Enshi",
     "Houtouwan",
 }
+
+# Include recognized world countries as geographic entities
+KNOWN_GEOGRAPHIC_ENTITIES.update(
+    {c.title() for c in COUNTRIES if len(c) > 2}
+)
 
 
 # ==================================================
@@ -586,8 +638,16 @@ class CandidateService:
 
         words = lower.split()
 
+        # Reject if starts with a boilerplate/non-location indicator
+        if words and words[0] in BOILERPLATE_WORDS:
+            return False
+
         # Reject if all words are generic location tokens (e.g. "beach park")
         if all(word in GENERIC_LOCATION_WORDS for word in words):
+            return False
+
+        # Reject if all words are invalid single words or temporal words
+        if all(word in INVALID_SINGLE_WORDS for word in words):
             return False
 
         if candidate.isdigit():
@@ -596,7 +656,7 @@ class CandidateService:
         if candidate.isupper() and len(candidate) <= 4 and candidate not in ("USA", "UK"):
             return False
 
-        # Single word validation: must not be in generic, stop, verb, demonym, or boilerplate sets
+        # Single word validation: must not be in generic, stop, verb, demonym, boilerplate, or temporal sets
         if len(words) == 1:
             if words[0] in GENERIC_LOCATION_WORDS or words[0] in INVALID_SINGLE_WORDS:
                 return False
@@ -679,9 +739,11 @@ class CandidateService:
             ).strip()
 
             lower_content = content.lower()
-            # Skip non-destination conversational intros
+            # Skip non-destination conversational intros and marketing bullet points
             if any(lower_content.startswith(p) for p in [
-                "here are", "these are", "some of", "favorite places", "my favorite", "save this", "check out"
+                "here are", "these are", "some of", "favorite places", "my favorite", "save this", "check out",
+                "a custom google map", "custom google map", "google map", "custom map", "my map",
+                "link in", "click the", "click here", "download", "free guide"
             ]):
                 continue
 
@@ -716,6 +778,7 @@ class CandidateService:
     def extract_compound_locations(
         self,
         text: str,
+        source: str = "caption",
     ):
         cleaned = self.clean(text)
         candidates = []
@@ -814,7 +877,7 @@ class CandidateService:
                 candidates.append(geo)
                 continue
             # OCR / transcription typo tolerance for recognized destinations
-            if len(geo_lower) >= 5:
+            if source in ("ocr", "speech") and len(geo_lower) >= 5:
                 for w in words_lower:
                     if len(w) >= 4 and abs(len(w) - len(geo_lower)) <= 2:
                         ratio = difflib.SequenceMatcher(None, w, geo_lower).ratio()
@@ -866,7 +929,7 @@ class CandidateService:
         if not text:
             return
 
-        candidates = self.extract_compound_locations(text)
+        candidates = self.extract_compound_locations(text, source=source)
 
         for candidate in candidates:
             key = candidate.lower()

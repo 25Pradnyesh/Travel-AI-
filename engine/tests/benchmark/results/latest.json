@@ -1,27 +1,27 @@
 {
-  "timestamp": "2026-09-29T06:37:22.752807+00:00",
+  "timestamp": "2026-09-29T12:09:44.387203+00:00",
   "summary": {
     "total_cases": 61,
     "completed_cases": 61,
-    "scored_cases": 17,
-    "untested_cases": 44,
-    "passed_cases": 17,
-    "failed_cases": 0,
+    "scored_cases": 47,
+    "untested_cases": 14,
+    "passed_cases": 42,
+    "failed_cases": 5,
     "error_cases": 0,
-    "accuracy": 100.0,
+    "accuracy": 89.4,
     "performance": {
-      "average_seconds": 48.9,
-      "p95_seconds": 64.8,
-      "min_seconds": 6.4,
-      "max_seconds": 1515.4,
-      "total_seconds": 2982.0
+      "average_seconds": 86.7,
+      "p95_seconds": 62.3,
+      "min_seconds": 5.7,
+      "max_seconds": 3849.1,
+      "total_seconds": 5288.1
     },
     "evidence_breakdown": {
       "caption": {
-        "total_scored": 13,
-        "passed": 13,
-        "failed": 0,
-        "accuracy": 100.0
+        "total_scored": 42,
+        "passed": 38,
+        "failed": 4,
+        "accuracy": 90.5
       },
       "ocr": {
         "total_scored": 3,
@@ -30,14 +30,14 @@
         "accuracy": 100.0
       },
       "speech": {
-        "total_scored": 7,
-        "passed": 7,
+        "total_scored": 9,
+        "passed": 9,
         "failed": 0,
         "accuracy": 100.0
       },
       "multi_location": {
-        "total_scored": 3,
-        "passed": 3,
+        "total_scored": 7,
+        "passed": 7,
         "failed": 0,
         "accuracy": 100.0
       }
@@ -58,7 +58,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'varenna' in detected output ('Varenna, Lake Como, Italy')",
-      "duration_seconds": 18.67,
+      "duration_seconds": 11.26,
       "http_status": 200,
       "detected": {
         "name": "Varenna, Lake Como, Italy",
@@ -77,13 +77,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 18.64,
+          "total_seconds": 11.24,
           "stages": {
-            "provider": 6.3,
+            "provider": 5.58,
             "location_extraction": 0.0,
-            "candidate_resolution": 5.44,
-            "verification": 0.39,
-            "nearby_places": 2.46,
+            "candidate_resolution": 2.77,
+            "verification": 0.32,
+            "nearby_places": 1.35,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -104,7 +104,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Correctly produced no resolved destination (Location Not Found).",
-      "duration_seconds": 75.94,
+      "duration_seconds": 62.32,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -112,10 +112,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 75.92,
+          "total_seconds": 62.31,
           "stages": {
-            "provider": 3.74,
-            "location_extraction": 70.19,
+            "provider": 3.97,
+            "location_extraction": 58.34,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -141,7 +141,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Chennai, India'",
-      "duration_seconds": 6.48,
+      "duration_seconds": 5.69,
       "http_status": 200,
       "detected": {
         "name": "Chennai, India",
@@ -160,13 +160,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 6.47,
+          "total_seconds": 5.68,
           "stages": {
-            "provider": 3.45,
+            "provider": 2.85,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.15,
+            "candidate_resolution": 1.16,
             "verification": 0.28,
-            "nearby_places": 1.59,
+            "nearby_places": 1.4,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -189,7 +189,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Austria'",
-      "duration_seconds": 9.38,
+      "duration_seconds": 6.08,
       "http_status": 200,
       "detected": {
         "name": "Austria",
@@ -208,13 +208,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 9.37,
+          "total_seconds": 6.08,
           "stages": {
-            "provider": 5.37,
+            "provider": 3.27,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.89,
+            "candidate_resolution": 1.23,
             "verification": 0.27,
-            "nearby_places": 1.83,
+            "nearby_places": 1.3,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -238,7 +238,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Detected location is within expected Meghalaya region: 'Meghalaya, India'",
-      "duration_seconds": 19.72,
+      "duration_seconds": 12.01,
       "http_status": 200,
       "detected": {
         "name": "Meghalaya, India",
@@ -257,13 +257,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 19.7,
+          "total_seconds": 12.0,
           "stages": {
-            "provider": 16.24,
+            "provider": 9.36,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.65,
-            "verification": 0.27,
-            "nearby_places": 1.55,
+            "candidate_resolution": 1.14,
+            "verification": 0.29,
+            "nearby_places": 1.21,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -287,7 +287,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'itoya' in detected output ('Itoya, Ginza, Tokyo, Japan')",
-      "duration_seconds": 21.22,
+      "duration_seconds": 9.7,
       "http_status": 200,
       "detected": {
         "name": "Itoya, Ginza, Tokyo, Japan",
@@ -306,13 +306,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 21.21,
+          "total_seconds": 9.69,
           "stages": {
-            "provider": 8.63,
+            "provider": 6.47,
             "location_extraction": 0.0,
-            "candidate_resolution": 10.63,
+            "candidate_resolution": 1.89,
             "verification": 0.0,
-            "nearby_places": 1.95,
+            "nearby_places": 1.33,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -336,7 +336,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'houtouwan china' in detected output ('Houtouwan China, 202457')",
-      "duration_seconds": 16.92,
+      "duration_seconds": 11.99,
       "http_status": 200,
       "detected": {
         "name": "Houtouwan China, 202457",
@@ -355,13 +355,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 16.91,
+          "total_seconds": 11.98,
           "stages": {
-            "provider": 12.62,
+            "provider": 9.11,
             "location_extraction": 0.0,
-            "candidate_resolution": 2.13,
-            "verification": 0.28,
-            "nearby_places": 1.87,
+            "candidate_resolution": 1.41,
+            "verification": 0.34,
+            "nearby_places": 1.12,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -373,19 +373,19 @@
     {
       "id": 8,
       "url": "https://www.instagram.com/reel/DbqaMR-NKvN/",
-      "expected": null,
-      "expected_display": "unspecified",
+      "expected": "Forte IX, Lithuania",
+      "expected_display": "Forte IX, Lithuania",
       "evidence": [
-        "speech",
-        "caption"
+        "caption",
+        "speech"
       ],
       "multi_location": false,
-      "notes": "Location in Speech and Caption",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 13.9,
+      "notes": "Location in Speech and Caption (Forte IX, Kaunas, Lithuania)",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Forte IX, Lithuania'",
+      "duration_seconds": 8.97,
       "http_status": 200,
       "detected": {
         "name": "Forte IX, Lithuania",
@@ -404,13 +404,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 13.89,
+          "total_seconds": 8.96,
           "stages": {
-            "provider": 8.85,
+            "provider": 5.45,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.09,
+            "candidate_resolution": 2.22,
             "verification": 0.0,
-            "nearby_places": 1.94,
+            "nearby_places": 1.29,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -422,16 +422,19 @@
     {
       "id": 9,
       "url": "https://www.instagram.com/reel/DbqaMR-NKvN/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Forte IX, Lithuania",
+      "expected_display": "Forte IX, Lithuania",
+      "evidence": [
+        "caption",
+        "speech"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 10.62,
+      "notes": "Location in Speech and Caption (Duplicate of Case 8)",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Forte IX, Lithuania'",
+      "duration_seconds": 6.17,
       "http_status": 200,
       "detected": {
         "name": "Forte IX, Lithuania",
@@ -450,13 +453,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.61,
+          "total_seconds": 6.16,
           "stages": {
-            "provider": 6.07,
+            "provider": 3.03,
             "location_extraction": 0.0,
-            "candidate_resolution": 2.56,
+            "candidate_resolution": 1.95,
             "verification": 0.0,
-            "nearby_places": 1.98,
+            "nearby_places": 1.18,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -480,7 +483,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'pingshan grand canyon' in detected output ('Pingshan Grand Canyon, Enshi, China, 445800')",
-      "duration_seconds": 11.48,
+      "duration_seconds": 8.02,
       "http_status": 200,
       "detected": {
         "name": "Pingshan Grand Canyon, Enshi, China, 445800",
@@ -499,13 +502,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.45,
+          "total_seconds": 8.01,
           "stages": {
-            "provider": 8.36,
+            "provider": 5.57,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.64,
+            "candidate_resolution": 1.29,
             "verification": 0.0,
-            "nearby_places": 1.43,
+            "nearby_places": 1.15,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -529,7 +532,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'monument valley' in detected output ('Monument Valley, Arizona, USA')",
-      "duration_seconds": 19.39,
+      "duration_seconds": 11.16,
       "http_status": 200,
       "detected": {
         "name": "Monument Valley, Arizona, USA",
@@ -548,13 +551,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 19.38,
+          "total_seconds": 11.15,
           "stages": {
-            "provider": 6.37,
+            "provider": 4.52,
             "location_extraction": 0.0,
-            "candidate_resolution": 11.09,
-            "verification": 0.43,
-            "nearby_places": 1.49,
+            "candidate_resolution": 4.74,
+            "verification": 0.28,
+            "nearby_places": 1.61,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -566,16 +569,26 @@
     {
       "id": 12,
       "url": "https://www.instagram.com/reel/DbEFu5SyML_/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Confusion Hill, California",
+        "Confusion Hill",
+        "California, USA"
+      ],
+      "expected_display": "Confusion Hill, California, Confusion Hill, California, USA",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.59,
+      "matched_locations": [
+        "Confusion Hill, California",
+        "California, USA"
+      ],
+      "notes": "Roadside attraction Confusion Hill in Piercy, CA",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 3 expected locations: Confusion Hill, California, California, USA",
+      "duration_seconds": 6.43,
       "http_status": 200,
       "detected": {
         "name": "California, USA",
@@ -594,13 +607,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 8.58,
+          "total_seconds": 6.42,
           "stages": {
-            "provider": 5.24,
+            "provider": 3.84,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.4,
-            "verification": 0.28,
-            "nearby_places": 1.66,
+            "candidate_resolution": 0.9,
+            "verification": 0.27,
+            "nearby_places": 1.42,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -623,7 +636,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'st joseph s cathederal' in detected output ('St. Joseph's Cathederal (St. Philomena's shrine), India')",
-      "duration_seconds": 54.21,
+      "duration_seconds": 41.98,
       "http_status": 200,
       "detected": {
         "name": "St. Joseph's Cathederal (St. Philomena's shrine), India",
@@ -642,13 +655,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 54.2,
+          "total_seconds": 41.97,
           "stages": {
-            "provider": 5.73,
+            "provider": 4.49,
             "location_extraction": 0.0,
-            "candidate_resolution": 46.74,
-            "verification": 0.31,
-            "nearby_places": 1.4,
+            "candidate_resolution": 35.45,
+            "verification": 0.37,
+            "nearby_places": 1.66,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -694,7 +707,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Matched 2 of 18 expected locations: Yellowstone National Park, Wyoming, Grand Teton National Park, Wyoming",
-      "duration_seconds": 48.43,
+      "duration_seconds": 45.49,
       "http_status": 200,
       "detected": {
         "name": "Grand Teton National Park, Wyoming, USA",
@@ -713,13 +726,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 48.42,
+          "total_seconds": 45.47,
           "stages": {
-            "provider": 10.05,
+            "provider": 7.22,
             "location_extraction": 0.0,
-            "candidate_resolution": 36.62,
-            "verification": 0.3,
-            "nearby_places": 1.44,
+            "candidate_resolution": 36.21,
+            "verification": 0.32,
+            "nearby_places": 1.72,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -743,7 +756,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Lago di Predil, Italy'",
-      "duration_seconds": 15.94,
+      "duration_seconds": 18.11,
       "http_status": 200,
       "detected": {
         "name": "Lago di Predil, Italy",
@@ -762,13 +775,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 15.93,
+          "total_seconds": 18.1,
           "stages": {
-            "provider": 7.82,
+            "provider": 8.38,
             "location_extraction": 0.0,
-            "candidate_resolution": 6.32,
-            "verification": 0.29,
-            "nearby_places": 1.5,
+            "candidate_resolution": 7.8,
+            "verification": 0.38,
+            "nearby_places": 1.54,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -780,16 +793,27 @@
     {
       "id": 16,
       "url": "https://www.instagram.com/reel/DbJTbyFN6Ps/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Castle Combe, England",
+        "Castle Combe",
+        "Castle Combe, Cotswolds",
+        "England, UK"
+      ],
+      "expected_display": "Castle Combe, England, Castle Combe ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 21.88,
+      "matched_locations": [
+        "Castle Combe, England",
+        "England, UK"
+      ],
+      "notes": "Village of Castle Combe, England",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 4 expected locations: Castle Combe, England, England, UK",
+      "duration_seconds": 7.59,
       "http_status": 200,
       "detected": {
         "name": "England, UK",
@@ -808,13 +832,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 21.87,
+          "total_seconds": 7.58,
           "stages": {
-            "provider": 17.63,
+            "provider": 3.82,
             "location_extraction": 0.0,
-            "candidate_resolution": 2.28,
-            "verification": 0.34,
-            "nearby_places": 1.61,
+            "candidate_resolution": 1.81,
+            "verification": 0.29,
+            "nearby_places": 1.65,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -830,12 +854,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption/metadata)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 1515.44,
+      "duration_seconds": 55.24,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -843,10 +867,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 1515.43,
+          "total_seconds": 55.23,
           "stages": {
-            "provider": 5.5,
-            "location_extraction": 1509.92,
+            "provider": 4.59,
+            "location_extraction": 50.64,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -865,12 +889,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Insufficient evidence (personal video without geographic anchors)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 31.11,
+      "duration_seconds": 34.24,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -878,10 +902,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 31.1,
+          "total_seconds": 34.23,
           "stages": {
-            "provider": 3.75,
-            "location_extraction": 27.33,
+            "provider": 4.55,
+            "location_extraction": 29.68,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -907,7 +931,7 @@
       "status": "passed",
       "match_type": "exact",
       "match_details": "Exact match with 'Mangystau, Kazakhstan'",
-      "duration_seconds": 6.43,
+      "duration_seconds": 8.34,
       "http_status": 200,
       "detected": {
         "name": "Mangystau, Kazakhstan",
@@ -926,13 +950,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 6.42,
+          "total_seconds": 8.33,
           "stages": {
-            "provider": 3.47,
+            "provider": 4.25,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.61,
+            "candidate_resolution": 2.43,
             "verification": 0.0,
-            "nearby_places": 1.33,
+            "nearby_places": 1.64,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -955,7 +979,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'matera' in detected output ('Matera, Italy')",
-      "duration_seconds": 16.33,
+      "duration_seconds": 10.34,
       "http_status": 200,
       "detected": {
         "name": "Matera, Italy",
@@ -974,13 +998,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 16.32,
+          "total_seconds": 10.33,
           "stages": {
-            "provider": 4.09,
+            "provider": 4.38,
             "location_extraction": 0.0,
-            "candidate_resolution": 10.46,
-            "verification": 0.31,
-            "nearby_places": 1.46,
+            "candidate_resolution": 4.01,
+            "verification": 0.29,
+            "nearby_places": 1.65,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1030,7 +1054,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Matched 1 of 22 expected locations: Mt. Storm King",
-      "duration_seconds": 59.75,
+      "duration_seconds": 70.68,
       "http_status": 200,
       "detected": {
         "name": "Mt. Storm King, USA",
@@ -1049,13 +1073,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 59.74,
+          "total_seconds": 70.66,
           "stages": {
-            "provider": 5.99,
+            "provider": 6.66,
             "location_extraction": 0.0,
-            "candidate_resolution": 51.96,
-            "verification": 0.29,
-            "nearby_places": 1.48,
+            "candidate_resolution": 60.72,
+            "verification": 0.3,
+            "nearby_places": 2.97,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1071,12 +1095,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Insufficient evidence (aesthetic lifestyle clip without geographic anchor)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 64.76,
+      "duration_seconds": 58.34,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1084,10 +1108,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 64.75,
+          "total_seconds": 58.34,
           "stages": {
-            "provider": 4.37,
-            "location_extraction": 60.32,
+            "provider": 5.15,
+            "location_extraction": 53.19,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1113,7 +1137,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'alresford' in detected output ('Watercress Line, UK')",
-      "duration_seconds": 20.96,
+      "duration_seconds": 18.96,
       "http_status": 200,
       "detected": {
         "name": "Watercress Line, UK",
@@ -1132,13 +1156,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 20.95,
+          "total_seconds": 18.95,
           "stages": {
-            "provider": 4.45,
+            "provider": 3.18,
             "location_extraction": 0.0,
-            "candidate_resolution": 14.32,
-            "verification": 0.28,
-            "nearby_places": 1.87,
+            "candidate_resolution": 13.86,
+            "verification": 0.3,
+            "nearby_places": 1.61,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1154,22 +1178,33 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 49.78,
-      "http_status": 500,
+      "duration_seconds": 52.56,
+      "http_status": 200,
       "detected": null,
       "detected_display": "None",
       "pipeline": {
         "success": false,
-        "stage": null,
-        "performance": null,
-        "error": null
+        "stage": "failed",
+        "performance": {
+          "total_seconds": 52.55,
+          "stages": {
+            "provider": 5.13,
+            "location_extraction": 47.42,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
+            "travel_intelligence": 0.0,
+            "response_building": 0.0
+          }
+        },
+        "error": "No location candidates generated from evidence."
       },
-      "error": "Travel AI couldn't complete the analysis."
+      "error": null
     },
     {
       "id": 25,
@@ -1178,12 +1213,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 34.08,
+      "duration_seconds": 28.11,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1191,10 +1226,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 34.07,
+          "total_seconds": 28.1,
           "stages": {
-            "provider": 3.2,
-            "location_extraction": 30.85,
+            "provider": 6.25,
+            "location_extraction": 21.84,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1209,18 +1244,22 @@
     {
       "id": 26,
       "url": "https://www.instagram.com/reel/DbUuKZEBmyE/",
-      "expected": null,
-      "expected_display": "unspecified",
+      "expected": [
+        "Nikola-Lenivets, Russia",
+        "Nikola-Lenivets",
+        "Никола-Ленивец"
+      ],
+      "expected_display": "Nikola-Lenivets, Russia, Nikola-Lenivets, Никола-Ленивец",
       "evidence": [
         "caption"
       ],
       "multi_location": false,
-      "notes": "Location in Caption",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 83.25,
+      "notes": "Location in Caption (Nikola-Lenivets Art Park, Russia)",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Destination missing: No location candidates generated from evidence.",
+      "duration_seconds": 82.27,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1228,10 +1267,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 83.24,
+          "total_seconds": 82.26,
           "stages": {
-            "provider": 8.34,
-            "location_extraction": 74.89,
+            "provider": 9.19,
+            "location_extraction": 73.07,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1241,7 +1280,7 @@
         },
         "error": "No location candidates generated from evidence."
       },
-      "error": null
+      "error": "No location candidates generated from evidence."
     },
     {
       "id": 27,
@@ -1257,7 +1296,7 @@
       "status": "passed",
       "match_type": "sufficient",
       "match_details": "Sufficient match: 'deqin' in detected output ('Deqin, China')",
-      "duration_seconds": 11.16,
+      "duration_seconds": 8.87,
       "http_status": 200,
       "detected": {
         "name": "Deqin, China",
@@ -1276,13 +1315,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.16,
+          "total_seconds": 8.86,
           "stages": {
-            "provider": 4.86,
+            "provider": 5.04,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.71,
-            "verification": 0.27,
-            "nearby_places": 2.32,
+            "candidate_resolution": 2.02,
+            "verification": 0.45,
+            "nearby_places": 1.35,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1294,16 +1333,18 @@
     {
       "id": 28,
       "url": "https://www.instagram.com/reel/DbAhbcQPhcA/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Lake Louise, Canada",
+      "expected_display": "Lake Louise, Canada",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.39,
+      "notes": "Lake Louise in Banff, Alberta, Canada",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Lake Louise, Canada'",
+      "duration_seconds": 8.07,
       "http_status": 200,
       "detected": {
         "name": "Lake Louise, Canada",
@@ -1322,13 +1363,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 8.38,
+          "total_seconds": 8.04,
           "stages": {
-            "provider": 4.85,
+            "provider": 5.0,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.88,
+            "candidate_resolution": 1.59,
             "verification": 0.0,
-            "nearby_places": 1.65,
+            "nearby_places": 1.45,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1340,16 +1381,23 @@
     {
       "id": 29,
       "url": "https://www.instagram.com/reel/DbqBWqnxoKa/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Salto Golondrina, Venezuela",
+        "Canaima National Park, Venezuela",
+        "Salto Golondrina",
+        "Venezuela"
+      ],
+      "expected_display": "Salto Golondrina, Venezuela, Canaima National Park, Venezuela ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 28.76,
+      "notes": "Salto Golondrina in Canaima National Park, Venezuela",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Destination missing: No location candidates generated from evidence.",
+      "duration_seconds": 36.44,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1357,10 +1405,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 28.75,
+          "total_seconds": 36.43,
           "stages": {
-            "provider": 3.46,
-            "location_extraction": 25.26,
+            "provider": 3.72,
+            "location_extraction": 32.71,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1370,7 +1418,7 @@
         },
         "error": "No location candidates generated from evidence."
       },
-      "error": null
+      "error": "No location candidates generated from evidence."
     },
     {
       "id": 30,
@@ -1379,37 +1427,37 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (Sanctuary of Truth visually depicted but unstated in text/speech)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.26,
+      "duration_seconds": 33.93,
       "http_status": 200,
       "detected": {
-        "name": "Matera, Italy",
-        "formatted_address": "75100 Matera, Province of Matera, Italy",
-        "country": "Italy",
-        "city": "Matera",
-        "region": "Province of Matera",
-        "latitude": 40.66636,
-        "longitude": 16.604445,
-        "confidence": 19,
+        "name": "On Eartla, India",
+        "formatted_address": "Shree Laxmi sadan (Pote Building, Shakti Beturkar Chowk, Kalyan West, Kalyan, Maharashtra 421301, India",
+        "country": "India",
+        "city": "On Eartla",
+        "region": "Maharashtra 421301",
+        "latitude": 19.248417,
+        "longitude": 73.130474,
+        "confidence": 39,
         "confidence_level": "VERY_LOW",
         "verification_status": "FAILED"
       },
-      "detected_display": "Matera, Italy",
+      "detected_display": "On Eartla, India",
       "pipeline": {
         "success": true,
-        "stage": "caption",
+        "stage": "ocr",
         "performance": {
-          "total_seconds": 8.25,
+          "total_seconds": 33.91,
           "stages": {
-            "provider": 3.42,
-            "location_extraction": 0.0,
-            "candidate_resolution": 2.96,
-            "verification": 0.27,
-            "nearby_places": 1.59,
+            "provider": 2.8,
+            "location_extraction": 24.71,
+            "candidate_resolution": 3.35,
+            "verification": 1.59,
+            "nearby_places": 1.47,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1425,12 +1473,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 29.37,
+      "duration_seconds": 35.81,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1438,10 +1486,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 29.36,
+          "total_seconds": 35.8,
           "stages": {
-            "provider": 3.05,
-            "location_extraction": 26.3,
+            "provider": 3.31,
+            "location_extraction": 32.49,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1460,12 +1508,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Insufficient evidence ('gotta sub', unanchored)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 36.3,
+      "duration_seconds": 37.28,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -1473,10 +1521,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 36.29,
+          "total_seconds": 37.26,
           "stages": {
-            "provider": 3.76,
-            "location_extraction": 32.52,
+            "provider": 3.2,
+            "location_extraction": 34.06,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -1491,18 +1539,18 @@
     {
       "id": 33,
       "url": "https://www.instagram.com/reel/DYhZEHczkvq/",
-      "expected": null,
-      "expected_display": "unspecified",
+      "expected": "Chongqing Yuzhong Peninsula, China",
+      "expected_display": "Chongqing Yuzhong Peninsula, China",
       "evidence": [
         "caption"
       ],
       "multi_location": false,
-      "notes": "Location in Caption",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 6.37,
+      "notes": "Chongqing Yuzhong Peninsula, China",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Chongqing Yuzhong Peninsula, China'",
+      "duration_seconds": 11.46,
       "http_status": 200,
       "detected": {
         "name": "Chongqing Yuzhong Peninsula, China",
@@ -1521,13 +1569,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 6.36,
+          "total_seconds": 11.44,
           "stages": {
-            "provider": 3.27,
+            "provider": 6.64,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.19,
+            "candidate_resolution": 2.27,
             "verification": 0.0,
-            "nearby_places": 1.89,
+            "nearby_places": 2.53,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1539,18 +1587,27 @@
     {
       "id": 34,
       "url": "https://www.instagram.com/reel/DbyI67-tgfo/",
-      "expected": null,
-      "expected_display": "unspecified",
+      "expected": [
+        "Lugard Road Lookout, Victoria Peak, Hong Kong",
+        "Victoria Peak, Hong Kong",
+        "Lugard Road Lookout"
+      ],
+      "expected_display": "Lugard Road Lookout, Victoria Peak, Hong Kong, Victoria Peak, Hong Kong, Lugard Road Lookout",
       "evidence": [
         "caption"
       ],
       "multi_location": false,
-      "notes": "Location in Caption",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 9.65,
+      "matched_locations": [
+        "Lugard Road Lookout, Victoria Peak, Hong Kong",
+        "Victoria Peak, Hong Kong",
+        "Lugard Road Lookout"
+      ],
+      "notes": "Lugard Road Lookout at Victoria Peak, Hong Kong",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Lugard Road Lookout, Victoria Peak, Hong Kong, Victoria Peak, Hong Kong, Lugard Road Lookout",
+      "duration_seconds": 10.44,
       "http_status": 200,
       "detected": {
         "name": "Pin Lugard Road Lookout, Victoria Peak, Hong, Hong Kong",
@@ -1569,13 +1626,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 9.64,
+          "total_seconds": 10.42,
           "stages": {
-            "provider": 3.97,
+            "provider": 4.45,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.88,
-            "verification": 0.28,
-            "nearby_places": 1.49,
+            "candidate_resolution": 3.81,
+            "verification": 0.29,
+            "nearby_places": 1.86,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1587,16 +1644,27 @@
     {
       "id": 35,
       "url": "https://www.instagram.com/reel/DZAMjBKvVjQ/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Abbotsford, Canada",
+        "Abbotsford, British Columbia",
+        "Abbotsford near Vancouver"
+      ],
+      "expected_display": "Abbotsford, Canada, Abbotsford, British Columbia, Abbotsford near Vancouver",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 15.92,
+      "matched_locations": [
+        "Abbotsford, Canada",
+        "Abbotsford, British Columbia",
+        "Abbotsford near Vancouver"
+      ],
+      "notes": "Abbotsford Tulip Garden, British Columbia, Canada",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Abbotsford, Canada, Abbotsford, British Columbia, Abbotsford near Vancouver",
+      "duration_seconds": 16.16,
       "http_status": 200,
       "detected": {
         "name": "Abbotsford near Vancouver and see this beautiful tulip garden, Canada",
@@ -1615,13 +1683,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 15.92,
+          "total_seconds": 16.12,
           "stages": {
-            "provider": 4.1,
+            "provider": 5.49,
             "location_extraction": 0.0,
-            "candidate_resolution": 10.15,
-            "verification": 0.25,
-            "nearby_places": 1.41,
+            "candidate_resolution": 8.78,
+            "verification": 0.27,
+            "nearby_places": 1.58,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1637,12 +1705,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Genuinely ambiguous ('Fairy Tale town, Switzerland' without naming village)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.01,
+      "duration_seconds": 9.42,
       "http_status": 200,
       "detected": {
         "name": "Fairy Tale, India",
@@ -1661,13 +1729,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 8.0,
+          "total_seconds": 9.41,
           "stages": {
-            "provider": 3.98,
+            "provider": 4.41,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.89,
-            "verification": 0.5,
-            "nearby_places": 1.62,
+            "candidate_resolution": 3.18,
+            "verification": 0.26,
+            "nearby_places": 1.56,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1679,16 +1747,27 @@
     {
       "id": 37,
       "url": "https://www.instagram.com/reel/DbQZ2cJvF7G/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
-      "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 14.0,
+      "expected": [
+        "Truso Valley, Georgia",
+        "Kazbegi, Georgia",
+        "Juta, Georgia"
+      ],
+      "expected_display": "Truso Valley, Georgia, Kazbegi, Georgia, Juta, Georgia",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Truso Valley, Georgia",
+        "Kazbegi, Georgia",
+        "Juta, Georgia"
+      ],
+      "notes": "Truso Valley and Kazbegi, Georgia",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Truso Valley, Georgia, Kazbegi, Georgia, Juta, Georgia",
+      "duration_seconds": 14.49,
       "http_status": 200,
       "detected": {
         "name": "Truso Valley, Georgia",
@@ -1707,13 +1786,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 13.98,
+          "total_seconds": 14.46,
           "stages": {
-            "provider": 7.59,
+            "provider": 8.92,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.53,
-            "verification": 0.25,
-            "nearby_places": 1.61,
+            "candidate_resolution": 3.65,
+            "verification": 0.29,
+            "nearby_places": 1.59,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1725,16 +1804,23 @@
     {
       "id": 38,
       "url": "https://www.instagram.com/reel/DZVyhEHyzYy/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Espresso Chalet, Stevens Pass Hwy, WA",
+        "Espresso Chalet, Washington",
+        "Espresso Chalet"
+      ],
+      "expected_display": "Espresso Chalet, Stevens Pass Hwy, WA, Espresso Chalet, Washington, Espresso Chalet",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 36.12,
+      "matched_locations": [],
+      "notes": "Espresso Chalet on Stevens Pass Highway, Washington",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Detected 'VILLAGE MUSTANC Information, USA' did not match any of the 3 expected locations.",
+      "duration_seconds": 43.64,
       "http_status": 200,
       "detected": {
         "name": "VILLAGE MUSTANC Information, USA",
@@ -1753,13 +1839,13 @@
         "success": true,
         "stage": "ocr",
         "performance": {
-          "total_seconds": 36.11,
+          "total_seconds": 43.63,
           "stages": {
-            "provider": 4.47,
-            "location_extraction": 24.25,
-            "candidate_resolution": 3.36,
-            "verification": 1.43,
-            "nearby_places": 1.72,
+            "provider": 4.17,
+            "location_extraction": 32.12,
+            "candidate_resolution": 3.06,
+            "verification": 1.55,
+            "nearby_places": 1.73,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1771,40 +1857,42 @@
     {
       "id": 39,
       "url": "https://www.instagram.com/reel/DZ8a_PdSXi6/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Iceland",
+      "expected_display": "Iceland",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 10.92,
+      "notes": "Iceland road trip itinerary",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Iceland'",
+      "duration_seconds": 8.41,
       "http_status": 200,
       "detected": {
-        "name": "August, India",
-        "formatted_address": "Jer Mansion, 70 B, August Kranti Rd, Gowalia Tank, Tardeo, Mumbai, Maharashtra 400026, India",
-        "country": "India",
-        "city": "August",
-        "region": "Maharashtra 400026",
-        "latitude": 18.962798,
-        "longitude": 72.810329,
-        "confidence": 76,
-        "confidence_level": "MEDIUM",
+        "name": "Iceland",
+        "formatted_address": "Iceland",
+        "country": "Iceland",
+        "city": "Iceland",
+        "region": null,
+        "latitude": 64.963051,
+        "longitude": -19.020835,
+        "confidence": 61,
+        "confidence_level": "LOW",
         "verification_status": "FAILED"
       },
-      "detected_display": "August, India",
+      "detected_display": "Iceland",
       "pipeline": {
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.91,
+          "total_seconds": 8.4,
           "stages": {
-            "provider": 4.04,
+            "provider": 4.7,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.93,
-            "verification": 0.51,
+            "candidate_resolution": 2.0,
+            "verification": 0.26,
             "nearby_places": 1.43,
             "travel_intelligence": 0.0,
             "response_building": 0.0
@@ -1817,16 +1905,29 @@
     {
       "id": 40,
       "url": "http://instagram.com/reel/Dbt1RyjhYO0/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Mt. Kishima, Japan",
+        "Yonezuka, Aso, Kumamoto",
+        "Aso, Kumamoto, Japan",
+        "Mt. Kishima"
+      ],
+      "expected_display": "Mt. Kishima, Japan, Yonezuka, Aso, Kumamoto ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 20.27,
+      "matched_locations": [
+        "Mt. Kishima, Japan",
+        "Yonezuka, Aso, Kumamoto",
+        "Aso, Kumamoto, Japan",
+        "Mt. Kishima"
+      ],
+      "notes": "Mt. Kishima and Yonezuka in Aso, Kumamoto, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Mt. Kishima, Japan, Yonezuka, Aso, Kumamoto, Aso, Kumamoto, Japan",
+      "duration_seconds": 18.57,
       "http_status": 200,
       "detected": {
         "name": "Mt. Kishima, Japan",
@@ -1845,13 +1946,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 20.25,
+          "total_seconds": 18.54,
           "stages": {
-            "provider": 5.89,
+            "provider": 5.95,
             "location_extraction": 0.0,
-            "candidate_resolution": 12.7,
-            "verification": 0.29,
-            "nearby_places": 1.36,
+            "candidate_resolution": 10.51,
+            "verification": 0.27,
+            "nearby_places": 1.81,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1863,16 +1964,27 @@
     {
       "id": 41,
       "url": "https://www.instagram.com/reel/DZgflJsv-ga/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Mount Wugong, China",
+        "Mount Wugong",
+        "Wugong Mountain"
+      ],
+      "expected_display": "Mount Wugong, China, Mount Wugong, Wugong Mountain",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 7.97,
+      "matched_locations": [
+        "Mount Wugong, China",
+        "Mount Wugong",
+        "Wugong Mountain"
+      ],
+      "notes": "Mount Wugong, Jiangxi, China",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Mount Wugong, China, Mount Wugong, Wugong Mountain",
+      "duration_seconds": 7.75,
       "http_status": 200,
       "detected": {
         "name": "Mount Wugong, 343206",
@@ -1891,13 +2003,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 7.95,
+          "total_seconds": 7.74,
           "stages": {
-            "provider": 3.61,
+            "provider": 4.66,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.04,
+            "candidate_resolution": 1.68,
             "verification": 0.0,
-            "nearby_places": 1.3,
+            "nearby_places": 1.39,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1909,16 +2021,18 @@
     {
       "id": 42,
       "url": "https://www.instagram.com/reel/Da-okBCxFV4/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Faroe Islands",
+      "expected_display": "Faroe Islands",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 10.15,
+      "notes": "Faroe Islands camper van tour",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Faroe Islands'",
+      "duration_seconds": 8.6,
       "http_status": 200,
       "detected": {
         "name": "Faroe Islands",
@@ -1937,13 +2051,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.14,
+          "total_seconds": 8.59,
           "stages": {
-            "provider": 2.67,
+            "provider": 3.18,
             "location_extraction": 0.0,
-            "candidate_resolution": 5.85,
-            "verification": 0.28,
-            "nearby_places": 1.33,
+            "candidate_resolution": 3.21,
+            "verification": 0.29,
+            "nearby_places": 1.92,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -1955,16 +2069,27 @@
     {
       "id": 43,
       "url": "https://www.instagram.com/reel/DZh--Kev2Rd/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Bailey Trail Trek, Arunachal Pradesh, India",
+        "Bailey Trail Trek",
+        "Tungri, Arunachal Pradesh, India",
+        "Dirang, Arunachal Pradesh"
+      ],
+      "expected_display": "Bailey Trail Trek, Arunachal Pradesh, India, Bailey Trail Trek ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 11.14,
+      "matched_locations": [
+        "Bailey Trail Trek, Arunachal Pradesh, India",
+        "Bailey Trail Trek"
+      ],
+      "notes": "Bailey Trail Trek in Arunachal Pradesh, India",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 4 expected locations: Bailey Trail Trek, Arunachal Pradesh, India, Bailey Trail Trek",
+      "duration_seconds": 13.18,
       "http_status": 200,
       "detected": {
         "name": "Bailey Trail Trek, 790104",
@@ -1983,13 +2108,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.13,
+          "total_seconds": 13.16,
           "stages": {
-            "provider": 5.03,
+            "provider": 7.63,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.35,
-            "verification": 0.47,
-            "nearby_places": 1.27,
+            "candidate_resolution": 3.81,
+            "verification": 0.38,
+            "nearby_places": 1.34,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2001,16 +2126,18 @@
     {
       "id": 44,
       "url": "https://www.instagram.com/reel/Db2wwVGuTjt/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Bath, UK",
+      "expected_display": "Bath, UK",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.42,
+      "notes": "City of Bath, England, UK",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Bath, UK'",
+      "duration_seconds": 10.07,
       "http_status": 200,
       "detected": {
         "name": "Bath, UK",
@@ -2029,13 +2156,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 8.41,
+          "total_seconds": 10.06,
           "stages": {
-            "provider": 3.26,
+            "provider": 4.06,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.73,
+            "candidate_resolution": 4.17,
             "verification": 0.0,
-            "nearby_places": 1.41,
+            "nearby_places": 1.83,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2047,16 +2174,28 @@
     {
       "id": 45,
       "url": "https://www.instagram.com/reel/Db40ocsoikH/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Beyazgul Street, Istanbul, Turkey",
+        "Beyazgul Street, Türkiye",
+        "Arnavutköy, Istanbul",
+        "Beyazgul Street"
+      ],
+      "expected_display": "Beyazgul Street, Istanbul, Turkey, Beyazgul Street, Türkiye ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 8.89,
+      "matched_locations": [
+        "Beyazgul Street, Istanbul, Turkey",
+        "Beyazgul Street, Türkiye",
+        "Beyazgul Street"
+      ],
+      "notes": "Beyazgul Street in Istanbul, Turkey",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 4 expected locations: Beyazgul Street, Istanbul, Turkey, Beyazgul Street, Türkiye, Beyazgul Street",
+      "duration_seconds": 9.15,
       "http_status": 200,
       "detected": {
         "name": "Beyazgul Street, Türkiye",
@@ -2075,13 +2214,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 8.88,
+          "total_seconds": 9.14,
           "stages": {
-            "provider": 3.1,
+            "provider": 4.02,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.02,
-            "verification": 0.3,
-            "nearby_places": 1.45,
+            "candidate_resolution": 3.28,
+            "verification": 0.28,
+            "nearby_places": 1.56,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2093,16 +2232,30 @@
     {
       "id": 46,
       "url": "https://www.instagram.com/reel/Db4TPsNN7pi/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
-      "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 20.88,
+      "expected": [
+        "Arches National Park",
+        "Canyonlands National Park",
+        "Capitol Reef National Park",
+        "Hanksville",
+        "Bryce Canyon National Park",
+        "Zion National Park",
+        "Dead Horse Point State Park",
+        "Utah, USA"
+      ],
+      "expected_display": "Arches National Park, Canyonlands National Park ... (8 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Utah, USA"
+      ],
+      "notes": "7 planetary places in Utah, USA",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 1 of 8 expected locations: Utah, USA",
+      "duration_seconds": 22.0,
       "http_status": 200,
       "detected": {
         "name": "Places in Utah that feel like stepping on a different planet, USA",
@@ -2121,13 +2274,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 20.87,
+          "total_seconds": 21.98,
           "stages": {
-            "provider": 4.66,
+            "provider": 4.26,
             "location_extraction": 0.0,
-            "candidate_resolution": 14.6,
+            "candidate_resolution": 15.91,
             "verification": 0.28,
-            "nearby_places": 1.32,
+            "nearby_places": 1.53,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2139,16 +2292,35 @@
     {
       "id": 47,
       "url": "https://www.instagram.com/reel/DbkXHUnsMb8/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
-      "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 36.73,
+      "expected": [
+        "Kyrgyzstan",
+        "Skazka Canyon",
+        "Barskoon Waterfall",
+        "Seven Bulls Rock",
+        "Chong-Kemin",
+        "Bishkek",
+        "Issyk-Kul",
+        "Karakol",
+        "Song Kul",
+        "Arabel Plateau"
+      ],
+      "expected_display": "Kyrgyzstan, Skazka Canyon ... (10 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Kyrgyzstan",
+        "Skazka Canyon",
+        "Barskoon Waterfall",
+        "Bishkek"
+      ],
+      "notes": "Kyrgyzstan travel itinerary guide",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 10 expected locations: Kyrgyzstan, Skazka Canyon, Barskoon Waterfall",
+      "duration_seconds": 32.32,
       "http_status": 200,
       "detected": {
         "name": "Skazka Canyon, Barskoon Waterfall, Seven, Kyrgyzstan",
@@ -2167,13 +2339,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 36.72,
+          "total_seconds": 32.31,
           "stages": {
-            "provider": 3.38,
+            "provider": 4.03,
             "location_extraction": 0.0,
-            "candidate_resolution": 31.75,
-            "verification": 0.26,
-            "nearby_places": 1.31,
+            "candidate_resolution": 26.31,
+            "verification": 0.27,
+            "nearby_places": 1.69,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2189,12 +2361,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Genuinely ambiguous ('Yep, Japan again' without landmark)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 12.69,
+      "duration_seconds": 9.48,
       "http_status": 200,
       "detected": {
         "name": "Yep, Japan, 1-chōme−33−１８ 白山ＮＴビル 3階",
@@ -2213,13 +2385,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 12.68,
+          "total_seconds": 9.47,
           "stages": {
-            "provider": 9.05,
+            "provider": 5.12,
             "location_extraction": 0.0,
-            "candidate_resolution": 1.77,
-            "verification": 0.28,
-            "nearby_places": 1.58,
+            "candidate_resolution": 1.51,
+            "verification": 0.29,
+            "nearby_places": 2.56,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2231,16 +2403,29 @@
     {
       "id": 49,
       "url": "https://www.instagram.com/reel/Dbz4-NliX3_/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Echizen Daibutsu Temple, Japan",
+        "Echizen Daibutsu, Fukui",
+        "Seidaiji Temple, Fukui",
+        "Echizen Daibutsu"
+      ],
+      "expected_display": "Echizen Daibutsu Temple, Japan, Echizen Daibutsu, Fukui ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 9.06,
+      "matched_locations": [
+        "Echizen Daibutsu Temple, Japan",
+        "Echizen Daibutsu, Fukui",
+        "Seidaiji Temple, Fukui",
+        "Echizen Daibutsu"
+      ],
+      "notes": "Echizen Daibutsu Temple in Fukui Prefecture, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Echizen Daibutsu Temple, Japan, Echizen Daibutsu, Fukui, Seidaiji Temple, Fukui",
+      "duration_seconds": 10.13,
       "http_status": 200,
       "detected": {
         "name": "Echizen Daibutsu Temple, Japan",
@@ -2259,13 +2444,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 9.05,
+          "total_seconds": 10.12,
           "stages": {
-            "provider": 3.91,
+            "provider": 3.5,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.5,
-            "verification": 0.26,
-            "nearby_places": 1.36,
+            "candidate_resolution": 4.57,
+            "verification": 0.3,
+            "nearby_places": 1.75,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2277,41 +2462,51 @@
     {
       "id": 50,
       "url": "https://www.instagram.com/reel/DVGc6JIiApW/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Arashiyama, Kyoto, Japan",
+        "Arashiyama, Japan",
+        "Arashiyama"
+      ],
+      "expected_display": "Arashiyama, Kyoto, Japan, Arashiyama, Japan, Arashiyama",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 37.51,
+      "matched_locations": [
+        "Arashiyama, Kyoto, Japan",
+        "Arashiyama, Japan"
+      ],
+      "notes": "Arashiyama area in Kyoto, Japan",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 2 of 3 expected locations: Arashiyama, Kyoto, Japan, Arashiyama, Japan",
+      "duration_seconds": 3849.07,
       "http_status": 200,
       "detected": {
-        "name": "Slovenia",
-        "formatted_address": "Slovenia",
-        "country": "Slovenia",
-        "city": "Slovenia",
-        "region": null,
-        "latitude": 46.151241,
-        "longitude": 14.995463,
-        "confidence": 0,
-        "confidence_level": "VERY_LOW",
+        "name": "ADASHINO NENBUTSUJI, Japan",
+        "formatted_address": "１７番地 Sagatoriimoto Adashinochō, Ukyo Ward, Kyoto, 616-8436, Japan",
+        "country": "Japan",
+        "city": "ADASHINO NENBUTSUJI",
+        "region": "616-8436",
+        "latitude": 35.02696,
+        "longitude": 135.665613,
+        "confidence": 78,
+        "confidence_level": "MEDIUM",
         "verification_status": "FAILED"
       },
-      "detected_display": "Slovenia",
+      "detected_display": "ADASHINO NENBUTSUJI, Japan",
       "pipeline": {
         "success": true,
-        "stage": "caption",
+        "stage": "ocr",
         "performance": {
-          "total_seconds": 37.5,
+          "total_seconds": 3849.06,
           "stages": {
-            "provider": 34.33,
-            "location_extraction": 0.0,
-            "candidate_resolution": 1.5,
-            "verification": 0.26,
-            "nearby_places": 1.41,
+            "provider": 3.74,
+            "location_extraction": 3834.47,
+            "candidate_resolution": 7.75,
+            "verification": 1.46,
+            "nearby_places": 1.63,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2327,12 +2522,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification (empty caption)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 60.98,
+      "duration_seconds": 60.29,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -2340,10 +2535,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 60.97,
+          "total_seconds": 60.28,
           "stages": {
-            "provider": 9.64,
-            "location_extraction": 51.32,
+            "provider": 4.94,
+            "location_extraction": 55.33,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -2362,58 +2557,49 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Insufficient evidence (inspirational text without geographic anchors)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 48.18,
+      "duration_seconds": 35.37,
       "http_status": 200,
-      "detected": {
-        "name": "Munich, Germany",
-        "formatted_address": "Munich, Germany",
-        "country": "Germany",
-        "city": "Munich",
-        "region": "Munich",
-        "latitude": 48.135125,
-        "longitude": 11.581981,
-        "confidence": 21,
-        "confidence_level": "VERY_LOW",
-        "verification_status": "FAILED"
-      },
-      "detected_display": "Munich, Germany",
+      "detected": null,
+      "detected_display": "None",
       "pipeline": {
-        "success": true,
-        "stage": "speech",
+        "success": false,
+        "stage": "failed",
         "performance": {
-          "total_seconds": 48.17,
+          "total_seconds": 35.36,
           "stages": {
-            "provider": 3.76,
-            "location_extraction": 39.76,
-            "candidate_resolution": 1.66,
-            "verification": 1.25,
-            "nearby_places": 1.71,
+            "provider": 2.89,
+            "location_extraction": 32.46,
+            "candidate_resolution": 0.0,
+            "verification": 0.0,
+            "nearby_places": 0.0,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
         },
-        "error": null
+        "error": "No location candidates generated from evidence."
       },
       "error": null
     },
     {
       "id": 53,
       "url": "https://www.instagram.com/reel/DbP7MQMxfcD/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Jeju Island, South Korea",
+      "expected_display": "Jeju Island, South Korea",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 11.88,
+      "notes": "Jeju Island, South Korea",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Jeju Island, South Korea'",
+      "duration_seconds": 9.94,
       "http_status": 200,
       "detected": {
         "name": "Jeju Island, South Korea",
@@ -2432,13 +2618,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 11.87,
+          "total_seconds": 9.93,
           "stages": {
-            "provider": 4.17,
+            "provider": 4.24,
             "location_extraction": 0.0,
-            "candidate_resolution": 5.56,
-            "verification": 0.59,
-            "nearby_places": 1.54,
+            "candidate_resolution": 3.83,
+            "verification": 0.26,
+            "nearby_places": 1.6,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2450,16 +2636,33 @@
     {
       "id": 54,
       "url": "https://www.instagram.com/reel/Db_BKP2xBVh/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
-      "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 50.54,
+      "expected": [
+        "Faroe Islands",
+        "Múlafossur Waterfall",
+        "Gásadalur",
+        "Trælanípa",
+        "Lake Sørvágsvatn",
+        "Drangarnir",
+        "Saksun",
+        "Gjógv",
+        "Kallur Lighthouse"
+      ],
+      "expected_display": "Faroe Islands, Múlafossur Waterfall ... (9 places)",
+      "evidence": [
+        "caption"
+      ],
+      "multi_location": true,
+      "matched_locations": [
+        "Faroe Islands",
+        "Múlafossur Waterfall",
+        "Gásadalur"
+      ],
+      "notes": "Faroe Islands bucket list destinations",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 9 expected locations: Faroe Islands, Múlafossur Waterfall, Gásadalur",
+      "duration_seconds": 48.73,
       "http_status": 200,
       "detected": {
         "name": "Múlafossur Waterfall, Faroe Islands",
@@ -2478,13 +2681,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 50.53,
+          "total_seconds": 48.7,
           "stages": {
-            "provider": 4.98,
+            "provider": 3.53,
             "location_extraction": 0.0,
-            "candidate_resolution": 43.7,
-            "verification": 0.27,
-            "nearby_places": 1.55,
+            "candidate_resolution": 43.56,
+            "verification": 0.42,
+            "nearby_places": 1.18,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2496,41 +2699,43 @@
     {
       "id": 55,
       "url": "https://www.instagram.com/reel/DavlUH4uck9/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Faroe Islands",
+      "expected_display": "Faroe Islands",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 17.88,
+      "notes": "Faroe Islands itinerary and guide",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Primary expected location 'faroe islands' not found in detected result ('Google Map, India')",
+      "duration_seconds": 12.71,
       "http_status": 200,
       "detected": {
-        "name": "A custom Google Map with 50 viewpoints, waterfalls, villages, photo spots, and hidden gems, India",
-        "formatted_address": "395, S Central Rd, MIDC Industrial Area, Mahape, Navi Mumbai, Maharashtra 400710, India",
+        "name": "Google Map, India",
+        "formatted_address": "FIFC Building, Level 7, Plot, C, 54&55, G Block BKC, Bandra Kurla Complex, Bandra East, Mumbai, Maharashtra 400098, India",
         "country": "India",
-        "city": "A custom Google Map with 50 viewpoints",
-        "region": "waterfalls, villages, photo spots, and hidden gems",
-        "latitude": 19.12916,
-        "longitude": 73.023319,
-        "confidence": 100,
-        "confidence_level": "VERY_HIGH",
+        "city": "Google Map",
+        "region": "Maharashtra 400098",
+        "latitude": 19.069508,
+        "longitude": 72.869774,
+        "confidence": 62,
+        "confidence_level": "LOW",
         "verification_status": "FAILED"
       },
-      "detected_display": "A custom Google Map with 50 viewpoints, waterfalls, villages, photo spots, and hidden gems, India",
+      "detected_display": "Google Map, India",
       "pipeline": {
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 17.87,
+          "total_seconds": 12.69,
           "stages": {
-            "provider": 4.63,
+            "provider": 4.05,
             "location_extraction": 0.0,
-            "candidate_resolution": 11.65,
-            "verification": 0.26,
-            "nearby_places": 1.33,
+            "candidate_resolution": 6.95,
+            "verification": 0.27,
+            "nearby_places": 1.42,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2542,41 +2747,41 @@
     {
       "id": 56,
       "url": "https://www.instagram.com/reel/Dbu0q-FSrYY/",
-      "expected": null,
-      "expected_display": "unspecified",
+      "expected": "Location Not Found",
+      "expected_display": "Location Not Found",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 35.42,
+      "notes": "Negative test: Video editing tutorial reel (no travel location)",
+      "scored": true,
+      "status": "failed",
+      "match_type": "none",
+      "match_details": "Expected 'Location Not Found', but detected 'Bemett WideSans To, Czechia'.",
+      "duration_seconds": 34.05,
       "http_status": 200,
       "detected": {
-        "name": "BRAND STUDIO IBDO, India",
-        "formatted_address": "Railway Station Rd, Laxmi Nagar, Ramayan Nagar, Ulhasnagar, Maharashtra 421004, India",
-        "country": "India",
-        "city": "BRAND STUDIO IBDO",
-        "region": "Maharashtra 421004",
-        "latitude": 19.221781,
-        "longitude": 73.161612,
-        "confidence": 44,
+        "name": "Bemett WideSans To, Czechia",
+        "formatted_address": "2b, Jeremiášova 2722, 155 00 Praha 5, Czechia",
+        "country": "Czechia",
+        "city": "Bemett WideSans To",
+        "region": "155 00 Praha 5",
+        "latitude": 50.043858,
+        "longitude": 14.337031,
+        "confidence": 42,
         "confidence_level": "VERY_LOW",
         "verification_status": "FAILED"
       },
-      "detected_display": "BRAND STUDIO IBDO, India",
+      "detected_display": "Bemett WideSans To, Czechia",
       "pipeline": {
         "success": true,
         "stage": "ocr",
         "performance": {
-          "total_seconds": 35.41,
+          "total_seconds": 34.03,
           "stages": {
-            "provider": 4.13,
-            "location_extraction": 22.77,
-            "candidate_resolution": 5.34,
-            "verification": 1.51,
-            "nearby_places": 1.64,
+            "provider": 4.55,
+            "location_extraction": 22.66,
+            "candidate_resolution": 3.96,
+            "verification": 1.24,
+            "nearby_places": 1.63,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2588,16 +2793,27 @@
     {
       "id": 57,
       "url": "https://www.instagram.com/reel/Dckwua4oavt/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Paisupok Lake, Indonesia",
+        "Paisupok Lake, Central Sulawesi",
+        "Paisupok Lake"
+      ],
+      "expected_display": "Paisupok Lake, Indonesia, Paisupok Lake, Central Sulawesi, Paisupok Lake",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 18.64,
+      "matched_locations": [
+        "Paisupok Lake, Indonesia",
+        "Paisupok Lake, Central Sulawesi",
+        "Paisupok Lake"
+      ],
+      "notes": "Paisupok Lake in Central Sulawesi, Indonesia",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 3 of 3 expected locations: Paisupok Lake, Indonesia, Paisupok Lake, Central Sulawesi, Paisupok Lake",
+      "duration_seconds": 55.57,
       "http_status": 200,
       "detected": {
         "name": "Paisupok Lake, Indonesia",
@@ -2616,13 +2832,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 18.63,
+          "total_seconds": 55.55,
           "stages": {
-            "provider": 5.34,
+            "provider": 44.24,
             "location_extraction": 0.0,
-            "candidate_resolution": 11.0,
-            "verification": 0.64,
-            "nearby_places": 1.64,
+            "candidate_resolution": 9.36,
+            "verification": 0.37,
+            "nearby_places": 1.58,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2634,16 +2850,29 @@
     {
       "id": 58,
       "url": "https://www.instagram.com/reel/Dc6UrAbS7DP/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": [
+        "Gaztelugatxe, Spain",
+        "San Juan de Gaztelugatxe, Spain",
+        "Gaztelugatxe, Basque Country",
+        "San Juan de Gaztelugatxe"
+      ],
+      "expected_display": "Gaztelugatxe, Spain, San Juan de Gaztelugatxe, Spain ... (4 places)",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 19.37,
+      "matched_locations": [
+        "Gaztelugatxe, Spain",
+        "San Juan de Gaztelugatxe, Spain",
+        "Gaztelugatxe, Basque Country",
+        "San Juan de Gaztelugatxe"
+      ],
+      "notes": "San Juan de Gaztelugatxe, Basque Country, Spain",
+      "scored": true,
+      "status": "passed",
+      "match_type": "sufficient",
+      "match_details": "Matched 4 of 4 expected locations: Gaztelugatxe, Spain, San Juan de Gaztelugatxe, Spain, Gaztelugatxe, Basque Country",
+      "duration_seconds": 19.32,
       "http_status": 200,
       "detected": {
         "name": "Gaztelugatxe officially San Juan de in Spain's Basque Country, Spain",
@@ -2662,13 +2891,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 19.35,
+          "total_seconds": 19.3,
           "stages": {
-            "provider": 5.71,
+            "provider": 7.54,
             "location_extraction": 0.0,
-            "candidate_resolution": 11.96,
-            "verification": 0.3,
-            "nearby_places": 1.38,
+            "candidate_resolution": 10.05,
+            "verification": 0.26,
+            "nearby_places": 1.46,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2684,12 +2913,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Requires manual ground-truth verification ('wow' caption)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 37.53,
+      "duration_seconds": 37.5,
       "http_status": 200,
       "detected": null,
       "detected_display": "None",
@@ -2697,10 +2926,10 @@
         "success": false,
         "stage": "failed",
         "performance": {
-          "total_seconds": 37.52,
+          "total_seconds": 37.5,
           "stages": {
-            "provider": 3.61,
-            "location_extraction": 33.89,
+            "provider": 3.69,
+            "location_extraction": 33.79,
             "candidate_resolution": 0.0,
             "verification": 0.0,
             "nearby_places": 0.0,
@@ -2719,12 +2948,12 @@
       "expected_display": "unspecified",
       "evidence": [],
       "multi_location": false,
-      "notes": "Location in",
+      "notes": "Unscored: Genuinely ambiguous ('Game of Thrones universe in Spain' without specific filming sites)",
       "scored": false,
       "status": "untested",
       "match_type": "untested",
       "match_details": "Case has no expected value specified.",
-      "duration_seconds": 9.43,
+      "duration_seconds": 8.03,
       "http_status": 200,
       "detected": {
         "name": "Spain",
@@ -2743,13 +2972,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 9.42,
+          "total_seconds": 8.02,
           "stages": {
-            "provider": 3.44,
+            "provider": 3.05,
             "location_extraction": 0.0,
-            "candidate_resolution": 4.24,
-            "verification": 0.3,
-            "nearby_places": 1.44,
+            "candidate_resolution": 3.04,
+            "verification": 0.28,
+            "nearby_places": 1.64,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
@@ -2761,16 +2990,18 @@
     {
       "id": 61,
       "url": "https://www.instagram.com/reel/DcyIef7MqjY/",
-      "expected": null,
-      "expected_display": "unspecified",
-      "evidence": [],
+      "expected": "Switzerland",
+      "expected_display": "Switzerland",
+      "evidence": [
+        "caption"
+      ],
       "multi_location": false,
-      "notes": "Location in",
-      "scored": false,
-      "status": "untested",
-      "match_type": "untested",
-      "match_details": "Case has no expected value specified.",
-      "duration_seconds": 10.57,
+      "notes": "Switzerland budget travel guide",
+      "scored": true,
+      "status": "passed",
+      "match_type": "exact",
+      "match_details": "Exact match with 'Switzerland'",
+      "duration_seconds": 9.83,
       "http_status": 200,
       "detected": {
         "name": "Switzerland",
@@ -2789,13 +3020,13 @@
         "success": true,
         "stage": "caption",
         "performance": {
-          "total_seconds": 10.57,
+          "total_seconds": 9.81,
           "stages": {
-            "provider": 4.5,
+            "provider": 5.58,
             "location_extraction": 0.0,
-            "candidate_resolution": 3.98,
-            "verification": 0.3,
-            "nearby_places": 1.78,
+            "candidate_resolution": 2.12,
+            "verification": 0.28,
+            "nearby_places": 1.82,
             "travel_intelligence": 0.0,
             "response_building": 0.0
           }
