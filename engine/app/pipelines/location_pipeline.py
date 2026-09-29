@@ -215,6 +215,66 @@ class LocationPipeline:
             except Exception as exc:
                 logger.warning("[PIPELINE] Failed to remove temp video %s: %s", video_path, type(exc).__name__)
 
+    def _is_credible_destination(
+        self,
+        resolver_result: dict | None,
+        gemini_result: dict | None = None,
+        stage: str = "caption",
+    ) -> bool:
+        """
+        Validates that a resolved destination meets the minimum evidence credibility threshold.
+        Prevents weak OCR/speech hallucinations and non-destination noise from being returned
+        as confident locations.
+        """
+        if not resolver_result or not isinstance(resolver_result, dict):
+            return False
+
+        winner = resolver_result.get("winner")
+        if not winner or not isinstance(winner, dict):
+            return False
+
+        gemini_status = (gemini_result.get("verification_status") if gemini_result else "").upper()
+        if gemini_status == "VERIFIED":
+            return True
+
+        score = float(winner.get("score") or 0.0)
+        place = winner.get("place") or {}
+        matched_sources = place.get("matched_sources") or []
+
+        # Multi-source corroboration (e.g. caption + speech, or caption + OCR)
+        if len(matched_sources) >= 2 and score >= 45.0:
+            return True
+
+        # Stage-specific credibility gates:
+        # Caption is author-written text: requires at least score >= 45.0
+        if stage == "caption":
+            return score >= 45.0
+
+        # OCR is video frame text: easily corrupted by fonts, subtitles, or watermarks.
+        # Reject if score is VERY_LOW (< 60.0) and unverified
+        if stage == "ocr":
+            if score < 60.0:
+                logger.info(
+                    "[PIPELINE] OCR candidate '%s' rejected for insufficient credibility (score=%.1f < 60.0, unverified)",
+                    place.get("travel_name"),
+                    score,
+                )
+                return False
+            return True
+
+        # Speech is audio transcription: phoneme noise
+        if stage == "speech":
+            if score < 55.0:
+                logger.info(
+                    "[PIPELINE] Speech candidate '%s' rejected for insufficient credibility (score=%.1f < 55.0, unverified)",
+                    place.get("travel_name"),
+                    score,
+                )
+                return False
+            return True
+
+        return score >= 50.0
+
     # ==================================================
     # Pipeline Execution
     # ==================================================
@@ -253,16 +313,17 @@ class LocationPipeline:
                     frame_paths,
                 )
                 verify_seconds = time.perf_counter() - t_ver
-                return self.build_response(
-                    "caption",
-                    evidence,
-                    resolver,
-                    gemini,
-                    total_start,
-                    provider_duration=provider_duration,
-                    extract_seconds=extract_seconds,
-                    verify_seconds=verify_seconds,
-                )
+                if self._is_credible_destination(resolver, gemini, stage="caption"):
+                    return self.build_response(
+                        "caption",
+                        evidence,
+                        resolver,
+                        gemini,
+                        total_start,
+                        provider_duration=provider_duration,
+                        extract_seconds=extract_seconds,
+                        verify_seconds=verify_seconds,
+                    )
 
             # ==================================================
             # STAGE 2 : OCR
@@ -296,16 +357,17 @@ class LocationPipeline:
                     frame_paths,
                 )
                 verify_seconds = time.perf_counter() - t_ver
-                return self.build_response(
-                    "ocr",
-                    evidence,
-                    resolver,
-                    gemini,
-                    total_start,
-                    provider_duration=provider_duration,
-                    extract_seconds=extract_seconds,
-                    verify_seconds=verify_seconds,
-                )
+                if self._is_credible_destination(resolver, gemini, stage="ocr"):
+                    return self.build_response(
+                        "ocr",
+                        evidence,
+                        resolver,
+                        gemini,
+                        total_start,
+                        provider_duration=provider_duration,
+                        extract_seconds=extract_seconds,
+                        verify_seconds=verify_seconds,
+                    )
 
             # ==================================================
             # STAGE 3 : Speech
@@ -334,16 +396,17 @@ class LocationPipeline:
                     frame_paths,
                 )
                 verify_seconds = time.perf_counter() - t_ver
-                return self.build_response(
-                    "speech",
-                    evidence,
-                    resolver,
-                    gemini,
-                    total_start,
-                    provider_duration=provider_duration,
-                    extract_seconds=extract_seconds,
-                    verify_seconds=verify_seconds,
-                )
+                if self._is_credible_destination(resolver, gemini, stage="speech"):
+                    return self.build_response(
+                        "speech",
+                        evidence,
+                        resolver,
+                        gemini,
+                        total_start,
+                        provider_duration=provider_duration,
+                        extract_seconds=extract_seconds,
+                        verify_seconds=verify_seconds,
+                    )
 
             # ==================================================
             # Nothing Found
@@ -369,7 +432,7 @@ class LocationPipeline:
             if isinstance(raw_err, str):
                 err_msg = raw_err
             elif attempted:
-                err_msg = "Google Places returned no verified destinations."
+                err_msg = "No credible travel destination found (candidates lacked sufficient confidence)."
             else:
                 err_msg = "No destination candidates found from the Reel."
 

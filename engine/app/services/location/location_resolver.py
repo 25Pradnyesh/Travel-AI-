@@ -96,6 +96,13 @@ BUSINESS_TYPES = {
     "plumber",
     "electrician",
     "roofing_contractor",
+
+    # Corporate & Office Workspaces
+    "corporate_office",
+    "office",
+    "coworking_space",
+    "company",
+    "local_government_office",
 }
 
 LANDMARK_TYPES = {

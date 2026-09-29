@@ -40,14 +40,22 @@ class LocationFormatter:
         state = ""
         locality = ""
 
-        if len(parts) >= 1:
-            country = parts[-1]
-
-        if len(parts) >= 2:
-            state = parts[-2]
-
-        if len(parts) >= 3:
-            locality = parts[-3]
+        # If the last address segment is numeric or a postal code, the country is the preceding segment
+        clean_last = parts[-1].strip() if parts else ""
+        if len(parts) >= 2 and (
+            clean_last.isdigit()
+            or (len(clean_last) <= 8 and any(c.isdigit() for c in clean_last) and not any(w in clean_last.lower() for w in ["island", "republic", "states", "kingdom"]))
+        ):
+            country = parts[-2]
+            state = parts[-3] if len(parts) >= 3 else ""
+            locality = parts[-4] if len(parts) >= 4 else ""
+        else:
+            if len(parts) >= 1:
+                country = parts[-1]
+            if len(parts) >= 2:
+                state = parts[-2]
+            if len(parts) >= 3:
+                locality = parts[-3]
 
         query_parts = self.extract_query_components(
             query,

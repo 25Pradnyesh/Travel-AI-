@@ -302,6 +302,20 @@ BOILERPLATE_WORDS = {
     "presets",
     "cinematic",
     "spiderman",
+    # Tech platforms & mapping software (frequently in marketing/promotional copy)
+    "google",
+    "youtube",
+    "instagram",
+    "facebook",
+    "tiktok",
+    "pinterest",
+    "twitter",
+    "telegram",
+    "whatsapp",
+    "spotify",
+    "apple",
+    "map",
+    "maps",
 }
 
 TEMPORAL_WORDS = {
@@ -484,6 +498,7 @@ KEYWORD_PATTERNS = [
     r"((?:The\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Mill|Bridge|Tower|Castle|Palace|Fort|Waterfall|Falls|Beach|Island|Forest|Rainforest|Valley|Peak|Pass|Canyon|Gorge|Recreation\s+Area))",
     r"(Lago\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
     r"(Val\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
+    r"((?:[Ss]alto|[Cc]ascada|[Cc]ataratas)\s+(?:de\s+|del\s+|el\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)",
     r"(Isola\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
     r"(Swiss\s+Alps)",
 ]
@@ -840,6 +855,8 @@ class CandidateService:
                 matches = re.findall(pattern, line)
                 for m in matches:
                     cand = m.strip() if isinstance(m, str) else m[0].strip()
+                    if cand and cand[0].islower():
+                        cand = cand.title()
                     if self.is_valid_candidate(cand):
                         candidates.append(cand)
 

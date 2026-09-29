@@ -37,6 +37,20 @@ COUNTRIES = {
     "egypt",
     "morocco",
     "south africa",
+    "faroe islands",
+    "venezuela",
+    "georgia",
+    "kyrgyzstan",
+    "lithuania",
+    "south korea",
+    "korea",
+    "ireland",
+    "scotland",
+    "wales",
+    "peru",
+    "chile",
+    "argentina",
+    "colombia",
 }
 
 
@@ -162,6 +176,13 @@ BAD_PLACE_TYPES = {
     "plumber",
     "electrician",
     "roofing_contractor",
+
+    # Corporate & Office Workspaces
+    "corporate_office",
+    "office",
+    "coworking_space",
+    "company",
+    "local_government_office",
 }
 
 
@@ -362,12 +383,14 @@ class ScoringService:
     # ==========================================================
 
     def confidence(
-
         self,
+        score: float,
+        evidence_count: int = 1,
+        is_country_only: bool = False,
+    ) -> str:
 
-        score,
-
-    ):
+        if is_country_only and score >= 80:
+            return "MEDIUM"
 
         if score >= 90:
             return "VERY_HIGH"
@@ -420,6 +443,13 @@ class ScoringService:
         ocr_index = self.build_search_space(ocr)
 
         hashtag_index = self.build_search_space(hashtags)
+
+        # Identify explicit countries declared in author evidence (title / caption)
+        author_text = f"{title} {caption}".lower()
+        all_countries = {c.lower() for c in COUNTRIES if len(c) > 3}
+        declared_countries = {
+            c for c in all_countries if c in author_text
+        }
 
         ranked = []
 
@@ -581,6 +611,18 @@ class ScoringService:
                 score += 20
                 matched_sources.add("title")
                 matched_terms.add(travel_name)
+
+            # ==========================================================
+            # Geographic Consistency & Country Alignment
+            # ==========================================================
+            if declared_countries:
+                if country and country in declared_countries:
+                    score += 35
+                    matched_sources.add("caption" if country in caption else "title")
+                    matched_terms.add(country)
+                elif country and country in all_countries and country not in declared_countries:
+                    # Penalize direct geographic contradiction (e.g. caption states "Switzerland", place is in "India")
+                    score -= 75
 
             # ==========================================================
             # Fuzzy Matching
@@ -925,6 +967,8 @@ class ScoringService:
                     "score": normalized,
                     "confidence": self.confidence(
                         normalized,
+                        evidence_count=len(matched_sources),
+                        is_country_only=bool(country and travel_name == country),
                     ),
                 }
             )
