@@ -105,13 +105,13 @@ class FrameExtractor:
 
         # Reject useless frames
 
-        if brightness < 25:
+        if brightness < 20:
             return None
 
-        if brightness > 235:
+        if brightness > 240:
             return None
 
-        if sharpness < 30:
+        if sharpness < 12:
             return None
 
         normalized_scene = min(
@@ -135,21 +135,10 @@ class FrameExtractor:
         )
 
         score = (
-
-            normalized_scene * 40
-
-            +
-
-            normalized_text * 35
-
-            +
-
-            normalized_sharpness * 15
-
-            +
-
-            normalized_brightness * 10
-
+            normalized_scene * 25
+            + normalized_text * 35
+            + normalized_sharpness * 25
+            + normalized_brightness * 15
         )
 
         return {
@@ -291,9 +280,6 @@ class FrameExtractor:
 
             previous_frame = frame.copy()
 
-            if diff < self.scene_threshold:
-                continue
-
             metrics = self.score_frame(
                 frame,
                 diff,
@@ -358,23 +344,28 @@ class FrameExtractor:
                 )
 
         # ==================================================
-        # Pick Best
+        # Pick Best per Temporal Segment
         # ==================================================
 
-        candidates.sort(
+        selected = []
+        if candidates:
+            seg_size = total_frames / max(max_frames, 1)
+            for seg_idx in range(max_frames):
+                seg_start = seg_idx * seg_size
+                seg_end = (seg_idx + 1) * seg_size
+                in_seg = [c for c in candidates if seg_start <= c["frame_no"] < seg_end]
+                if in_seg:
+                    best = max(in_seg, key=lambda x: x["metrics"]["score"])
+                    selected.append(best)
 
-            key=lambda x: x["metrics"]["score"],
-
-            reverse=True,
-
-        )
-
-        selected = candidates[:max_frames]
+        # Fallback to fill max_frames if any segment lacked valid candidates
+        if len(selected) < max_frames and candidates:
+            remaining = [c for c in candidates if c not in selected]
+            remaining.sort(key=lambda x: x["metrics"]["score"], reverse=True)
+            selected.extend(remaining[: max_frames - len(selected)])
 
         selected.sort(
-
             key=lambda x: x["frame_no"]
-
         )
 
         saved = []

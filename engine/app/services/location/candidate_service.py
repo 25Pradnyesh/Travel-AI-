@@ -1,5 +1,6 @@
-import re
+import difflib
 import logging
+import re
 
 from engine.app.services.scoring.scoring_service import COUNTRIES
 
@@ -352,6 +353,17 @@ KNOWN_GEOGRAPHIC_ENTITIES = {
     "Mysuru",
     "Bangalore",
     "Bengaluru",
+    "Chennai",
+    "Mumbai",
+    "Delhi",
+    "Kolkata",
+    "Hyderabad",
+    "Pune",
+    "Jaipur",
+    "Agra",
+    "Varanasi",
+    "Goa",
+    "Kerala",
     "Meghalaya",
     "Shillong",
     "Cherrapunji",
@@ -387,6 +399,23 @@ KNOWN_GEOGRAPHIC_ENTITIES = {
     "Milan",
     "Florence",
     "Naples",
+    "Kyoto",
+    "Osaka",
+    "Madrid",
+    "Barcelona",
+    "Berlin",
+    "Munich",
+    "Amsterdam",
+    "Vienna",
+    "Prague",
+    "Zurich",
+    "Geneva",
+    "Sydney",
+    "Melbourne",
+    "Dubai",
+    "Singapore",
+    "Bangkok",
+    "Bali",
     "Enshi",
     "Houtouwan",
 }
@@ -778,9 +807,21 @@ class CandidateService:
         # 6. Recognized Single-Word Geographic Entities
         # ------------------------------------------
         words_in_text = set(re.findall(r"\b[A-Za-z]+\b", cleaned))
+        words_lower = {w.lower() for w in words_in_text if len(w) >= 3}
         for geo in KNOWN_GEOGRAPHIC_ENTITIES:
-            if geo.lower() in {w.lower() for w in words_in_text}:
+            geo_lower = geo.lower()
+            if geo_lower in words_lower:
                 candidates.append(geo)
+                continue
+            # OCR / transcription typo tolerance for recognized destinations
+            if len(geo_lower) >= 5:
+                for w in words_lower:
+                    if len(w) >= 4 and abs(len(w) - len(geo_lower)) <= 2:
+                        ratio = difflib.SequenceMatcher(None, w, geo_lower).ratio()
+                        if ratio >= 0.70:
+                            candidates.append(geo)
+                            break
+
 
         # ------------------------------------------
         # Normalization and Validation Filter

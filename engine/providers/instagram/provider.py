@@ -1,5 +1,6 @@
-from pathlib import Path
+import time
 import uuid
+from pathlib import Path
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
@@ -45,6 +46,12 @@ class InstagramYtDlpProvider(BaseProvider):
 
             "socket_timeout": 30,
 
+            "retries": 3,
+
+            "fragment_retries": 3,
+
+            "extractor_retries": 3,
+
         }
 
     # ==================================================
@@ -69,6 +76,50 @@ class InstagramYtDlpProvider(BaseProvider):
             pass
 
     # ==================================================
+    # Metadata Extraction Without Video (Photo Posts)
+    # ==================================================
+
+    def _extract_metadata_without_video(
+        self,
+        url: str,
+    ) -> dict | None:
+        """
+        Extracts metadata for Instagram posts that do not contain a video stream
+        (e.g., static photo carousels or image-only posts).
+        """
+        captured = {}
+        try:
+            from yt_dlp.extractor.instagram import InstagramIE
+
+            orig_extract_product = InstagramIE._extract_product
+            orig_raise_no_formats = InstagramIE.raise_no_formats
+
+            def capturing_extract_product(ie_self, *args, **kwargs):
+                res = orig_extract_product(ie_self, *args, **kwargs)
+                captured["info"] = res
+                return res
+
+            def suppressing_raise_no_formats(ie_self, msg, expected=True):
+                if "no video" in str(msg).lower():
+                    return
+                return orig_raise_no_formats(ie_self, msg, expected=expected)
+
+            InstagramIE._extract_product = capturing_extract_product
+            InstagramIE.raise_no_formats = suppressing_raise_no_formats
+
+            try:
+                with YoutubeDL({"quiet": True, "no_warnings": True, "socket_timeout": 20}) as ydl:
+                    try:
+                        return ydl.extract_info(url, download=False)
+                    except Exception:
+                        return captured.get("info")
+            finally:
+                InstagramIE._extract_product = orig_extract_product
+                InstagramIE.raise_no_formats = orig_raise_no_formats
+        except Exception:
+            return captured.get("info")
+
+    # ==================================================
     # Download Reel
     # ==================================================
 
@@ -88,59 +139,58 @@ class InstagramYtDlpProvider(BaseProvider):
             output_template,
         )
 
-        try:
-
-            with YoutubeDL(options) as ydl:
-
-                info = ydl.extract_info(
-
-                    url,
-
-                    download=True,
-
-                )
-
-                requested = info.get(
-                    "requested_downloads",
-                    [],
-                )
-
-                if requested:
-
-                    video_path = requested[0].get(
-                        "filepath",
+        download_attempts = 2
+        for attempt in range(download_attempts):
+            try:
+                with YoutubeDL(options) as ydl:
+                    info = ydl.extract_info(
+                        url,
+                        download=True,
                     )
-
+                    requested = info.get(
+                        "requested_downloads",
+                        [],
+                    )
+                    if requested:
+                        video_path = requested[0].get(
+                            "filepath",
+                        )
+                    else:
+                        video_path = ydl.prepare_filename(
+                            info,
+                        )
+                    break
+            except DownloadError as e:
+                err_msg = str(e).lower()
+                if "no video" in err_msg or "no video formats" in err_msg:
+                    info = self._extract_metadata_without_video(url)
+                    if info:
+                        video_path = None
+                        break
+                    else:
+                        self._cleanup_partial_files(file_id)
+                        raise RuntimeError(f"Instagram download failed.\n\n{e}")
+                elif attempt < download_attempts - 1:
+                    time.sleep(1.5)
+                    continue
                 else:
-
-                    video_path = ydl.prepare_filename(
-                        info,
+                    self._cleanup_partial_files(file_id)
+                    raise RuntimeError(
+                        f"Instagram download failed.\n\n{e}"
                     )
+            except Exception:
+                self._cleanup_partial_files(file_id)
+                raise
 
-        except DownloadError as e:
-
-            self._cleanup_partial_files(file_id)
-            raise RuntimeError(
-
-                f"Instagram download failed.\n\n{e}"
-
+        if video_path is not None:
+            video_path = Path(
+                video_path,
             )
-        except Exception:
-            self._cleanup_partial_files(file_id)
-            raise
-
-        video_path = Path(
-            video_path,
-        )
-
-        if not video_path.exists():
-
-            self._cleanup_partial_files(file_id)
-            raise FileNotFoundError(
-
-                "Downloaded video not found."
-
-            )
+            if not video_path.exists():
+                self._cleanup_partial_files(file_id)
+                raise FileNotFoundError(
+                    "Downloaded video not found."
+                )
 
         print(
             "\n========== INSTAGRAM PROVIDER ==========\n"
@@ -269,7 +319,7 @@ class InstagramYtDlpProvider(BaseProvider):
 
             "video_path": str(
                 video_path,
-            ),
+            ) if video_path else None,
 
             "thumbnail_path": metadata.get(
                 "thumbnail",
