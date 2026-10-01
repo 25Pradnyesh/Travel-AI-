@@ -1,0 +1,12 @@
+{
+  "extends": "./mobile/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./mobile/*"]
+    }
+  },
+  "include": [
+    "mobile/**/*.ts",
+    "mobile/**/*.tsx"
+  ]
+}

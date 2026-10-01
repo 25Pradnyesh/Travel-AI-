@@ -28,6 +28,24 @@ External Services & APIs
 
 The mobile client is the **primary product consumer** of this API. The legacy Next.js web application (`web/app/api/analyze/route.ts`) acts as a secondary server-side proxy to the same FastAPI backend.
 
+### 1.1 V2 Cloud Architecture: Supabase Data Layer
+
+In V2, the mobile application connects to **Supabase** for user profiles, analysis history, and bookmark synchronization.
+
+```text
+Expo Mobile App (mobile/)
+      ↓  (Client-side @supabase/supabase-js)
+Supabase Cloud (PostgreSQL Auth & Database: profiles, analyses, saved_places)
+      ↓  (Direct HTTP REST /analyze)
+FastAPI Intelligence Engine (engine/)
+      ↓
+External Inference & Extraction (yt-dlp, Whisper, EasyOCR, Google Places, Gemini)
+```
+
+* **Media Storage Boundary:** Raw Instagram video files, audio tracks, and extracted keyframes are strictly ephemeral runtime assets processed on the FastAPI engine and are **never** stored in Supabase. Only structured intelligence is persisted.
+* **Credentials:** Mobile clients strictly communicate using `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+
 ---
 
 ## 2. API Architecture & Communication Flow

@@ -117,3 +117,38 @@ The engine features a dedicated, zero-dependency observability layer under `engi
 - **Guaranteed Cleanup:** Automatic removal of temporary videos, partial fragments (`.part`, `.ytdl`), and isolated request frame directories with Windows retry safety.
 - **Stage 13 Release Candidate:** Fully validated against 169 unit/integration tests and complete 61-case real-world benchmark regression suite.
 
+---
+
+## V2 Cloud Architecture: Supabase Integration (Stage 1 Foundation)
+
+Travel AI V2 introduces Supabase as the unified backend-as-a-service cloud layer for authentication, relational persistence, and cross-device bookmark synchronization.
+
+```text
+Expo Mobile App
+      ↓
+Supabase Auth / Database
+      ↓
+FastAPI Intelligence Engine
+      ↓
+Instagram / Google Places / Gemini
+```
+
+### Core Architecture & Persistence Principles
+
+1. **Strict Ephemeral Media Processing:**
+   - **Reel videos are NOT stored in Supabase.**
+   - **Extracted keyframes and audio transcripts are NOT stored in Supabase.**
+   - All downloaded Instagram media, OpenCV frames, and Whisper audio clips remain strictly ephemeral scratchpad data processed exclusively within isolated, self-cleaning directories on the FastAPI engine.
+
+2. **Structured Intelligence Persistence:**
+   - Supabase persists only verified, structured intelligence and user bookmarks:
+     - `profiles`: User presentation and identity metadata.
+     - `analyses`: Historical analysis run summaries (destination, country, confidence, and travel intelligence JSON).
+     - `analysis_places`: Identified landmarks and POIs associated with an analysis run.
+     - `saved_places`: User-bookmarked places and destinations.
+
+3. **Decoupled Engine & Client Boundaries:**
+   - The mobile client interacts with Supabase using the public/anon key via the official `@supabase/supabase-js` client.
+   - The FastAPI engine remains independent and provider-agnostic, focusing on pipeline intelligence, rate-limiting, and inference orchestration.
+   - **Authentication and authorization (OAuth, session management, RLS policies) will be implemented in subsequent stages.**
+

@@ -48,6 +48,16 @@ export const Config = {
 
   // Application bundle identifier
   BUNDLE_ID: 'com.travelai.mobile',
+
+  // Supabase Cloud Configuration (Stage 1 V2)
+  SUPABASE: {
+    URL: process.env.EXPO_PUBLIC_SUPABASE_URL?.trim() || '',
+    ANON_KEY: (
+      process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ||
+      ''
+    ).trim(),
+  },
 } as const;
 
 export default Config;

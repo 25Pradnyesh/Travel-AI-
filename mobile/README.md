@@ -118,6 +118,19 @@ EXPO_PUBLIC_API_URL=http://localhost:8000
 ### API Security & Client Secrets
 The mobile client never contains backend API keys (`GOOGLE_PLACES_API_KEY`, `GEMINI_API_KEY`, `OPENWEATHER_API_KEY`). All third-party services are accessed exclusively via the FastAPI engine proxy.
 
+### Supabase Cloud Configuration (Stage 1 V2)
+Configure Supabase credentials in `mobile/.env.local` (see `mobile/.env.example`):
+
+```bash
+EXPO_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_anon_key_here
+```
+
+* **Client Access:** Accessible via `@/lib/supabase` using the typed `@supabase/supabase-js` client.
+* **Security:** Only the public/anonymous key is used in mobile code. The `service_role` secret must NEVER be included in the mobile client.
+* **Storage Boundary:** Raw videos, extracted frames, and audio clips are strictly ephemeral backend files and are **never** stored in Supabase. Only structured intelligence is persisted.
+
+
 ---
 
 ## 6. End-to-End Analysis Flow
