@@ -11,10 +11,13 @@ out/
 # Python
 # ==================================================
 
+.venv/
 engine/.venv/
 __pycache__/
 *.py[cod]
 *$py.class
+.pytest_cache/
+scratch/
 
 # ==================================================
 # Environment Variables
