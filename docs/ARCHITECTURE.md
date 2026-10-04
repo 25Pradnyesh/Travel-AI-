@@ -165,3 +165,12 @@ Instagram / Google Places / Gemini
   - **Zero-Friction Guest Mode:** Guest access to Reel analysis, destination exploration, and local bookmarks is 100% preserved. Authentication is strictly opt-in for multi-device sync.
   - Zero Credential Exposure: Google and Apple client secrets, Team IDs, Service IDs, and Private Keys reside exclusively within the Supabase Dashboard.
 
+- **Cloud Analysis History Persistence Architecture (Stage 5):**
+  - **Authenticated Cloud Sync:** Signed-in users automatically persist structured Reel analysis results and discovered points of interest to Supabase cloud tables (`analyses` and `analysis_places`).
+  - **Zero Cloud Writes for Guests:** Guest analysis remains 100% functional locally with zero Supabase database queries performed.
+  - **Strict Ephemeral Media Boundary:** Supabase stores zero raw video files, audio tracks, keyframes, or extracted clips. Only verified destination metadata, coordinates, confidence scores, and travel intelligence JSON are persisted.
+  - **Parent-Child RLS Compliance:** Preserves strict PostgreSQL RLS policies by writing the parent `analyses` record first with the verified `auth.uid()`, then inserting child `analysis_places` referencing the generated parent ID.
+  - **Partial Failure & Atomic Cleanup:** If child place insertion fails, the orphaned parent analysis record is immediately cleaned up under RLS (`analyses_delete_own` with foreign key `ON DELETE CASCADE`), preventing corrupt or partial history state.
+  - **Resilient & Non-Blocking Analysis Flow:** Cloud persistence is triggered asynchronously. Any cloud failure or network interruption is logged as a development diagnostic and never blocks or fails the user's active analysis experience.
+  - **Accidental Duplicate Guard:** An in-memory WeakSet and execution debounce cooldown window prevent accidental duplicate rows caused by rapid component re-renders or duplicate callbacks.
+  - **History Data Layer Preparedness:** Exposes strongly-typed query methods (`getUserAnalyses`, `getAnalysisDetail`, `deleteAnalysis`) preparing the application layer for future History screen implementation.

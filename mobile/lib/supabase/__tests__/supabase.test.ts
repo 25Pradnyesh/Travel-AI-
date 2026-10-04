@@ -25,6 +25,20 @@ import {
   signInWithGoogle,
   signInWithApple,
 } from '../auth';
+import {
+  extractReelId,
+  resolveThumbnailUrl,
+  clampConfidence,
+  formatRating,
+  mapAnalysisToRow,
+  mapPlacesToRows,
+  saveAnalysisToCloudHistory,
+  getUserAnalyses,
+  getAnalysisDetail,
+  deleteAnalysis,
+  resetHistorySaveGuards,
+} from '../history';
+import { AnalysisResponse } from '@/types/analysis';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -32,13 +46,13 @@ function assert(condition: unknown, message: string): asserts condition {
   }
 }
 
-export function runSupabaseBoundaryTests(): { passed: number; failed: number } {
+export async function runSupabaseBoundaryTests(): Promise<{ passed: number; failed: number }> {
   let passed = 0;
   let failed = 0;
 
-  const runTest = (name: string, fn: () => void) => {
+  const runTest = async (name: string, fn: () => void | Promise<void>) => {
     try {
-      fn();
+      await fn();
       passed++;
     } catch (err) {
       failed++;
@@ -290,6 +304,342 @@ export function runSupabaseBoundaryTests(): { passed: number; failed: number } {
         Boolean(googleResult.error && googleResult.error.includes('Supabase is not configured')),
         'Google sign in must report descriptive unconfigured error'
       );
+    });
+
+    // ============================================================================
+    // 6. Stage 5: Cloud Analysis History Persistence & Data Layer
+    // ============================================================================
+    const mockAnalysisResponse: AnalysisResponse = {
+      success: true,
+      best_guess: {
+        place_id: 'ChIJ42b10_nzh0cR2M2h4hJ7f_E',
+        name: 'Villa Cipressi, Lake Como',
+        formatted_address: 'Via 4 Novembre, 22, 23829 Varenna LC, Italy',
+        country: 'Italy',
+        city: 'Varenna',
+        region: 'Lombardy',
+        latitude: 46.0125,
+        longitude: 9.2831,
+        rating: 4.7,
+        user_ratings_total: 1250,
+        types: ['tourist_attraction', 'point_of_interest'],
+        photos: [{ url: 'https://images.unsplash.com/photo-varenna.jpg' }],
+        maps_url: 'https://maps.google.com/?cid=123',
+        confidence: 96,
+        confidence_level: 'VERY_HIGH',
+        verification_status: 'VERIFIED',
+        gemini_confidence: 0.98,
+        gemini_reason: 'Distinct architectural landmarks and Lake Como shoreline match.',
+        why: 'Verified via multimodal visual matching and Google Places coordinates.',
+      },
+      travel_intelligence: {
+        category: 'Scenic Coastal Town',
+        category_emoji: '🏔️',
+        best_season: 'May - September',
+        peak_months: ['July', 'August'],
+        budget_level: 'Moderate to High',
+        travel_tips: ['Book ferry tickets in advance during peak season.'],
+      },
+      nearby_places: [
+        {
+          place_id: 'ChIJNearbyPlace001',
+          name: 'Villa Monastero',
+          formatted_address: 'Viale Polvani, 4, 23829 Varenna LC, Italy',
+          latitude: 46.0092,
+          longitude: 9.2842,
+          rating: 4.8,
+          user_ratings_total: 2100,
+          types: ['museum'],
+          category: 'Cultural Landmark',
+          maps_url: 'https://maps.google.com/?cid=456',
+        },
+        {
+          // Duplicate place ID simulation to verify deduplication
+          place_id: 'ChIJ42b10_nzh0cR2M2h4hJ7f_E',
+          name: 'Villa Cipressi (Duplicate)',
+          formatted_address: 'Via 4 Novembre, 22, Italy',
+          latitude: 46.0125,
+          longitude: 9.2831,
+          rating: 4.7,
+          user_ratings_total: 1250,
+          types: ['tourist_attraction'],
+          category: 'Attractions',
+          maps_url: 'https://maps.google.com/?cid=123',
+        },
+      ],
+    };
+
+    function createMockHistoryClient(options?: {
+      session?: { user: { id: string } } | null;
+      failParentInsert?: boolean;
+      failPlacesInsert?: boolean;
+      analysesData?: any[];
+      placesData?: any[];
+    }) {
+      const session =
+        options?.session !== undefined
+          ? options.session
+          : { user: { id: '123e4567-e89b-12d3-a456-426614174000' } };
+
+      const calls: { table: string; method: string; payload?: any }[] = [];
+
+      const client: any = {
+        auth: {
+          getSession: async () => ({
+            data: { session },
+            error: null,
+          }),
+        },
+        from: (table: string) => ({
+          insert: (payload: any) => {
+            calls.push({ table, method: 'insert', payload });
+            return {
+              select: (_fields?: string) => ({
+                single: async () => {
+                  if (table === 'analyses' && options?.failParentInsert) {
+                    return { data: null, error: { message: 'Database insert failed' } };
+                  }
+                  return {
+                    data: {
+                      id: 'mock-analysis-uuid-999',
+                      user_id: payload.user_id,
+                      destination: payload.destination,
+                      created_at: new Date().toISOString(),
+                    },
+                    error: null,
+                  };
+                },
+              }),
+              then: (resolve: (val: any) => void) => {
+                if (table === 'analysis_places' && options?.failPlacesInsert) {
+                  return resolve({
+                    data: null,
+                    error: { message: 'Foreign key or place insert failed' },
+                  });
+                }
+                return resolve({ data: payload, error: null });
+              },
+            };
+          },
+          delete: () => {
+            calls.push({ table, method: 'delete' });
+            return {
+              eq: (_col: string, _val: any) => Promise.resolve({ data: null, error: null }),
+            };
+          },
+          select: (_cols?: string) => {
+            calls.push({ table, method: 'select' });
+            return {
+              order: (_col: string, _opts?: any) => ({
+                range: (_start: number, _end: number) =>
+                  Promise.resolve({ data: options?.analysesData || [], error: null }),
+              }),
+              eq: (_col: string, _val: any) => ({
+                single: async () => ({
+                  data: options?.analysesData?.[0] || { id: 'mock-analysis-uuid-999' },
+                  error: null,
+                }),
+                order: (_c: string, _o?: any) =>
+                  Promise.resolve({ data: options?.placesData || [], error: null }),
+              }),
+            };
+          },
+        }),
+        __calls: calls,
+      };
+
+      return client;
+    }
+
+    await runTest('extractReelId parses shortcodes and ignores trailing parameters', () => {
+      assert(
+        extractReelId('https://www.instagram.com/reel/C8xyzExample1/') === 'C8xyzExample1',
+        'standard reel url parsed'
+      );
+      assert(
+        extractReelId('https://instagram.com/reels/DaAiVGUx7Cf?igsh=123') === 'DaAiVGUx7Cf',
+        'reels plural url with query parsed'
+      );
+      assert(extractReelId('https://instagram.com/p/something') === null, 'non-reel url returns null');
+      assert(extractReelId('') === null, 'empty url returns null');
+    });
+
+    await runTest('clampConfidence and formatRating conform to database constraints', () => {
+      assert(clampConfidence(95.4) === 95, 'rounds confidence');
+      assert(clampConfidence(-10) === 0, 'clamps negative confidence to 0');
+      assert(clampConfidence(120) === 100, 'clamps high confidence to 100');
+      assert(clampConfidence(null) === null, 'null confidence preserved');
+
+      assert(formatRating(4.766) === 4.77, 'formats rating to 2 decimal places');
+      assert(formatRating(6.5) === 5.0, 'clamps rating above 5.0');
+      assert(formatRating(-1) === 0.0, 'clamps rating below 0.0');
+      assert(formatRating(null) === null, 'null rating preserved');
+    });
+
+    await runTest('mapAnalysisToRow maps AnalysisResponse to AnalysisInsert respecting ephemeral media rule', () => {
+      const reelUrl = 'https://www.instagram.com/reel/C8xyzExample1/';
+      const userId = '123e4567-e89b-12d3-a456-426614174000';
+      const mapped = mapAnalysisToRow(mockAnalysisResponse, reelUrl, userId);
+
+      assert(mapped.user_id === userId, 'user_id matches verified session');
+      assert(mapped.reel_url === reelUrl, 'reel_url matches');
+      assert(mapped.reel_id === 'C8xyzExample1', 'reel_id extracted');
+      assert(mapped.destination === 'Villa Cipressi, Lake Como', 'destination mapped');
+      assert(mapped.country === 'Italy', 'country mapped');
+      assert(mapped.confidence === 96, 'confidence clamped and mapped');
+      assert(
+        mapped.thumbnail_url === 'https://images.unsplash.com/photo-varenna.jpg',
+        'thumbnail mapped'
+      );
+      assert(
+        typeof mapped.travel_intelligence === 'object' && mapped.travel_intelligence !== null,
+        'travel_intelligence JSON preserved'
+      );
+
+      // Strict ephemeral media check: confirm no video bytes, audio tracks, or frames are mapped
+      const keys = Object.keys(mapped);
+      assert(!keys.includes('video'), 'no raw video in mapped row');
+      assert(!keys.includes('audio'), 'no raw audio in mapped row');
+      assert(!keys.includes('frames'), 'no extracted frames in mapped row');
+    });
+
+    await runTest('mapPlacesToRows maps best_guess and nearby places, deduplicating IDs', () => {
+      const analysisId = '987e6543-e89b-12d3-a456-426614174111';
+      const places = mapPlacesToRows(mockAnalysisResponse, analysisId);
+
+      // Total places: 1 from best_guess + 1 unique from nearby_places (duplicate ID ignored) = 2
+      assert(places.length === 2, `expected 2 deduplicated places, got ${places.length}`);
+
+      // Primary place check
+      const primary = places[0];
+      assert(primary.analysis_id === analysisId, 'primary links to parent analysisId');
+      assert(primary.place_id === 'ChIJ42b10_nzh0cR2M2h4hJ7f_E', 'primary place_id matches');
+      assert(primary.name === 'Villa Cipressi, Lake Como', 'primary name matches');
+      assert(primary.rating === 4.7, 'primary rating matches');
+      assert(primary.category === 'tourist_attraction', 'category mapped');
+
+      // Nearby place check
+      const nearby = places[1];
+      assert(nearby.analysis_id === analysisId, 'nearby links to parent analysisId');
+      assert(nearby.place_id === 'ChIJNearbyPlace001', 'nearby place_id matches');
+      assert(nearby.name === 'Villa Monastero', 'nearby name matches');
+      assert(nearby.category === 'Cultural Landmark', 'nearby category matches');
+    });
+
+    await runTest('saveAnalysisToCloudHistory skips cloud writes for guest users (no session)', async () => {
+      const mockClient = createMockHistoryClient({ session: null });
+      const result = await saveAnalysisToCloudHistory(
+        mockAnalysisResponse,
+        'https://www.instagram.com/reel/C8xyzExample1/',
+        mockClient
+      );
+
+      assert(result.status === 'skipped_guest', 'guest write must be skipped');
+      assert(
+        mockClient.__calls.length === 0,
+        'zero database calls should be made when unauthenticated'
+      );
+    });
+
+    await runTest('saveAnalysisToCloudHistory skips invalid or incomplete analysis responses', async () => {
+      const mockClient = createMockHistoryClient();
+      const invalidResponse: AnalysisResponse = { success: false, error: 'Resolution failed' };
+
+      const result = await saveAnalysisToCloudHistory(
+        invalidResponse,
+        'https://www.instagram.com/reel/C8xyzExample1/',
+        mockClient
+      );
+
+      assert(result.status === 'skipped_invalid', 'incomplete analysis must be skipped');
+      assert(mockClient.__calls.length === 0, 'zero database calls for invalid response');
+    });
+
+    await runTest('saveAnalysisToCloudHistory saves parent analysis first then places for signed-in user', async () => {
+      resetHistorySaveGuards();
+      const mockClient = createMockHistoryClient();
+      const reelUrl = 'https://www.instagram.com/reel/C8xyzExample1/';
+
+      const result = await saveAnalysisToCloudHistory(mockAnalysisResponse, reelUrl, mockClient);
+
+      assert(result.status === 'saved', 'persists successfully for authenticated session');
+      assert(result.analysisId === 'mock-analysis-uuid-999', 'returns persisted analysisId');
+      assert(result.placesCount === 2, 'persists associated places count');
+
+      // Verify call sequence: analyses inserted first, analysis_places second
+      assert(mockClient.__calls.length >= 2, 'at least 2 database operations executed');
+      assert(mockClient.__calls[0].table === 'analyses', 'analyses inserted first');
+      assert(mockClient.__calls[0].method === 'insert', 'analyses method is insert');
+      assert(
+        mockClient.__calls[0].payload.user_id === '123e4567-e89b-12d3-a456-426614174000',
+        'parent analysis uses verified auth.uid()'
+      );
+
+      assert(mockClient.__calls[1].table === 'analysis_places', 'analysis_places inserted second');
+      assert(mockClient.__calls[1].method === 'insert', 'analysis_places method is insert');
+    });
+
+    await runTest('saveAnalysisToCloudHistory cleans up parent analysis on places insertion failure', async () => {
+      resetHistorySaveGuards();
+      const mockClient = createMockHistoryClient({ failPlacesInsert: true });
+      const reelUrl = 'https://www.instagram.com/reel/C8xyzExampleFailPlaces/';
+
+      const result = await saveAnalysisToCloudHistory(mockAnalysisResponse, reelUrl, mockClient);
+
+      assert(result.status === 'error', 'returns error status on partial failure');
+      assert(result.partialPlacesFailed === true, 'marks partialPlacesFailed');
+
+      // Verify that parent analysis was deleted as cleanup under RLS
+      const deleteCalls = mockClient.__calls.filter(
+        (c: { table: string; method: string }) => c.table === 'analyses' && c.method === 'delete'
+      );
+      assert(deleteCalls.length === 1, 'cleanup delete was invoked on analyses');
+    });
+
+    await runTest('saveAnalysisToCloudHistory prevents accidental duplicate saves from re-renders', async () => {
+      resetHistorySaveGuards();
+      const mockClient = createMockHistoryClient();
+      const reelUrl = 'https://www.instagram.com/reel/C8xyzDuplicateTest/';
+
+      // First save succeeds
+      const firstResult = await saveAnalysisToCloudHistory(mockAnalysisResponse, reelUrl, mockClient);
+      assert(firstResult.status === 'saved', 'first save succeeds');
+
+      // Duplicate save on same response object immediately skipped
+      const secondResult = await saveAnalysisToCloudHistory(mockAnalysisResponse, reelUrl, mockClient);
+      assert(secondResult.status === 'skipped_duplicate', 'second save on same object is debounced');
+
+      // Separate response for same user+URL within cooldown also debounced
+      const clonedResponse = JSON.parse(JSON.stringify(mockAnalysisResponse));
+      const thirdResult = await saveAnalysisToCloudHistory(clonedResponse, reelUrl, mockClient);
+      assert(thirdResult.status === 'skipped_duplicate', 'rapid duplicate callback is debounced');
+
+      // Resetting guards permits subsequent intentional save
+      resetHistorySaveGuards();
+      const separateResult = await saveAnalysisToCloudHistory(clonedResponse, reelUrl, mockClient);
+      assert(separateResult.status === 'saved', 'intentional save after reset succeeds');
+    });
+
+    await runTest('future history query methods prepare data layer cleanly', async () => {
+      const mockData = [
+        {
+          id: 'mock-analysis-uuid-999',
+          destination: 'Villa Cipressi',
+          created_at: new Date().toISOString(),
+        },
+      ];
+      const mockClient = createMockHistoryClient({ analysesData: mockData, placesData: [] });
+
+      const analysesResult = await getUserAnalyses({ limit: 10 }, mockClient);
+      assert(analysesResult.data !== null, 'getUserAnalyses returns data array');
+      assert(analysesResult.error === null, 'getUserAnalyses error is null');
+
+      const detailResult = await getAnalysisDetail('mock-analysis-uuid-999', mockClient);
+      assert(detailResult.data !== null, 'getAnalysisDetail returns composite record');
+      assert(detailResult.data?.analysis.id === 'mock-analysis-uuid-999', 'analysis id matches');
+
+      const deleteResult = await deleteAnalysis('mock-analysis-uuid-999', mockClient);
+      assert(deleteResult.success === true, 'deleteAnalysis succeeds');
     });
   } finally {
     process.env = originalEnv;

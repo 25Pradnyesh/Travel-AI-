@@ -40,8 +40,9 @@ export interface Database {
           {
             foreignKeyName: 'profiles_id_fkey';
             columns: ['id'];
+            isOneToOne: true;
             referencedRelation: 'users';
-            referencedSchema: 'auth';
+            referencedColumns: ['id'];
           }
         ];
       };
@@ -86,8 +87,9 @@ export interface Database {
           {
             foreignKeyName: 'analyses_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'profiles';
-            referencedSchema: 'public';
+            referencedColumns: ['id'];
           }
         ];
       };
@@ -135,8 +137,9 @@ export interface Database {
           {
             foreignKeyName: 'analysis_places_analysis_id_fkey';
             columns: ['analysis_id'];
+            isOneToOne: false;
             referencedRelation: 'analyses';
-            referencedSchema: 'public';
+            referencedColumns: ['id'];
           }
         ];
       };
@@ -184,8 +187,9 @@ export interface Database {
           {
             foreignKeyName: 'saved_places_user_id_fkey';
             columns: ['user_id'];
+            isOneToOne: false;
             referencedRelation: 'profiles';
-            referencedSchema: 'public';
+            referencedColumns: ['id'];
           }
         ];
       };

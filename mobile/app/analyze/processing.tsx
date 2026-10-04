@@ -7,6 +7,7 @@ import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { travelAiApi, getFriendlyErrorMessage } from '@/lib/api/travel-ai';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
+import { saveAnalysisToCloudHistory } from '@/lib/supabase';
 
 const STAGE_MESSAGES = [
   {
@@ -91,6 +92,16 @@ export default function ProcessingScreen() {
       // Successful destination match -> navigate to Results
       hapticFeedback.success();
       setIsLoading(false);
+
+      // Stage 5: Automatically persist successful analysis to cloud history for authenticated users.
+      // Non-blocking: failures do not impede or delay navigation to Results.
+      saveAnalysisToCloudHistory(response, targetUrl).catch((historyErr) => {
+        if (__DEV__) {
+          // eslint-disable-next-line no-console
+          console.warn('[Processing] Background cloud history persistence warning:', historyErr);
+        }
+      });
+
       router.replace({
         pathname: '/analyze/results',
         params: { url: targetUrl },

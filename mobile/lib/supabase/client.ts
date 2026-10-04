@@ -94,7 +94,8 @@ export function getSupabaseClient(): SupabaseClient<Database> {
     return cachedClient;
   }
 
-  if (__DEV__) {
+  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
+  if (isDev) {
     // eslint-disable-next-line no-console
     console.warn(
       '[Travel AI Supabase] Supabase credentials not found. ' +

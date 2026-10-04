@@ -685,3 +685,161 @@ To enable Apple sign-in for production and staging environments, complete the fo
    - Confirm browser closes and redirects to `travelai://auth/callback`.
    - Confirm Profile screen shows Apple authenticated badge and user email.
 5. **Multi-Provider Verification:** Confirm signing out and signing in with Google works interchangeably without session corruption.
+
+---
+
+## 14. Cloud Analysis History Persistence Architecture (Stage 5)
+
+Travel AI Stage 5 implements automatic cloud persistence for successful Reel analyses when a verified Supabase authentication session exists, while preserving 100% unrestricted local analysis for guests with zero cloud writes.
+
+```text
+React Native Mobile App (Travel AI)
+      │
+      │ 1. Reel analysis completes on FastAPI Engine
+      ▼
+ProcessingScreen / History Service (mobile/lib/supabase/history.ts)
+      │
+      │ 2. Check supabase.auth.getSession()
+      ├───────────────────────┬──────────────────────────┐
+      ▼                       ▼                          ▼
+Guest Mode (No Session)  Unconfigured            Authenticated Session
+  • Cloud write skipped    • Write skipped         • Verified user_id = auth.uid()
+  • Zero DB queries        • Local fallback        • 1. INSERT public.analyses
+  • Reel results rendered  • Reel results rendered • 2. INSERT public.analysis_places
+                                                   • Results rendered (non-blocking)
+```
+
+### 14.1 Persistence Model & Data Contracts
+
+When an authenticated user analyzes a Reel, the client maps the structured `AnalysisResponse` into two relational tables in Supabase:
+
+#### 1. Parent Analysis Record (`public.analyses`)
+
+| Column Name | Database Type | Source Field | Description / Constraints |
+| :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Generated | Primary key generated via `gen_random_uuid()`. |
+| `user_id` | `UUID` | `session.user.id` | Verified Supabase authenticated user ID. Never client-supplied. |
+| `reel_url` | `TEXT` | `targetUrl` | Normalized Instagram Reel URL. |
+| `reel_id` | `TEXT` | Extracted regex | Instagram shortcode (e.g. `C8xyzExample1` from `/reel/C8xyzExample1/`). |
+| `thumbnail_url` | `TEXT` | `best_guess.photos[0]` | Resolved photo URL or relative proxy path. |
+| `destination` | `TEXT` | `best_guess.name` | Resolved landmark, city, or destination name. |
+| `country` | `TEXT` | `best_guess.country` | Geocoded country division or `null`. |
+| `confidence` | `INTEGER` | `best_guess.confidence` | Clamped integer score `[0, 100]` satisfying `CHECK` constraint. |
+| `travel_intelligence` | `JSONB` | `response.travel_intelligence` | Structured travel dossier (category, seasonality, budget, tips). |
+| `created_at` | `TIMESTAMPTZ` | Generated | UTC creation timestamp (defaults to `now()`). |
+
+#### 2. Associated Discovered Places (`public.analysis_places`)
+
+| Column Name | Database Type | Source Field | Description / Constraints |
+| :--- | :--- | :--- | :--- |
+| `id` | `UUID` | Generated | Primary key generated via `gen_random_uuid()`. |
+| `analysis_id` | `UUID` | Parent `analyses.id` | Foreign key referencing parent analysis with `ON DELETE CASCADE`. |
+| `place_id` | `TEXT` | `place.place_id` | Canonical Google Places ID or generated identifier. Deduplicated. |
+| `name` | `TEXT` | `place.name` | Verified place or venue name. |
+| `address` | `TEXT` | `place.formatted_address` | Local street address hierarchy. |
+| `latitude` | `DOUBLE PRECISION` | `place.latitude` | WGS84 coordinate within `[-90, 90]`. |
+| `longitude` | `DOUBLE PRECISION` | `place.longitude` | WGS84 coordinate within `[-180, 180]`. |
+| `rating` | `NUMERIC(3, 2)` | `place.rating` | Clamped rating `[0.00, 5.00]` rounded to 2 decimal places. |
+| `category` | `TEXT` | `place.category` | Classification tag (`Primary Destination`, `Attractions`, `Dining`). |
+| `photo_url` | `TEXT` | `place.photos[0]` | Resolved photo URL or proxy path. |
+| `created_at` | `TIMESTAMPTZ` | Generated | UTC creation timestamp (defaults to `now()`). |
+
+---
+
+### 14.2 Strict Ephemeral Media Boundary
+
+> [!IMPORTANT]
+> **Zero Raw Media Storage:**
+> - Under no circumstances are video files (`.mp4`), audio tracks (`.m4a`), extracted video keyframes (`.jpg`), or raw speech transcripts persisted in Supabase tables or Supabase Storage.
+> - Only verified destination metadata, coordinates, confidence scores, and structured JSON dossiers are persisted.
+> - All media processing remains 100% ephemeral on the FastAPI engine and is purged immediately upon completion.
+
+---
+
+### 14.3 Guest vs. Authenticated Behavior
+
+- **Authenticated Users:** Successful analyses automatically trigger background persistence via `saveAnalysisToCloudHistory(response, reelUrl)`.
+- **Guest Users:** If `supabase.auth.getSession()` returns no active session (`session == null`), `saveAnalysisToCloudHistory` immediately exits with `{ status: 'skipped_guest' }`. **Zero SQL queries or network calls are made to Supabase.**
+- **Preserved User Experience:** Cloud persistence is completely non-blocking. If persistence encounters an error or network drop, the analysis view transitions to the Results screen normally without any disruptive error dialogs or artificial failure states.
+
+---
+
+### 14.4 Parent-Child RLS Compliance & Atomic Cleanup
+
+1. **Parent-First Insertion Order:**
+   - The client always inserts into `public.analyses` first with `user_id = auth.uid()`.
+   - The RLS policy `analyses_insert_own` (`WITH CHECK (auth.uid() = user_id)`) validates and commits the row.
+2. **Child Insertion Order:**
+   - The child records in `public.analysis_places` are inserted second, referencing the committed parent `analysis_id`.
+   - The RLS policy `analysis_places_insert_own` (`WITH CHECK (EXISTS (SELECT 1 FROM public.analyses WHERE analyses.id = analysis_places.analysis_id AND analyses.user_id = auth.uid()))`) validates that the parent record belongs to the requesting user.
+3. **Partial Failure Cleanup:**
+   - If child place insertion fails after the parent analysis has been saved, the service immediately initiates safe cleanup:
+     ```ts
+     await activeClient.from('analyses').delete().eq('id', analysisId);
+     ```
+   - Because of `ON DELETE CASCADE`, deleting the parent analysis automatically purges any partially inserted child places, preventing orphan or corrupted history records.
+   - The service returns `{ status: 'error', partialPlacesFailed: true }` without throwing.
+
+---
+
+### 14.5 Accidental Duplicate Prevention
+
+To guard against duplicate database records caused by rapid component re-renders or repeated callbacks:
+1. **Response Object Tracking:** A `WeakSet<AnalysisResponse>` caches persisted response instances in memory.
+2. **Execution Cooldown Window:** A 10-second debounce cache keyed by `${userId}:${normalizedUrl}` coalesces rapid repeated calls for the identical analysis session.
+3. **In-Flight Coalescing:** Concurrent simultaneous calls for the same URL share the same active promise.
+4. **Intentional Re-Analysis Permitted:** If a user intentionally runs an analysis again after the 10-second window, the separate analysis is persisted normally.
+
+---
+
+### 14.6 History Screen Data Layer (Preparedness)
+
+`mobile/lib/supabase/history.ts` exports the following typed query and mutation methods for the future History screen:
+
+```ts
+// Fetch paginated analysis history for the signed-in user
+export async function getUserAnalyses(
+  options?: { limit?: number; offset?: number },
+  client?: SupabaseClient<Database>
+): Promise<{ data: AnalysisRow[] | null; error: string | null }>;
+
+// Fetch a single analysis record with all associated places
+export async function getAnalysisDetail(
+  analysisId: string,
+  client?: SupabaseClient<Database>
+): Promise<{ data: AnalysisDetail | null; error: string | null }>;
+
+// Delete an analysis record (cascades to all child places)
+export async function deleteAnalysis(
+  analysisId: string,
+  client?: SupabaseClient<Database>
+): Promise<{ success: boolean; error: string | null }>;
+```
+
+---
+
+### 14.7 Live & Local Verification Checklist
+
+1. **Run TypeScript Check:**
+   ```powershell
+   npx --prefix mobile tsc --noEmit
+   ```
+2. **Run Git Check:**
+   ```powershell
+   git diff --check
+   ```
+3. **Run Boundary Test Suite:**
+   ```powershell
+   npx tsx mobile/lib/supabase/__tests__/run-tests.ts
+   ```
+4. **Run Backend Schema Tests:**
+   ```powershell
+   python -m unittest engine/tests/test_v2_supabase_schema.py
+   ```
+5. **Live Supabase Verification (Optional with Live Credentials):**
+   - Configure valid `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `mobile/.env.local`.
+   - Sign in via Google or Apple OAuth on mobile.
+   - Analyze a public Instagram Reel (e.g. `https://www.instagram.com/reel/C8xyzExample1/`).
+   - Open Supabase Table Editor -> inspect `analyses` table -> confirm row created with `user_id = <auth.uid()>`.
+   - Inspect `analysis_places` table -> confirm child places created referencing `analysis_id`.
+   - Sign out -> analyze another Reel as guest -> confirm no new rows created in `analyses`.
