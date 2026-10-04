@@ -371,3 +371,101 @@ A persistent database is not required for the current single-device MVP. However
 | **Cloud Locker Sync** | Allow users to access saved bookmarks across iPhone, Android, and web. | PostgreSQL with Supabase / Firebase | `users` table, `saved_places` table with foreign key `user_id` |
 | **Collaborative Trips** | Multi-user shared travel itineraries. | PostgreSQL + PostGIS | `trips`, `trip_places`, `trip_collaborators` |
 | **Geospatial POI Cache** | Cache Google Places nearby results to reduce Places API billing costs. | PostgreSQL with PostGIS | Spatial index on `(latitude, longitude)` with radial query caching |
+
+---
+
+## 11. Supabase Cloud Database & Row Level Security (Stage 1 & 2)
+
+In Travel AI V2, Supabase PostgreSQL acts as the cloud persistence layer for user profiles, analysis history, and synchronized bookmarks, maintaining complete decoupling from the stateless FastAPI intelligence engine.
+
+### 11.1 Managed Tables & Security Model
+
+All four cloud tables enforce **Row Level Security (RLS)**. By default, unauthenticated (`anon`) users have **zero access** (cannot select, insert, update, or delete records).
+
+| Table | Stage | RLS Status | Permitted Roles | Access Scope & Constraints |
+| :--- | :--- | :--- | :--- | :--- |
+| `profiles` | 1 & 2 | **ENABLED** | `authenticated` | SELECT, INSERT, UPDATE, DELETE for own profile (`auth.uid() = id`). `WITH CHECK (auth.uid() = id)` enforces identity immutability. |
+| `analyses` | 1 & 2 | **ENABLED** | `authenticated` | SELECT, INSERT, UPDATE, DELETE for own analyses (`user_id = auth.uid()`). `WITH CHECK` prevents reassigning records. |
+| `analysis_places` | 1 & 2 | **ENABLED** | `authenticated` | SELECT, INSERT, UPDATE, DELETE only when parent `analyses.user_id = auth.uid()`. `WITH CHECK` prevents linking POIs to other users' analyses. |
+| `saved_places` | 1 & 2 | **ENABLED** | `authenticated` | SELECT, INSERT, UPDATE, DELETE for own bookmarks (`user_id = auth.uid()`). Unique constraint on `(user_id, place_id)`. |
+
+### 11.2 Applied Policies Matrix
+
+1. **`profiles`:**
+   - `profiles_select_own`: `FOR SELECT TO authenticated USING (auth.uid() = id)`
+   - `profiles_insert_own`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = id)`
+   - `profiles_update_own`: `FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id)`
+   - `profiles_delete_own`: `FOR DELETE TO authenticated USING (auth.uid() = id)`
+
+2. **`analyses`:**
+   - `analyses_select_own`: `FOR SELECT TO authenticated USING (auth.uid() = user_id)`
+   - `analyses_insert_own`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id)`
+   - `analyses_update_own`: `FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`
+   - `analyses_delete_own`: `FOR DELETE TO authenticated USING (auth.uid() = user_id)`
+
+3. **`analysis_places`:**
+   - `analysis_places_select_own`: `FOR SELECT TO authenticated USING (EXISTS (SELECT 1 FROM public.analyses WHERE analyses.id = analysis_places.analysis_id AND analyses.user_id = auth.uid()))`
+   - `analysis_places_insert_own`: `FOR INSERT TO authenticated WITH CHECK (EXISTS (SELECT 1 FROM public.analyses WHERE analyses.id = analysis_places.analysis_id AND analyses.user_id = auth.uid()))`
+   - `analysis_places_update_own`: `FOR UPDATE TO authenticated USING (...) WITH CHECK (...)`
+   - `analysis_places_delete_own`: `FOR DELETE TO authenticated USING (...)`
+
+4. **`saved_places`:**
+   - `saved_places_select_own`: `FOR SELECT TO authenticated USING (auth.uid() = user_id)`
+   - `saved_places_insert_own`: `FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id)`
+   - `saved_places_update_own`: `FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`
+   - `saved_places_delete_own`: `FOR DELETE TO authenticated USING (auth.uid() = user_id)`
+
+---
+
+### 11.3 How to Apply the Migration
+
+#### Option A: Supabase Dashboard SQL Editor (Quickest)
+1. Log in to [Supabase Dashboard](https://supabase.com/dashboard) and open your project.
+2. In the left navigation menu, click **SQL Editor**.
+3. Click **New query**.
+4. Copy and paste the contents of `supabase/migrations/20261002000000_supabase_rls_security.sql` (or the complete `supabase/schema.sql` if initializing from scratch).
+5. Click **Run** (or press `Ctrl+Enter` / `Cmd+Enter`).
+6. Ensure the result message shows `Success. No rows returned`.
+
+#### Option B: Supabase CLI
+```bash
+# Push migrations to your linked Supabase remote project
+supabase db push
+```
+
+---
+
+### 11.4 How to Verify Policies in the Supabase Dashboard
+
+1. **Verify Table RLS Status:**
+   - Open **Authentication** -> **Policies** in the left sidebar (or navigate to **Database** -> **Tables**).
+   - Verify that all four tables display **RLS enabled** (green shield/badge):
+     - `public.profiles`
+     - `public.analyses`
+     - `public.analysis_places`
+     - `public.saved_places`
+
+2. **Verify Active Policies:**
+   - Expand each table under **Authentication** -> **Policies**.
+   - Check that all four operations (SELECT, INSERT, UPDATE, DELETE) are listed with target role `authenticated`.
+   - Confirm that no public or unauthenticated policies exist.
+
+3. **Verify via SQL Editor Sandbox:**
+   Run the following query in the **SQL Editor** to inspect policy metadata in PostgreSQL:
+   ```sql
+   SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check
+   FROM pg_policies
+   WHERE schemaname = 'public'
+   ORDER BY tablename, cmd;
+   ```
+
+4. **Test Anonymous Access Denial:**
+   Run this simulation in the SQL Editor to prove anonymous access is blocked:
+   ```sql
+   SET ROLE anon;
+   SELECT * FROM public.profiles;        -- Returns 0 rows
+   SELECT * FROM public.analyses;        -- Returns 0 rows
+   SELECT * FROM public.analysis_places; -- Returns 0 rows
+   SELECT * FROM public.saved_places;    -- Returns 0 rows
+   RESET ROLE;
+   ```

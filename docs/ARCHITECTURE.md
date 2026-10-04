@@ -150,5 +150,11 @@ Instagram / Google Places / Gemini
 3. **Decoupled Engine & Client Boundaries:**
    - The mobile client interacts with Supabase using the public/anon key via the official `@supabase/supabase-js` client.
    - The FastAPI engine remains independent and provider-agnostic, focusing on pipeline intelligence, rate-limiting, and inference orchestration.
-   - **Authentication and authorization (OAuth, session management, RLS policies) will be implemented in subsequent stages.**
+- **Row Level Security (RLS) & Multi-Tenant Isolation (Stage 2):**
+  - RLS is explicitly enabled on all four cloud tables (`profiles`, `analyses`, `analysis_places`, `saved_places`).
+  - Strict tenant isolation guarantees authenticated users access only their own rows (`auth.uid() = user_id` / `auth.uid() = id`).
+  - Child landmark records (`analysis_places`) validate parent analysis ownership via subquery joins with `WITH CHECK`, preventing unauthorized cross-user injections.
+  - Profile identity immutability is enforced (`WITH CHECK (auth.uid() = id)`).
+  - Unauthenticated (anon) requests have zero access to private records.
+  - OAuth login providers and session management will be integrated in subsequent stages.
 

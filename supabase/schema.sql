@@ -1,7 +1,9 @@
 -- ==============================================================================
--- Travel AI V2 — Supabase Foundation Schema (Stage 1)
+-- Travel AI V2 — Supabase Consolidated Schema (Stages 1 & 2)
 -- File: supabase/schema.sql
--- Description: Core cloud tables for profiles, analyses, analysis_places, and saved_places.
+-- Description: Core cloud tables, performance indexes, and Row Level Security
+--              (RLS) access control policies for profiles, analyses,
+--              analysis_places, and saved_places.
 -- ==============================================================================
 
 -- Enable UUID extension if not already enabled
@@ -86,5 +88,173 @@ CREATE INDEX IF NOT EXISTS idx_analysis_places_place_id ON public.analysis_place
 CREATE INDEX IF NOT EXISTS idx_saved_places_user_id ON public.saved_places(user_id);
 CREATE INDEX IF NOT EXISTS idx_saved_places_place_id ON public.saved_places(place_id);
 
--- Note: Row Level Security (RLS) policies and OAuth authentication hooks are intentionally
--- excluded in Stage 1 and will be introduced in subsequent stages.
+-- ==============================================================================
+-- Row Level Security (RLS) Enablement (Stage 2)
+-- All tables are private by default. Unauthenticated (anon) requests have zero access.
+-- ==============================================================================
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analyses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.analysis_places ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.saved_places ENABLE ROW LEVEL SECURITY;
+
+-- ==============================================================================
+-- Row Level Security (RLS) Policies
+-- ==============================================================================
+
+-- ------------------------------------------------------------------------------
+-- Profiles Table Policies
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
+CREATE POLICY "profiles_select_own"
+ON public.profiles
+FOR SELECT
+TO authenticated
+USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+CREATE POLICY "profiles_insert_own"
+ON public.profiles
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own"
+ON public.profiles
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "profiles_delete_own" ON public.profiles;
+CREATE POLICY "profiles_delete_own"
+ON public.profiles
+FOR DELETE
+TO authenticated
+USING (auth.uid() = id);
+
+-- ------------------------------------------------------------------------------
+-- Analyses Table Policies
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "analyses_select_own" ON public.analyses;
+CREATE POLICY "analyses_select_own"
+ON public.analyses
+FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "analyses_insert_own" ON public.analyses;
+CREATE POLICY "analyses_insert_own"
+ON public.analyses
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "analyses_update_own" ON public.analyses;
+CREATE POLICY "analyses_update_own"
+ON public.analyses
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "analyses_delete_own" ON public.analyses;
+CREATE POLICY "analyses_delete_own"
+ON public.analyses
+FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
+
+-- ------------------------------------------------------------------------------
+-- Analysis Places Table Policies
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "analysis_places_select_own" ON public.analysis_places;
+CREATE POLICY "analysis_places_select_own"
+ON public.analysis_places
+FOR SELECT
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.analyses
+        WHERE public.analyses.id = public.analysis_places.analysis_id
+          AND public.analyses.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "analysis_places_insert_own" ON public.analysis_places;
+CREATE POLICY "analysis_places_insert_own"
+ON public.analysis_places
+FOR INSERT
+TO authenticated
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.analyses
+        WHERE public.analyses.id = public.analysis_places.analysis_id
+          AND public.analyses.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "analysis_places_update_own" ON public.analysis_places;
+CREATE POLICY "analysis_places_update_own"
+ON public.analysis_places
+FOR UPDATE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.analyses
+        WHERE public.analyses.id = public.analysis_places.analysis_id
+          AND public.analyses.user_id = auth.uid()
+    )
+)
+WITH CHECK (
+    EXISTS (
+        SELECT 1 FROM public.analyses
+        WHERE public.analyses.id = public.analysis_places.analysis_id
+          AND public.analyses.user_id = auth.uid()
+    )
+);
+
+DROP POLICY IF EXISTS "analysis_places_delete_own" ON public.analysis_places;
+CREATE POLICY "analysis_places_delete_own"
+ON public.analysis_places
+FOR DELETE
+TO authenticated
+USING (
+    EXISTS (
+        SELECT 1 FROM public.analyses
+        WHERE public.analyses.id = public.analysis_places.analysis_id
+          AND public.analyses.user_id = auth.uid()
+    )
+);
+
+-- ------------------------------------------------------------------------------
+-- Saved Places Table Policies
+-- ------------------------------------------------------------------------------
+DROP POLICY IF EXISTS "saved_places_select_own" ON public.saved_places;
+CREATE POLICY "saved_places_select_own"
+ON public.saved_places
+FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "saved_places_insert_own" ON public.saved_places;
+CREATE POLICY "saved_places_insert_own"
+ON public.saved_places
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "saved_places_update_own" ON public.saved_places;
+CREATE POLICY "saved_places_update_own"
+ON public.saved_places
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "saved_places_delete_own" ON public.saved_places;
+CREATE POLICY "saved_places_delete_own"
+ON public.saved_places
+FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
