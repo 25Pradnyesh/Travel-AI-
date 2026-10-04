@@ -8,8 +8,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+import {
+  getCloudSavedPlaces,
+  saveCloudPlace,
+  removeCloudPlace,
+  setPendingSaveAction,
+  mapSavedPlaceRowToModel,
+  SavedPlaceRow,
+  useAuth,
+} from '@/lib/supabase';
 
 const STORAGE_KEY = '@travel_ai_saved_places_v1';
 
@@ -313,6 +323,39 @@ export async function toggleSavedPlace(
 }
 
 /**
+ * Synchronizes a list of database rows into the local memory cache and storage.
+ */
+export function syncCloudPlacesToCache(rows: SavedPlaceRow[]): void {
+  const models = rows.map(mapSavedPlaceRowToModel);
+  const seen = new Set<string>();
+  const unique: SavedPlace[] = [];
+  for (const m of models) {
+    if (!seen.has(m.id)) {
+      seen.add(m.id);
+      unique.push(m);
+    }
+  }
+  memoryCache = unique;
+  persistCacheToStorage();
+  notifyListeners();
+}
+
+/**
+ * Synchronizes an individual saved place row into the local memory cache.
+ */
+export function syncCloudPlaceToCache(row: SavedPlaceRow): void {
+  const model = mapSavedPlaceRowToModel(row);
+  const existingIndex = memoryCache.findIndex((p) => p.id === model.id);
+  if (existingIndex >= 0) {
+    memoryCache[existingIndex] = model;
+  } else {
+    memoryCache = [model, ...memoryCache];
+  }
+  persistCacheToStorage();
+  notifyListeners();
+}
+
+/**
  * Subscribes to storage changes.
  */
 export function subscribeToSavedPlaces(
@@ -329,11 +372,35 @@ export function subscribeToSavedPlaces(
 }
 
 /**
- * React hook for consuming and updating saved places with live synchronization.
+ * React hook for consuming and updating saved places with live cloud and local synchronization.
  */
 export function useSavedPlaces() {
+  const { isAuthenticated } = useAuth();
   const [places, setPlaces] = useState<SavedPlace[]>(() => getSavedPlacesSync());
   const [loading, setLoading] = useState(!isLoaded);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sync with cloud on auth change or mount if authenticated
+  const refreshCloudPlaces = useCallback(async () => {
+    if (!isAuthenticated) return;
+    setIsSyncing(true);
+    try {
+      const { data, error } = await getCloudSavedPlaces();
+      if (!error && data) {
+        syncCloudPlacesToCache(data);
+      }
+    } catch {
+      // Offline fallback: keep existing cache
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      refreshCloudPlaces();
+    }
+  }, [isAuthenticated, refreshCloudPlaces]);
 
   useEffect(() => {
     let mounted = true;
@@ -372,21 +439,54 @@ export function useSavedPlaces() {
 
   const handleToggle = useCallback(
     async (place: SaveablePlaceInput, photoUrl?: string): Promise<boolean> => {
-      return await toggleSavedPlace(place, photoUrl);
+      const normalized = normalizeToSavedPlace(place, photoUrl);
+
+      // GUEST FLOW: Retain pending action in memory and open OAuth modal
+      if (!isAuthenticated) {
+        setPendingSaveAction(place, photoUrl);
+        hapticFeedback.selection();
+        router.push('/(auth)/login');
+        return false;
+      }
+
+      // AUTHENTICATED FLOW:
+      if (isPlaceSavedSync(normalized.id)) {
+        await removeCloudPlace(normalized.id);
+        await removeSavedPlace(normalized.id);
+        return false;
+      } else {
+        const result = await saveCloudPlace(place, photoUrl);
+        if (result.data) {
+          syncCloudPlaceToCache(result.data);
+          hapticFeedback.selection();
+        } else {
+          // If cloud failed or offline, save locally
+          await savePlace(normalized, photoUrl);
+        }
+        return true;
+      }
     },
-    []
+    [isAuthenticated]
   );
 
-  const handleRemove = useCallback(async (id: string): Promise<void> => {
-    await removeSavedPlace(id);
-  }, []);
+  const handleRemove = useCallback(
+    async (id: string): Promise<void> => {
+      if (isAuthenticated) {
+        await removeCloudPlace(id);
+      }
+      await removeSavedPlace(id);
+    },
+    [isAuthenticated]
+  );
 
   return {
     savedPlaces: places,
     savedCount: places.length,
     isLoading: loading,
+    isSyncing,
     isSaved,
     toggleSave: handleToggle,
     removeSave: handleRemove,
+    refreshCloudPlaces,
   };
 }

@@ -843,3 +843,48 @@ export async function deleteAnalysis(
    - Open Supabase Table Editor -> inspect `analyses` table -> confirm row created with `user_id = <auth.uid()>`.
    - Inspect `analysis_places` table -> confirm child places created referencing `analysis_id`.
    - Sign out -> analyze another Reel as guest -> confirm no new rows created in `analyses`.
+
+---
+
+## 15. Stage 6 — History and Saved Places User Experience & Cloud Contracts
+
+Stage 6 completes the user-facing History and Saved Places experience for the Travel AI mobile app, building directly upon the persistence and authentication layers from Stages 1–5.
+
+### 15.1 Cloud Saved Places CRUD & Duplicate Prevention
+
+- **Database Table:** `public.saved_places`
+- **Schema Constraints:** Unique constraint `saved_places_user_place_unique (user_id, place_id)` ensures a user cannot accidentally create duplicate bookmarks for the same place.
+- **Repository Operations (`mobile/lib/supabase/saved-places.ts`):**
+  - `getCloudSavedPlaces()`: Retrieves all bookmarked places for the authenticated user, ordered by `created_at DESC`.
+  - `saveCloudPlace(place, photoUrl)`: Inserts or updates the bookmark using `upsert` with `onConflict: 'user_id,place_id'`.
+  - `removeCloudPlace(placeId)`: Deletes the bookmark row where `place_id = :placeId` and `user_id = auth.uid()`.
+- **Offline / Sync Harmony:** `useSavedPlaces` syncs cloud data to local memory and `AsyncStorage` on authentication events and provides pull-to-refresh on the Saved tab.
+
+### 15.2 Guest In-Memory Retention & Authentication Resumption
+
+1. **Guest Save Trigger:**
+   - When a guest taps Save on a place or analysis result, zero writes are made to Supabase.
+   - The action is captured in memory via `setPendingSaveAction(place, photoUrl)`.
+   - The app navigates to the OAuth modal (`/(auth)/login`).
+2. **Successful Authentication Resumption:**
+   - When Google or Apple sign-in completes successfully, `executePendingSaveAction()` retrieves the pending item from memory and executes `saveCloudPlace`.
+   - The saved place is immediately synced into local cache (`syncCloudPlaceToCache`).
+   - The app returns to the active screen (`router.back()`).
+   - **Crucial Rule:** The Instagram Reel analysis is **NOT** rerun. The existing in-memory result is preserved seamlessly.
+3. **Cancellation & Failure Safety:**
+   - If the user dismisses the sign-in modal or cancels the OAuth flow, `clearPendingSaveAction()` immediately purges the pending action from memory.
+   - The current view is preserved; the item is **not** claimed as saved.
+
+### 15.3 Analysis History Experience
+
+- **Navigation Entry:** Accessible directly from the Profile tab (`mobile/app/(tabs)/profile.tsx`) under `TRAVEL INTELLIGENCE`.
+- **No Bottom Tab Changes:** Retains the exact 4-tab bar layout: `Analyze`, `Explore`, `Saved`, `Profile`.
+- **History List (`mobile/app/history/index.tsx`):**
+  - Uses `getUserAnalyses({ limit: 50 })`.
+  - Displays destination name, country, thumbnail photo, confidence status badge, and creation date.
+  - Supports pull-to-refresh and individual analysis deletion with cascading cleanup.
+- **History Detail Dossier (`mobile/app/history/[id].tsx`):**
+  - Uses `getAnalysisDetail(id)` to retrieve parent analysis and associated places.
+  - Displays travel intelligence: overview, seasonality, vibe, budget, customs, and field tips.
+  - Displays discovered points of interest using `PlaceCard` with direct external map routing and bookmarking.
+  - Safely handles unavailable or incomplete fields with graceful fallbacks.

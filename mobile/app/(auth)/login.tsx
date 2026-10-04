@@ -21,7 +21,8 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
-import { useAuth } from '@/lib/supabase';
+import { useAuth, clearPendingSaveAction, executePendingSaveAction } from '@/lib/supabase';
+import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function LoginScreen() {
@@ -40,6 +41,7 @@ export default function LoginScreen() {
 
   const handleDismiss = () => {
     hapticFeedback.light();
+    clearPendingSaveAction();
     clearError();
     if (router.canGoBack()) {
       router.back();
@@ -56,12 +58,21 @@ export default function LoginScreen() {
     const result = await signInWithApple();
 
     if (result.canceled) {
+      clearPendingSaveAction();
       setStatusNotice('Apple sign-in cancelled. You can continue exploring as a guest.');
       return;
     }
 
     if (result.success) {
       hapticFeedback.success();
+      try {
+        const pendingResult = await executePendingSaveAction();
+        if (pendingResult.executed && pendingResult.place) {
+          syncCloudPlaceToCache(pendingResult.place);
+        }
+      } catch {
+        // Pending save failure does not block sign-in completion
+      }
       if (router.canGoBack()) {
         router.back();
       } else {
@@ -78,12 +89,21 @@ export default function LoginScreen() {
     const result = await signInWithGoogle();
 
     if (result.canceled) {
+      clearPendingSaveAction();
       setStatusNotice('Google sign-in cancelled. You can continue exploring as a guest.');
       return;
     }
 
     if (result.success) {
       hapticFeedback.success();
+      try {
+        const pendingResult = await executePendingSaveAction();
+        if (pendingResult.executed && pendingResult.place) {
+          syncCloudPlaceToCache(pendingResult.place);
+        }
+      } catch {
+        // Pending save failure does not block sign-in completion
+      }
       if (router.canGoBack()) {
         router.back();
       } else {

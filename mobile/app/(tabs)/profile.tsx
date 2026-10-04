@@ -15,7 +15,8 @@ import { travelAiApi } from '@/lib/api/travel-ai';
 import { apiClient } from '@/lib/api/client';
 import { EngineHealthResponse } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
-import { useAuth } from '@/lib/supabase';
+import { useAuth, executePendingSaveAction } from '@/lib/supabase';
+import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -67,6 +68,14 @@ export default function ProfileScreen() {
     const result = await signInWithApple();
     if (result.success) {
       hapticFeedback.success();
+      try {
+        const pendingResult = await executePendingSaveAction();
+        if (pendingResult.executed && pendingResult.place) {
+          syncCloudPlaceToCache(pendingResult.place);
+        }
+      } catch {
+        // Pending save failure tolerated
+      }
     }
   };
 
@@ -75,6 +84,23 @@ export default function ProfileScreen() {
     const result = await signInWithGoogle();
     if (result.success) {
       hapticFeedback.success();
+      try {
+        const pendingResult = await executePendingSaveAction();
+        if (pendingResult.executed && pendingResult.place) {
+          syncCloudPlaceToCache(pendingResult.place);
+        }
+      } catch {
+        // Pending save failure tolerated
+      }
+    }
+  };
+
+  const handleHistoryPress = () => {
+    hapticFeedback.selection();
+    if (isAuthenticated) {
+      router.push('/history');
+    } else {
+      router.push('/(auth)/login');
     }
   };
 
@@ -257,6 +283,42 @@ export default function ProfileScreen() {
               </View>
             </View>
           )}
+        </View>
+
+        {/* Travel Intelligence & History Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionEyebrow}>TRAVEL INTELLIGENCE</Text>
+          <Pressable
+            onPress={handleHistoryPress}
+            style={({ pressed }) => [styles.historyCard, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="View previous Reel analyses and travel history"
+          >
+            <View style={styles.historyCardLeft}>
+              <View style={styles.historyIconWrapper}>
+                <Ionicons name="time-outline" size={22} color={Colors.surfaceDark} />
+              </View>
+              <View style={styles.historyTextContainer}>
+                <View style={styles.historyTitleRow}>
+                  <Text style={styles.historyTitle}>Analysis History</Text>
+                  {isAuthenticated && (
+                    <View style={styles.cloudBadge}>
+                      <Ionicons name="cloud-outline" size={11} color={Colors.textSecondary} />
+                      <Text style={styles.cloudBadgeText}>Cloud</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.historySubtitle}>
+                  {isAuthenticated
+                    ? 'Access previous Reel analyses, verified destinations, and travel tips.'
+                    : 'Sign in to access your cloud analysis history and saved intelligence.'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.historyChevronWrapper}>
+              <Ionicons name="chevron-forward" size={18} color={Colors.textMuted} />
+            </View>
+          </Pressable>
         </View>
 
         {/* Navigation & Maps Preferences */}
@@ -818,6 +880,72 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textPrimary,
     fontWeight: '500',
+  },
+  historyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.xl,
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: Colors.borderSubtle,
+  },
+  historyCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: Spacing.sm,
+  },
+  historyIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: Radius.full,
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: Colors.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  historyTextContainer: {
+    flex: 1,
+  },
+  historyTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  historyTitle: {
+    ...Typography.body,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  cloudBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceSubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Colors.borderSubtle,
+    gap: 3,
+  },
+  cloudBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  historySubtitle: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    lineHeight: 17,
+  },
+  historyChevronWrapper: {
+    marginLeft: Spacing.xs,
   },
   divider: {
     height: 1,

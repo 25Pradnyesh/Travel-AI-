@@ -38,6 +38,17 @@ import {
   deleteAnalysis,
   resetHistorySaveGuards,
 } from '../history';
+import {
+  mapPlaceToSavedPlaceInsert,
+  mapSavedPlaceRowToModel,
+  getCloudSavedPlaces,
+  saveCloudPlace,
+  removeCloudPlace,
+  setPendingSaveAction,
+  getPendingSaveAction,
+  clearPendingSaveAction,
+  executePendingSaveAction,
+} from '../saved-places';
 import { AnalysisResponse } from '@/types/analysis';
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -640,6 +651,218 @@ export async function runSupabaseBoundaryTests(): Promise<{ passed: number; fail
 
       const deleteResult = await deleteAnalysis('mock-analysis-uuid-999', mockClient);
       assert(deleteResult.success === true, 'deleteAnalysis succeeds');
+    });
+
+    // ==============================================================================
+    // Stage 6 Tests — History and Saved Places UI & Cloud Data Layer
+    // ==============================================================================
+
+    function createMockSavedPlacesClient(options?: {
+      session?: any;
+      savedPlacesData?: any[];
+      failUpsert?: boolean;
+      failDelete?: boolean;
+    }) {
+      const calls: Array<{ table: string; method: string; payload?: any; filter?: any }> = [];
+      const defaultUser = { id: '123e4567-e89b-12d3-a456-426614174000', email: 'test@travelai.app' };
+      const session = options?.session !== undefined ? options.session : { user: defaultUser };
+
+      const client: any = {
+        auth: {
+          getSession: async () => ({
+            data: { session },
+            error: null,
+          }),
+        },
+        from: (table: string) => ({
+          select: (_cols?: string) => {
+            calls.push({ table, method: 'select' });
+            return {
+              order: (_col: string, _opts?: any) =>
+                Promise.resolve({ data: options?.savedPlacesData || [], error: null }),
+            };
+          },
+          upsert: (payload: any, _opts?: any) => {
+            calls.push({ table, method: 'upsert', payload });
+            return {
+              select: (_cols?: string) => ({
+                single: async () => {
+                  if (options?.failUpsert) {
+                    return { data: null, error: { message: 'Database error on upsert' } };
+                  }
+                  return {
+                    data: {
+                      id: 'mock-saved-uuid-1',
+                      user_id: payload.user_id,
+                      place_id: payload.place_id,
+                      name: payload.name,
+                      address: payload.address,
+                      latitude: payload.latitude,
+                      longitude: payload.longitude,
+                      rating: payload.rating,
+                      category: payload.category,
+                      photo_url: payload.photo_url,
+                      created_at: new Date().toISOString(),
+                    },
+                    error: null,
+                  };
+                },
+              }),
+            };
+          },
+          delete: () => ({
+            eq: (col: string, val: any) => {
+              calls.push({ table, method: 'delete', filter: { [col]: val } });
+              if (options?.failDelete) {
+                return Promise.resolve({ error: { message: 'Delete failed' } });
+              }
+              return Promise.resolve({ error: null });
+            },
+          }),
+        }),
+        __calls: calls,
+      };
+
+      return client;
+    }
+
+    await runTest('mapPlaceToSavedPlaceInsert normalizes place attributes into typed schema row', () => {
+      const mockPlace = {
+        place_id: 'ChIJ42b10_nzh0cR2M2h4hJ7f_E',
+        name: 'Villa Cipressi',
+        formatted_address: 'Via 4 Novembre, 22, Varenna, Italy',
+        latitude: 45.9995,
+        longitude: 9.2847,
+        rating: 4.678,
+        category: 'Historic Villa',
+        photos: [{ url: '/api/v1/proxy/photo1.jpg' }],
+      };
+
+      const row = mapPlaceToSavedPlaceInsert(mockPlace as any, 'user-uuid-123');
+
+      assert(row.user_id === 'user-uuid-123', 'user_id matches authenticated user');
+      assert(row.place_id === 'ChIJ42b10_nzh0cR2M2h4hJ7f_E', 'place_id preserved');
+      assert(row.name === 'Villa Cipressi', 'name preserved');
+      assert(row.address === 'Via 4 Novembre, 22, Varenna, Italy', 'address mapped');
+      assert(row.latitude === 45.9995 && row.longitude === 9.2847, 'coordinates mapped');
+      assert(row.rating === 4.68, 'rating clamped and rounded to 2 decimal places');
+      assert(row.category === 'Historic Villa', 'category preserved');
+    });
+
+    await runTest('mapSavedPlaceRowToModel maps database row to UI SavedPlace model', () => {
+      const mockRow: SavedPlaceRow = {
+        id: 'mock-saved-uuid-1',
+        user_id: 'user-uuid-123',
+        place_id: 'ChIJ42b10_nzh0cR2M2h4hJ7f_E',
+        name: 'Villa Cipressi',
+        address: 'Via 4 Novembre, 22, Varenna, Italy',
+        latitude: 45.9995,
+        longitude: 9.2847,
+        rating: 4.68,
+        category: 'Historic Villa',
+        photo_url: 'https://images.unsplash.com/photo-151234',
+        created_at: '2026-10-04T12:00:00Z',
+      };
+
+      const model = mapSavedPlaceRowToModel(mockRow);
+
+      assert(model.id === 'ChIJ42b10_nzh0cR2M2h4hJ7f_E', 'model id maps to place_id');
+      assert(model.name === 'Villa Cipressi', 'name maps');
+      assert(model.address === 'Via 4 Novembre, 22, Varenna, Italy', 'address maps');
+      assert(model.rating === 4.68, 'rating maps');
+      assert(model.saved_at === new Date('2026-10-04T12:00:00Z').getTime(), 'saved_at timestamp parsed');
+    });
+
+    await runTest('getCloudSavedPlaces queries public.saved_places under authenticated session', async () => {
+      const mockPlaces = [
+        {
+          id: 'row-1',
+          user_id: '123e4567-e89b-12d3-a456-426614174000',
+          place_id: 'place-1',
+          name: 'Lake Como Villa',
+          created_at: new Date().toISOString(),
+        },
+      ];
+      const mockClient = createMockSavedPlacesClient({ savedPlacesData: mockPlaces });
+
+      const result = await getCloudSavedPlaces(mockClient);
+
+      assert(result.data !== null && result.data.length === 1, 'returns array of saved places');
+      assert(result.error === null, 'no error returned');
+      assert(mockClient.__calls[0].table === 'saved_places', 'queries saved_places table');
+    });
+
+    await runTest('getCloudSavedPlaces protects guests with unauthenticated error', async () => {
+      const mockClient = createMockSavedPlacesClient({ session: null });
+
+      const result = await getCloudSavedPlaces(mockClient);
+
+      assert(result.data === null, 'data is null for guest');
+      assert(result.error !== null, 'returns unauthenticated error');
+      assert(mockClient.__calls.length === 0, 'zero database calls made');
+    });
+
+    await runTest('saveCloudPlace prevents duplicate saves using unique constraint upsert', async () => {
+      const mockClient = createMockSavedPlacesClient();
+      const placeInput = {
+        id: 'place-dup-001',
+        name: 'Grand Hotel Tremezzo',
+        rating: 4.9,
+      };
+
+      const result = await saveCloudPlace(placeInput as any, undefined, mockClient);
+
+      assert(result.data !== null, 'place successfully saved');
+      assert(result.error === null, 'no error');
+
+      const upsertCall = mockClient.__calls.find((c: any) => c.method === 'upsert');
+      assert(upsertCall !== undefined, 'upsert was invoked');
+      assert(upsertCall.payload.place_id === 'place-dup-001', 'payload has correct place_id');
+      assert(upsertCall.payload.user_id === '123e4567-e89b-12d3-a456-426614174000', 'payload has verified user_id');
+    });
+
+    await runTest('removeCloudPlace deletes place record scoped to place_id', async () => {
+      const mockClient = createMockSavedPlacesClient();
+
+      const result = await removeCloudPlace('place-to-remove-123', mockClient);
+
+      assert(result.success === true, 'delete succeeds');
+      const deleteCall = mockClient.__calls.find((c: any) => c.method === 'delete');
+      assert(deleteCall !== undefined, 'delete was invoked');
+      assert(deleteCall.filter.place_id === 'place-to-remove-123', 'filtered by place_id');
+    });
+
+    await runTest('Guest pending save action lifecycle: set, get, clear, and cancel', () => {
+      clearPendingSaveAction();
+      assert(getPendingSaveAction() === null, 'pending action initially null');
+
+      const samplePlace = { id: 'place-guest-1', name: 'Castello di Vezio' };
+      setPendingSaveAction(samplePlace as any, 'https://example.com/photo.jpg');
+
+      const active = getPendingSaveAction();
+      assert(active !== null, 'pending action exists after set');
+      assert(active?.place.name === 'Castello di Vezio', 'pending place name preserved');
+      assert(active?.photoUrl === 'https://example.com/photo.jpg', 'photoUrl preserved');
+
+      // Cancellation clears pending action without saving
+      clearPendingSaveAction();
+      assert(getPendingSaveAction() === null, 'pending action cleared on cancellation');
+    });
+
+    await runTest('executePendingSaveAction resumes save after auth without rerunning Reel', async () => {
+      clearPendingSaveAction();
+      const mockClient = createMockSavedPlacesClient();
+
+      // Guest tapped save
+      const samplePlace = { id: 'place-resume-1', name: 'Bellagio Harbor' };
+      setPendingSaveAction(samplePlace as any, 'https://example.com/bellagio.jpg');
+
+      // Auth completed successfully
+      const result = await executePendingSaveAction(mockClient);
+
+      assert(result.executed === true, 'pending action executed');
+      assert(result.place?.name === 'Bellagio Harbor', 'saved place row returned');
+      assert(getPendingSaveAction() === null, 'pending action cleared after execution');
     });
   } finally {
     process.env = originalEnv;

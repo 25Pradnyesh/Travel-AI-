@@ -3,6 +3,7 @@ import {
   FlatList,
   ListRenderItem,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -21,10 +22,13 @@ import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { SavedPlace, useSavedPlaces } from '@/lib/storage/saved-places';
+import { useAuth } from '@/lib/supabase';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function SavedScreen() {
-  const { savedPlaces, savedCount, toggleSave } = useSavedPlaces();
+  const { savedPlaces, savedCount, toggleSave, isSyncing, refreshCloudPlaces } =
+    useSavedPlaces();
+  const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Extract unique categories from saved places
@@ -97,26 +101,60 @@ export default function SavedScreen() {
     [handleOpenPlace, toggleSave, handleOpenMaps]
   );
 
+  const handleSignInPress = useCallback(() => {
+    hapticFeedback.selection();
+    router.push('/(auth)/login');
+  }, []);
+
   const renderListHeader = () => (
     <View>
       {/* Editorial Header */}
       <View style={styles.header}>
         <View style={styles.titleRow}>
           <View>
-            <Text style={styles.eyebrow}>TRAVEL LOCKER</Text>
+            <Text style={styles.eyebrow}>
+              {isAuthenticated ? 'CLOUD LOCKER' : 'TRAVEL LOCKER'}
+            </Text>
             <Text style={styles.title}>Your Places</Text>
           </View>
           {savedCount > 0 && (
             <View style={styles.countBadge}>
-              <Ionicons name="bookmark" size={13} color={Colors.surfaceDark} />
+              <Ionicons
+                name={isAuthenticated ? 'cloud-done-outline' : 'bookmark'}
+                size={14}
+                color={isAuthenticated ? Colors.verified : Colors.surfaceDark}
+              />
               <Text style={styles.countText}>{savedCount}</Text>
             </View>
           )}
         </View>
         <Text style={styles.subtitle}>
-          Offline collection of verified destinations and points of interest.
+          {isAuthenticated
+            ? 'Cloud-synchronized collection of verified destinations and points of interest.'
+            : 'Offline collection of verified destinations. Sign in to sync across devices.'}
         </Text>
       </View>
+
+      {/* Guest Sign-In Notice Banner */}
+      {!isAuthenticated && (
+        <Pressable
+          onPress={handleSignInPress}
+          style={({ pressed }) => [styles.guestBanner, pressed && styles.pressed]}
+          accessibilityRole="button"
+          accessibilityLabel="Sign in to back up and sync your saved places"
+        >
+          <View style={styles.guestBannerIcon}>
+            <Ionicons name="cloud-upload-outline" size={18} color={Colors.surfaceDark} />
+          </View>
+          <View style={styles.guestBannerText}>
+            <Text style={styles.guestBannerTitle}>Sync Across Devices</Text>
+            <Text style={styles.guestBannerDesc}>
+              Sign in with Apple or Google to back up your places to personal cloud.
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+        </Pressable>
+      )}
 
       {savedPlaces.length > 0 ? (
         <>
@@ -156,7 +194,11 @@ export default function SavedScreen() {
             icon={<Ionicons name="bookmark-outline" size={32} color={Colors.textMuted} />}
             eyebrow="NO SAVED PLACES YET"
             title="Your travel locker is empty."
-            description="Analyze a Reel and bookmark places or destinations you want to remember. All saved places are kept offline on your device."
+            description={
+              isAuthenticated
+                ? 'Analyze a Reel and bookmark places or destinations you want to remember. Saved places sync to your personal cloud.'
+                : 'Analyze a Reel and bookmark places or destinations you want to remember. Sign in to safeguard them across all your devices.'
+            }
             actionLabel="Start Analyzing"
             onActionPress={() => router.push('/')}
           />
@@ -194,6 +236,8 @@ export default function SavedScreen() {
         ListEmptyComponent={renderListEmpty}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshing={isSyncing}
+        onRefresh={isAuthenticated ? refreshCloudPlaces : undefined}
         initialNumToRender={8}
         maxToRenderPerBatch={10}
         windowSize={5}
@@ -266,5 +310,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     marginTop: Spacing.xl,
+  },
+  guestBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: Colors.borderSubtle,
+    marginBottom: Spacing.md,
+    gap: Spacing.md,
+  },
+  guestBannerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.surfaceSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guestBannerText: {
+    flex: 1,
+  },
+  guestBannerTitle: {
+    ...Typography.bodySmall,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  guestBannerDesc: {
+    ...Typography.caption,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    lineHeight: 16,
+  },
+  pressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.99 }],
   },
 });
