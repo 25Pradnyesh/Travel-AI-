@@ -19,6 +19,7 @@ import {
   AnalysisPlaceRow,
   SavedPlaceRow,
 } from '../types';
+import { parseAuthUrl, getAuthRedirectUrl } from '../auth';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -194,6 +195,57 @@ export function runSupabaseBoundaryTests(): { passed: number; failed: number } {
 
       assert(mockSavedPlace.place_id === 'ChIJ42b10_nzh0cR2M2h4hJ7f_E', 'place_id matches');
       assert(mockSavedPlace.user_id !== null, 'user_id matches');
+    });
+
+    // ============================================================================
+    // 4. Stage 3: Google OAuth & Redirect URL Processing
+    // ============================================================================
+    runTest('parses PKCE authorization code from OAuth callback URL', () => {
+      const url = 'travelai://auth/callback?code=mock_pkce_auth_code_999';
+      const parsed = parseAuthUrl(url);
+      assert(parsed.code === 'mock_pkce_auth_code_999', 'code must match expected');
+      assert(!parsed.accessToken, 'accessToken should be undefined');
+      assert(!parsed.error, 'error should be undefined');
+    });
+
+    runTest('parses access_token and refresh_token from hash fragment callback URL', () => {
+      const url =
+        'travelai://auth/callback#access_token=mock_jwt_access_111&refresh_token=mock_refresh_222&expires_in=3600&token_type=bearer';
+      const parsed = parseAuthUrl(url);
+      assert(parsed.accessToken === 'mock_jwt_access_111', 'accessToken must match');
+      assert(parsed.refreshToken === 'mock_refresh_222', 'refreshToken must match');
+      assert(!parsed.code, 'code should be undefined');
+    });
+
+    runTest('parses error and error_description from failed OAuth callback URL', () => {
+      const url =
+        'travelai://auth/callback?error=access_denied&error_description=User+declined+the+authorization+request';
+      const parsed = parseAuthUrl(url);
+      assert(parsed.error === 'access_denied', 'error must match');
+      assert(
+        parsed.errorDescription === 'User declined the authorization request',
+        'errorDescription must match'
+      );
+    });
+
+    runTest('handles empty or malformed URLs gracefully without throwing', () => {
+      const emptyParsed = parseAuthUrl('');
+      assert(Object.keys(emptyParsed).length === 0, 'empty string returns empty object');
+
+      const malformedParsed = parseAuthUrl('travelai://not-a-valid-param');
+      assert(!malformedParsed.code, 'malformed url does not set code');
+    });
+
+    runTest('getAuthRedirectUrl generates deep link matching app scheme', () => {
+      const redirectUrl = getAuthRedirectUrl();
+      assert(
+        typeof redirectUrl === 'string' && redirectUrl.length > 0,
+        'redirect URL must be a non-empty string'
+      );
+      assert(
+        redirectUrl.includes('auth/callback'),
+        'redirect URL must target auth/callback route'
+      );
     });
   } finally {
     process.env = originalEnv;

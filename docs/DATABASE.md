@@ -469,3 +469,108 @@ supabase db push
    SELECT * FROM public.saved_places;    -- Returns 0 rows
    RESET ROLE;
    ```
+
+---
+
+## 12. Supabase Google OAuth Configuration & Mobile Integration (Stage 3)
+
+Travel AI V2 supports seamless Google sign-in using Supabase Auth. The architecture maintains a zero-credential footprint in the mobile client: the Google Client Secret is held strictly within the Supabase backend.
+
+```text
+React Native Mobile App (Travel AI)
+      │
+      │ 1. signInWithOAuth('google') -> Returns auth URL
+      ▼
+Supabase Auth (https://<project-id>.supabase.co)
+      │
+      │ 2. Redirect to Google Consent
+      ▼
+Google Accounts (accounts.google.com)
+      │
+      │ 3. User approves -> Callback to Supabase
+      ▼
+Supabase Auth Handler (https://<project-id>.supabase.co/auth/v1/callback)
+      │
+      │ 4. Exchanges code with Google -> Generates session
+      ▼
+Deep Link Return (travelai://auth/callback#access_token=... or ?code=...)
+      │
+      │ 5. Intercepted by WebBrowser.openAuthSessionAsync
+      ▼
+Mobile App (Session stored in AsyncStorage, RLS enabled for private data)
+```
+
+### 12.1 Google Cloud Console Configuration (Manual)
+
+1. Open the [Google Cloud Console](https://console.cloud.google.com/) and select or create your project.
+2. Navigate to **APIs & Services** -> **Credentials**.
+3. Configure the **OAuth Consent Screen** (if not already done):
+   - User Type: **External**
+   - App name: **Travel AI**
+   - User support email & developer contact email: your email
+   - Scopes: `openid`, `email`, `profile`
+4. Click **Create Credentials** -> **OAuth client ID**:
+   - Application type: **Web application** (Note: Web application type is required by Supabase Auth server).
+   - Name: `Travel AI Supabase Auth`
+   - **Authorized JavaScript origins:**
+     - `https://<your-supabase-project-id>.supabase.co`
+   - **Authorized redirect URIs:**
+     - `https://<your-supabase-project-id>.supabase.co/auth/v1/callback`
+5. Click **Create**. Copy the generated **Client ID** and **Client Secret**.
+
+---
+
+### 12.2 Supabase Dashboard Configuration (Manual)
+
+1. In the [Supabase Dashboard](https://supabase.com/dashboard), open your Travel AI project.
+2. In the left navigation, click **Authentication** -> **Providers**.
+3. Locate **Google** in the provider list and toggle it **Enabled**:
+   - **Client ID:** Paste the Client ID from Google Cloud Console.
+   - **Client Secret:** Paste the Client Secret from Google Cloud Console.
+   - Click **Save**.
+4. In the left navigation, click **Authentication** -> **URL Configuration**:
+   - **Site URL:** `travelai://` (or your production website URL)
+   - Under **Redirect URLs**, click **Add URL** and add the following allowed callback patterns:
+     - `travelai://auth/callback` (Primary production & development build deep link)
+     - `travelai://*` (Wildcard scheme fallback)
+     - `exp://*` (For Expo Go development on local network)
+     - `http://localhost:8081/--/auth/callback` (For local simulator or web testing)
+   - Click **Save**.
+
+---
+
+### 12.3 Real-Device Testing & Verification Procedure
+
+1. **Verify Environment Variables:**
+   Confirm `mobile/.env.local` has:
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=https://<your-supabase-project-id>.supabase.co
+   EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<your-anon-or-publishable-key>
+   ```
+
+2. **Launch the App:**
+   ```bash
+   cd mobile
+   npx expo start
+   ```
+
+3. **Execute Guest Validation:**
+   - Launch the app in guest mode.
+   - Navigate to the **Analyze** tab, paste a public Instagram Reel, and verify the analysis pipeline executes fully without signing in.
+   - Verify guest access to **Explore** and local **Saved** places.
+
+4. **Execute Sign-In Flow:**
+   - Navigate to **Profile** tab -> Click **Sign in with Google** (or open the **Account** modal).
+   - Verify the system in-app browser opens the Google accounts selection/consent screen.
+   - Complete Google sign-in.
+   - Verify the browser closes automatically and redirects back to Travel AI.
+   - Confirm the **Profile** screen updates immediately to show your Google account name, email, and authenticated status.
+
+5. **Execute Session Restoration Test:**
+   - Force close the mobile app completely.
+   - Reopen the app.
+   - Navigate to **Profile** tab and verify the user session is immediately restored without re-prompting.
+
+6. **Execute Sign-Out Flow:**
+   - Click **Sign Out** on the Profile screen.
+   - Verify the screen reverts to "Guest Traveler" and stored credentials are fully cleared.
