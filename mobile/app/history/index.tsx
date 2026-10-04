@@ -41,7 +41,7 @@ import {
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function HistoryListScreen() {
-  const { isAuthenticated, isAuthenticating } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [analyses, setAnalyses] = useState<AnalysisRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -68,12 +68,13 @@ export default function HistoryListScreen() {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user?.id) {
       fetchHistory();
     } else {
+      setAnalyses([]);
       setIsLoading(false);
     }
-  }, [isAuthenticated, fetchHistory]);
+  }, [isAuthenticated, user?.id, fetchHistory]);
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);

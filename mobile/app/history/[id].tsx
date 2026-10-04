@@ -256,6 +256,9 @@ export default function HistoryDetailScreen() {
     (ti.local_customs as string) ||
     null;
 
+  const destinationPlaceId = analysis.reel_id || analysis.destination;
+  const isDestinationSaved = isSaved(destinationPlaceId);
+
   return (
     <View style={styles.screen}>
       <TopBar
@@ -264,6 +267,33 @@ export default function HistoryDetailScreen() {
         onBackPress={handleBack}
         rightAction={
           <View style={styles.topRightActions}>
+            <IconButton
+              size={36}
+              variant="subtle"
+              accessibilityLabel={
+                isDestinationSaved
+                  ? 'Remove destination from saved'
+                  : 'Save destination'
+              }
+              onPress={() =>
+                toggleSave(
+                  {
+                    id: destinationPlaceId,
+                    name: analysis.destination,
+                    address: analysis.country || undefined,
+                    category: 'Primary Destination',
+                    saved_at: Date.now(),
+                  },
+                  heroImageUrl || undefined
+                )
+              }
+            >
+              <Ionicons
+                name={isDestinationSaved ? 'bookmark' : 'bookmark-outline'}
+                size={18}
+                color={isDestinationSaved ? Colors.textPrimary : Colors.textSecondary}
+              />
+            </IconButton>
             {analysis.reel_url ? (
               <IconButton
                 size={36}
@@ -402,7 +432,7 @@ export default function HistoryDetailScreen() {
                 formattedAddress={place.address || undefined}
                 rating={place.rating ?? undefined}
                 photoUrl={resolveThumbnailUrl(place.photo_url) || undefined}
-                isSaved={isSaved(place.place_id)}
+                isSaved={isSaved(place.place_id || place.name)}
                 onPress={() => handleOpenPlace(place)}
                 onSavePress={() =>
                   toggleSave(

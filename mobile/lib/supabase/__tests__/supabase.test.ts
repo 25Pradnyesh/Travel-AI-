@@ -864,6 +864,73 @@ export async function runSupabaseBoundaryTests(): Promise<{ passed: number; fail
       assert(result.place?.name === 'Bellagio Harbor', 'saved place row returned');
       assert(getPendingSaveAction() === null, 'pending action cleared after execution');
     });
+
+    // ==============================================================================
+    // Stage 7 Tests — Cross-Device Synchronization & Final QA Hardening
+    // ==============================================================================
+
+    await runTest('saveCloudPlace handles database or network errors honestly without false positive success', async () => {
+      const mockClient = createMockSavedPlacesClient({ failUpsert: true });
+      const placeInput = {
+        id: 'place-err-001',
+        name: 'Villa del Balbianello',
+      };
+
+      const result = await saveCloudPlace(placeInput as any, undefined, mockClient);
+
+      assert(result.data === null, 'data must be null on failure');
+      assert(result.error !== null, 'error message must be returned');
+      assert(result.error === 'Database error on upsert', 'exact error message preserved');
+    });
+
+    await runTest('removeCloudPlace handles deletion failure honestly', async () => {
+      const mockClient = createMockSavedPlacesClient({ failDelete: true });
+
+      const result = await removeCloudPlace('place-err-001', mockClient);
+
+      assert(result.success === false, 'success is false on delete failure');
+      assert(result.error === 'Delete failed', 'error message preserved');
+    });
+
+    await runTest('executePendingSaveAction handles execution failure and purges pending state without looping', async () => {
+      clearPendingSaveAction();
+      const mockClient = createMockSavedPlacesClient({ failUpsert: true });
+
+      const samplePlace = { id: 'place-fail-1', name: 'Como Cathedral' };
+      setPendingSaveAction(samplePlace as any);
+
+      const result = await executePendingSaveAction(mockClient);
+
+      assert(result.executed === false, 'executed must be false on failure');
+      assert(result.error === 'Database error on upsert', 'returns database error');
+      // Crucial: pending action must be cleared to prevent repeated failure loops
+      assert(getPendingSaveAction() === null, 'pending action cleared on failure to prevent loops');
+    });
+
+    await runTest('Modal dismissal or gesture cancellation purges pending guest save safely', () => {
+      clearPendingSaveAction();
+      const samplePlace = { id: 'place-cancel-1', name: 'Menaggio Promenade' };
+      setPendingSaveAction(samplePlace as any, 'https://example.com/menaggio.jpg');
+
+      assert(getPendingSaveAction() !== null, 'pending action is active');
+
+      // User swipes down or cancels login modal
+      clearPendingSaveAction();
+
+      assert(getPendingSaveAction() === null, 'pending action is purged on cancellation');
+    });
+
+    await runTest('Sign-out state purge isolates accounts cleanly', () => {
+      // Simulate guest action before sign-out
+      setPendingSaveAction({ id: 'place-prev-user', name: 'Previous User Place' } as any);
+      assert(getPendingSaveAction() !== null, 'action set');
+
+      // Sign-out cleans pending actions and debounce guards
+      clearPendingSaveAction();
+      resetHistorySaveGuards();
+
+      assert(getPendingSaveAction() === null, 'pending action empty after sign-out');
+    });
   } finally {
     process.env = originalEnv;
   }

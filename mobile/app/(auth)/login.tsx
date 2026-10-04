@@ -8,7 +8,7 @@
  * - Adherence to Travel AI Design System & Apple Human Interface Guidelines
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -38,6 +38,13 @@ export default function LoginScreen() {
     user,
   } = useAuth();
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+
+  // Clear pending save action if modal is dismissed without completing sign-in
+  useEffect(() => {
+    return () => {
+      clearPendingSaveAction();
+    };
+  }, []);
 
   const handleDismiss = () => {
     hapticFeedback.light();

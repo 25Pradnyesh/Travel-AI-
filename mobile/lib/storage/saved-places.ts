@@ -6,7 +6,7 @@
  * reactive subscriber notification.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
@@ -16,6 +16,7 @@ import {
   saveCloudPlace,
   removeCloudPlace,
   setPendingSaveAction,
+  clearPendingSaveAction,
   mapSavedPlaceRowToModel,
   SavedPlaceRow,
   useAuth,
@@ -356,6 +357,21 @@ export function syncCloudPlaceToCache(row: SavedPlaceRow): void {
 }
 
 /**
+ * Completely purges saved places memory cache and local storage.
+ * Enforces strict tenant isolation during sign-out and account switching.
+ */
+export async function clearSavedPlacesCache(): Promise<void> {
+  memoryCache = [];
+  memoryCacheMap = new Map();
+  try {
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Storage write error tolerated
+  }
+  notifyListeners();
+}
+
+/**
  * Subscribes to storage changes.
  */
 export function subscribeToSavedPlaces(
@@ -373,12 +389,14 @@ export function subscribeToSavedPlaces(
 
 /**
  * React hook for consuming and updating saved places with live cloud and local synchronization.
+ * Enforces strict user isolation across sign-in, sign-out, and account switches.
  */
 export function useSavedPlaces() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [places, setPlaces] = useState<SavedPlace[]>(() => getSavedPlacesSync());
   const [loading, setLoading] = useState(!isLoaded);
   const [isSyncing, setIsSyncing] = useState(false);
+  const previousUserIdRef = useRef<string | null | undefined>(user?.id);
 
   // Sync with cloud on auth change or mount if authenticated
   const refreshCloudPlaces = useCallback(async () => {
@@ -396,11 +414,22 @@ export function useSavedPlaces() {
     }
   }, [isAuthenticated]);
 
+  // Account switching and sign-out isolation
   useEffect(() => {
-    if (isAuthenticated) {
+    const previousUserId = previousUserIdRef.current;
+    const currentUserId = user?.id;
+
+    if (previousUserId !== undefined && previousUserId !== currentUserId) {
+      // User signed out or switched to a different account: purge previous user's cached places
+      clearSavedPlacesCache();
+      clearPendingSaveAction();
+    }
+    previousUserIdRef.current = currentUserId;
+
+    if (isAuthenticated && currentUserId) {
       refreshCloudPlaces();
     }
-  }, [isAuthenticated, refreshCloudPlaces]);
+  }, [isAuthenticated, user?.id, refreshCloudPlaces]);
 
   useEffect(() => {
     let mounted = true;
@@ -451,19 +480,31 @@ export function useSavedPlaces() {
 
       // AUTHENTICATED FLOW:
       if (isPlaceSavedSync(normalized.id)) {
-        await removeCloudPlace(normalized.id);
-        await removeSavedPlace(normalized.id);
-        return false;
+        const removeResult = await removeCloudPlace(normalized.id);
+        if (!removeResult.error) {
+          await removeSavedPlace(normalized.id);
+          return false;
+        } else {
+          if (__DEV__) {
+            // eslint-disable-next-line no-console
+            console.warn('[Saved Places] Cloud remove failed:', removeResult.error);
+          }
+          return true; // Keep state intact on network/persistence error
+        }
       } else {
         const result = await saveCloudPlace(place, photoUrl);
-        if (result.data) {
+        if (result.data && !result.error) {
           syncCloudPlaceToCache(result.data);
           hapticFeedback.selection();
+          return true;
         } else {
-          // If cloud failed or offline, save locally
-          await savePlace(normalized, photoUrl);
+          // Cloud save failed: do NOT falsely claim it was saved
+          if (__DEV__) {
+            // eslint-disable-next-line no-console
+            console.warn('[Saved Places] Cloud save failed:', result.error);
+          }
+          return false;
         }
-        return true;
       }
     },
     [isAuthenticated]
@@ -472,7 +513,14 @@ export function useSavedPlaces() {
   const handleRemove = useCallback(
     async (id: string): Promise<void> => {
       if (isAuthenticated) {
-        await removeCloudPlace(id);
+        const removeResult = await removeCloudPlace(id);
+        if (removeResult.error) {
+          if (__DEV__) {
+            // eslint-disable-next-line no-console
+            console.warn('[Saved Places] Cloud remove failed:', removeResult.error);
+          }
+          return;
+        }
       }
       await removeSavedPlace(id);
     },

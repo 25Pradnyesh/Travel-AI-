@@ -888,3 +888,66 @@ Stage 6 completes the user-facing History and Saved Places experience for the Tr
   - Displays travel intelligence: overview, seasonality, vibe, budget, customs, and field tips.
   - Displays discovered points of interest using `PlaceCard` with direct external map routing and bookmarking.
   - Safely handles unavailable or incomplete fields with graceful fallbacks.
+
+---
+
+## 16. Stage 7 — Cross-Device Synchronization, Tenant Isolation & Final QA Hardening
+
+Stage 7 completes the integration hardening of Travel AI's persistence and cloud synchronization layers across multiple devices, account transitions, and network conditions.
+
+### 16.1 Source of Truth & Synchronization Architecture
+
+- **Authoritative Backend:** Hosted Supabase PostgreSQL (`public.saved_places` and `public.analyses`) is the sole source of truth for all authenticated user data.
+- **Client Cache Role:** The mobile local cache (`AsyncStorage` key `@travel_ai_saved_places_v1` + module memory map) serves purely as an offline and rapid-render mirror of the authenticated user's records.
+- **Bi-directional Sync Flow:**
+  1. **Read Path:** On session establishment, login, or pull-to-refresh, `getCloudSavedPlaces()` fetches the latest state from Supabase. The local cache is reconciled using `syncAllCloudPlacesToCache(cloudPlaces)`.
+  2. **Write Path:** When saving or removing a place, the operation is committed directly to Supabase (`saveCloudPlace` / `removeCloudPlace`). Only upon a verified 2xx success response is the local cache updated. If the Supabase write fails, the local cache remains unmodified and the UI alerts the user.
+
+### 16.2 Account Isolation & Cache Invalidation
+
+To guarantee that User A's private bookmarks and history are never exposed to User B or a subsequent guest on a shared or reused device:
+- **`clearSavedPlacesCache()`:** Clears both the in-memory Map cache and `AsyncStorage` asynchronously.
+- **Trigger Points:**
+  - `signOut()` invocation in `mobile/lib/supabase/AuthContext.tsx`.
+  - `supabase.auth.onAuthStateChange` listener on `SIGNED_OUT` event.
+  - `useRef(user?.id)` change detection in `useSavedPlaces()` and `useHistory()`.
+- **Pending Action Purge:** Any pending guest save actions (`pendingSaveAction`) are wiped synchronously on sign-out to prevent delayed auto-saving into an unintended account.
+
+### 16.3 Robustness Against Network and Persistence Errors
+
+- **Strict Validation on Mutations:** `handleToggle` and `handleRemove` in `useSavedPlaces` do not perform optimistic local writes without verifying cloud response. If `result.error` is present or `result.data` is null, the mutation returns `false` and the error is logged.
+- **Idempotent Cloud Upsert:** `saveCloudPlace` utilizes `ON CONFLICT (user_id, place_id) DO UPDATE` to gracefully handle concurrent saves from multiple devices without throwing unique constraint violations.
+- **Cascading Analysis Deletion:** Deleting an analysis via `deleteAnalysis(id)` cascades through `analysis_places` without touching unrelated `saved_places` rows, preserving bookmarks even if the parent Reel analysis is deleted.
+
+### 16.4 Modal Gesture & Guest Action Lifecycle
+
+- **Modal Gesture Dismissal:** When a guest is prompted to authenticate via `/(auth)/login` after tapping bookmark, native swipe-down dismissals on iOS and Android trigger the unmount cleanup in `login.tsx`, resetting `pendingSaveAction` to null.
+- **No Stale Retries:** If `executePendingSaveAction()` encounters an error during the post-login cloud write, the pending action is discarded immediately to prevent endless retry loops on subsequent screen transitions.
+
+### 16.5 Live Cross-Device Verification Runbook
+
+For team QA engineers verifying multi-device synchronization with active Supabase credentials:
+
+1. **Prerequisites:**
+   - Two physical mobile devices (or one simulator and one physical device) running the Travel AI app build.
+   - Active `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` configured in `mobile/.env.local`.
+   - Google or Apple OAuth providers enabled in the Supabase Dashboard.
+
+2. **Step 1: Concurrent Login:**
+   - Device A: Sign in with `tester@example.com` via Google or Apple.
+   - Device B: Sign in with the identical `tester@example.com` account.
+
+3. **Step 2: Analysis Cloud Sync:**
+   - Device A: Analyze a public travel Reel. Verify that the analysis and discovered places appear in Device A's Profile -> Analysis History.
+   - Device B: Open Profile -> Analysis History and perform a pull-to-refresh. Verify that the new analysis immediately populates on Device B.
+
+4. **Step 3: Saved Places Real-time Sync & Duplicate Resistance:**
+   - Device A: Bookmark a discovered place from the analysis.
+   - Device B: Navigate to the `Saved` tab and pull to refresh. Verify the place appears on Device B with identical metadata.
+   - Device B: Tap bookmark on the same place again (attempt duplicate save). Verify the app safely handles the action idempotently.
+   - Device A: Remove the place from Saved Places.
+   - Device B: Pull to refresh. Verify the place is removed from Device B.
+
+5. **Step 4: Account Switching & Isolation:**
+   - Device A: Sign out of `tester@example.com`. Verify Saved tab and History tab immediately show empty signed-out states.
+   - Device A: Sign in with a different account `other@example.com`. Verify that `tester@example.com`'s history and saved places do NOT appear.

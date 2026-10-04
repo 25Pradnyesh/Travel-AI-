@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   ListRenderItem,
   Platform,
@@ -26,7 +27,7 @@ import { useAuth } from '@/lib/supabase';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function SavedScreen() {
-  const { savedPlaces, savedCount, toggleSave, isSyncing, refreshCloudPlaces } =
+  const { savedPlaces, savedCount, toggleSave, isLoading, isSyncing, refreshCloudPlaces } =
     useSavedPlaces();
   const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -188,6 +189,11 @@ export default function SavedScreen() {
             }`}
           />
         </>
+      ) : isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={Colors.surfaceDark} />
+          <Text style={styles.loadingText}>Syncing saved places...</Text>
+        </View>
       ) : (
         <View style={styles.emptyContainer}>
           <EmptyState
@@ -348,5 +354,15 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.85,
     transform: [{ scale: 0.99 }],
+  },
+  loadingContainer: {
+    paddingVertical: Spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+  },
+  loadingText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
   },
 });

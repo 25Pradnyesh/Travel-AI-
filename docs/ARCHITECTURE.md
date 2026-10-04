@@ -180,3 +180,8 @@ Instagram / Google Places / Gemini
   - **Guest In-Memory Pending Action & OAuth Resumption:** If a guest taps Save on a destination or place, the pending action is retained in memory (`setPendingSaveAction`), and the existing Google/Apple OAuth modal (`/(auth)/login`) is requested. Upon successful authentication, `executePendingSaveAction` automatically executes the save to Supabase without rerunning the Instagram Reel.
   - **Safe Cancellation & Error Non-Destruction:** If a guest dismisses or cancels authentication, the pending action is safely cleared (`clearPendingSaveAction`), the active analysis view or place detail is preserved untouched, and the item is not falsely claimed as saved.
   - **Multi-Device & Offline Sync:** Synchronizes seamlessly with local cache (`AsyncStorage`) and provides pull-to-refresh for on-demand cloud sync.
+- **Cross-Device Synchronization & Final QA Hardening (Stage 7):**
+  - **Account Isolation & Cache Purging:** On sign-out or account switching, local `AsyncStorage` bookmarks and in-memory caches are completely purged via `clearSavedPlacesCache()`, preventing any cross-user data bleed.
+  - **Supabase as Single Source of Truth:** Authenticated saved places and history are strictly synchronized against Supabase PostgreSQL tables; cloud save and removal errors do not falsely claim success or desynchronize state.
+  - **Robust Pending-Action Lifecycle:** Modal gesture dismissal (swipe down), explicit cancellation, or network error safely purges pending guest save actions (`clearPendingSaveAction()`), preventing stale or duplicate save loops.
+  - **Zero-Flicker Loading States:** Replaces empty-state flashes during initial cloud sync with graceful loading indicators on the Saved and History screens.

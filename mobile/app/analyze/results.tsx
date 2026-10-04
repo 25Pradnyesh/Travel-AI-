@@ -181,6 +181,9 @@ export default function ResultsScreen() {
     return list;
   }, [ti.travel_tips]);
 
+  const destinationPlaceId = bestGuess.place_id || bestGuess.name || 'primary_destination';
+  const isDestinationSaved = isSaved(destinationPlaceId);
+
   return (
     <View style={styles.screen}>
       <TopBar
@@ -193,24 +196,16 @@ export default function ResultsScreen() {
               size={36}
               variant="subtle"
               accessibilityLabel={
-                isSaved(bestGuess.place_id || 'primary_destination')
+                isDestinationSaved
                   ? 'Remove destination from saved'
                   : 'Save destination'
               }
               onPress={() => toggleSave(bestGuess, heroImageUrl)}
             >
               <Ionicons
-                name={
-                  isSaved(bestGuess.place_id || 'primary_destination')
-                    ? 'bookmark'
-                    : 'bookmark-outline'
-                }
+                name={isDestinationSaved ? 'bookmark' : 'bookmark-outline'}
                 size={18}
-                color={
-                  isSaved(bestGuess.place_id || 'primary_destination')
-                    ? Colors.textPrimary
-                    : Colors.textSecondary
-                }
+                color={isDestinationSaved ? Colors.textPrimary : Colors.textSecondary}
               />
             </IconButton>
             <IconButton
@@ -518,7 +513,7 @@ export default function ResultsScreen() {
                   rating={place.rating}
                   userRatingsTotal={place.user_ratings_total}
                   distanceKm={place.distance_km}
-                  isSaved={isSaved(place.place_id)}
+                  isSaved={isSaved(place.place_id || place.name)}
                   onPress={() => handleOpenPlace(place)}
                   onSavePress={() => toggleSave(place)}
                   onDirectionsPress={() => handleOpenPlaceDirections(place)}

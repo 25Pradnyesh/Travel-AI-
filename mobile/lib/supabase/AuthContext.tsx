@@ -27,6 +27,9 @@ import {
   signInWithApple as authSignInWithApple,
   signOut as authSignOut,
 } from './auth';
+import { clearPendingSaveAction } from './saved-places';
+import { resetHistorySaveGuards } from './history';
+import { clearSavedPlacesCache } from '../storage/saved-places';
 
 export interface AuthContextValue {
   session: Session | null;
@@ -96,11 +99,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // 2. Subscribe to auth state updates (sign in, sign out, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (isMounted) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setIsLoading(false);
+      }
+      if (event === 'SIGNED_OUT') {
+        await clearSavedPlacesCache();
+        clearPendingSaveAction();
+        resetHistorySaveGuards();
       }
     });
 
@@ -201,6 +209,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(null);
         setUser(null);
         setError(null);
+        await clearSavedPlacesCache();
+        clearPendingSaveAction();
+        resetHistorySaveGuards();
       } else if (result.error) {
         setError(result.error);
       }
