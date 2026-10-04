@@ -574,3 +574,114 @@ Mobile App (Session stored in AsyncStorage, RLS enabled for private data)
 6. **Execute Sign-Out Flow:**
    - Click **Sign Out** on the Profile screen.
    - Verify the screen reverts to "Guest Traveler" and stored credentials are fully cleared.
+
+---
+
+## 13. Supabase Sign in with Apple Configuration & Native Integration (Stage 4)
+
+Travel AI V2 provides unified multi-provider authentication supporting both **Sign in with Apple** and **Sign in with Google** through Supabase Auth. Apple sign-in resolves to the identical Supabase user session model, enforcing the same PostgreSQL Row Level Security (RLS) policies.
+
+```text
+React Native Mobile App (Travel AI)
+      │
+      │ 1. signInWithApple() -> Requests authorization URL
+      ▼
+Supabase Auth (https://<project-id>.supabase.co)
+      │
+      │ 2. Redirects to Apple ID Authorization
+      ▼
+Apple ID Services (appleid.apple.com)
+      │
+      │ 3. User authorizes with Apple ID -> POST callback to Supabase
+      ▼
+Supabase Auth Handler (https://<project-id>.supabase.co/auth/v1/callback)
+      │
+      │ 4. Verifies Apple client secret JWT & creates session
+      ▼
+Deep Link Return (travelai://auth/callback#access_token=... or ?code=...)
+      │
+      │ 5. Intercepted by WebBrowser.openAuthSessionAsync
+      ▼
+Mobile App (Session persisted to AsyncStorage; full RLS access enabled)
+```
+
+### 13.1 Apple Developer Portal Configuration (Manual)
+
+To enable Apple sign-in for production and staging environments, complete the following setup in the [Apple Developer Member Center](https://developer.apple.com/account):
+
+1. **Verify App ID:**
+   - Go to **Certificates, Identifiers & Profiles** -> **Identifiers** -> **App IDs**.
+   - Select your app identifier: `com.travelai.mobile`.
+   - Ensure the **Sign in with Apple** capability checkbox is enabled.
+   - Click **Save**.
+
+2. **Register a Services ID (For OAuth Web Flow):**
+   - Click **+** next to Identifiers -> Select **Services IDs** -> Click **Continue**.
+   - Description: `Travel AI Apple Auth`
+   - Identifier: `com.travelai.mobile.auth` (or similar reversed-domain string).
+   - Enable **Sign in with Apple** -> Click **Configure**:
+     - **Primary App ID:** Select `com.travelai.mobile`.
+     - **Domains and Subdomains:** Add your Supabase project domain:
+       `<your-supabase-project-id>.supabase.co`
+     - **Return URLs:** Add the Supabase callback endpoint:
+       `https://<your-supabase-project-id>.supabase.co/auth/v1/callback`
+   - Click **Done** -> **Continue** -> **Register**.
+
+3. **Generate a Private Key:**
+   - Go to **Keys** -> Click **+** to register a new key.
+   - Key Name: `Travel AI Supabase Auth Key`
+   - Enable **Sign in with Apple** -> Click **Configure** and choose Primary App ID `com.travelai.mobile`.
+   - Click **Save** -> **Continue** -> **Register**.
+   - Download the `.p8` private key file (Note: Apple allows downloading this file only once).
+   - Note your **Key ID** and your Apple **Team ID** (located at the top right of the developer portal).
+
+---
+
+### 13.2 Supabase Dashboard Provider Configuration (Manual)
+
+1. Open your project in the [Supabase Dashboard](https://supabase.com/dashboard).
+2. Navigate to **Authentication** -> **Providers** -> **Apple**.
+3. Toggle **Enable Sign in with Apple** to **ON**:
+   - **Services ID (Client ID):** Enter the Services ID (e.g. `com.travelai.mobile.auth`).
+   - **Apple Team ID:** Enter your 10-character Team ID.
+   - **Key ID:** Enter the 10-character Key ID from the private key.
+   - **Secret Key (Private Key):** Paste the contents of your downloaded `.p8` file.
+4. Click **Save**.
+
+---
+
+### 13.3 Native Build & Platform Considerations
+
+| Environment | Apple Sign-In Support | Requirements / Limitations |
+| :--- | :--- | :--- |
+| **Expo Go / Simulator** | Supported via Web OAuth | Opens Apple ID web sheet in `WebBrowser.openAuthSessionAsync`. Requires valid Supabase Apple provider config. |
+| **Physical iOS Device** | Supported via Web OAuth / Native Sheet | Biometric Face ID / Touch ID supported in system sheet. |
+| **Android & Web** | Supported via Web OAuth | Apple ID web authorization supported across all platforms. |
+| **Production EAS Build** | Full Native & Web Support | Requires paid Apple Developer account ($99/year), provisioned distribution profile, and `com.travelai.mobile` bundle ID. |
+
+> [!IMPORTANT]
+> **Native Entitlement Note for EAS / Bare Builds:**
+> If upgrading from WebBrowser OAuth to native iOS sheet authentication (`expo-apple-authentication`), the following entitlement must be added to `ios.entitlements` in `app.json`:
+> ```json
+> "ios": {
+>   "entitlements": {
+>     "com.apple.developer.applesignin": ["Default"]
+>   }
+> }
+> ```
+> This entitlement requires a paid Apple Developer account and an App ID provisioned with Sign in with Apple capability. The current WebBrowser OAuth implementation does not require native build re-linking and works immediately across platforms.
+
+---
+
+### 13.4 Real-Device Verification Checklist
+
+1. **Verify Supabase Configuration:** Ensure Apple provider is enabled in Supabase Dashboard with Services ID, Team ID, Key ID, and Private Key.
+2. **Start Dev Server:** `npx expo start` in `mobile/`.
+3. **Guest Flow Verification:** Confirm Reel analysis works 100% without signing in.
+4. **Apple Sign-In Trigger:**
+   - Tap **Sign in with Apple** in the Login modal or Profile tab.
+   - Verify the system authentication session prompts for Apple ID credentials / Face ID.
+   - Complete authorization.
+   - Confirm browser closes and redirects to `travelai://auth/callback`.
+   - Confirm Profile screen shows Apple authenticated badge and user email.
+5. **Multi-Provider Verification:** Confirm signing out and signing in with Google works interchangeably without session corruption.

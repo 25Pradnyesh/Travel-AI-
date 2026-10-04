@@ -19,7 +19,12 @@ import {
   AnalysisPlaceRow,
   SavedPlaceRow,
 } from '../types';
-import { parseAuthUrl, getAuthRedirectUrl } from '../auth';
+import {
+  parseAuthUrl,
+  getAuthRedirectUrl,
+  signInWithGoogle,
+  signInWithApple,
+} from '../auth';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -245,6 +250,45 @@ export function runSupabaseBoundaryTests(): { passed: number; failed: number } {
       assert(
         redirectUrl.includes('auth/callback'),
         'redirect URL must target auth/callback route'
+      );
+    });
+
+    // ============================================================================
+    // 5. Stage 4: Apple OAuth & Multi-Provider Compatibility
+    // ============================================================================
+    runTest('parses Apple authorization code from callback URL', () => {
+      const appleUrl = 'travelai://auth/callback?code=mock_apple_auth_code_777';
+      const parsed = parseAuthUrl(appleUrl);
+      assert(parsed.code === 'mock_apple_auth_code_777', 'Apple code must match expected');
+    });
+
+    runTest('parses Apple user cancellation error', () => {
+      const appleCancelUrl =
+        'travelai://auth/callback?error=user_cancelled_authorize&error_description=The+user+canceled+authorization';
+      const parsed = parseAuthUrl(appleCancelUrl);
+      assert(parsed.error === 'user_cancelled_authorize', 'Apple cancel error must match');
+      assert(
+        parsed.errorDescription === 'The user canceled authorization',
+        'Apple cancel description must match'
+      );
+    });
+
+    runTest('verifies signInWithApple and signInWithGoogle guard unconfigured environment', async () => {
+      delete process.env.EXPO_PUBLIC_SUPABASE_URL;
+      delete process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+      const appleResult = await signInWithApple();
+      assert(appleResult.success === false, 'Apple sign in must fail when unconfigured');
+      assert(
+        Boolean(appleResult.error && appleResult.error.includes('Supabase is not configured')),
+        'Apple sign in must report descriptive unconfigured error'
+      );
+
+      const googleResult = await signInWithGoogle();
+      assert(googleResult.success === false, 'Google sign in must fail when unconfigured');
+      assert(
+        Boolean(googleResult.error && googleResult.error.includes('Supabase is not configured')),
+        'Google sign in must report descriptive unconfigured error'
       );
     });
   } finally {

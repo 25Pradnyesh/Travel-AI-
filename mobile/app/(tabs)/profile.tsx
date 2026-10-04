@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TopBar } from '@/components/ui';
-import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
+import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
 import { travelAiApi } from '@/lib/api/travel-ai';
 import { apiClient } from '@/lib/api/client';
 import { EngineHealthResponse } from '@/types/analysis';
@@ -19,8 +19,15 @@ import { useAuth } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, isAuthenticated, isAuthenticating, signInWithGoogle, signOut, error: authError } =
-    useAuth();
+  const {
+    user,
+    isAuthenticated,
+    isAuthenticating,
+    signInWithGoogle,
+    signInWithApple,
+    signOut,
+    error: authError,
+  } = useAuth();
 
   const [preferredMap, setPreferredMap] = useState<'apple' | 'google'>('google');
   const [health, setHealth] = useState<EngineHealthResponse | null>(null);
@@ -55,6 +62,14 @@ export default function ProfileScreen() {
     router.push('/(auth)/login');
   };
 
+  const handleQuickAppleSignIn = async () => {
+    hapticFeedback.selection();
+    const result = await signInWithApple();
+    if (result.success) {
+      hapticFeedback.success();
+    }
+  };
+
   const handleQuickGoogleSignIn = async () => {
     hapticFeedback.selection();
     const result = await signInWithGoogle();
@@ -72,13 +87,19 @@ export default function ProfileScreen() {
   const isPlacesReady = Boolean(health?.configuration?.google_places_ready);
   const isGeminiReady = Boolean(health?.configuration?.gemini_ready);
 
-  // Derived user display name and initials
+  // Derived user display name, provider, and initials
   const displayName =
     (user?.user_metadata?.full_name as string) ||
     (user?.user_metadata?.name as string) ||
     user?.email?.split('@')[0] ||
     'Traveler';
   const userInitial = displayName.charAt(0).toUpperCase();
+
+  const provider =
+    (user?.app_metadata?.provider as string) ||
+    (user?.identities?.[0]?.provider as string) ||
+    'oauth';
+  const isApple = provider === 'apple';
 
   return (
     <View style={styles.screen}>
@@ -104,8 +125,19 @@ export default function ProfileScreen() {
                       {displayName}
                     </Text>
                     <View style={styles.verifiedBadge}>
-                      <Ionicons name="checkmark-circle" size={14} color={Colors.verified} />
-                      <Text style={styles.verifiedBadgeText}>Google</Text>
+                      {isApple ? (
+                        <>
+                          <Ionicons name="logo-apple" size={13} color={Colors.textPrimary} />
+                          <Text style={[styles.verifiedBadgeText, { color: Colors.textPrimary }]}>
+                            Apple
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark-circle" size={14} color={Colors.verified} />
+                          <Text style={styles.verifiedBadgeText}>Google</Text>
+                        </>
+                      )}
                     </View>
                   </View>
                   <Text style={styles.accountEmail} numberOfLines={1}>
@@ -158,7 +190,7 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                   <Text style={styles.guestSubtitle}>
-                    Sign in with Google to sync bookmarks across your devices and safeguard your
+                    Sign in with Apple or Google to sync bookmarks across your devices and safeguard your
                     analyses.
                   </Text>
                 </View>
@@ -171,38 +203,57 @@ export default function ProfileScreen() {
                 </View>
               )}
 
-              <View style={styles.guestActionRow}>
+              <View style={styles.guestActionStack}>
                 <Pressable
-                  onPress={handleQuickGoogleSignIn}
+                  onPress={handleQuickAppleSignIn}
                   disabled={isAuthenticating}
                   style={({ pressed }) => [
-                    styles.primarySignInButton,
+                    styles.primaryAppleButton,
                     pressed && styles.pressed,
                     isAuthenticating && styles.buttonDisabled,
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel="Sign in with Google"
+                  accessibilityLabel="Sign in with Apple"
                 >
                   {isAuthenticating ? (
                     <ActivityIndicator size="small" color={Colors.canvas} />
                   ) : (
                     <View style={styles.signInButtonContent}>
-                      <Ionicons name="logo-google" size={16} color={Colors.canvas} />
-                      <Text style={styles.primarySignInText}>Sign in with Google</Text>
+                      <Ionicons name="logo-apple" size={17} color={Colors.canvas} />
+                      <Text style={styles.primaryAppleText}>Sign in with Apple</Text>
                     </View>
                   )}
                 </Pressable>
 
-                <Pressable
-                  onPress={handleSignInPress}
-                  hitSlop={8}
-                  style={({ pressed }) => [styles.secondaryDetailsButton, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Learn more about cloud sync"
-                >
-                  <Text style={styles.secondaryDetailsText}>Details</Text>
-                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
-                </Pressable>
+                <View style={styles.guestSecondaryRow}>
+                  <Pressable
+                    onPress={handleQuickGoogleSignIn}
+                    disabled={isAuthenticating}
+                    style={({ pressed }) => [
+                      styles.secondaryGoogleButton,
+                      pressed && styles.pressed,
+                      isAuthenticating && styles.buttonDisabled,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Sign in with Google"
+                  >
+                    <View style={styles.signInButtonContent}>
+                      <Ionicons name="logo-google" size={15} color={Colors.textPrimary} />
+                      <Text style={styles.secondaryGoogleText}>Google</Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={handleSignInPress}
+                    hitSlop={8}
+                    style={({ pressed }) => [styles.secondaryDetailsButton, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Learn more about cloud sync"
+                  >
+                    <Text style={styles.secondaryDetailsText}>Details</Text>
+                    <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+                  </Pressable>
+                </View>
               </View>
             </View>
           )}
@@ -592,35 +643,53 @@ const styles = StyleSheet.create({
     color: Colors.error,
     flex: 1,
   },
-  guestActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  guestActionStack: {
     gap: Spacing.sm,
   },
-  primarySignInButton: {
-    flex: 1,
-    minHeight: 44,
+  primaryAppleButton: {
+    minHeight: 46,
     backgroundColor: Colors.surfaceDark,
     borderRadius: Radius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
   },
+  primaryAppleText: {
+    ...Typography.bodySmall,
+    fontWeight: '600',
+    color: Colors.canvas,
+  },
+  guestSecondaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  secondaryGoogleButton: {
+    flex: 1,
+    minHeight: 42,
+    backgroundColor: Colors.surfaceSubtle,
+    borderWidth: 1,
+    borderColor: Colors.borderSubtle,
+    borderRadius: Radius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  secondaryGoogleText: {
+    ...Typography.caption,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
   signInButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  primarySignInText: {
-    ...Typography.bodySmall,
-    fontWeight: '600',
-    color: Colors.canvas,
-  },
   secondaryDetailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.sm,
-    minHeight: 44,
+    minHeight: 42,
     gap: 2,
   },
   secondaryDetailsText: {

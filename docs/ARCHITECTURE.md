@@ -157,10 +157,11 @@ Instagram / Google Places / Gemini
   - Profile identity immutability is enforced (`WITH CHECK (auth.uid() = id)`).
   - Unauthenticated (anon) requests have zero access to private records.
 
-- **Google OAuth Integration & Mobile Session Architecture (Stage 3):**
-  - Mobile authentication leverages Supabase Auth with Google OAuth via `expo-web-browser` and `expo-linking`.
-  - Deep-link redirect handling: `travelai://auth/callback` handles PKCE authorization code exchange and implicit token sets.
+- **Apple & Google OAuth Integration & Mobile Session Architecture (Stages 3 & 4):**
+  - Unified mobile authentication leverages Supabase Auth with both Google and Apple OAuth providers via `expo-web-browser` and `expo-linking`.
+  - Reusable deep-link redirect handling: `travelai://auth/callback` handles PKCE authorization code exchange and implicit token sets for all OAuth providers.
+  - Multi-Provider Identity Linking: Supabase automatically links authenticated identities to a unified `auth.users` profile, preserving identical RLS security contracts across all providers.
   - Session restoration: Automatically hydrates valid sessions on app boot from `@react-native-async-storage/async-storage`.
   - **Zero-Friction Guest Mode:** Guest access to Reel analysis, destination exploration, and local bookmarks is 100% preserved. Authentication is strictly opt-in for multi-device sync.
-  - Zero Credential Exposure: Google OAuth client secrets and credentials reside exclusively within the Supabase Dashboard.
+  - Zero Credential Exposure: Google and Apple client secrets, Team IDs, Service IDs, and Private Keys reside exclusively within the Supabase Dashboard.
 

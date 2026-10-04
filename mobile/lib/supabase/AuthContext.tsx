@@ -1,7 +1,8 @@
 /**
- * Travel AI Mobile — Supabase Authentication Context & Hook (Stage 3)
+ * Travel AI Mobile — Supabase Authentication Context & Hook (Stages 3 & 4)
  *
  * Provides reactive authentication state across the application:
+ * - Google and Apple OAuth sign-in support
  * - Session restoration from AsyncStorage on boot
  * - Real-time state subscription via `onAuthStateChange`
  * - Deep linking fallback handler for OAuth redirects
@@ -23,6 +24,7 @@ import {
   AuthResult,
   handleAuthRedirect,
   signInWithGoogle as authSignInWithGoogle,
+  signInWithApple as authSignInWithApple,
   signOut as authSignOut,
 } from './auth';
 
@@ -35,6 +37,7 @@ export interface AuthContextValue {
   isConfigured: boolean;
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<AuthResult>;
+  signInWithApple: () => Promise<AuthResult>;
   signOut: () => Promise<{ success: boolean; error?: string }>;
   clearError: () => void;
 }
@@ -155,7 +158,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return result;
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Sign-in failed.';
+      const msg = err instanceof Error ? err.message : 'Google sign-in failed.';
+      setError(msg);
+      return { success: false, error: msg };
+    } finally {
+      setIsAuthenticating(false);
+    }
+  }, []);
+
+  // Sign in with Apple handler
+  const signInWithApple = useCallback(async (): Promise<AuthResult> => {
+    setIsAuthenticating(true);
+    setError(null);
+
+    try {
+      const result = await authSignInWithApple();
+
+      if (result.success && result.session) {
+        setSession(result.session);
+        setUser(result.session.user);
+        setError(null);
+      } else if (result.error && !result.canceled) {
+        setError(result.error);
+      }
+
+      return result;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Apple sign-in failed.';
       setError(msg);
       return { success: false, error: msg };
     } finally {
@@ -195,10 +224,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       isConfigured: configured,
       isAuthenticated: Boolean(session && user),
       signInWithGoogle,
+      signInWithApple,
       signOut,
       clearError,
     }),
-    [session, user, isLoading, isAuthenticating, error, configured, signInWithGoogle, signOut, clearError]
+    [
+      session,
+      user,
+      isLoading,
+      isAuthenticating,
+      error,
+      configured,
+      signInWithGoogle,
+      signInWithApple,
+      signOut,
+      clearError,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

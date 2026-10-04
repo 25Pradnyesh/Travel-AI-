@@ -1,11 +1,11 @@
 /**
- * Travel AI Mobile — Login Screen (Stage 3)
+ * Travel AI Mobile — Login Screen (Stages 3 & 4)
  *
- * Implements Google sign-in via Supabase Auth with:
+ * Implements Sign in with Apple & Sign in with Google via Supabase Auth:
  * - Clear value proposition (bookmark sync, cross-device analysis history)
- * - Clear loading, cancellation, and error feedback
+ * - Clear loading, cancellation, and error feedback for both providers
  * - Strict preservation of guest mode ("Continue as Guest" / dismissible modal)
- * - Adherence to Travel AI Design System
+ * - Adherence to Travel AI Design System & Apple Human Interface Guidelines
  */
 
 import React, { useState } from 'react';
@@ -27,7 +27,15 @@ import { hapticFeedback } from '@/lib/haptics';
 export default function LoginScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { signInWithGoogle, isAuthenticating, isConfigured, error, clearError, user } = useAuth();
+  const {
+    signInWithGoogle,
+    signInWithApple,
+    isAuthenticating,
+    isConfigured,
+    error,
+    clearError,
+    user,
+  } = useAuth();
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
   const handleDismiss = () => {
@@ -40,6 +48,28 @@ export default function LoginScreen() {
     }
   };
 
+  const handleAppleSignIn = async () => {
+    hapticFeedback.selection();
+    clearError();
+    setStatusNotice(null);
+
+    const result = await signInWithApple();
+
+    if (result.canceled) {
+      setStatusNotice('Apple sign-in cancelled. You can continue exploring as a guest.');
+      return;
+    }
+
+    if (result.success) {
+      hapticFeedback.success();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/profile');
+      }
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     hapticFeedback.selection();
     clearError();
@@ -48,13 +78,12 @@ export default function LoginScreen() {
     const result = await signInWithGoogle();
 
     if (result.canceled) {
-      setStatusNotice('Sign-in cancelled. You can continue exploring as a guest.');
+      setStatusNotice('Google sign-in cancelled. You can continue exploring as a guest.');
       return;
     }
 
     if (result.success) {
       hapticFeedback.success();
-      // Dismiss modal or navigate to Profile
       if (router.canGoBack()) {
         router.back();
       } else {
@@ -177,6 +206,35 @@ export default function LoginScreen() {
 
         {/* Action Buttons */}
         <View style={styles.actionSection}>
+          {/* Sign in with Apple */}
+          <Pressable
+            onPress={handleAppleSignIn}
+            disabled={isAuthenticating}
+            style={({ pressed }) => [
+              styles.appleButton,
+              isAuthenticating && styles.buttonDisabled,
+              pressed && !isAuthenticating && styles.pressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in with Apple"
+            accessibilityState={{ busy: isAuthenticating }}
+          >
+            {isAuthenticating ? (
+              <ActivityIndicator size="small" color={Colors.canvas} />
+            ) : (
+              <View style={styles.buttonContent}>
+                <Ionicons
+                  name="logo-apple"
+                  size={19}
+                  color={Colors.canvas}
+                  style={styles.providerIcon}
+                />
+                <Text style={styles.appleButtonText}>Continue with Apple</Text>
+              </View>
+            )}
+          </Pressable>
+
+          {/* Sign in with Google */}
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={isAuthenticating}
@@ -192,13 +250,19 @@ export default function LoginScreen() {
             {isAuthenticating ? (
               <ActivityIndicator size="small" color={Colors.textPrimary} />
             ) : (
-              <View style={styles.googleButtonContent}>
-                <Ionicons name="logo-google" size={18} color={Colors.textPrimary} style={styles.googleIcon} />
+              <View style={styles.buttonContent}>
+                <Ionicons
+                  name="logo-google"
+                  size={17}
+                  color={Colors.textPrimary}
+                  style={styles.providerIcon}
+                />
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
               </View>
             )}
           </Pressable>
 
+          {/* Continue as Guest */}
           <Pressable
             onPress={handleDismiss}
             disabled={isAuthenticating}
@@ -388,31 +452,44 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   actionSection: {
-    gap: Spacing.sm,
+    gap: Spacing.sm + 2,
     marginBottom: Spacing.lg,
   },
-  googleButton: {
-    backgroundColor: Colors.surface,
-    borderWidth: 1.5,
-    borderColor: Colors.borderFocus,
+  appleButton: {
+    backgroundColor: Colors.surfaceDark,
     borderRadius: Radius.xl,
     minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
   },
-  googleButtonContent: {
-    flexDirection: 'row',
+  appleButtonText: {
+    ...Typography.body,
+    fontWeight: '600',
+    color: Colors.canvas,
+  },
+  googleButton: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.borderSubtle,
+    borderRadius: Radius.xl,
+    minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  googleIcon: {
-    marginRight: Spacing.sm + 2,
+    paddingHorizontal: Spacing.lg,
   },
   googleButtonText: {
     ...Typography.body,
     fontWeight: '600',
     color: Colors.textPrimary,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providerIcon: {
+    marginRight: Spacing.sm + 2,
   },
   guestButton: {
     minHeight: 48,
@@ -438,7 +515,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   pressed: {
-    opacity: 0.8,
+    opacity: 0.85,
     transform: [{ scale: 0.985 }],
   },
 });

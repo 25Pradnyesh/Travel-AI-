@@ -1,14 +1,15 @@
 /**
- * Travel AI Mobile — Supabase Google OAuth Service (Stage 3)
+ * Travel AI Mobile — Supabase OAuth Service (Stages 3 & 4)
  *
- * Implements Google OAuth authentication via Supabase Auth using:
+ * Implements Google and Apple OAuth authentication via Supabase Auth using:
  * - `expo-web-browser` for secure in-app browser authentication sessions
  * - `expo-linking` for deep-link redirect handling
  * - `@supabase/supabase-js` for PKCE/token session establishment and AsyncStorage persistence
  *
  * SECURITY:
- * - Google Client Secret is NEVER stored in the mobile application. It is stored exclusively
- *   in the Supabase Dashboard under Authentication -> Providers -> Google.
+ * - Google and Apple Client Secrets, Service IDs, Team IDs, and Private Keys are NEVER
+ *   stored in the mobile application. They reside exclusively in the Supabase Dashboard
+ *   under Authentication -> Providers -> (Google / Apple).
  * - Mobile client interacts only using the public Supabase URL and publishable/anon key.
  * - Guest mode is preserved across all application paths; authentication is strictly opt-in.
  */
@@ -22,6 +23,11 @@ import { supabase, isSupabaseConfigured } from './client';
 WebBrowser.maybeCompleteAuthSession();
 
 /**
+ * Supported third-party OAuth providers.
+ */
+export type OAuthProvider = 'google' | 'apple';
+
+/**
  * Parsed parameters extracted from an OAuth callback URL.
  */
 export interface ParsedAuthTokens {
@@ -33,7 +39,7 @@ export interface ParsedAuthTokens {
 }
 
 /**
- * Result returned by the Google sign-in operation.
+ * Result returned by the OAuth sign-in operations.
  */
 export interface AuthResult {
   success: boolean;
@@ -147,16 +153,18 @@ export async function handleAuthRedirect(url: string): Promise<Session | null> {
 }
 
 /**
- * Initiates the Google OAuth sign-in flow.
+ * Common OAuth sign-in flow for supported providers (Google, Apple).
  *
  * Flow:
  * 1. Verifies Supabase configuration is present.
- * 2. Requests an OAuth authorization URL from Supabase with Google provider.
+ * 2. Requests an OAuth authorization URL from Supabase for the specified provider.
  * 3. Launches an in-app browser session using `WebBrowser.openAuthSessionAsync`.
  * 4. Intercepts the `travelai://auth/callback` redirect.
  * 5. Exchanges credentials and persists session into AsyncStorage.
  */
-export async function signInWithGoogle(): Promise<AuthResult> {
+export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResult> {
+  const providerLabel = provider === 'apple' ? 'Apple' : 'Google';
+
   // 1. Guard against unconfigured Supabase credentials
   if (!isSupabaseConfigured()) {
     return {
@@ -171,30 +179,39 @@ export async function signInWithGoogle(): Promise<AuthResult> {
 
     const redirectUrl = getAuthRedirectUrl();
 
+    const options: {
+      redirectTo: string;
+      skipBrowserRedirect: boolean;
+      queryParams?: Record<string, string>;
+    } = {
+      redirectTo: redirectUrl,
+      skipBrowserRedirect: true,
+    };
+
+    if (provider === 'google') {
+      options.queryParams = {
+        access_type: 'offline',
+        prompt: 'consent',
+      };
+    }
+
     // 2. Request authorization URL from Supabase
     const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
-      },
+      provider,
+      options,
     });
 
     if (oauthError) {
       return {
         success: false,
-        error: oauthError.message || 'Failed to initialize Google OAuth session.',
+        error: oauthError.message || `Failed to initialize ${providerLabel} OAuth session.`,
       };
     }
 
     if (!data?.url) {
       return {
         success: false,
-        error: 'Supabase did not return an authorization URL. Check that the Google provider is enabled in the Supabase Dashboard.',
+        error: `Supabase did not return an authorization URL. Check that the ${providerLabel} provider is enabled in the Supabase Dashboard.`,
       };
     }
 
@@ -224,12 +241,27 @@ export async function signInWithGoogle(): Promise<AuthResult> {
       error: 'Authentication browser window was closed without completing sign-in.',
     };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Google sign-in encountered an unexpected error.';
+    const message =
+      err instanceof Error ? err.message : `${providerLabel} sign-in encountered an unexpected error.`;
     return {
       success: false,
       error: message,
     };
   }
+}
+
+/**
+ * Initiates Google OAuth sign-in flow.
+ */
+export async function signInWithGoogle(): Promise<AuthResult> {
+  return signInWithOAuth('google');
+}
+
+/**
+ * Initiates Apple OAuth sign-in flow.
+ */
+export async function signInWithApple(): Promise<AuthResult> {
+  return signInWithOAuth('apple');
 }
 
 /**

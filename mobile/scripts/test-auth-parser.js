@@ -99,4 +99,21 @@ assert(Object.keys(parseAuthUrl(null)).length === 0, 'Null returns empty object'
 assert(Object.keys(parseAuthUrl('travelai://something-else')).length === 0, 'Non-query returns empty');
 console.log('✓ Empty and malformed inputs handled gracefully');
 
-console.log('All 5 Auth Parser tests passed successfully!');
+// Test 6: Apple ID authorization code grant
+const appleUrl = 'travelai://auth/callback?code=mock_apple_auth_code_777';
+const appleRes = parseAuthUrl(appleUrl);
+assert(appleRes.code === 'mock_apple_auth_code_777', 'Apple authorization code parsed correctly');
+console.log('✓ Apple authorization code grant parsed');
+
+// Test 7: Apple ID user cancellation
+const appleCancelUrl =
+  'travelai://auth/callback?error=user_cancelled_authorize&error_description=The+user+canceled+authorization';
+const appleCancelRes = parseAuthUrl(appleCancelUrl);
+assert(appleCancelRes.error === 'user_cancelled_authorize', 'Apple cancellation error parsed');
+assert(
+  appleCancelRes.errorDescription === 'The user canceled authorization',
+  'Apple cancellation description parsed'
+);
+console.log('✓ Apple user cancellation parsed');
+
+console.log('All 7 Auth Parser tests passed successfully!');
