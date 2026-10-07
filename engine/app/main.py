@@ -66,10 +66,14 @@ def validate_configuration() -> dict[str, bool]:
     places_key = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in ("true", "1", "yes")
+    supabase_url = os.getenv("SUPABASE_URL", "").strip()
+    supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    env = os.getenv("ENVIRONMENT", "development").strip().lower()
 
     status_dict = {
         "google_places_configured": bool(places_key),
         "gemini_configured": bool(gemini_key),
+        "supabase_configured": bool(supabase_url and supabase_key),
         "rate_limiting_enabled": rate_limit_enabled,
     }
 
@@ -84,9 +88,16 @@ def validate_configuration() -> dict[str, bool]:
     else:
         print("✅ Gemini API configured.")
 
+    if not (supabase_url and supabase_key):
+        print("ℹ️ Supabase environment variables not set on engine (client direct mode active).")
+    else:
+        print("✅ Supabase configured.")
+
     if rate_limit_enabled:
         rpm = os.getenv("RATE_LIMIT_PER_MINUTE", "60")
         print(f"🔒 Rate limiting active ({rpm} req/min).")
+
+    print(f"🌍 Environment: {env}")
 
     return status_dict
 
@@ -101,6 +112,7 @@ def configure_cors(env_cors: str | None = None) -> tuple[list[str], bool]:
     """
     Derives allowed CORS origins and credentials policy.
     Hardens against credentialed wildcard access (allow_origins=['*'] + allow_credentials=True).
+    Supports both ALLOWED_ORIGINS and CORS_ORIGINS environment variables.
     """
     dev_origins = [
         "http://localhost:3000",
@@ -110,7 +122,7 @@ def configure_cors(env_cors: str | None = None) -> tuple[list[str], bool]:
     ]
 
     if env_cors is None:
-        env_cors = os.getenv("CORS_ORIGINS", "")
+        env_cors = os.getenv("ALLOWED_ORIGINS") or os.getenv("CORS_ORIGINS", "")
 
     raw = env_cors.strip()
     if not raw:

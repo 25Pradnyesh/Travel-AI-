@@ -53,11 +53,14 @@ The FastAPI engine requires the following environment variables in production:
 
 | Variable | Description | Required | Example |
 |---|---|---|---|
+| `ENVIRONMENT` | Deployment environment identifier | Yes | `production` |
 | `GOOGLE_PLACES_API_KEY` | Google Places API key for candidate resolution and photos | Yes | `AIzaSy...` |
 | `GEMINI_API_KEY` | Google Gemini API key for visual verification | Optional (falls back to heuristic) | `AIzaSy...` |
 | `GEMINI_MODEL` | Gemini model name | No | `gemini-2.5-flash` |
+| `SUPABASE_URL` | Supabase project URL | Yes (if engine direct database access enabled) | `https://xyzcompany.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase server-side service-role secret | Yes (if engine direct database access enabled) | `eyJhbGci...` |
+| `ALLOWED_ORIGINS` | Comma-separated allowed origins (synonym: `CORS_ORIGINS`) | Yes (if web client enabled) | `https://api.travelai.app` |
 | `OPENWEATHER_API_KEY` | Weather intelligence API key | No | `your_key_here` |
-| `CORS_ORIGINS` | Comma-separated allowed web origins (mobile app does not enforce CORS) | Yes (if web client enabled) | `https://travelai.example.com` |
 | `RATE_LIMIT_ENABLED` | Enables in-memory token bucket rate limiting | Yes | `true` |
 | `RATE_LIMIT_PER_MINUTE` | Max requests allowed per minute per IP | Yes | `60` |
 | `RATE_LIMIT_BURST` | Max burst requests per IP | Yes | `15` |
@@ -65,54 +68,81 @@ The FastAPI engine requires the following environment variables in production:
 | `MAX_REQUEST_BODY_SIZE_BYTES`| Maximum HTTP request payload size in bytes | Yes | `102400` (100KB) |
 
 > [!CAUTION]
-> Never configure `CORS_ORIGINS=*` with credentials enabled. The engine's `configure_cors()` function hardens against this and will reject wildcard origins if credentials are required.
+> Never configure `ALLOWED_ORIGINS=*` or `CORS_ORIGINS=*` with credentials enabled. The engine's `configure_cors()` function hardens against this and will reject wildcard origins if credentials are required.
 
-### B. Production Uvicorn Execution
-Run Uvicorn with production worker configuration and HTTPS termination (via reverse proxy like Nginx, Cloudflare, or AWS ALB):
+### B. Production Container Build & Execution
+Build the Docker image using the root or engine context:
 
 ```bash
-uvicorn engine.app.main:app \
-  --host 0.0.0.0 \
-  --port 8000 \
-  --workers 4 \
-  --proxy-headers \
-  --forwarded-allow-ips "*"
+# Build production image
+docker build -t travel-ai-engine:latest -f engine/Dockerfile .
+
+# Run locally in production mode
+docker run -d --name travel-ai-engine -p 8000:8000 \
+  -e ENVIRONMENT=production \
+  -e GOOGLE_PLACES_API_KEY="AIzaSy..." \
+  -e GEMINI_API_KEY="AIzaSy..." \
+  -e ALLOWED_ORIGINS="https://api.travelai.app" \
+  travel-ai-engine:latest
 ```
 
-### C. Container Deployment (Dockerfile)
-```dockerfile
-FROM python:3.12-slim
+### C. Cloud Deployment Commands
 
-# Install system dependencies for audio/video media extraction
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+#### Option 1: Google Cloud Run (Recommended for Gemini / Google Places)
+```bash
+# Authenticate and configure project
+gcloud auth login
+gcloud config set project travel-ai-prod
 
-WORKDIR /app
+# Build and submit container image to Google Artifact Registry
+gcloud builds submit --tag gcr.io/travel-ai-prod/travel-ai-engine:1.0.0 -f engine/Dockerfile .
 
-# Copy dependency definitions
-COPY engine/requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Deploy to Cloud Run with HTTPS and auto-scaling
+gcloud run deploy travel-ai-engine \
+  --image gcr.io/travel-ai-prod/travel-ai-engine:1.0.0 \
+  --platform managed \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --memory 2Gi \
+  --cpu 2 \
+  --concurrency 8 \
+  --set-env-vars ENVIRONMENT=production,RATE_LIMIT_ENABLED=true \
+  --set-secrets GOOGLE_PLACES_API_KEY=places-api-key:latest,GEMINI_API_KEY=gemini-api-key:latest
+```
 
-# Copy application code
-COPY engine/ engine/
+#### Option 2: Fly.io
+```bash
+# Launch app
+fly launch --dockerfile engine/Dockerfile
 
-ENV PYTHONPATH="/app:/app/engine"
-EXPOSE 8000
+# Set production secrets
+fly secrets set \
+  ENVIRONMENT=production \
+  GOOGLE_PLACES_API_KEY="AIzaSy..." \
+  GEMINI_API_KEY="AIzaSy..."
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+# Deploy
+fly deploy
+```
 
-CMD ["uvicorn", "engine.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+#### Option 3: AWS App Runner / ECS
+```bash
+# Push image to Amazon ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com
+docker tag travel-ai-engine:latest <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/travel-ai-engine:latest
+docker push <aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/travel-ai-engine:latest
+
+# Create App Runner service with HTTPS termination
+aws apprunner create-service \
+  --service-name travel-ai-engine \
+  --source-configuration ImageRepository='{ImageIdentifier="<aws_account_id>.dkr.ecr.us-east-1.amazonaws.com/travel-ai-engine:latest",ImageRepositoryType="ECR"}'
 ```
 
 ### D. Production Verification
 Once deployed, verify the public HTTPS health endpoint:
 
 ```bash
-curl -i https://api.travelai.example.com/health
+curl -i https://api.travelai.app/health
 ```
 
 Expected JSON response:
@@ -121,9 +151,11 @@ Expected JSON response:
   "status": "ok",
   "service": "Travel AI Engine",
   "version": "1.0.0",
+  "environment": "production",
   "configuration": {
     "google_places_ready": true,
     "gemini_ready": true,
+    "supabase_ready": false,
     "rate_limiting_active": true
   }
 }
