@@ -11,7 +11,8 @@ import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
-import { handleAuthRedirect } from '@/lib/supabase';
+import { handleAuthRedirect, executePendingSaveAction } from '@/lib/supabase';
+import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function AuthCallbackScreen() {
@@ -27,6 +28,17 @@ export default function AuthCallbackScreen() {
         const initialUrl = await Linking.getInitialURL();
         if (initialUrl && initialUrl.includes('auth/callback')) {
           await handleAuthRedirect(initialUrl);
+
+          // Resume and execute any pending guest save action upon successful auth
+          try {
+            const pendingResult = await executePendingSaveAction();
+            if (pendingResult.executed && pendingResult.place) {
+              syncCloudPlaceToCache(pendingResult.place);
+            }
+          } catch {
+            // Tolerated: pending save failure does not block authentication
+          }
+
           if (isMounted) {
             setStatus('success');
             hapticFeedback.success();
@@ -76,7 +88,7 @@ export default function AuthCallbackScreen() {
               <Ionicons name="checkmark-circle" size={48} color={Colors.verified} />
             </View>
             <Text style={styles.title}>Welcome to Travel AI</Text>
-            <Text style={styles.subtitle}>Your Google account has been connected successfully.</Text>
+            <Text style={styles.subtitle}>Your account has been connected successfully.</Text>
           </>
         )}
 

@@ -89,9 +89,14 @@ Mobile Presentation & Persistence
 * **Interactive Cartography:** Native map canvas powered by `react-native-maps` featuring custom markers, zero-delta camera protection, and gesture-driven place bottom sheets.
 * **Place Detail Inspection:** Dedicated inspection modal (`/place/[id]`) with dual resolution across active session memory and offline storage.
 * **Explore Surface:** Aggregated discovery feed with real-time search filtering, dynamic category chips, and virtualized `<FlatList>` rendering.
-* **Saved Places Locker:** Offline bookmarking backed by `@react-native-async-storage/async-storage` with optimistic bookmark removal.
-* **Local Persistence Resilience:** Serialized asynchronous write queue (`persistQueue`) preventing race conditions and corrupted storage recovery.
-* **Production-Safe API Configuration:** Centralized environment configuration with strict loopback isolation guards in production release builds.
+* **Supabase Cloud Authentication:** Seamless Google and Apple OAuth via `expo-web-browser` and `travelai://auth/callback` deep linking with automatic session restoration.
+* **Guest Mode Preservation:** Unauthenticated users can analyze Reels and browse discoveries with zero login wall; authentication is strictly opt-in.
+* **Guest → Auth Pending Action Preservation:** Guests who tap Bookmark are prompted to authenticate without losing their selection or re-analyzing the Reel.
+* **Cloud Analysis History:** Historical analysis dossiers persisted to Supabase with parent-child cascade deletion and strict Row Level Security.
+* **Cloud Saved Places Locker:** Cloud-synchronized bookmarking backed by `public.saved_places` with database unique constraint enforcement.
+* **Two-Device Synchronization:** Focus-based auto-refresh (`useFocusEffect`) and pull-to-refresh keep Saved Places and History synchronized across devices.
+* **Account Isolation:** Strict multi-tenant isolation via PostgreSQL RLS and automatic memory/AsyncStorage cache purging upon sign-out.
+* **Production-Safe API Configuration:** Automated release guards reject loopback, private LAN IPs, and insecure HTTP in production release builds.
 * **Native Mobile Ergonomics:** Single-thumb mobile layout, platform-aware external navigation handoffs (Apple Maps vs. Google Maps), and native tactile haptics.
 
 ---
@@ -102,31 +107,36 @@ The native mobile client in `mobile/` is the primary application surface for Tra
 
 ### Navigation Architecture
 
-The mobile app implements a persistent 4-tab thumb navigation shell combined with focused stack and modal screens:
+The mobile app implements a persistent 4-tab thumb navigation shell combined with focused stack, modal, and OAuth callback screens:
 
 ```text
 Travel AI App Shell
 ├── Tabs (Bottom Navigation)
 │   ├── Analyze    — Reel URL input, clipboard detection, pipeline trigger
 │   ├── Explore    — Aggregated discoveries feed with search & category filtering
-│   ├── Saved      — Resilient offline travel locker with instant bookmark access
-│   └── Profile    — Navigation preferences (Apple vs Google Maps), engine diagnostics
+│   ├── Saved      — Cloud-backed travel locker with category chips & pull-to-refresh
+│   └── Profile    — Account management, OAuth sign-in/out, History link, diagnostics
 │
 └── Stack & Modal Screens
-    ├── /analyze/processing — Truthful multi-stage pipeline status & elapsed timer
+    ├── /analyze/processing — Multi-stage pipeline status & elapsed timer
     ├── /analyze/results    — Editorial destination dossier & travel intelligence
     ├── /analyze/map        — Full-screen interactive cartography canvas
-    └── /place/[id]         — Place detail inspection modal
+    ├── /place/[id]         — Place detail inspection modal
+    ├── /history            — User analysis history list with pull-to-refresh
+    ├── /history/[id]       — Historical analysis detail dossier & POI links
+    ├── /(auth)/login       — Google & Apple OAuth sign-in modal with guest continue
+    └── /auth/callback      — Deep-link OAuth redirect handler (travelai://auth/callback)
 ```
 
 ### Key Technologies
 * **Framework:** React Native (`0.86.x`), Expo (SDK 57)
 * **Routing:** Expo Router (`~57.0.x`, file-based typed routing)
 * **Language:** TypeScript (`~6.0.x`, strict mode)
+* **Cloud & Auth:** `@supabase/supabase-js` (`2.117.x`), Supabase Auth (Google & Apple OAuth)
 * **Cartography:** `react-native-maps` (`1.27.x`, Apple MapKit on iOS, Google Play Services on Android)
 * **Storage:** `@react-native-async-storage/async-storage` (`2.2.x`)
 * **Gestures & Motion:** `react-native-safe-area-context`, `react-native-gesture-handler`, `react-native-reanimated`
-* **Device Capabilities:** `expo-clipboard`, `expo-haptics`, `expo-image`
+* **Device Capabilities:** `expo-clipboard`, `expo-haptics`, `expo-image`, `expo-web-browser`, `expo-linking`
 
 For visual specifications and component tokens, see [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
 
@@ -358,18 +368,21 @@ eas build --profile production --platform all
 
 ## Documentation Map
 
-Detailed engineering, architecture, and design specifications are maintained in dedicated reference documents:
+Detailed engineering, architecture, and release readiness specifications are maintained in dedicated reference documents:
 
-* **[docs/PRD.md](docs/PRD.md):** Authoritative Product Requirements Document, core user journeys, technical boundaries, and MVP Definition of Done.
-* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):** Core architecture overview and system flow documentation.
-* **[docs/architecture/](docs/architecture/):** Source-grounded Archify architecture artifacts, interactive system topologies, and pipeline dataflow diagrams.
-* **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md):** Authoritative Mobile Design System, Swiss editorial styling, design tokens, typography, and component specifications.
-* **[docs/AGENTS.md](docs/AGENTS.md):** Canonical operating guide, change-scope rules, security boundaries, and validation protocols for AI coding agents.
-* **[docs/SECURITY.md](docs/SECURITY.md):** Authoritative security and secrets-handling guide.
+* **[docs/RELEASE_READINESS.md](docs/RELEASE_READINESS.md):** Production readiness audit report and phase-by-phase release checklist.
+* **[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md):** Android release verification checklist and pre-submission gates.
+* **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md):** Google and Apple OAuth external setup, deep linking, and session architecture guide.
+* **[docs/PRODUCTION.md](docs/PRODUCTION.md):** Production backend deployment, containerization, and release configuration guide.
+* **[docs/TESTING.md](docs/TESTING.md):** Comprehensive test suites documentation (Pytest, Supabase TSX, Auth parser, TypeScript).
+* **[docs/BETA_TESTING.md](docs/BETA_TESTING.md):** Beta testing distribution, defect classification, and quality monitoring plan.
+* **[docs/PRD.md](docs/PRD.md):** Authoritative Product Requirements Document and MVP Definition of Done.
+* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):** Core architecture overview, system flows, and Mermaid diagrams.
+* **[docs/DATABASE.md](docs/DATABASE.md):** Authoritative data architecture, Supabase schema, and RLS policies guide.
+* **[docs/SECURITY.md](docs/SECURITY.md):** Authoritative security, privacy, and secrets-handling guide.
+* **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md):** Mobile Design System, Swiss editorial styling, typography, and tokens.
 * **[docs/CODE_STYLE.md](docs/CODE_STYLE.md):** Authoritative coding standards and maintainability guide.
-* **[docs/DATABASE.md](docs/DATABASE.md):** Authoritative data architecture and storage management guide.
 * **[docs/API.md](docs/API.md):** Authoritative API and integration communication guide.
-* **[docs/mobile/](docs/mobile/):** Mobile UX roadmap ([mobile-ux-roadmap.md](docs/mobile/mobile-ux-roadmap.md)) and complete 10-screen specifications ([mobile-screen-spec.md](docs/mobile/mobile-screen-spec.md)).
 
 ---
 

@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Chip,
@@ -31,6 +31,15 @@ export default function SavedScreen() {
     useSavedPlaces();
   const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('All');
+
+  // Multi-device synchronization: Re-sync with cloud whenever Saved screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        refreshCloudPlaces();
+      }
+    }, [isAuthenticated, refreshCloudPlaces])
+  );
 
   // Extract unique categories from saved places
   const categories = useMemo(() => {

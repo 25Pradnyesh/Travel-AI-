@@ -39,12 +39,6 @@ export default function LoginScreen() {
   } = useAuth();
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
 
-  // Clear pending save action if modal is dismissed without completing sign-in
-  useEffect(() => {
-    return () => {
-      clearPendingSaveAction();
-    };
-  }, []);
 
   const handleDismiss = () => {
     hapticFeedback.light();

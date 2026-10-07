@@ -185,3 +185,40 @@ Instagram / Google Places / Gemini
   - **Supabase as Single Source of Truth:** Authenticated saved places and history are strictly synchronized against Supabase PostgreSQL tables; cloud save and removal errors do not falsely claim success or desynchronize state.
   - **Robust Pending-Action Lifecycle:** Modal gesture dismissal (swipe down), explicit cancellation, or network error safely purges pending guest save actions (`clearPendingSaveAction()`), preventing stale or duplicate save loops.
   - **Zero-Flicker Loading States:** Replaces empty-state flashes during initial cloud sync with graceful loading indicators on the Saved and History screens.
+
+- **Production Readiness Hardening (Stage 8 & Release Candidate):**
+  - **Production URL Guards:** Release builds (`!__DEV__`) enforce strict validation of `EXPO_PUBLIC_API_URL`. Any loopback address (`localhost`, `127.0.0.1`, `10.0.2.2`), private LAN IP (`192.168.x.x`, `10.x.x.x`), or insecure HTTP is automatically rejected, preventing accidental dev fallbacks in store builds.
+  - **Two-Device Focus Synchronization:** In addition to manual pull-to-refresh, the `Saved` tab and `History` screen employ `useFocusEffect` to automatically synchronize with the Supabase cloud whenever the user switches tabs or returns to the screen.
+  - **Deep-Link Callback Pending Action Resumption:** Deep-link redirects arriving through `mobile/app/auth/callback.tsx` automatically execute pending guest save actions and sync them to local cache upon session establishment.
+
+```mermaid
+graph TD
+    subgraph Mobile [Expo / React Native Client]
+        UI[Mobile Navigation & Screens]
+        AuthCtx[AuthContext & Session Store]
+        SavedStore[Saved Places Storage & Cache]
+        ProdGuard[Production URL Validation Guard]
+    end
+
+    subgraph Backend [FastAPI Engine]
+        API[API Endpoints: /analyze, /health]
+        Security[Security Headers & Rate Limiting]
+        Pipeline[Metadata, OCR, Whisper & Vision]
+        Cache[In-Memory Places & Candidate Cache]
+    end
+
+    subgraph Cloud [Supabase Cloud]
+        OAuth[Supabase Auth - Google & Apple]
+        DB[(PostgreSQL - RLS Enabled)]
+    end
+
+    UI -->|Session Queries| AuthCtx
+    UI -->|Bookmarks & Sync| SavedStore
+    UI -->|Analyze Request| ProdGuard
+    ProdGuard -->|HTTPS Only| API
+    AuthCtx -->|PKCE Exchange & JWT| OAuth
+    SavedStore -->|Row Level Security CRUD| DB
+    OAuth -.->|Establishes User ID| DB
+    API --> Security --> Pipeline
+    Pipeline --> Cache
+```

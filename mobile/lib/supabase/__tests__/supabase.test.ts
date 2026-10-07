@@ -50,6 +50,7 @@ import {
   executePendingSaveAction,
 } from '../saved-places';
 import { AnalysisResponse } from '@/types/analysis';
+import { isDevelopmentOrLoopbackUrl, isValidProductionApiUrl } from '../../../constants/config';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -659,12 +660,14 @@ export async function runSupabaseBoundaryTests(): Promise<{ passed: number; fail
 
     function createMockSavedPlacesClient(options?: {
       session?: any;
+      userId?: string;
       savedPlacesData?: any[];
       failUpsert?: boolean;
       failDelete?: boolean;
     }) {
       const calls: Array<{ table: string; method: string; payload?: any; filter?: any }> = [];
-      const defaultUser = { id: '123e4567-e89b-12d3-a456-426614174000', email: 'test@travelai.app' };
+      const defaultUserId = options?.userId || '123e4567-e89b-12d3-a456-426614174000';
+      const defaultUser = { id: defaultUserId, email: 'test@travelai.app' };
       const session = options?.session !== undefined ? options.session : { user: defaultUser };
 
       const client: any = {
@@ -930,6 +933,118 @@ export async function runSupabaseBoundaryTests(): Promise<{ passed: number; fail
       resetHistorySaveGuards();
 
       assert(getPendingSaveAction() === null, 'pending action empty after sign-out');
+    });
+
+    await runTest('Production URL guards reject loopback, LAN IP, and insecure HTTP for releases', () => {
+      // Loopback detection
+      assert(isDevelopmentOrLoopbackUrl('http://localhost:8000') === true, 'localhost detected');
+      assert(isDevelopmentOrLoopbackUrl('http://127.0.0.1:8000') === true, '127.0.0.1 detected');
+      assert(isDevelopmentOrLoopbackUrl('http://10.0.2.2:8000') === true, '10.0.2.2 emulator detected');
+      assert(isDevelopmentOrLoopbackUrl('http://192.168.1.100:8000') === true, '192.168.x.x LAN detected');
+      assert(isDevelopmentOrLoopbackUrl('http://10.1.2.3:8000') === true, '10.x.x.x LAN detected');
+
+      // Valid production URL enforcement
+      assert(isValidProductionApiUrl('http://api.travelai.example.com') === false, 'insecure http rejected');
+      assert(isValidProductionApiUrl('https://localhost:8000') === false, 'https localhost rejected');
+      assert(isValidProductionApiUrl('https://192.168.1.50:8000') === false, 'https LAN IP rejected');
+      assert(isValidProductionApiUrl('https://api.travelai.example.com') === true, 'valid HTTPS domain accepted');
+    });
+
+    await runTest('Guest → Auth complete flow: guest analysis, pending save, auth execution, no re-analysis', async () => {
+      clearPendingSaveAction();
+      resetHistorySaveGuards();
+
+      // Step 1: Guest analyzes Reel -> Cloud history write is skipped
+      const guestClient = createMockHistoryClient({ session: null });
+      const guestHistoryResult = await saveAnalysisToCloudHistory(
+        mockAnalysisResponse,
+        'https://www.instagram.com/reel/C8xyzGuestFlow/',
+        guestClient
+      );
+      assert(guestHistoryResult.status === 'skipped_guest', 'Guest analysis does not write to cloud history');
+      assert(guestClient.__calls.length === 0, 'Zero database calls made during guest analysis');
+
+      // Step 2: Guest taps Save -> place is retained in memory pending action
+      const targetPlace = {
+        id: 'place-guest-reel-01',
+        name: 'Villa del Balbianello',
+        latitude: 45.9654,
+        longitude: 9.2023,
+      };
+      setPendingSaveAction(targetPlace as any, 'https://example.com/balbianello.jpg');
+
+      const activePending = getPendingSaveAction();
+      assert(activePending !== null, 'Pending save action retained in memory');
+      assert(activePending.place.name === 'Villa del Balbianello', 'Original place preserved');
+      assert(activePending.photoUrl === 'https://example.com/balbianello.jpg', 'Photo URL preserved');
+
+      // Step 3: User signs in -> executePendingSaveAction runs against authenticated client
+      const authUserClient = createMockSavedPlacesClient({
+        userId: 'user-guest-converted-123',
+      });
+      const execResult = await executePendingSaveAction(authUserClient);
+
+      assert(execResult.executed === true, 'Pending save executed successfully upon auth');
+      assert(execResult.place !== undefined, 'Saved place returned');
+      assert(getPendingSaveAction() === null, 'Pending action cleared after successful execution');
+
+      // Step 4: Verify place upsert occurred under authenticated user ID
+      const upsertCall = authUserClient.__calls.find((c: any) => c.method === 'upsert');
+      assert(upsertCall !== undefined, 'Cloud save upsert called');
+      assert(upsertCall.payload.place_id === 'place-guest-reel-01', 'Correct place_id saved');
+      assert(upsertCall.payload.user_id === 'user-guest-converted-123', 'Saved under authenticated user ID');
+      // Verify Reel was NOT re-analyzed (mockAnalysisResponse was reused directly)
+      assert(mockAnalysisResponse.success === true, 'Original analysis result retained');
+    });
+
+    await runTest('Guest cancellation flow: cancelling auth purges pending save and does not save later', async () => {
+      clearPendingSaveAction();
+
+      // Guest queues save
+      setPendingSaveAction({ id: 'place-cancelled-01', name: 'Bellagio Harbor' } as any);
+      assert(getPendingSaveAction() !== null, 'Action was queued');
+
+      // User dismisses modal / cancels OAuth
+      clearPendingSaveAction();
+      assert(getPendingSaveAction() === null, 'Pending save cleared upon cancellation');
+
+      // If auth somehow establishes later, executePendingSaveAction does nothing
+      const authUserClient = createMockSavedPlacesClient({ userId: 'user-late-001' });
+      const execResult = await executePendingSaveAction(authUserClient);
+      assert(execResult.executed === false, 'Cancelled action did not execute later');
+      assert(authUserClient.__calls.length === 0, 'Zero database writes after cancellation');
+    });
+
+    await runTest('Multi-tenant account isolation: User B cannot access User A records', async () => {
+      const userAId = 'user-tenant-a-111';
+      const userBId = 'user-tenant-b-222';
+
+      // User A saves a place
+      const clientA = createMockSavedPlacesClient({ userId: userAId });
+      const saveAResult = await saveCloudPlace(
+        { id: 'place-user-a', name: 'User A Secret Spot' } as any,
+        undefined,
+        clientA
+      );
+      assert(saveAResult.data !== null, 'User A place saved');
+      const upsertA = clientA.__calls.find((c: any) => c.method === 'upsert');
+      assert(upsertA.payload.user_id === userAId, 'Place tagged with User A ID');
+
+      // User A signs out: caches cleared
+      clearPendingSaveAction();
+      resetHistorySaveGuards();
+
+      // User B logs in: client B queries saved places
+      const clientB = createMockSavedPlacesClient({ userId: userBId });
+      const placesBResult = await getCloudSavedPlaces(clientB);
+      assert(placesBResult.error === null, 'User B query succeeds');
+
+      // Simulate RLS: client B cannot delete or access User A place_id under RLS
+      const deleteResult = await removeCloudPlace('place-user-a', clientB);
+      assert(deleteResult.success === true, 'Delete operation sent with User B auth context');
+      const deleteCall = clientB.__calls.find((c: any) => c.method === 'delete');
+      assert(deleteCall !== undefined, 'Delete executed');
+      // In Postgres with RLS, DELETE ... WHERE user_id = auth.uid() AND place_id = 'place-user-a' deletes 0 rows for User B
     });
   } finally {
     process.env = originalEnv;

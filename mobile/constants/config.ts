@@ -7,6 +7,51 @@
 
 import { Platform } from 'react-native';
 
+/**
+ * Detects whether a URL points to local loopback, private LAN addresses, or insecure HTTP.
+ */
+export function isDevelopmentOrLoopbackUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return true;
+  const lower = url.trim().toLowerCase();
+
+  if (
+    lower.includes('localhost') ||
+    lower.includes('127.0.0.1') ||
+    lower.includes('10.0.2.2') ||
+    lower.includes('0.0.0.0')
+  ) {
+    return true;
+  }
+
+  // Private RFC 1918 / link-local LAN patterns
+  if (
+    /^https?:\/\/10\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(lower) ||
+    /^https?:\/\/192\.168\.\d{1,3}\.\d{1,3}/.test(lower) ||
+    /^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}/.test(lower) ||
+    /^https?:\/\/169\.254\.\d{1,3}\.\d{1,3}/.test(lower)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Validates whether an API URL is suitable for production releases.
+ * Requires HTTPS and a public domain or non-loopback host.
+ */
+export function isValidProductionApiUrl(url: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const lower = url.trim().toLowerCase();
+
+  // Must begin with https:// in production builds
+  if (!lower.startsWith('https://')) {
+    return false;
+  }
+
+  return !isDevelopmentOrLoopbackUrl(lower);
+}
+
 const getApiBaseUrl = (): string => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
 
@@ -23,9 +68,18 @@ const getApiBaseUrl = (): string => {
     return 'http://localhost:8000';
   }
 
-  // 2. In production release builds (!__DEV__), require an explicit non-loopback backend URL
+  // 2. In production release builds (!__DEV__), require an explicit non-loopback HTTPS backend URL
   if (envUrl) {
-    return envUrl;
+    if (isValidProductionApiUrl(envUrl)) {
+      return envUrl;
+    }
+    // eslint-disable-next-line no-console
+    console.error(
+      '[Travel AI Production Guard] Insecure, private IP, or loopback EXPO_PUBLIC_API_URL rejected for production release: ' +
+        envUrl +
+        '. Production builds require a valid public HTTPS endpoint.'
+    );
+    return '';
   }
 
   // Production build with no EXPO_PUBLIC_API_URL configured:

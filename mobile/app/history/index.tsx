@@ -22,7 +22,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ConfidenceBadge,
@@ -75,6 +75,15 @@ export default function HistoryListScreen() {
       setIsLoading(false);
     }
   }, [isAuthenticated, user?.id, fetchHistory]);
+
+  // Multi-device synchronization: Re-fetch history whenever screen gains focus
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated && user?.id) {
+        fetchHistory(true);
+      }
+    }, [isAuthenticated, user?.id, fetchHistory])
+  );
 
   const handleRefresh = useCallback(() => {
     setIsRefreshing(true);
