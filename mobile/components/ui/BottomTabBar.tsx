@@ -76,8 +76,8 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
     >
       <GlassView
         borderRadius={Radius.pill}
-        intensity={65}
-        variant="frosted"
+        intensity={75}
+        variant="dark"
         style={styles.glassPill}
       >
         <View style={styles.tabRow}>
@@ -154,7 +154,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 <Ionicons
                   name={iconName}
                   size={18}
-                  color={isFocused ? Colors.ivoryMist : Colors.textMuted}
+                  color={isFocused ? Colors.ivoryMist : Colors.textSecondary}
                 />
                 <Text
                   style={[
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   tabLabelInactive: {
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   tabLabelActive: {
     color: Colors.ivoryMist,

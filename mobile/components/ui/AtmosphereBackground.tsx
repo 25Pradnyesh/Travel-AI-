@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 import { StyleSheet, View, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -17,7 +17,7 @@ export const useAtmosphere = () => useContext(AtmosphereContext);
 
 export interface AtmosphereBackgroundProps {
   children?: React.ReactNode;
-  imageUrl?: string | null;
+  imageUrl?: string | number | null;
   blurRadius?: number;
   variant?: 'sky' | 'night' | 'destination';
   style?: ViewStyle;
@@ -28,47 +28,75 @@ export interface AtmosphereBackgroundProps {
  *
  * Full-bleed atmospheric background layer with Android BlurTargetView integration.
  * - 'sky': Icy Blue sky (#A6DCF8) -> Mid-slate teal (#2F6275) -> Deep Onyx-Teal (#081218).
- * - 'destination': Background photo blurred (blurRadius ~30-36) with 55% dark scrim + bottom vignette.
+ * - 'destination': Background photo blurred with translucent scrim + soft bottom vignette.
  * - Wraps background with BlurTargetView so all child GlassViews receive native Android blur target.
  */
 export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
   children,
   imageUrl,
+  blurRadius = 24,
   variant = 'sky',
   style,
 }) => {
   const blurTargetRef = useRef<View>(null);
-  const hasPhoto = Boolean(imageUrl && imageUrl.trim().length > 0);
+  const [imageError, setImageError] = useState(false);
+
+  React.useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  const hasPhoto = Boolean(
+    imageUrl &&
+      !imageError &&
+      (typeof imageUrl === 'number' || (typeof imageUrl === 'string' && imageUrl.trim().length > 0))
+  );
+
+  const imageSource = React.useMemo(() => {
+    if (!hasPhoto) return null;
+    if (typeof imageUrl === 'string') {
+      return { uri: imageUrl };
+    }
+    return imageUrl;
+  }, [hasPhoto, imageUrl]);
 
   return (
     <AtmosphereContext.Provider value={{ blurTargetRef }}>
       <View style={[styles.container, style]}>
         {/* Background layer wrapped in BlurTargetView for native Android blur resolution */}
         <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
-          {hasPhoto ? (
-            // Full-bleed destination photography with blur (blurRadius 32) and ~32% dark scrim
+          {hasPhoto && imageSource ? (
+            // Full-bleed destination photography with blur and translucent scrim
             <View style={StyleSheet.absoluteFill}>
               <Image
-                source={{ uri: imageUrl! }}
+                source={imageSource}
                 style={StyleSheet.absoluteFill}
                 contentFit="cover"
-                blurRadius={32}
+                blurRadius={blurRadius}
                 cachePolicy="disk"
                 transition={300}
+                onLoad={(e) => {
+                  if (__DEV__) {
+                    console.log(
+                      `[AtmosphereBackground] Background photo loaded: (${e.source.width}x${e.source.height})`
+                    );
+                  }
+                }}
+                onError={(err) => {
+                  console.warn(
+                    '[AtmosphereBackground] Background photo failed to load:',
+                    imageUrl,
+                    err.error
+                  );
+                  setImageError(true);
+                }}
               />
-              {/* Reduced ~32% scrim so the photo's vibrant colors show */}
+              {/* Soft scrim so the photo's vibrant colors visibly shine */}
               <View style={[StyleSheet.absoluteFill, styles.photoScrim]} />
-              {/* Stronger bottom vignette gradient protecting cards and contrast */}
+              {/* Gentle bottom vignette gradient protecting bottom cards */}
               <LinearGradient
-                colors={Colors.posterGradient}
-                locations={[0, 0.28, 0.65, 1]}
+                colors={['transparent', 'rgba(5, 11, 14, 0.20)', 'rgba(5, 11, 14, 0.70)', 'rgba(5, 11, 14, 0.92)']}
+                locations={[0, 0.35, 0.70, 1]}
                 style={StyleSheet.absoluteFill}
-              />
-              {/* Subtle top vignette scrim */}
-              <LinearGradient
-                colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
-                locations={[0, 1]}
-                style={styles.topVignette}
               />
             </View>
           ) : (
@@ -81,7 +109,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
               />
               {/* Top vignette scrim protecting header legibility */}
               <LinearGradient
-                colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
+                colors={['rgba(5, 11, 14, 0.40)', 'transparent']}
                 locations={[0, 1]}
                 style={styles.topVignette}
               />
@@ -103,7 +131,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photoScrim: {
-    backgroundColor: 'rgba(5, 11, 14, 0.32)', // ~32% dark scrim
+    backgroundColor: 'rgba(5, 11, 14, 0.16)', // ~16% scrim so vibrant photo colors shine through
   },
   topVignette: {
     position: 'absolute',

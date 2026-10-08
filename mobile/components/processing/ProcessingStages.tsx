@@ -86,7 +86,7 @@ export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
               {/* Left State Indicator */}
               <View style={styles.indicatorWrapper}>
                 {isCompleted ? (
-                  <Ionicons name="checkmark-circle" size={20} color={Colors.icyBlue} />
+                  <View style={styles.passedDot} />
                 ) : isCurrent ? (
                   <View style={styles.pulsingWrapper}>
                     <Animated.View
@@ -148,6 +148,12 @@ export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
           );
         })}
       </View>
+
+      {/* Honest estimation disclaimer */}
+      <View style={styles.captionRow}>
+        <Ionicons name="information-circle-outline" size={13} color={Colors.textSecondary} />
+        <Text style={styles.captionText}>Steps are estimated while the engine works.</Text>
+      </View>
     </View>
   );
 };
@@ -207,6 +213,12 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: Colors.icyBlue,
+  },
+  passedDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(251, 244, 227, 0.55)',
   },
   hollowDot: {
     width: 14,
@@ -268,6 +280,21 @@ const styles = StyleSheet.create({
   },
   detailUpcoming: {
     color: 'rgba(110, 126, 134, 0.70)',
+  },
+  captionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.md,
+  },
+  captionText: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    lineHeight: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

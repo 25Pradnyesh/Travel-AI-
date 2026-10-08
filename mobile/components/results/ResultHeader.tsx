@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ResultHeaderProps {
@@ -31,10 +31,9 @@ export const ResultHeader: React.FC<ResultHeaderProps> = ({
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel="Back to Analyze"
-          accessibilityHint="Returns to the analyze screen"
           style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
         >
-          <Ionicons name="arrow-back" size={20} color={Colors.onyx} />
+          <Ionicons name="arrow-back" size={18} color={Colors.ivoryMist} />
           <Text style={styles.backText}>Analyze</Text>
         </Pressable>
 
@@ -56,7 +55,7 @@ export const ResultHeader: React.FC<ResultHeaderProps> = ({
             accessibilityLabel={`Share ${destinationName || 'destination'}`}
             style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
           >
-            <Ionicons name="share-outline" size={20} color={Colors.onyx} />
+            <Ionicons name="share-outline" size={18} color={Colors.ivoryMist} />
           </Pressable>
         ) : (
           <View style={styles.actionPlaceholder} />
@@ -68,9 +67,10 @@ export const ResultHeader: React.FC<ResultHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.ivoryMist,
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
+    backgroundColor: 'transparent',
+    paddingHorizontal: Spacing.xl,
     paddingBottom: Spacing.sm,
+    zIndex: 10,
   },
   contentRow: {
     flexDirection: 'row',
@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   backText: {
+    fontFamily: Fonts.sansSemiBold,
     fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onyx,
+    color: Colors.ivoryMist,
     letterSpacing: -0.2,
   },
   centerContainer: {
@@ -96,18 +96,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerLabel: {
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    color: 'rgba(12, 12, 12, 0.45)', // Onyx muted
+    letterSpacing: 1.4,
+    color: Colors.icyBlue,
+    textTransform: 'uppercase',
   },
   actionButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
     borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.12)',
-    backgroundColor: Colors.ivoryMist,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    backgroundColor: 'rgba(8, 18, 24, 0.65)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     width: 38,
   },
   pressed: {
-    opacity: 0.65,
+    opacity: 0.75,
     transform: [{ scale: 0.96 }],
   },
 });

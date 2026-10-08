@@ -24,9 +24,8 @@ import {
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
-// Sample bright, vibrant daytime demonstration photo (bright white architecture + blue sky)
-const DEMO_PHOTO_URL =
-  'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1000&q=80';
+// Bundled local high-resolution demo photo
+const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
 
 export default function KitchenSinkScreen() {
   const insets = useSafeAreaInsets();
@@ -45,7 +44,7 @@ export default function KitchenSinkScreen() {
   return (
     <AtmosphereBackground
       variant="sky"
-      imageUrl={backgroundMode === 'photo' ? DEMO_PHOTO_URL : null}
+      imageUrl={backgroundMode === 'photo' ? SAMPLE_PHOTO : null}
     >
       <ScrollView
         contentContainerStyle={[
@@ -157,8 +156,10 @@ export default function KitchenSinkScreen() {
               intensity={70}
               style={styles.blurTestOverlay}
             >
-              <Text style={styles.blurOverlayText}>Frosted Glass Blur</Text>
-              <Text style={styles.blurOverlaySubtext}>dimezisBlurView active</Text>
+              <View style={styles.blurLabelPill}>
+                <Text style={styles.blurOverlayText}>Frosted Glass Blur</Text>
+                <Text style={styles.blurOverlaySubtext}>dimezisBlurView active</Text>
+              </View>
             </GlassView>
           </View>
         </View>
@@ -250,10 +251,10 @@ export default function KitchenSinkScreen() {
             <View style={styles.posterColumn}>
               <Text style={styles.cardSublabel}>With Full-Bleed Photo</Text>
               <PosterCard
-                title="Tokyo"
-                subtitle="Honshu · Japan"
+                title="Dolomites"
+                subtitle="South Tyrol · Italy"
                 category="Destinations"
-                imageUrl={DEMO_PHOTO_URL}
+                imageUrl={SAMPLE_PHOTO}
                 isSaved={isPosterSaved}
                 onPress={() => hapticFeedback.selection()}
                 onToggleSave={() => setIsPosterSaved((prev) => !prev)}
@@ -450,15 +451,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: Radius.lg,
   },
+  blurLabelPill: {
+    backgroundColor: 'rgba(8, 18, 24, 0.78)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.20)',
+  },
   blurOverlayText: {
     fontFamily: Fonts.sansBold,
-    fontSize: 14,
+    fontSize: 13,
     color: Colors.ivoryMist,
   },
   blurOverlaySubtext: {
     fontFamily: Fonts.sansMedium,
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: Colors.icyBlue,
     marginTop: 2,
   },
   chipRow: {

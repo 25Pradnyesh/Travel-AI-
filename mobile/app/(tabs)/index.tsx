@@ -34,13 +34,14 @@ import {
 } from '@/lib/supabase';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 
+const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
+
 const SAMPLE_REEL = {
   label: 'Alpine Lakes Reel',
   url: 'https://www.instagram.com/reel/C8xyzExample1/',
   destination: 'Dolomites Alpine Lake',
   country: 'South Tyrol · Italy',
-  photoUrl:
-    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80',
+  photo: SAMPLE_PHOTO,
 };
 
 const DISCOVERY_CHIPS = [
@@ -406,7 +407,7 @@ export default function AnalyzeScreen() {
                     <PosterCard
                       title={SAMPLE_REEL.destination}
                       subtitle={SAMPLE_REEL.country}
-                      imageUrl={SAMPLE_REEL.photoUrl}
+                      imageUrl={SAMPLE_REEL.photo}
                       category="Sample Discovery"
                       isSaved={isSaved('sample_dolomites')}
                       onPress={() => handleSelectExample(SAMPLE_REEL.url)}

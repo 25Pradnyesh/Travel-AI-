@@ -16,7 +16,7 @@ import { hapticFeedback } from '@/lib/haptics';
 export interface PosterCardProps {
   title: string;
   subtitle?: string;
-  imageUrl?: string | null;
+  imageUrl?: string | number | null;
   category?: string;
   isSaved?: boolean;
   onPress: () => void;
@@ -24,9 +24,6 @@ export interface PosterCardProps {
   aspectRatio?: number;
   style?: StyleProp<ViewStyle>;
 }
-
-// Fallback blurhash for smooth placeholder transitions
-const DEFAULT_BLURHASH = 'L5H2EC=PM+yV0g-mq.wG9c010J}T';
 
 export const PosterCard: React.FC<PosterCardProps> = ({
   title,
@@ -41,13 +38,30 @@ export const PosterCard: React.FC<PosterCardProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
 
+  // Reset error state whenever imageUrl changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
   const handleToggleSave = (e: any) => {
     e?.stopPropagation?.();
     hapticFeedback.light();
     onToggleSave?.();
   };
 
-  const hasImage = Boolean(imageUrl && imageUrl.trim().length > 0 && !imageError);
+  const hasImage = Boolean(
+    imageUrl &&
+      !imageError &&
+      (typeof imageUrl === 'number' || (typeof imageUrl === 'string' && imageUrl.trim().length > 0))
+  );
+
+  const imageSource = React.useMemo(() => {
+    if (!hasImage) return null;
+    if (typeof imageUrl === 'string') {
+      return { uri: imageUrl };
+    }
+    return imageUrl;
+  }, [hasImage, imageUrl]);
 
   return (
     <Pressable
@@ -65,16 +79,29 @@ export const PosterCard: React.FC<PosterCardProps> = ({
         style,
       ]}
     >
-      {hasImage ? (
+      {hasImage && imageSource ? (
         // Full-bleed destination photography
         <Image
-          source={{ uri: imageUrl! }}
-          placeholder={{ blurhash: DEFAULT_BLURHASH }}
+          source={imageSource}
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           cachePolicy="disk"
           transition={250}
-          onError={() => setImageError(true)}
+          onLoad={(e) => {
+            if (__DEV__) {
+              console.log(
+                `[PosterCard] Photo loaded: "${title}" (${e.source.width}x${e.source.height})`
+              );
+            }
+          }}
+          onError={(err) => {
+            console.warn(
+              `[PosterCard] Photo load failed for "${title}":`,
+              imageUrl,
+              err.error
+            );
+            setImageError(true);
+          }}
         />
       ) : (
         // Graceful fallback: Atmospheric sky gradient + outline icon
@@ -84,7 +111,7 @@ export const PosterCard: React.FC<PosterCardProps> = ({
           style={StyleSheet.absoluteFill}
         >
           <View style={styles.fallbackIconWrapper}>
-            <Ionicons name="compass-outline" size={32} color="rgba(251, 244, 227, 0.4)" />
+            <Ionicons name="compass-outline" size={32} color="rgba(251, 244, 227, 0.45)" />
           </View>
         </LinearGradient>
       )}

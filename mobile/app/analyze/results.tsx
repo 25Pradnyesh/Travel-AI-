@@ -8,18 +8,18 @@ import {
   View,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
   DestinationBriefing,
   DestinationIdentity,
-  LocalAdviceSection,
   ResultActions,
   ResultHeader,
   ResultHero,
   SourceReelSection,
   SurroundingPlacesSection,
 } from '@/components/results';
-import { Button, EmptyState } from '@/components/ui';
+import { AtmosphereBackground, EmptyState, PillButton } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
@@ -28,6 +28,7 @@ import { NearbyPlace, TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function ResultsScreen() {
+  const insets = useSafeAreaInsets();
   const { data, sourceUrl } = analysisStore.getAnalysisResult();
   const { isSaved, toggleSave } = useSavedPlaces();
   const entranceFade = useRef(new Animated.Value(0)).current;
@@ -35,7 +36,7 @@ export default function ResultsScreen() {
   useEffect(() => {
     Animated.timing(entranceFade, {
       toValue: 1,
-      duration: 320,
+      duration: 350,
       useNativeDriver: true,
     }).start();
   }, [entranceFade]);
@@ -55,11 +56,16 @@ export default function ResultsScreen() {
       .join(', ');
   }, [bestGuess]);
 
-  // Primary photography URL
-  const heroImageUrl = useMemo(() => {
-    const primaryPhoto = Array.isArray(bestGuess?.photos) ? bestGuess.photos[0] : undefined;
-    return analysisStore.resolvePhotoUrl(primaryPhoto?.url);
+  // Primary photography details
+  const primaryPhoto = useMemo(() => {
+    return Array.isArray(bestGuess?.photos) ? bestGuess.photos[0] : undefined;
   }, [bestGuess?.photos]);
+
+  const heroImageUrl = useMemo(() => {
+    return analysisStore.resolvePhotoUrl(primaryPhoto?.url);
+  }, [primaryPhoto?.url]);
+
+  const photoAuthor = primaryPhoto?.author;
 
   // Curated travel advice tips
   const tipsList = useMemo(() => {
@@ -119,7 +125,7 @@ export default function ResultsScreen() {
         await Linking.openURL(sourceUrl);
       }
     } catch {
-      // Ignore URL open error
+      // Quiet fallback
     }
   }, [sourceUrl]);
 
@@ -178,11 +184,11 @@ export default function ResultsScreen() {
   // If no analysis result is in memory
   if (!data || !bestGuess) {
     return (
-      <View style={styles.screen}>
+      <AtmosphereBackground variant="sky">
         <ResultHeader onBack={handleBack} />
         <View style={styles.emptyContainer}>
           <EmptyState
-            icon={<Ionicons name="compass-outline" size={32} color={Colors.onyx} />}
+            icon={<Ionicons name="compass-outline" size={36} color={Colors.icyBlue} />}
             eyebrow="NO ANALYSIS ACTIVE"
             title="No Destination Selected"
             description="Paste an Instagram travel reel on the Analyze screen to discover verified places."
@@ -190,75 +196,77 @@ export default function ResultsScreen() {
             onActionPress={handleBack}
           />
         </View>
-      </View>
+      </AtmosphereBackground>
     );
   }
 
+  const scrollBottomPadding = 58 + Math.max(insets.bottom, 16) + Spacing.xl;
+
   return (
     <View style={styles.screen}>
-      {/* Top Editorial Header */}
-      <ResultHeader
-        onBack={handleBack}
-        destinationName={bestGuess.name}
-        onShare={handleShare}
-      />
+      <AtmosphereBackground variant="sky">
+        <Animated.View style={[styles.flex, { opacity: entranceFade }]}>
+          <ScrollView
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: scrollBottomPadding },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* 1. Full-Bleed Poster Hero (Top ~54% of screen) */}
+            <ResultHero
+              imageUrl={heroImageUrl}
+              destinationName={bestGuess.name}
+              locationSubtitle={locationSubtitle}
+              photoCount={Array.isArray(bestGuess.photos) ? bestGuess.photos.length : 0}
+              photoAuthor={photoAuthor}
+              onBack={handleBack}
+              onShare={handleShare}
+            />
 
-      <Animated.View style={[styles.flex, { opacity: entranceFade }]}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Visual Anchor: Large Immersive Photography */}
-          <ResultHero
-            imageUrl={heroImageUrl}
-            destinationName={bestGuess.name}
-            photoCount={Array.isArray(bestGuess.photos) ? bestGuess.photos.length : 0}
-          />
+            {/* 2. Glass Evidence Panel (Dark Glass with ConfidenceBadge & Gemini Clues) */}
+            <DestinationIdentity
+              confidence={bestGuess.confidence}
+              verificationStatus={bestGuess.verification_status}
+              category={ti.category || (Array.isArray(bestGuess.types) ? bestGuess.types[0] : undefined)}
+              why={bestGuess.why}
+              geminiReason={bestGuess.gemini_reason || data.gemini?.reason}
+            />
 
-          {/* Destination Identity & Restrained "WE FOUND IT" Moment */}
-          <DestinationIdentity
-            name={bestGuess.name}
-            locationSubtitle={locationSubtitle}
-            category={ti.category || (Array.isArray(bestGuess.types) ? bestGuess.types[0] : undefined)}
-            confidence={bestGuess.confidence}
-            verificationStatus={bestGuess.verification_status}
-          />
+            {/* 3. Travel Dossier (Stacked dark-glass rows with circular buttons & expandable tips) */}
+            <DestinationBriefing
+              summary={ti.travel_summary}
+              intelligence={ti}
+              tips={tipsList}
+            />
 
-          {/* Primary Action Buttons (Save, Share, Maps) */}
-          <ResultActions
-            isSaved={isDestinationSaved}
-            onToggleSave={handleToggleDestinationSave}
-            onShare={handleShare}
-            onOpenDirections={handleOpenDestinationMaps}
-          />
+            {/* 4. Explore Nearby (Category pills with counts + 2-column poster cards) */}
+            <SurroundingPlacesSection
+              places={nearbyPlaces}
+              isPlaceSaved={isPlaceSavedCheck}
+              onOpenPlace={handleOpenPlace}
+              onOpenDirections={handleOpenPlaceDirections}
+              onToggleSavePlace={handleTogglePlaceSave}
+              onOpenMap={handleOpenMap}
+            />
 
-          {/* Destination Briefing (About, Evidence, Trip Window/Budget/Stay) */}
-          <DestinationBriefing
-            summary={ti.travel_summary}
-            whyIdentified={bestGuess.why}
-            intelligence={ti}
-          />
+            {/* 5. Source Reel Context & Resolution Telemetry */}
+            <SourceReelSection
+              sourceUrl={sourceUrl}
+              totalSeconds={data.performance?.total_seconds}
+              onOpenSourceReel={handleOpenSourceReel}
+            />
+          </ScrollView>
+        </Animated.View>
 
-          {/* Curated Local Travel Guidance Tips */}
-          <LocalAdviceSection tips={tipsList} />
-
-          {/* Surrounding Highlights Points of Interest */}
-          <SurroundingPlacesSection
-            places={nearbyPlaces}
-            isPlaceSaved={isPlaceSavedCheck}
-            onOpenPlace={handleOpenPlace}
-            onOpenDirections={handleOpenPlaceDirections}
-            onToggleSavePlace={handleTogglePlaceSave}
-            onOpenMap={handleOpenMap}
-          />
-
-          {/* Source Reel Context Reference */}
-          <SourceReelSection
-            sourceUrl={sourceUrl}
-            onOpenSourceReel={handleOpenSourceReel}
-          />
-        </ScrollView>
-      </Animated.View>
+        {/* 6. Sticky Floating Glass Action Bar (Save, Map, Directions) */}
+        <ResultActions
+          isSaved={isDestinationSaved}
+          onToggleSave={handleToggleDestinationSave}
+          onOpenMap={handleOpenMap}
+          onOpenDirections={handleOpenDestinationMaps}
+        />
+      </AtmosphereBackground>
     </View>
   );
 }
@@ -266,13 +274,13 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.ivoryMist, // Dominant canvas background #FBF4E3
+    backgroundColor: Colors.canvas,
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Spacing.massive,
+    flexGrow: 1,
   },
   emptyContainer: {
     flex: 1,

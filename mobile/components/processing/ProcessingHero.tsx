@@ -25,11 +25,15 @@ export const ProcessingHero: React.FC<ProcessingHeroProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.eyebrow}>EDITORIAL REEL RESOLUTION</Text>
+      <View style={styles.eyebrowPill}>
+        <Text style={styles.eyebrow}>EDITORIAL REEL RESOLUTION</Text>
+      </View>
       <Text style={styles.headline}>Finding your place.</Text>
-      <Text style={styles.description}>
-        We're looking for visual clues, landmarks and location signals in the reel.
-      </Text>
+      <View style={styles.descriptionPill}>
+        <Text style={styles.description}>
+          We're looking for visual clues, landmarks and location signals in the reel.
+        </Text>
+      </View>
 
       {isLongRunning && (
         <Animated.View style={[styles.reassuranceWrapper, { opacity: reassuranceAnim }]}>
@@ -49,6 +53,15 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     alignItems: 'center',
   },
+  eyebrowPill: {
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.25)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    marginBottom: Spacing.sm,
+  },
   eyebrow: {
     fontFamily: Fonts.sansBold,
     fontSize: 10,
@@ -56,7 +69,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
     textTransform: 'uppercase',
     color: Colors.icyBlue,
-    marginBottom: Spacing.xs,
   },
   headline: {
     fontFamily: Fonts.serifItalic,
@@ -67,13 +79,21 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
     textAlign: 'center',
   },
+  descriptionPill: {
+    backgroundColor: 'rgba(8, 18, 24, 0.70)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderRadius: Radius.xl,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 8,
+    marginTop: Spacing.sm,
+    maxWidth: 320,
+  },
   description: {
     fontFamily: Fonts.sansRegular,
     fontSize: 13,
     lineHeight: 19,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    maxWidth: 300,
+    color: Colors.ivoryMist,
     textAlign: 'center',
   },
   reassuranceWrapper: {

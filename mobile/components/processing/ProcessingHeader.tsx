@@ -42,15 +42,11 @@ export const ProcessingHeader: React.FC<ProcessingHeaderProps> = ({
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>
 
-        {/* Elapsed Timer as Frosted Pill Top-Right */}
-        <GlassView
-          variant="frosted"
-          borderRadius={Radius.pill}
-          style={styles.timerPill}
-        >
+        {/* Elapsed Timer as Dark Frosted Pill Top-Right */}
+        <View style={styles.timerPill}>
           <Ionicons name="time-outline" size={13} color={Colors.icyBlue} />
           <Text style={styles.timerText}>{formatTime(elapsedSeconds)}</Text>
-        </GlassView>
+        </View>
       </View>
     </View>
   );
@@ -72,7 +68,7 @@ const styles = StyleSheet.create({
   cancelPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(8, 18, 24, 0.55)',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.18)',
     borderRadius: Radius.pill,
@@ -89,6 +85,10 @@ const styles = StyleSheet.create({
   timerPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderRadius: Radius.pill,
     paddingHorizontal: Spacing.md,
     paddingVertical: 7,
     gap: 6,

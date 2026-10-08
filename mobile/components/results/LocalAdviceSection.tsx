@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+import { GlassView } from '@/components/ui';
 
 export interface LocalAdviceSectionProps {
   tips: string[];
@@ -13,33 +14,40 @@ export const LocalAdviceSection: React.FC<LocalAdviceSectionProps> = ({ tips }) 
     <View style={styles.container}>
       <Text style={styles.sectionHeader}>LOCAL TRAVEL GUIDANCE</Text>
 
-      <View style={styles.tipsList}>
-        {tips.slice(0, 5).map((tip, index) => (
-          <View key={index} style={styles.tipRow}>
-            <View style={styles.tipNumberWrapper}>
-              <Text style={styles.tipNumber}>{index + 1}</Text>
+      <GlassView variant="dark" borderRadius={Radius.xl} style={styles.card}>
+        <View style={styles.tipsList}>
+          {tips.slice(0, 5).map((tip, index) => (
+            <View key={index} style={styles.tipRow}>
+              <View style={styles.tipNumberWrapper}>
+                <Text style={styles.tipNumber}>{index + 1}</Text>
+              </View>
+              <Text style={styles.tipText}>{tip}</Text>
             </View>
-            <Text style={styles.tipText}>{tip}</Text>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      </GlassView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
+    paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
   },
   sectionHeader: {
-    fontSize: 11,
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
     lineHeight: 14,
-    fontWeight: '700',
-    letterSpacing: 1.4,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: 'rgba(12, 12, 12, 0.45)', // Onyx muted
-    marginBottom: Spacing.md,
+    color: Colors.icyBlue,
+    marginBottom: Spacing.sm,
+  },
+  card: {
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.12)',
   },
   tipsList: {
     gap: Spacing.md,
@@ -54,21 +62,21 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.16)',
-    backgroundColor: 'rgba(12, 12, 12, 0.04)',
+    borderColor: 'rgba(166, 220, 248, 0.25)',
+    backgroundColor: 'rgba(166, 220, 248, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 1,
   },
   tipNumber: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.onyx,
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
+    color: Colors.icyBlue,
   },
   tipText: {
-    fontSize: 14,
-    lineHeight: 21,
-    color: 'rgba(12, 12, 12, 0.80)',
+    fontFamily: Fonts.sansRegular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: Colors.ivoryMist,
     flex: 1,
   },
 });
