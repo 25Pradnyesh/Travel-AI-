@@ -1,32 +1,18 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ErrorState, LoadingState, TopBar } from '@/components/ui';
-import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import {
+  ProcessingError,
+  ProcessingHeader,
+  ProcessingHero,
+  ProcessingIndicator,
+  ProcessingStages,
+} from '@/components/processing';
+import { Colors, Spacing } from '@/constants/theme';
 import { travelAiApi, getFriendlyErrorMessage } from '@/lib/api/travel-ai';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAnalysisToCloudHistory } from '@/lib/supabase';
-
-const STAGE_MESSAGES = [
-  {
-    title: 'Ingesting Reel media...',
-    subtitle: 'Extracting video frames, on-screen text, audio & creator metadata.',
-  },
-  {
-    title: 'Analyzing location clues...',
-    subtitle: 'Multimodal analysis of speech transcription, OCR & landmark visuals.',
-  },
-  {
-    title: 'Resolving geographic candidates...',
-    subtitle: 'Matching coordinates and directory records via Google Places.',
-  },
-  {
-    title: 'Synthesizing travel intelligence...',
-    subtitle: 'Curating seasonality windows, daily budget & surrounding points of interest.',
-  },
-];
 
 export default function ProcessingScreen() {
   const { url } = useLocalSearchParams<{ url?: string }>();
@@ -34,17 +20,16 @@ export default function ProcessingScreen() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [errorTitle, setErrorTitle] = useState<string>('Analysis Unavailable');
+  const [errorTitle, setErrorTitle] = useState<string>("Couldn't identify this place.");
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isAnalyzingRef = useRef(false);
-  const reassuranceFade = useRef(new Animated.Value(0)).current;
 
   const runAnalysis = useCallback(async (targetUrl: string) => {
     if (isAnalyzingRef.current) return;
     isAnalyzingRef.current = true;
 
-    // Immediately purge any previous analysis result to eliminate stale state leaks
+    // Immediately purge previous analysis result to eliminate stale state leaks
     analysisStore.clearAnalysisResult();
     setIsLoading(true);
     setErrorMessage(null);
@@ -83,7 +68,7 @@ export default function ProcessingScreen() {
         setErrorTitle('Destination Unresolved');
         setErrorMessage(
           response.error ||
-            'We analyzed the visual frames, audio speech, and caption context of this Reel, but could not detect definitive geographic coordinates or confirmed landmarks.'
+            'We analyzed the visual frames and caption context of this reel, but could not detect definitive geographic coordinates or confirmed landmarks. Try another reel with recognizable scenery.'
         );
         setIsLoading(false);
         return;
@@ -93,8 +78,7 @@ export default function ProcessingScreen() {
       hapticFeedback.success();
       setIsLoading(false);
 
-      // Stage 5: Automatically persist successful analysis to cloud history for authenticated users.
-      // Non-blocking: failures do not impede or delay navigation to Results.
+      // Automatically persist successful analysis to cloud history for authenticated users (non-blocking)
       saveAnalysisToCloudHistory(response, targetUrl).catch((historyErr) => {
         if (__DEV__) {
           // eslint-disable-next-line no-console
@@ -152,20 +136,28 @@ export default function ProcessingScreen() {
     };
   }, [url, runAnalysis]);
 
-  // Stage message rotation & elapsed timer
+  // Elapsed timer and realistic semantic stage transitions
   useEffect(() => {
     if (!isLoading) return;
 
-    const messageInterval = setInterval(() => {
-      setStageIndex((prev) => (prev + 1) % STAGE_MESSAGES.length);
-    }, 6000);
-
     const timerInterval = setInterval(() => {
-      setElapsedSeconds((prev) => prev + 1);
+      setElapsedSeconds((prev) => {
+        const next = prev + 1;
+        // Map elapsed seconds to realistic semantic stages
+        if (next < 8) {
+          setStageIndex(0); // Reel Received
+        } else if (next < 22) {
+          setStageIndex(1); // Inspecting Scenery
+        } else if (next < 40) {
+          setStageIndex(2); // Resolving Location
+        } else {
+          setStageIndex(3); // Building Your Dossier
+        }
+        return next;
+      });
     }, 1000);
 
     return () => {
-      clearInterval(messageInterval);
       clearInterval(timerInterval);
     };
   }, [isLoading]);
@@ -193,70 +185,37 @@ export default function ProcessingScreen() {
     }
   };
 
-  const currentStage = STAGE_MESSAGES[stageIndex];
-  const isLongRunning = elapsedSeconds >= 35;
-
-  useEffect(() => {
-    if (isLongRunning) {
-      Animated.timing(reassuranceFade, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      reassuranceFade.setValue(0);
-    }
-  }, [isLongRunning, reassuranceFade]);
+  const isLongRunning = elapsedSeconds >= 30;
 
   return (
     <View style={styles.screen}>
-      <TopBar
-        title={isLoading ? 'Processing Reel' : 'Analysis Status'}
-        showBack
-        onBackPress={handleCancel}
-      />
+      <ProcessingHeader onCancel={handleCancel} url={url} />
 
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {isLoading ? (
-          <View style={styles.loadingWrapper}>
-            <LoadingState
-              title={currentStage.title}
-              subtitle={currentStage.subtitle}
-              onCancel={handleCancel}
-              cancelLabel="Cancel Analysis"
-            />
+          <>
+            {/* Editorial Processing Hero */}
+            <ProcessingHero isLongRunning={isLongRunning} />
 
-            {/* Elapsed Time & Cold Start Reassurance */}
-            <View style={styles.telemetryCard}>
-              <View style={styles.elapsedRow}>
-                <Ionicons name="time-outline" size={14} color={Colors.textMuted} />
-                <Text style={styles.elapsedText}>
-                  {elapsedSeconds > 0 ? `Elapsed: ${elapsedSeconds}s` : 'Connecting to engine...'}
-                </Text>
-              </View>
+            {/* Travel-Oriented Cartographic Radar Viewfinder */}
+            <ProcessingIndicator />
 
-              {isLongRunning && (
-                <Animated.View style={[styles.reassuranceRow, { opacity: reassuranceFade }]}>
-                  <Ionicons name="information-circle-outline" size={14} color={Colors.info} />
-                  <Text style={styles.reassuranceText}>
-                    Multimodal analysis and Google Places resolution can take up to 60–90 seconds
-                    during heavy video processing or initial cold start.
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
-          </View>
+            {/* Semantic Processing Progression Stages */}
+            <ProcessingStages currentStageIndex={stageIndex} />
+          </>
         ) : (
-          <ErrorState
+          /* Editorial Error Recovery State */
+          <ProcessingError
             title={errorTitle}
             message={errorMessage || 'An error occurred during analysis.'}
-            retryLabel="Try Again"
             onRetry={handleRetry}
-            cancelLabel="Go Back"
             onCancel={handleCancel}
           />
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -264,50 +223,10 @@ export default function ProcessingScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.canvas,
+    backgroundColor: Colors.ivoryMist, // Dominant canvas background #FBF4E3
   },
-  content: {
-    flex: 1,
-  },
-  loadingWrapper: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  telemetryCard: {
-    width: '100%',
-    maxWidth: 360,
-    marginTop: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-  },
-  elapsedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  elapsedText: {
-    ...Typography.mono,
-    fontSize: 11,
-    color: Colors.textMuted,
-    marginLeft: Spacing.xs,
-  },
-  reassuranceRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.infoSurface,
-    borderWidth: 1,
-    borderColor: Colors.infoBorder,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  reassuranceText: {
-    ...Typography.bodySmall,
-    fontSize: 11,
-    color: Colors.textSecondary,
-    flex: 1,
-    marginLeft: Spacing.xs,
-    lineHeight: 16,
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: Spacing.huge,
   },
 });
