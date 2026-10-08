@@ -33,17 +33,26 @@ export const Colors = {
   canvasMuted: '#101C24',       // Elevated dark tone
 
   // Atmospheric Gradient Stops (Top -> Middle -> Bottom)
-  atmosphereSky: ['#A6DCF8', '#224350', '#081218'] as const,
+  atmosphereSky: ['#A6DCF8', '#2F6275', '#081218'] as const,
   atmosphereNight: ['#182B36', '#0E1A22', '#050B0E'] as const,
   atmosphereScrim: ['transparent', 'rgba(8, 18, 24, 0.65)', '#081218'] as const,
-  posterGradient: ['transparent', 'rgba(5, 11, 14, 0.45)', 'rgba(5, 11, 14, 0.92)'] as const,
+  topVignetteScrim: ['rgba(5, 11, 14, 0.40)', 'transparent'] as const,
+  posterGradient: ['transparent', 'rgba(5, 11, 14, 0.50)', 'rgba(5, 11, 14, 0.94)'] as const,
 
   // Translucent Glass Tokens
-  glassBg: 'rgba(14, 26, 34, 0.62)',
+  // Frosted Glass for chrome (tab bar, chips, input, headers)
+  glassFrostedBg: 'rgba(251, 244, 227, 0.09)',
+  glassFrostedBorder: 'rgba(251, 244, 227, 0.22)',
+
+  // Dark Glass for text-dense panels (dossier, briefings, contrast cards)
+  glassDarkBg: 'rgba(10, 20, 28, 0.78)',
+  glassDarkBorder: 'rgba(251, 244, 227, 0.14)',
+
+  glassBg: 'rgba(14, 26, 34, 0.65)',
   glassBgSubtle: 'rgba(251, 244, 227, 0.06)',
-  glassBgHeavy: 'rgba(10, 18, 24, 0.85)',
-  glassBorder: 'rgba(251, 244, 227, 0.14)',
-  glassBorderActive: 'rgba(251, 244, 227, 0.35)',
+  glassBgHeavy: 'rgba(10, 18, 24, 0.88)',
+  glassBorder: 'rgba(251, 244, 227, 0.16)',
+  glassBorderActive: 'rgba(251, 244, 227, 0.40)',
   glassOnyx: 'rgba(12, 12, 12, 0.88)',
 
   // Text Tokens (strictly contrast-verified)

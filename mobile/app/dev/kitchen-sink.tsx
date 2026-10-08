@@ -23,7 +23,7 @@ import {
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
-// Sample demonstration photo (high-res Mount Fuji / Japan scenery)
+// Sample bright, busy demonstration photo (vibrant daytime city & nature)
 const DEMO_PHOTO_URL =
   'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1000&q=80';
 
@@ -76,7 +76,7 @@ export default function KitchenSinkScreen() {
               color={Colors.ivoryMist}
             />
             <Text style={styles.togglePillText}>
-              {backgroundMode === 'photo' ? 'Photo Mode' : 'Sky Gradient'}
+              {backgroundMode === 'photo' ? 'Photo Mode (Blur+Scrim)' : 'Sky Gradient'}
             </Text>
           </Pressable>
         </View>
@@ -84,9 +84,7 @@ export default function KitchenSinkScreen() {
         {/* Section 0: Title & Contrast Audit */}
         <View style={styles.section}>
           <Text style={styles.sectionEyebrow}>PHASE 1 PRIMITIVES AUDIT</Text>
-          <Text style={styles.heroTitle}>
-            Tokyo
-          </Text>
+          <Text style={styles.heroTitle}>Tokyo</Text>
           <Text style={styles.headlineWithAccent}>
             Drop a reel. <Text style={styles.italicAccent}>Find the place.</Text>
           </Text>
@@ -94,39 +92,73 @@ export default function KitchenSinkScreen() {
             Atmospheric Canvas & Glassmorphic Primitives
           </Text>
 
-          {/* Contrast Numbers Card */}
-          <GlassView style={styles.contrastCard}>
+          {/* Contrast Numbers Card (Dark Glass variant) */}
+          <GlassView variant="dark" style={styles.contrastCard}>
             <View style={styles.cardHeaderRow}>
               <Ionicons name="checkmark-circle" size={16} color={Colors.icyBlue} />
-              <Text style={styles.cardHeaderText}>CONTRAST AUDIT (WCAG AA/AAA)</Text>
+              <Text style={styles.cardHeaderText}>SCRIPT-COMPUTED CONTRAST RATIOS</Text>
             </View>
             <Text style={styles.contrastLine}>
-              • Ivory Mist (#FBF4E3) on Canvas (#081218): <Text style={styles.boldScore}>16.8:1 (AAA)</Text>
+              • Ivory Mist (#FBF4E3) on Canvas (#081218): <Text style={styles.boldScore}>17.25:1 (AAA)</Text>
             </Text>
             <Text style={styles.contrastLine}>
-              • Ivory Mist on Dark Glass (#0E1A22): <Text style={styles.boldScore}>15.5:1 (AAA)</Text>
+              • Ivory Mist on Mid-Gradient (#2F6275): <Text style={styles.boldScore}>6.13:1 (AA ≥ 4.5:1)</Text>
             </Text>
             <Text style={styles.contrastLine}>
-              • Frost Tint (#A8B6BE) on Canvas: <Text style={styles.boldScore}>9.1:1 (AAA)</Text>
+              • Ivory Mist on Dark Glass (#0E1A22): <Text style={styles.boldScore}>16.39:1 (AAA)</Text>
             </Text>
             <Text style={styles.contrastLine}>
-              • Muted Slate (#6E7E86) on Canvas: <Text style={styles.boldScore}>4.8:1 (AA ≥ 4.5:1)</Text>
+              • Frost Tint (#A8B6BE) on Canvas: <Text style={styles.boldScore}>9.10:1 (AAA)</Text>
             </Text>
             <Text style={styles.contrastLine}>
-              • Onyx (#0C0C0C) on Icy Blue (#A6DCF8): <Text style={styles.boldScore}>13.9:1 (AAA)</Text>
+              • Frost Tint on Dark Glass: <Text style={styles.boldScore}>8.64:1 (AAA)</Text>
             </Text>
             <Text style={styles.contrastLine}>
-              • White (#FFFFFF) on Racing Red (#EB2627): <Text style={styles.boldScore}>4.8:1 (AA)</Text>
+              • Muted Slate (#6E7E86) on Canvas: <Text style={styles.boldScore}>4.50:1 (AA)</Text>
+            </Text>
+            <Text style={styles.contrastLine}>
+              • Onyx (#0C0C0C) on Icy Blue (#A6DCF8): <Text style={styles.boldScore}>13.24:1 (AAA)</Text>
+            </Text>
+            <Text style={styles.contrastLine}>
+              • White on Racing Red: <Text style={styles.boldScore}>4.34:1 (Large text / icons only)</Text>
             </Text>
             <Text style={styles.platformBadge}>
-              Android blur: dimezisBlurView ({Platform.OS})
+              Android blur: dimezisBlurView + BlurTargetView ({Platform.OS})
             </Text>
           </GlassView>
         </View>
 
-        {/* Section 1: Glass Input */}
+        {/* Section 1: Blur Test Strip */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. Glass Input Pill</Text>
+          <Text style={styles.sectionTitle}>1. Native Blur Test Strip</Text>
+          <Text style={styles.sectionDesc}>
+            High-contrast underlying stripes to visibly prove optical blur behind glass.
+          </Text>
+          <View style={styles.blurTestWrapper}>
+            {/* High-contrast underlying pattern */}
+            <View style={styles.stripePattern}>
+              {[...Array(12)].map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.stripe,
+                    { backgroundColor: i % 2 === 0 ? '#FFFFFF' : '#081218' },
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Overlaid GlassView blurring the right half */}
+            <GlassView variant="frosted" intensity={70} style={styles.blurTestOverlay}>
+              <Text style={styles.blurOverlayText}>Glass Blurred</Text>
+              <Text style={styles.blurOverlaySubtext}>dimezisBlurView active</Text>
+            </GlassView>
+          </View>
+        </View>
+
+        {/* Section 2: Glass Input */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>2. Glass Input Pill (Frosted Chrome)</Text>
           <GlassInput
             value={inputValue}
             onChangeText={(t) => {
@@ -143,9 +175,9 @@ export default function KitchenSinkScreen() {
           />
         </View>
 
-        {/* Section 2: Pill Chips */}
+        {/* Section 3: Pill Chips */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. Pill Chips</Text>
+          <Text style={styles.sectionTitle}>3. Pill Chips (Frosted Chrome)</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
             {['Beach', 'Mountain', 'Cafés', 'Hidden Stays', 'Viewpoints'].map((cat) => (
               <PillChip
@@ -165,9 +197,9 @@ export default function KitchenSinkScreen() {
           </ScrollView>
         </View>
 
-        {/* Section 3: Truthful PRD Verification Badges */}
+        {/* Section 4: Truthful PRD Verification Badges */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. PRD Verification Badges (Truthful Styling)</Text>
+          <Text style={styles.sectionTitle}>4. PRD Verification Badges (Truthful Styling)</Text>
           <View style={styles.badgeRow}>
             <ConfidenceBadge status="VERIFIED" confidence={95} />
             <ConfidenceBadge status="PARTIAL" confidence={68} />
@@ -178,9 +210,9 @@ export default function KitchenSinkScreen() {
           </Text>
         </View>
 
-        {/* Section 4: Pill Buttons */}
+        {/* Section 5: Pill Buttons */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>4. Pill Buttons</Text>
+          <Text style={styles.sectionTitle}>5. Pill Buttons</Text>
           <View style={styles.buttonRow}>
             <PillButton
               title="Brand CTA"
@@ -201,10 +233,10 @@ export default function KitchenSinkScreen() {
           </View>
         </View>
 
-        {/* Section 5: Poster Cards (~3:4 Aspect Ratio) */}
+        {/* Section 6: Poster Cards (~3:4 Aspect Ratio) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            5. Poster Cards (~3:4) & Graceful Fallback
+            6. Poster Cards (~3:4) & Graceful Fallback
           </Text>
           <View style={styles.postersGrid}>
             {/* Card with Photo */}
@@ -236,10 +268,10 @@ export default function KitchenSinkScreen() {
           </View>
         </View>
 
-        {/* Section 6: Skeleton Shimmer */}
+        {/* Section 7: Skeleton Shimmer */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. Skeleton Shimmer Loaders</Text>
-          <GlassView style={styles.skeletonContainer}>
+          <Text style={styles.sectionTitle}>7. Skeleton Shimmer Loaders</Text>
+          <GlassView variant="dark" style={styles.skeletonContainer}>
             <SkeletonShimmer height={180} borderRadius={Radius.xl} />
             <View style={{ height: 12 }} />
             <SkeletonShimmer height={20} width="65%" borderRadius={Radius.sm} />
@@ -265,7 +297,7 @@ const styles = StyleSheet.create({
   backPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(8, 18, 24, 0.65)',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
     borderWidth: 1,
     borderColor: Colors.glassBorder,
     borderRadius: Radius.pill,
@@ -373,7 +405,54 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansSemiBold,
     fontSize: 16,
     color: Colors.ivoryMist,
+    marginBottom: Spacing.xs,
+  },
+  sectionDesc: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    color: Colors.textSecondary,
     marginBottom: Spacing.md,
+  },
+  blurTestWrapper: {
+    height: 110,
+    borderRadius: Radius.xl,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  stripePattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+  },
+  stripe: {
+    flex: 1,
+    height: '100%',
+  },
+  blurTestOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    bottom: 10,
+    width: '60%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radius.lg,
+  },
+  blurOverlayText: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 14,
+    color: Colors.ivoryMist,
+  },
+  blurOverlaySubtext: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 11,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   chipRow: {
     gap: Spacing.sm,

@@ -4,10 +4,9 @@ import {
   DimensionValue,
   StyleProp,
   StyleSheet,
-  View,
   ViewStyle,
 } from 'react-native';
-import { Colors, Radius } from '@/constants/theme';
+import { Radius } from '@/constants/theme';
 
 export interface SkeletonShimmerProps {
   width?: DimensionValue;
@@ -22,19 +21,19 @@ export const SkeletonShimmer: React.FC<SkeletonShimmerProps> = ({
   borderRadius = Radius.md,
   style,
 }) => {
-  const opacityAnim = useRef(new Animated.Value(0.35)).current;
+  const opacityAnim = useRef(new Animated.Value(0.40)).current;
 
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(opacityAnim, {
-          toValue: 0.85,
-          duration: 900,
+          toValue: 0.92,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(opacityAnim, {
-          toValue: 0.35,
-          duration: 900,
+          toValue: 0.40,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
@@ -61,9 +60,10 @@ export const SkeletonShimmer: React.FC<SkeletonShimmerProps> = ({
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: 'rgba(251, 244, 227, 0.12)',
+    // High-visibility bone color visible over both light sky gradient and dark photo scrims
+    backgroundColor: 'rgba(251, 244, 227, 0.24)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.06)',
+    borderColor: 'rgba(251, 244, 227, 0.35)',
   },
 });
 
