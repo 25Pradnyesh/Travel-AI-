@@ -2,47 +2,55 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { GlassView } from '@/components/ui';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ProcessingHeaderProps {
   onCancel: () => void;
-  url?: string;
+  elapsedSeconds: number;
 }
+
+const formatTime = (secs: number) => {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};
 
 export const ProcessingHeader: React.FC<ProcessingHeaderProps> = ({
   onCancel,
-  url,
+  elapsedSeconds,
 }) => {
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
       <View style={styles.contentRow}>
-        {/* Minimal Cancel / Back Affordance */}
+        {/* Cancel as Frosted Pill Top-Left */}
         <Pressable
           onPress={() => {
             hapticFeedback.light();
             onCancel();
           }}
-          hitSlop={10}
+          hitSlop={8}
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Cancel analysis"
-          accessibilityHint="Stops the current reel analysis and returns to Home"
-          style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+          accessibilityLabel="Cancel reel analysis"
+          style={({ pressed }) => [styles.cancelPill, pressed && styles.pressed]}
         >
-          <Ionicons name="arrow-back" size={20} color={Colors.onyx} />
+          <Ionicons name="arrow-back" size={15} color={Colors.ivoryMist} />
           <Text style={styles.cancelText}>Cancel</Text>
         </Pressable>
 
-        {/* Quiet Reel Reference Pill */}
-        <View style={styles.statusPill}>
-          <View style={styles.statusDot} />
-          <Text style={styles.statusText}>
-            {url ? 'ANALYZING REEL' : 'PROCESSING'}
-          </Text>
-        </View>
+        {/* Elapsed Timer as Frosted Pill Top-Right */}
+        <GlassView
+          variant="frosted"
+          borderRadius={Radius.pill}
+          style={styles.timerPill}
+        >
+          <Ionicons name="time-outline" size={13} color={Colors.icyBlue} />
+          <Text style={styles.timerText}>{formatTime(elapsedSeconds)}</Text>
+        </GlassView>
       </View>
     </View>
   );
@@ -50,9 +58,10 @@ export const ProcessingHeader: React.FC<ProcessingHeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.ivoryMist,
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.sm,
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
   contentRow: {
     flexDirection: 'row',
@@ -60,44 +69,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 44,
   },
-  cancelButton: {
+  cancelPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    minHeight: TouchTarget.minHeight,
-    paddingRight: Spacing.md,
+    backgroundColor: 'rgba(8, 18, 24, 0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
     gap: 6,
   },
   cancelText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onyx,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13,
+    color: Colors.ivoryMist,
     letterSpacing: -0.2,
   },
-  statusPill: {
+  timerPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(12, 12, 12, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.12)',
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm + 4,
-    paddingVertical: 5,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
     gap: 6,
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.icyBlue, // Icy Blue #A6DCF8 supporting detail
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.2,
-    color: Colors.onyx,
+  timerText: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 12,
+    color: Colors.ivoryMist,
+    letterSpacing: 0.5,
   },
   pressed: {
-    opacity: 0.65,
+    opacity: 0.75,
     transform: [{ scale: 0.97 }],
   },
 });

@@ -46,7 +46,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
         {/* Background layer wrapped in BlurTargetView for native Android blur resolution */}
         <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
           {hasPhoto ? (
-            // Full-bleed destination photography with heavy blur and 55% dark scrim
+            // Full-bleed destination photography with blur (blurRadius 32) and ~32% dark scrim
             <View style={StyleSheet.absoluteFill}>
               <Image
                 source={{ uri: imageUrl! }}
@@ -56,24 +56,30 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
                 cachePolicy="disk"
                 transition={300}
               />
-              {/* Dark uniform scrim so text is readable over any bright/busy photo */}
+              {/* Reduced ~32% scrim so the photo's vibrant colors show */}
               <View style={[StyleSheet.absoluteFill, styles.photoScrim]} />
-              {/* Bottom vignette gradient */}
+              {/* Stronger bottom vignette gradient protecting cards and contrast */}
               <LinearGradient
                 colors={Colors.posterGradient}
-                locations={[0, 0.45, 1]}
+                locations={[0, 0.28, 0.65, 1]}
                 style={StyleSheet.absoluteFill}
+              />
+              {/* Subtle top vignette scrim */}
+              <LinearGradient
+                colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
+                locations={[0, 1]}
+                style={styles.topVignette}
               />
             </View>
           ) : (
-            // Signature VAMO Sky Atmosphere: Icy Blue #A6DCF8 -> #2F6275 -> #081218
+            // Signature VAMO Sky Atmosphere: Icy Blue #A6DCF8 -> #2F6275 (at 0.28) -> #081218
             <View style={StyleSheet.absoluteFill}>
               <LinearGradient
                 colors={variant === 'night' ? Colors.atmosphereNight : Colors.atmosphereSky}
-                locations={[0, 0.38, 1]}
+                locations={variant === 'night' ? [0, 0.38, 1] : [0, 0.28, 1]}
                 style={StyleSheet.absoluteFill}
               />
-              {/* Subtle top vignette scrim protecting header legibility */}
+              {/* Top vignette scrim protecting header legibility */}
               <LinearGradient
                 colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
                 locations={[0, 1]}
@@ -97,14 +103,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   photoScrim: {
-    backgroundColor: 'rgba(5, 11, 14, 0.55)', // 55% dark scrim
+    backgroundColor: 'rgba(5, 11, 14, 0.32)', // ~32% dark scrim
   },
   topVignette: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
+    height: 130,
   },
 });
 

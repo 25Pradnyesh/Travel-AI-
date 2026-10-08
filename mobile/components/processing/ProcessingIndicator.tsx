@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
 
 export const ProcessingIndicator: React.FC = () => {
   const scanLineAnim = useRef(new Animated.Value(0)).current;
@@ -13,13 +13,13 @@ export const ProcessingIndicator: React.FC = () => {
       Animated.sequence([
         Animated.timing(scanLineAnim, {
           toValue: 1,
-          duration: 2200,
+          duration: 2400,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         }),
         Animated.timing(scanLineAnim, {
           toValue: 0,
-          duration: 2200,
+          duration: 2400,
           easing: Easing.inOut(Easing.quad),
           useNativeDriver: true,
         }),
@@ -30,7 +30,7 @@ export const ProcessingIndicator: React.FC = () => {
     const waveLoop = Animated.loop(
       Animated.timing(pulseWaveAnim, {
         toValue: 1,
-        duration: 2800,
+        duration: 3000,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       })
@@ -65,20 +65,20 @@ export const ProcessingIndicator: React.FC = () => {
     };
   }, [scanLineAnim, pulseWaveAnim, centerPinAnim]);
 
-  // Interpolations
+  // Interpolations scaled to 184px reticle
   const scanTranslateY = scanLineAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-45, 45],
+    outputRange: [-65, 65],
   });
 
   const scanOpacity = scanLineAnim.interpolate({
     inputRange: [0, 0.15, 0.85, 1],
-    outputRange: [0.2, 0.85, 0.85, 0.2],
+    outputRange: [0.2, 0.9, 0.9, 0.2],
   });
 
   const waveScale = pulseWaveAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.35, 1.2],
+    outputRange: [0.35, 1.25],
   });
 
   const waveOpacity = pulseWaveAnim.interpolate({
@@ -88,7 +88,7 @@ export const ProcessingIndicator: React.FC = () => {
 
   return (
     <View style={styles.container} accessible={true} accessibilityLabel="Geographic radar scanning viewfinder">
-      {/* Outer Reticle Ring */}
+      {/* Outer Reticle Ring (Ivory strokes over atmosphere) */}
       <View style={styles.outerRing}>
         {/* Cardinal Direction Indicators */}
         <Text style={[styles.cardinalText, styles.cardinalN]}>N</Text>
@@ -96,13 +96,13 @@ export const ProcessingIndicator: React.FC = () => {
         <Text style={[styles.cardinalText, styles.cardinalS]}>S</Text>
         <Text style={[styles.cardinalText, styles.cardinalW]}>W</Text>
 
-        {/* Crosshair Tick Marks */}
+        {/* Crosshair Tick Marks (Ivory) */}
         <View style={styles.tickNorth} />
         <View style={styles.tickSouth} />
         <View style={styles.tickEast} />
         <View style={styles.tickWest} />
 
-        {/* Inner Concentric Horizon Ring */}
+        {/* Inner Concentric Horizon Ring (Ivory) */}
         <View style={styles.innerRing} />
 
         {/* Expanding Cartographic Wave (Icy Blue) */}
@@ -127,7 +127,7 @@ export const ProcessingIndicator: React.FC = () => {
           ]}
         />
 
-        {/* Pinpoint Location Marker (Onyx Ring + Racing Red Core) */}
+        {/* Pinpoint Location Marker (Ivory Ring + Racing Red Center Dot) */}
         <Animated.View
           style={[
             styles.centerPin,
@@ -147,107 +147,108 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 14,
+    marginVertical: 18,
   },
   outerRing: {
-    width: 144,
-    height: 144,
-    borderRadius: 72,
+    width: 184,
+    height: 184,
+    borderRadius: 92,
     borderWidth: 1.5,
-    borderColor: 'rgba(12, 12, 12, 0.16)', // Subtle Onyx border
-    backgroundColor: Colors.ivoryMist,
+    borderColor: 'rgba(251, 244, 227, 0.25)', // Ivory strokes
+    backgroundColor: 'rgba(8, 18, 24, 0.42)', // Soft dark scrim within reticle
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
     overflow: 'hidden',
   },
   innerRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 112,
+    height: 112,
+    borderRadius: 56,
     borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.10)',
+    borderColor: 'rgba(251, 244, 227, 0.16)', // Ivory inner ring
     position: 'absolute',
   },
   cardinalText: {
     position: 'absolute',
-    fontSize: 8,
-    fontWeight: '700',
-    color: 'rgba(12, 12, 12, 0.35)',
+    fontSize: 9,
+    fontFamily: Fonts.sansBold,
+    color: Colors.ivoryMist,
+    opacity: 0.65,
     letterSpacing: 0.5,
   },
   cardinalN: {
-    top: 7,
+    top: 8,
   },
   cardinalS: {
-    bottom: 7,
+    bottom: 8,
   },
   cardinalE: {
-    right: 8,
+    right: 9,
   },
   cardinalW: {
-    left: 8,
+    left: 9,
   },
   tickNorth: {
     position: 'absolute',
     top: 0,
     width: 1.5,
-    height: 6,
-    backgroundColor: 'rgba(12, 12, 12, 0.25)',
+    height: 8,
+    backgroundColor: 'rgba(251, 244, 227, 0.35)',
   },
   tickSouth: {
     position: 'absolute',
     bottom: 0,
     width: 1.5,
-    height: 6,
-    backgroundColor: 'rgba(12, 12, 12, 0.25)',
+    height: 8,
+    backgroundColor: 'rgba(251, 244, 227, 0.35)',
   },
   tickEast: {
     position: 'absolute',
     right: 0,
-    width: 6,
+    width: 8,
     height: 1.5,
-    backgroundColor: 'rgba(12, 12, 12, 0.25)',
+    backgroundColor: 'rgba(251, 244, 227, 0.35)',
   },
   tickWest: {
     position: 'absolute',
     left: 0,
-    width: 6,
+    width: 8,
     height: 1.5,
-    backgroundColor: 'rgba(12, 12, 12, 0.25)',
+    backgroundColor: 'rgba(251, 244, 227, 0.35)',
   },
   pulseWave: {
     position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 156,
+    height: 156,
+    borderRadius: 78,
     borderWidth: 1.5,
-    borderColor: Colors.icyBlue, // Icy Blue #A6DCF8
+    borderColor: Colors.icyBlue, // Icy Blue
     backgroundColor: 'rgba(166, 220, 248, 0.12)',
   },
   scannerLine: {
     position: 'absolute',
-    width: 104,
+    width: 140,
     height: 2,
     borderRadius: 1,
-    backgroundColor: Colors.icyBlue, // Icy Blue #A6DCF8 scanning line
+    backgroundColor: Colors.icyBlue, // Icy Blue scanning sweep
   },
   centerPin: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 1.5,
-    borderColor: Colors.onyx,
-    backgroundColor: Colors.ivoryMist,
+    borderColor: Colors.ivoryMist,
+    backgroundColor: 'rgba(8, 18, 24, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 5,
   },
   racingRedCore: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.racingRed, // Racing Red #EB2627 pinpoint core
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.racingRed, // Racing Red center dot
   },
 });
 

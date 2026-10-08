@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { AtmosphereBackground, GlassView } from '@/components/ui';
 import {
   ProcessingError,
   ProcessingHeader,
@@ -8,13 +11,27 @@ import {
   ProcessingIndicator,
   ProcessingStages,
 } from '@/components/processing';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { travelAiApi, getFriendlyErrorMessage } from '@/lib/api/travel-ai';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAnalysisToCloudHistory } from '@/lib/supabase';
 
+function shortenReelUrl(fullUrl?: string): string {
+  if (!fullUrl) return '';
+  try {
+    const cleaned = fullUrl.replace(/^https?:\/\/(www\.)?/, '');
+    if (cleaned.length > 38) {
+      return cleaned.slice(0, 35) + '...';
+    }
+    return cleaned;
+  } catch {
+    return fullUrl;
+  }
+}
+
 export default function ProcessingScreen() {
+  const insets = useSafeAreaInsets();
   const { url } = useLocalSearchParams<{ url?: string }>();
   const [stageIndex, setStageIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -98,6 +115,7 @@ export default function ProcessingScreen() {
 
       hapticFeedback.medium();
       if (__DEV__) {
+        // eslint-disable-next-line no-console
         console.warn('[PROCESSING] Analysis failed:', err);
       }
       const friendlyMsg = getFriendlyErrorMessage(err);
@@ -136,7 +154,7 @@ export default function ProcessingScreen() {
     };
   }, [url, runAnalysis]);
 
-  // Elapsed timer and realistic semantic stage transitions
+  // Elapsed timer and realistic honest semantic stage transitions (no fake percentages)
   useEffect(() => {
     if (!isLoading) return;
 
@@ -145,13 +163,13 @@ export default function ProcessingScreen() {
         const next = prev + 1;
         // Map elapsed seconds to realistic semantic stages
         if (next < 8) {
-          setStageIndex(0); // Reel Received
-        } else if (next < 22) {
-          setStageIndex(1); // Inspecting Scenery
-        } else if (next < 40) {
-          setStageIndex(2); // Resolving Location
+          setStageIndex(0); // Reel received
+        } else if (next < 20) {
+          setStageIndex(1); // Inspecting scenery
+        } else if (next < 38) {
+          setStageIndex(2); // Resolving location
         } else {
-          setStageIndex(3); // Building Your Dossier
+          setStageIndex(3); // Building your dossier
         }
         return next;
       });
@@ -185,11 +203,16 @@ export default function ProcessingScreen() {
     }
   };
 
-  const isLongRunning = elapsedSeconds >= 30;
+  // Reassurance notice triggers at 35s per rule
+  const isLongRunning = elapsedSeconds >= 35;
 
   return (
-    <View style={styles.screen}>
-      <ProcessingHeader onCancel={handleCancel} url={url} />
+    <AtmosphereBackground variant="sky">
+      {/* Top Header with Frosted Cancel Pill Top-Left and Frosted Timer Pill Top-Right */}
+      <ProcessingHeader
+        onCancel={handleCancel}
+        elapsedSeconds={elapsedSeconds}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -197,17 +220,17 @@ export default function ProcessingScreen() {
       >
         {isLoading ? (
           <>
-            {/* Editorial Processing Hero */}
+            {/* Status Line: Instrument Serif Italic "Finding your place." */}
             <ProcessingHero isLongRunning={isLongRunning} />
 
-            {/* Travel-Oriented Cartographic Radar Viewfinder */}
+            {/* Centered Large Reticle with Ivory strokes, Icy Blue sweep, and Racing Red center dot */}
             <ProcessingIndicator />
 
-            {/* Semantic Processing Progression Stages */}
+            {/* 4 Dark Glass Rows with done check, active pulsing dot, and pending hollow dot */}
             <ProcessingStages currentStageIndex={stageIndex} />
           </>
         ) : (
-          /* Editorial Error Recovery State */
+          /* Dark Glass Error Card (clear message + Retry + Back), no red walls */
           <ProcessingError
             title={errorTitle}
             message={errorMessage || 'An error occurred during analysis.'}
@@ -216,17 +239,57 @@ export default function ProcessingScreen() {
           />
         )}
       </ScrollView>
-    </View>
+
+      {/* Bottom Frosted Glass Pill showing Shortened Reel URL */}
+      {url ? (
+        <View
+          style={[
+            styles.bottomPillWrapper,
+            { paddingBottom: Math.max(insets.bottom, 16) + 8 },
+          ]}
+        >
+          <GlassView
+            variant="frosted"
+            borderRadius={Radius.pill}
+            style={styles.reelPill}
+          >
+            <Ionicons name="logo-instagram" size={14} color={Colors.icyBlue} />
+            <Text numberOfLines={1} style={styles.reelUrlText}>
+              {shortenReelUrl(url)}
+            </Text>
+          </GlassView>
+        </View>
+      ) : null}
+    </AtmosphereBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.ivoryMist, // Dominant canvas background #FBF4E3
-  },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: Spacing.huge,
+    paddingBottom: 90,
+  },
+  bottomPillWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    pointerEvents: 'box-none',
+  },
+  reelPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 8,
+    gap: 8,
+    maxWidth: 320,
+  },
+  reelUrlText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 12,
+    color: Colors.ivoryMist,
+    letterSpacing: -0.2,
   },
 });

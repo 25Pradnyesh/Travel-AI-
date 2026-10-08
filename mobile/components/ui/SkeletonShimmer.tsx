@@ -61,9 +61,9 @@ export const SkeletonShimmer: React.FC<SkeletonShimmerProps> = ({
 const styles = StyleSheet.create({
   skeleton: {
     // High-visibility bone color visible over both light sky gradient and dark photo scrims
-    backgroundColor: 'rgba(251, 244, 227, 0.24)',
+    backgroundColor: 'rgba(75, 105, 120, 0.32)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.35)',
+    borderColor: 'rgba(251, 244, 227, 0.28)',
   },
 });
 

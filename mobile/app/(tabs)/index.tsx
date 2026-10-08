@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  FlatList,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -8,8 +9,10 @@ import {
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
+  useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -49,6 +52,8 @@ const DISCOVERY_CHIPS = [
 ] as const;
 
 export default function AnalyzeScreen() {
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const { isAuthenticated, user } = useAuth();
   const { savedPlaces, isSaved, toggleSave } = useSavedPlaces();
   const [url, setUrl] = useState('');
@@ -56,6 +61,12 @@ export default function AnalyzeScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentAnalyses, setRecentAnalyses] = useState<AnalysisRow[]>([]);
   const [activeChip, setActiveChip] = useState<string>('Hidden Stays');
+
+  // Carousel dimensions: card width ~72% so next card peeks in
+  const cardWidth = Math.round(screenWidth * 0.72);
+  const cardGap = Spacing.md;
+  const snapInterval = cardWidth + cardGap;
+  const scrollBottomPadding = 60 + Math.max(insets.bottom, 16) + Spacing.lg;
 
   // Greet by real user name only if signed in, otherwise drop greeting completely
   const userGreetingName = useMemo(() => {
@@ -220,9 +231,8 @@ export default function AnalyzeScreen() {
 
   return (
     <AtmosphereBackground variant="sky">
-      {/* Top Editorial Header */}
+      {/* Top Editorial Header (history clock removed per rule 7) */}
       <HomeHeader
-        onPressHistory={handleViewAllHistory}
         onPressProfile={handleOpenProfile}
         userName={userGreetingName}
       />
@@ -233,7 +243,10 @@ export default function AnalyzeScreen() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: scrollBottomPadding },
+            ]}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -241,16 +254,23 @@ export default function AnalyzeScreen() {
             {/* Editorial Greeting & Display Headline */}
             <View style={styles.heroSection}>
               {userGreetingName ? (
-                <Text style={styles.userGreeting}>
-                  Hello, {userGreetingName}
-                </Text>
+                <View style={styles.userGreetingPill}>
+                  <Ionicons name="sparkles" size={11} color={Colors.icyBlue} />
+                  <Text style={styles.userGreeting}>
+                    Hello, {userGreetingName}
+                  </Text>
+                </View>
               ) : null}
 
+              {/* 56-58px Display headline: Inter Bold + Instrument Serif Italic */}
               <Text style={styles.displayHeadline}>
-                Drop a reel.{'\n'}
-                <Text style={styles.displayItalicAccent}>Find the place.</Text>
+                Drop a reel.
+              </Text>
+              <Text style={styles.displayItalicAccent}>
+                Find the place.
               </Text>
 
+              {/* Ivory subtitle on darkened zone (>= 6.13:1 contrast) */}
               <Text style={styles.heroDescription}>
                 Paste an Instagram travel reel to discover where it was filmed.
               </Text>
@@ -333,14 +353,21 @@ export default function AnalyzeScreen() {
               </View>
 
               {hasInFocus ? (
-                /* Horizontal Carousel of Poster Cards */
-                <ScrollView
+                /* Horizontal FlatList Carousel with ~72% card peek */
+                <FlatList
+                  data={inFocusItems}
+                  keyExtractor={(item) => item.id}
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.focusCarousel}
-                >
-                  {inFocusItems.map((item) => (
-                    <View key={item.id} style={styles.posterWrapper}>
+                  snapToInterval={snapInterval}
+                  snapToAlignment="start"
+                  decelerationRate="fast"
+                  contentContainerStyle={[
+                    styles.focusCarousel,
+                    { paddingRight: screenWidth - cardWidth },
+                  ]}
+                  renderItem={({ item }) => (
+                    <View style={{ width: cardWidth, marginRight: cardGap }}>
                       <PosterCard
                         title={item.title}
                         subtitle={item.subtitle}
@@ -370,12 +397,12 @@ export default function AnalyzeScreen() {
                         }}
                       />
                     </View>
-                  ))}
-                </ScrollView>
+                  )}
+                />
               ) : (
-                /* Designed Empty State: Single Featured Sample Reel Poster Card */
+                /* Designed Empty State: Single Featured Sample Reel Poster Card with 72% width */
                 <View style={styles.emptyContainer}>
-                  <View style={styles.samplePosterWrapper}>
+                  <View style={{ width: cardWidth, alignSelf: 'flex-start' }}>
                     <PosterCard
                       title={SAMPLE_REEL.destination}
                       subtitle={SAMPLE_REEL.country}
@@ -409,34 +436,50 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.lg,
+  },
+  userGreetingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(8, 18, 24, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    gap: 6,
+    marginBottom: Spacing.sm,
   },
   userGreeting: {
     fontFamily: Fonts.sansSemiBold,
-    fontSize: 13,
-    color: Colors.icyBlue,
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xs,
+    fontSize: 12,
+    color: Colors.ivoryMist,
+    letterSpacing: 0.3,
   },
   displayHeadline: {
     fontFamily: Fonts.sansBold,
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 56,
+    lineHeight: 58,
     color: Colors.ivoryMist,
-    letterSpacing: -0.9,
+    letterSpacing: -1.2,
   },
   displayItalicAccent: {
     fontFamily: Fonts.serifItalic,
     fontStyle: 'italic',
+    fontSize: 58,
+    lineHeight: 62,
     color: Colors.ivoryMist,
+    letterSpacing: -0.5,
+    marginTop: -2,
   },
   heroDescription: {
     fontFamily: Fonts.sansRegular,
     fontSize: 14,
-    lineHeight: 20,
-    color: Colors.textSecondary,
-    marginTop: Spacing.sm,
+    lineHeight: 21,
+    color: Colors.ivoryMist,
+    marginTop: Spacing.md,
     maxWidth: 320,
   },
   inputWrapper: {
@@ -499,27 +542,19 @@ const styles = StyleSheet.create({
     color: Colors.icyBlue,
   },
   focusCarousel: {
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
-  },
-  posterWrapper: {
-    width: 200,
+    paddingLeft: Spacing.xl,
   },
   emptyContainer: {
     paddingHorizontal: Spacing.xl,
-    alignItems: 'center',
-  },
-  samplePosterWrapper: {
-    width: '100%',
-    maxWidth: 280,
+    alignItems: 'flex-start',
   },
   emptyCaption: {
     fontFamily: Fonts.sansRegular,
     fontSize: 12,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: 'left',
     marginTop: Spacing.sm + 2,
-    maxWidth: 260,
+    maxWidth: 280,
   },
   pressed: {
     opacity: 0.75,

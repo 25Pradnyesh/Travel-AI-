@@ -10,6 +10,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { BlurTargetView } from 'expo-blur';
 import {
   AtmosphereBackground,
   ConfidenceBadge,
@@ -23,13 +24,14 @@ import {
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
-// Sample bright, busy demonstration photo (vibrant daytime city & nature)
+// Sample bright, vibrant daytime demonstration photo (bright white architecture + blue sky)
 const DEMO_PHOTO_URL =
-  'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1000&q=80';
+  'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1000&q=80';
 
 export default function KitchenSinkScreen() {
   const insets = useSafeAreaInsets();
   const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo'>('sky');
+  const stripeTargetRef = React.useRef<View>(null);
   const [inputValue, setInputValue] = useState('');
   const [showInputError, setShowInputError] = useState(false);
   const [selectedChip, setSelectedChip] = useState('Beach');
@@ -132,11 +134,11 @@ export default function KitchenSinkScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>1. Native Blur Test Strip</Text>
           <Text style={styles.sectionDesc}>
-            High-contrast underlying stripes to visibly prove optical blur behind glass.
+            High-contrast underlying stripes to visibly prove optical blur behind frosted glass (~12% opacity).
           </Text>
           <View style={styles.blurTestWrapper}>
-            {/* High-contrast underlying pattern */}
-            <View style={styles.stripePattern}>
+            {/* High-contrast underlying pattern wrapped in BlurTargetView for Android */}
+            <BlurTargetView ref={stripeTargetRef} style={styles.stripePattern}>
               {[...Array(12)].map((_, i) => (
                 <View
                   key={i}
@@ -146,11 +148,16 @@ export default function KitchenSinkScreen() {
                   ]}
                 />
               ))}
-            </View>
+            </BlurTargetView>
 
             {/* Overlaid GlassView blurring the right half */}
-            <GlassView variant="frosted" intensity={70} style={styles.blurTestOverlay}>
-              <Text style={styles.blurOverlayText}>Glass Blurred</Text>
+            <GlassView
+              variant="frosted"
+              blurTarget={stripeTargetRef}
+              intensity={70}
+              style={styles.blurTestOverlay}
+            >
+              <Text style={styles.blurOverlayText}>Frosted Glass Blur</Text>
               <Text style={styles.blurOverlaySubtext}>dimezisBlurView active</Text>
             </GlassView>
           </View>

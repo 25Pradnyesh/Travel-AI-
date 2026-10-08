@@ -37,11 +37,11 @@ export const Colors = {
   atmosphereNight: ['#182B36', '#0E1A22', '#050B0E'] as const,
   atmosphereScrim: ['transparent', 'rgba(8, 18, 24, 0.65)', '#081218'] as const,
   topVignetteScrim: ['rgba(5, 11, 14, 0.40)', 'transparent'] as const,
-  posterGradient: ['transparent', 'rgba(5, 11, 14, 0.50)', 'rgba(5, 11, 14, 0.94)'] as const,
+  posterGradient: ['transparent', 'rgba(5, 11, 14, 0.40)', 'rgba(5, 11, 14, 0.82)', 'rgba(5, 11, 14, 0.96)'] as const,
 
   // Translucent Glass Tokens
   // Frosted Glass for chrome (tab bar, chips, input, headers)
-  glassFrostedBg: 'rgba(251, 244, 227, 0.09)',
+  glassFrostedBg: 'rgba(251, 244, 227, 0.12)',
   glassFrostedBorder: 'rgba(251, 244, 227, 0.22)',
 
   // Dark Glass for text-dense panels (dossier, briefings, contrast cards)

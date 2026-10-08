@@ -1,7 +1,8 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { GlassView } from '@/components/ui';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 
 export interface StageItem {
   id: string;
@@ -12,22 +13,22 @@ export interface StageItem {
 export const SEMANTIC_STAGES: StageItem[] = [
   {
     id: 'ingest',
-    label: 'REEL RECEIVED',
+    label: 'Reel received',
     detail: 'Reading visual clues and audio context',
   },
   {
     id: 'clues',
-    label: 'INSPECTING SCENERY',
+    label: 'Inspecting scenery',
     detail: 'Scanning landmarks, signs and terrain',
   },
   {
     id: 'geo',
-    label: 'RESOLVING LOCATION',
+    label: 'Resolving location',
     detail: 'Pinpointing geographic coordinates',
   },
   {
     id: 'dossier',
-    label: 'BUILDING YOUR DOSSIER',
+    label: 'Building your dossier',
     detail: 'Preparing destination intelligence',
   },
 ];
@@ -39,6 +40,29 @@ export interface ProcessingStagesProps {
 export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
   currentStageIndex,
 }) => {
+  const pulseAnim = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 800,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.4,
+          duration: 800,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.stagesHeader}>ANALYSIS STAGES</Text>
@@ -48,39 +72,48 @@ export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
           const isCompleted = index < currentStageIndex;
           const isCurrent = index === currentStageIndex;
           const isUpcoming = index > currentStageIndex;
-          const isLast = index === SEMANTIC_STAGES.length - 1;
 
           return (
-            <View key={stage.id} style={styles.stageRow}>
-              {/* Left Timeline Indicator */}
-              <View style={styles.indicatorColumn}>
-                <View
-                  style={[
-                    styles.nodeCircle,
-                    isCompleted && styles.nodeCompleted,
-                    isCurrent && styles.nodeCurrent,
-                    isUpcoming && styles.nodeUpcoming,
-                  ]}
-                >
-                  {isCompleted ? (
-                    <Ionicons name="checkmark-sharp" size={10} color={Colors.ivoryMist} />
-                  ) : isCurrent ? (
-                    <View style={styles.currentNodeDot} />
-                  ) : null}
-                </View>
-
-                {!isLast && (
-                  <View
-                    style={[
-                      styles.connectorLine,
-                      isCompleted ? styles.connectorCompleted : styles.connectorPending,
-                    ]}
-                  />
+            <GlassView
+              key={stage.id}
+              variant="dark"
+              borderRadius={Radius.lg}
+              style={[
+                styles.glassStageRow,
+                isCurrent && styles.glassStageRowCurrent,
+              ]}
+            >
+              {/* Left State Indicator */}
+              <View style={styles.indicatorWrapper}>
+                {isCompleted ? (
+                  <Ionicons name="checkmark-circle" size={20} color={Colors.icyBlue} />
+                ) : isCurrent ? (
+                  <View style={styles.pulsingWrapper}>
+                    <Animated.View
+                      style={[
+                        styles.pulsingRing,
+                        {
+                          opacity: pulseAnim,
+                          transform: [
+                            {
+                              scale: pulseAnim.interpolate({
+                                inputRange: [0.4, 1],
+                                outputRange: [0.9, 1.25],
+                              }),
+                            },
+                          ],
+                        },
+                      ]}
+                    />
+                    <View style={styles.pulsingCenterDot} />
+                  </View>
+                ) : (
+                  <View style={styles.hollowDot} />
                 )}
               </View>
 
-              {/* Right Content */}
-              <View style={[styles.contentColumn, isCurrent && styles.currentContent]}>
+              {/* Center Content */}
+              <View style={styles.contentColumn}>
                 <View style={styles.labelRow}>
                   <Text
                     style={[
@@ -106,12 +139,12 @@ export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
                     isCurrent && styles.detailCurrent,
                     isUpcoming && styles.detailUpcoming,
                   ]}
-                  numberOfLines={2}
+                  numberOfLines={1}
                 >
                   {stage.detail}
                 </Text>
               </View>
-            </View>
+            </GlassView>
           );
         })}
       </View>
@@ -121,80 +154,70 @@ export const ProcessingStages: React.FC<ProcessingStagesProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
+    paddingHorizontal: Spacing.xl,
     marginTop: Spacing.md,
     marginBottom: Spacing.lg,
   },
   stagesHeader: {
-    fontSize: 11,
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
     lineHeight: 14,
-    fontWeight: '700',
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: 'rgba(12, 12, 12, 0.45)',
-    marginBottom: Spacing.md,
+    color: Colors.icyBlue,
+    marginBottom: Spacing.sm,
   },
   stageList: {
-    width: '100%',
+    gap: Spacing.sm,
   },
-  stageRow: {
+  glassStageRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    minHeight: 52,
-  },
-  indicatorColumn: {
     alignItems: 'center',
-    width: 20,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 12,
+  },
+  glassStageRowCurrent: {
+    borderColor: 'rgba(166, 220, 248, 0.35)',
+  },
+  indicatorWrapper: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: Spacing.md,
   },
-  nodeCircle: {
+  pulsingWrapper: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  pulsingRing: {
+    position: 'absolute',
     width: 18,
     height: 18,
     borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nodeCompleted: {
-    backgroundColor: Colors.onyx,
-  },
-  nodeCurrent: {
-    backgroundColor: Colors.ivoryMist,
+    backgroundColor: 'rgba(166, 220, 248, 0.20)',
     borderWidth: 1.5,
-    borderColor: Colors.racingRed, // Racing Red active focus
+    borderColor: Colors.icyBlue,
   },
-  currentNodeDot: {
+  pulsingCenterDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.racingRed,
+    backgroundColor: Colors.icyBlue,
   },
-  nodeUpcoming: {
-    backgroundColor: Colors.ivoryMist,
-    borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.18)',
-  },
-  connectorLine: {
-    width: 1.5,
-    flex: 1,
-    minHeight: 28,
-    marginVertical: 2,
-  },
-  connectorCompleted: {
-    backgroundColor: Colors.onyx,
-  },
-  connectorPending: {
-    backgroundColor: 'rgba(12, 12, 12, 0.12)',
+  hollowDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    borderColor: 'rgba(251, 244, 227, 0.25)',
+    backgroundColor: 'transparent',
   },
   contentColumn: {
     flex: 1,
-    paddingBottom: Spacing.md,
-  },
-  currentContent: {
-    backgroundColor: 'rgba(12, 12, 12, 0.03)',
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: Spacing.xs + 2,
-    marginLeft: -Spacing.xs,
   },
   labelRow: {
     flexDirection: 'row',
@@ -203,46 +226,48 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   stageLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: -0.2,
   },
   labelCompleted: {
-    color: 'rgba(12, 12, 12, 0.65)',
+    color: Colors.ivoryMist,
   },
   labelCurrent: {
-    color: Colors.onyx,
+    color: Colors.ivoryMist,
   },
   labelUpcoming: {
-    color: 'rgba(12, 12, 12, 0.28)',
+    color: Colors.textMuted,
   },
   activePill: {
-    backgroundColor: 'rgba(235, 38, 39, 0.08)',
+    backgroundColor: 'rgba(166, 220, 248, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(235, 38, 39, 0.20)',
-    borderRadius: Radius.full,
-    paddingHorizontal: 6,
+    borderColor: 'rgba(166, 220, 248, 0.35)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 7,
     paddingVertical: 2,
   },
   activePillText: {
+    fontFamily: Fonts.sansBold,
     fontSize: 9,
-    fontWeight: '700',
     letterSpacing: 0.8,
-    color: Colors.racingRed,
+    color: Colors.icyBlue,
   },
   stageDetail: {
+    fontFamily: Fonts.sansRegular,
     fontSize: 12,
-    lineHeight: 17,
+    lineHeight: 16,
   },
   detailCompleted: {
-    color: 'rgba(12, 12, 12, 0.45)',
+    color: Colors.textSecondary,
   },
   detailCurrent: {
-    color: 'rgba(12, 12, 12, 0.75)',
-    fontWeight: '500',
+    color: Colors.ivoryMist,
+    opacity: 0.9,
   },
   detailUpcoming: {
-    color: 'rgba(12, 12, 12, 0.22)',
+    color: 'rgba(110, 126, 134, 0.70)',
   },
 });
 

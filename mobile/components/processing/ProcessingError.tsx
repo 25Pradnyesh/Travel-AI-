@@ -1,7 +1,8 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { GlassView, PillButton } from '@/components/ui';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ProcessingErrorProps {
@@ -19,7 +20,7 @@ export const ProcessingError: React.FC<ProcessingErrorProps> = ({
 }) => {
   return (
     <View style={styles.container} accessible={true} accessibilityRole="alert">
-      <View style={styles.card}>
+      <GlassView variant="dark" borderRadius={Radius.xl} style={styles.card}>
         {/* Subtle Icon Accent */}
         <View style={styles.iconWrapper}>
           <Ionicons name="alert-circle-outline" size={26} color={Colors.racingRed} />
@@ -31,133 +32,87 @@ export const ProcessingError: React.FC<ProcessingErrorProps> = ({
 
         {/* Recovery Actions */}
         <View style={styles.actionColumn}>
-          {/* Primary Action in Racing Red */}
-          <Pressable
+          <PillButton
+            title="Try Again"
+            variant="brand"
             onPress={() => {
               hapticFeedback.light();
               onRetry();
             }}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Retry reel analysis"
-            style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
-          >
-            <Ionicons name="refresh-outline" size={17} color={Colors.ivoryMist} />
-            <Text style={styles.retryText}>Try Again</Text>
-          </Pressable>
+            iconLeft={<Ionicons name="refresh-outline" size={16} color={Colors.textOnRed} />}
+          />
 
-          {/* Secondary Action in Ivory / Subtle Onyx */}
-          <Pressable
+          <PillButton
+            title="Back to Home"
+            variant="glass"
             onPress={() => {
               hapticFeedback.light();
               onCancel();
             }}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Return to analyze screen"
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-          >
-            <Text style={styles.backText}>Back to Home</Text>
-          </Pressable>
+          />
         </View>
-      </View>
+      </GlassView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
-    justifyContent: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.md,
     alignItems: 'center',
-    backgroundColor: Colors.ivoryMist,
+    width: '100%',
   },
   card: {
     width: '100%',
-    maxWidth: 360,
-    backgroundColor: Colors.ivoryMist,
-    borderRadius: Radius.xl + 4,
-    borderWidth: 1.5,
-    borderColor: 'rgba(12, 12, 12, 0.14)',
+    maxWidth: 380,
     paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl + 4,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
   },
   iconWrapper: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(235, 38, 39, 0.08)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(235, 38, 39, 0.14)',
     borderWidth: 1,
-    borderColor: 'rgba(235, 38, 39, 0.22)',
+    borderColor: 'rgba(235, 38, 39, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   label: {
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
+    lineHeight: 14,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: 'rgba(12, 12, 12, 0.45)',
+    color: Colors.icyBlue,
     marginBottom: Spacing.xs,
   },
   title: {
-    fontSize: 20,
-    lineHeight: 26,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-    color: Colors.onyx,
+    fontFamily: Fonts.serifItalic,
+    fontStyle: 'italic',
+    fontSize: 24,
+    lineHeight: 28,
+    color: Colors.ivoryMist,
     textAlign: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   message: {
+    fontFamily: Fonts.sansRegular,
     fontSize: 13,
     lineHeight: 19,
-    fontWeight: '400',
-    color: 'rgba(12, 12, 12, 0.65)',
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
+    maxWidth: 300,
   },
   actionColumn: {
     width: '100%',
     gap: Spacing.sm,
-  },
-  retryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.racingRed, // Racing Red #EB2627 primary action
-    minHeight: 50,
-    borderRadius: Radius.lg + 2,
-    paddingHorizontal: Spacing.lg,
-    gap: 8,
-  },
-  retryText: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-    color: Colors.ivoryMist,
-  },
-  backButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.ivoryMist,
-    borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.16)',
-    minHeight: 48,
-    borderRadius: Radius.lg + 2,
-    paddingHorizontal: Spacing.lg,
-  },
-  backText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onyx,
-  },
-  pressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.985 }],
   },
 });
 

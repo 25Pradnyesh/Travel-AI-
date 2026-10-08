@@ -48,24 +48,6 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             </Pressable>
           )}
 
-          {/* History shortcut */}
-          {onPressHistory && (
-            <Pressable
-              onPress={() => {
-                hapticFeedback.light();
-                onPressHistory();
-              }}
-              hitSlop={8}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="View analysis history"
-              accessibilityHint="Navigates to your past analyzed travel reels"
-              style={({ pressed }) => [styles.circleAction, pressed && styles.pressed]}
-            >
-              <Ionicons name="time-outline" size={17} color={Colors.ivoryMist} />
-            </Pressable>
-          )}
-
           {/* Profile Avatar Shortcut */}
           {onPressProfile && (
             <Pressable

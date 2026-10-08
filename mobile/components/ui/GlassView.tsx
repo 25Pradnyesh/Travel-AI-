@@ -37,7 +37,7 @@ export interface GlassViewProps {
 export const GlassView: React.FC<GlassViewProps> = ({
   children,
   intensity = 55,
-  tint = 'dark',
+  tint,
   variant = 'frosted',
   borderRadius = Radius.xxl,
   hasBorder = true,
@@ -73,6 +73,7 @@ export const GlassView: React.FC<GlassViewProps> = ({
   };
 
   const activeBlurTarget = customBlurTarget || blurTargetRef;
+  const activeTint = tint ?? (variant === 'frosted' ? 'light' : 'dark');
 
   if (reduceTransparency) {
     return (
@@ -93,7 +94,7 @@ export const GlassView: React.FC<GlassViewProps> = ({
   return (
     <BlurView
       intensity={intensity}
-      tint={tint}
+      tint={activeTint}
       blurMethod="dimezisBlurView"
       blurTarget={Platform.OS === 'android' ? activeBlurTarget : undefined}
       style={[

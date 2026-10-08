@@ -77,7 +77,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
       <GlassView
         borderRadius={Radius.pill}
         intensity={65}
-        tint="dark"
+        variant="frosted"
         style={styles.glassPill}
       >
         <View style={styles.tabRow}>
@@ -185,9 +185,6 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     height: 60,
-    backgroundColor: 'rgba(12, 22, 28, 0.78)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.16)',
     justifyContent: 'center',
   },
   tabRow: {
