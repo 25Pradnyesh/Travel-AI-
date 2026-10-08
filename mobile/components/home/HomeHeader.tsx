@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, TouchTarget } from '@/constants/theme';
+import { router } from 'expo-router';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface HomeHeaderProps {
@@ -21,23 +22,41 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ onPressHistory }) => {
           <View style={styles.brandDot} />
         </View>
 
-        {/* Minimal History Action */}
-        {onPressHistory && (
+        {/* Actions Row */}
+        <View style={styles.actionsRow}>
           <Pressable
             onPress={() => {
-              hapticFeedback.light();
-              onPressHistory();
+              hapticFeedback.selection();
+              router.push('/dev/kitchen-sink' as any);
             }}
-            hitSlop={8}
+            hitSlop={6}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="View analysis history"
-            accessibilityHint="Navigates to your past analyzed travel reels"
-            style={({ pressed }) => [styles.historyButton, pressed && styles.pressed]}
+            accessibilityLabel="Open UI Kitchen Sink"
+            style={({ pressed }) => [styles.devButton, pressed && styles.pressed]}
           >
-            <Ionicons name="time-outline" size={20} color={Colors.onyx} />
+            <Ionicons name="sparkles" size={12} color={Colors.onyx} />
+            <Text style={styles.devButtonText}>UI Sink</Text>
           </Pressable>
-        )}
+
+          {/* Minimal History Action */}
+          {onPressHistory && (
+            <Pressable
+              onPress={() => {
+                hapticFeedback.light();
+                onPressHistory();
+              }}
+              hitSlop={8}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="View analysis history"
+              accessibilityHint="Navigates to your past analyzed travel reels"
+              style={({ pressed }) => [styles.historyButton, pressed && styles.pressed]}
+            >
+              <Ionicons name="time-outline" size={18} color={Colors.onyx} />
+            </Pressable>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -71,6 +90,28 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: Colors.racingRed,
     marginLeft: 6,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  devButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(12, 12, 12, 0.16)',
+    backgroundColor: 'rgba(12, 12, 12, 0.05)',
+    gap: 4,
+    minHeight: 34,
+  },
+  devButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.onyx,
   },
   historyButton: {
     width: 38,

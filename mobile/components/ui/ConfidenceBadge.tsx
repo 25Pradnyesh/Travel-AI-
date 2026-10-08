@@ -1,124 +1,115 @@
 import React from 'react';
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
-import { VerificationStatus } from '@/types/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
+
+export type VerificationState = 'VERIFIED' | 'PARTIAL' | 'UNVERIFIED' | 'SKIPPED' | string;
 
 export interface ConfidenceBadgeProps {
-  status: VerificationStatus | string;
+  status?: VerificationState;
   confidence?: number;
+  showIcon?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
+/**
+ * ConfidenceBadge
+ *
+ * Truthful PRD verification states:
+ * - VERIFIED: Icy Blue #A6DCF8 with checkmark
+ * - PARTIAL: Warm Amber #E5A866
+ * - UNVERIFIED / SKIPPED: Honest muted slate #7A8991 (STRICTLY NO Icy Blue)
+ */
 export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
-  status,
+  status = 'UNVERIFIED',
   confidence,
+  showIcon = true,
   style,
 }) => {
-  const normalized = (status || 'SKIPPED').toUpperCase();
+  const normalized = (status || '').toUpperCase();
 
-  const getConfig = () => {
-    switch (normalized) {
-      case 'VERIFIED':
-        return {
-          label: 'Verified Match',
-          dotColor: Colors.verified,
-          backgroundColor: Colors.verifiedSurface,
-          borderColor: Colors.verifiedBorder,
-          textColor: Colors.verified,
-        };
-      case 'PARTIAL':
-        return {
-          label: 'Partially Verified',
-          dotColor: Colors.partial,
-          backgroundColor: Colors.partialSurface,
-          borderColor: Colors.partialBorder,
-          textColor: Colors.partial,
-        };
-      case 'FAILED':
-      case 'AI_UNVERIFIED':
-        return {
-          label: 'Location Identified (AI Unverified)',
-          dotColor: Colors.aiUnverified,
-          backgroundColor: Colors.aiUnverifiedSurface,
-          borderColor: Colors.aiUnverifiedBorder,
-          textColor: Colors.textSecondary,
-        };
-      default:
-        return {
-          label: 'Algorithmic Placement',
-          dotColor: Colors.algorithmic,
-          backgroundColor: Colors.algorithmicSurface,
-          borderColor: Colors.algorithmicBorder,
-          textColor: Colors.textMuted,
-        };
-    }
-  };
+  const isVerified = normalized === 'VERIFIED';
+  const isPartial = normalized === 'PARTIAL';
+  const isUnverified = !isVerified && !isPartial;
 
-  const config = getConfig();
+  const label = isVerified
+    ? 'VERIFIED'
+    : isPartial
+    ? 'PARTIAL MATCH'
+    : 'UNVERIFIED';
+
+  const badgeColor = isVerified
+    ? Colors.verified
+    : isPartial
+    ? Colors.partial
+    : Colors.unverified;
+
+  const badgeSurface = isVerified
+    ? Colors.verifiedSurface
+    : isPartial
+    ? Colors.partialSurface
+    : Colors.unverifiedSurface;
+
+  const badgeBorder = isVerified
+    ? Colors.verifiedBorder
+    : isPartial
+    ? Colors.partialBorder
+    : Colors.unverifiedBorder;
+
+  const iconName = isVerified
+    ? 'checkmark-circle-sharp'
+    : isPartial
+    ? 'alert-circle-sharp'
+    : 'help-circle-sharp';
 
   return (
     <View
       style={[
-        styles.container,
-        {
-          backgroundColor: config.backgroundColor,
-          borderColor: config.borderColor,
-        },
+        styles.badge,
+        { backgroundColor: badgeSurface, borderColor: badgeBorder },
         style,
       ]}
       accessible={true}
       accessibilityRole="text"
-      accessibilityLabel={`Verification status: ${config.label}${
-        confidence != null ? `, ${confidence}% confidence` : ''
-      }`}
+      accessibilityLabel={`Verification status: ${label}${confidence != null ? `, ${confidence}% confidence` : ''}`}
     >
-      <View style={[styles.dot, { backgroundColor: config.dotColor }]} />
-      <Text style={[styles.label, { color: config.textColor }]}>{config.label}</Text>
+      {showIcon && (
+        <Ionicons name={iconName} size={12} color={badgeColor} style={styles.icon} />
+      )}
+      <Text style={[styles.text, { color: badgeColor }]}>{label}</Text>
       {confidence != null && confidence > 0 && (
-        <View style={styles.scoreContainer}>
-          <Text style={styles.scoreSeparator}>·</Text>
-          <Text style={[styles.scoreText, { color: config.textColor }]}>{confidence}%</Text>
-        </View>
+        <Text style={[styles.confidenceText, { color: badgeColor }]}>
+          {Math.round(confidence)}%
+        </Text>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: Spacing.xs,
-    borderRadius: Radius.md,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: Radius.full,
-    marginRight: Spacing.xs + 2,
+  icon: {
+    marginRight: 4,
   },
-  label: {
-    ...Typography.caption,
-    fontSize: 11,
-    fontWeight: '600',
+  text: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
-  scoreContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: Spacing.xs,
-  },
-  scoreSeparator: {
-    color: Colors.textMuted,
-    marginRight: Spacing.xs,
-    fontSize: 12,
-  },
-  scoreText: {
-    ...Typography.caption,
-    fontSize: 11,
-    fontWeight: '700',
+  confidenceText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 10,
+    marginLeft: 4,
+    opacity: 0.85,
   },
 });
 

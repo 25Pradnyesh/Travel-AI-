@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { GlassView } from './GlassView';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface BottomTabBarProps {
@@ -17,38 +18,44 @@ export interface BottomTabBarProps {
   insets?: any;
 }
 
-type TabIconName = 'sparkles' | 'sparkles-outline' | 'compass' | 'compass-outline' | 'bookmark' | 'bookmark-outline' | 'person' | 'person-outline';
+type TabIconName =
+  | 'sparkles'
+  | 'sparkles-outline'
+  | 'compass'
+  | 'compass-outline'
+  | 'bookmark'
+  | 'bookmark-outline';
 
 interface TabConfig {
+  name: string;
   label: string;
   activeIcon: TabIconName;
   inactiveIcon: TabIconName;
-  isPrimary?: boolean;
+  isCenterPrimary?: boolean;
 }
 
-const TAB_CONFIGS: Record<string, TabConfig> = {
-  index: {
-    label: 'Analyze',
-    activeIcon: 'sparkles',
-    inactiveIcon: 'sparkles-outline',
-    isPrimary: true,
-  },
-  explore: {
-    label: 'Explore',
-    activeIcon: 'compass',
-    inactiveIcon: 'compass-outline',
-  },
-  saved: {
+// 3 floating tabs: Saved · Analyze (center filled Onyx) · Explore
+const ORDERED_TABS: TabConfig[] = [
+  {
+    name: 'saved',
     label: 'Saved',
     activeIcon: 'bookmark',
     inactiveIcon: 'bookmark-outline',
   },
-  profile: {
-    label: 'Profile',
-    activeIcon: 'person',
-    inactiveIcon: 'person-outline',
+  {
+    name: 'index',
+    label: 'Analyze',
+    activeIcon: 'sparkles',
+    inactiveIcon: 'sparkles-outline',
+    isCenterPrimary: true,
   },
-};
+  {
+    name: 'explore',
+    label: 'Explore',
+    activeIcon: 'compass',
+    inactiveIcon: 'compass-outline',
+  },
+];
 
 export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   state,
@@ -58,144 +65,186 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, Spacing.sm) }]}>
-      <View style={styles.tabRow}>
-        {state.routes.map((route: any, index: number) => {
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
-          const config = TAB_CONFIGS[route.name] || {
-            label: route.name,
-            activeIcon: 'compass',
-            inactiveIcon: 'compass-outline',
-          };
+    <View
+      style={[
+        styles.floatingContainer,
+        {
+          bottom: Math.max(insets.bottom, 12),
+        },
+      ]}
+      pointerEvents="box-none"
+    >
+      <GlassView
+        borderRadius={Radius.pill}
+        intensity={65}
+        tint="dark"
+        style={styles.glassPill}
+      >
+        <View style={styles.tabRow}>
+          {ORDERED_TABS.map((tab) => {
+            // Find the matching route in state.routes
+            const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
+            if (routeIndex === -1) return null;
 
-          const onPress = () => {
-            if (!isFocused) {
-              hapticFeedback.selection();
+            const route = state.routes[routeIndex];
+            const isFocused = state.index === routeIndex;
+            const { options } = descriptors[route.key];
+
+            const onPress = () => {
+              if (!isFocused) {
+                hapticFeedback.selection();
+              }
+              const event = navigation.emit({
+                type: 'tabPress',
+                target: route.key,
+                canPreventDefault: true,
+              });
+
+              if (!isFocused && !event.defaultPrevented) {
+                navigation.navigate(route.name);
+              }
+            };
+
+            const iconName = isFocused ? tab.activeIcon : tab.inactiveIcon;
+
+            // Center primary tab (Analyze) has special filled Onyx pill when active
+            if (tab.isCenterPrimary) {
+              return (
+                <Pressable
+                  key={route.key}
+                  accessibilityRole="button"
+                  accessibilityState={isFocused ? { selected: true } : {}}
+                  accessibilityLabel={options.tabBarAccessibilityLabel || tab.label}
+                  onPress={onPress}
+                  style={({ pressed }) => [
+                    styles.centerTabItem,
+                    isFocused && styles.centerTabItemActive,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <Ionicons
+                    name={iconName}
+                    size={17}
+                    color={isFocused ? Colors.ivoryMist : Colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.centerLabel,
+                      isFocused ? styles.centerLabelActive : styles.centerLabelInactive,
+                    ]}
+                  >
+                    {tab.label}
+                  </Text>
+                </Pressable>
+              );
             }
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
 
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
-          };
-
-          const onLongPress = () => {
-            navigation.emit({
-              type: 'tabLongPress',
-              target: route.key,
-            });
-          };
-
-          const iconName = isFocused ? config.activeIcon : config.inactiveIcon;
-          const activeColor = Colors.surfaceDark;
-          const inactiveColor = Colors.textMuted;
-
-          return (
-            <Pressable
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel || config.label}
-              testID={options.tabBarButtonTestID}
-              onPress={onPress}
-              onLongPress={onLongPress}
-              style={({ pressed }) => [
-                styles.tabItem,
-                pressed && styles.tabItemPressed,
-              ]}
-            >
-              <View
-                style={[
-                  styles.iconWrapper,
-                  config.isPrimary && isFocused && styles.primaryFocusedWrapper,
+            return (
+              <Pressable
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                accessibilityLabel={options.tabBarAccessibilityLabel || tab.label}
+                onPress={onPress}
+                style={({ pressed }) => [
+                  styles.tabItem,
+                  pressed && styles.pressed,
                 ]}
               >
                 <Ionicons
                   name={iconName}
-                  size={config.isPrimary ? 22 : 20}
-                  color={isFocused ? activeColor : inactiveColor}
+                  size={18}
+                  color={isFocused ? Colors.ivoryMist : Colors.textMuted}
                 />
-              </View>
-
-              <Text
-                style={[
-                  styles.tabLabel,
-                  isFocused ? styles.tabLabelFocused : styles.tabLabelUnfocused,
-                  config.isPrimary && isFocused && styles.primaryTabLabelFocused,
-                ]}
-              >
-                {config.label}
-              </Text>
-
-              {isFocused && <View style={styles.activeDot} />}
-            </Pressable>
-          );
-        })}
-      </View>
+                <Text
+                  style={[
+                    styles.tabLabel,
+                    isFocused ? styles.tabLabelActive : styles.tabLabelInactive,
+                  ]}
+                >
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </GlassView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.canvas,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderSubtle,
-    paddingTop: Spacing.sm,
+  floatingContainer: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  glassPill: {
+    width: '100%',
+    maxWidth: 360,
+    height: 60,
+    backgroundColor: 'rgba(12, 22, 28, 0.78)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    justifyContent: 'center',
   },
   tabRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.sm,
+    height: '100%',
   },
   tabItem: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: TouchTarget.minHeight,
-    paddingVertical: 2,
-    position: 'relative',
+    height: '100%',
+    minWidth: TouchTarget.minWidth,
   },
-  tabItemPressed: {
-    opacity: 0.7,
-    transform: [{ scale: 0.96 }],
-  },
-  iconWrapper: {
+  centerTabItem: {
+    flex: 1.2,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 26,
+    height: 44,
+    borderRadius: Radius.pill,
+    backgroundColor: 'transparent',
+    gap: 6,
+    paddingHorizontal: Spacing.base,
   },
-  primaryFocusedWrapper: {
-    transform: [{ scale: 1.05 }],
+  centerTabItemActive: {
+    backgroundColor: Colors.onyx,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.35)',
   },
   tabLabel: {
-    ...Typography.caption,
-    fontSize: 10,
+    fontSize: 11,
+    fontFamily: Fonts.sansMedium,
     marginTop: 2,
   },
-  tabLabelUnfocused: {
+  tabLabelInactive: {
     color: Colors.textMuted,
-    fontWeight: '500',
   },
-  tabLabelFocused: {
-    color: Colors.textPrimary,
-    fontWeight: '700',
+  tabLabelActive: {
+    color: Colors.ivoryMist,
+    fontFamily: Fonts.sansSemiBold,
   },
-  primaryTabLabelFocused: {
-    color: Colors.surfaceDark,
-    fontWeight: '700',
+  centerLabel: {
+    fontSize: 13,
+    fontFamily: Fonts.sansSemiBold,
   },
-  activeDot: {
-    width: 4,
-    height: 4,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceDark,
-    marginTop: 3,
+  centerLabelInactive: {
+    color: Colors.textSecondary,
+  },
+  centerLabelActive: {
+    color: Colors.ivoryMist,
+  },
+  pressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
   },
 });
 

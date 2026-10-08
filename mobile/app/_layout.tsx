@@ -4,14 +4,34 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+} from '@expo-google-fonts/instrument-serif';
 import { Colors } from '@/constants/theme';
 import { AuthProvider } from '@/lib/supabase';
 import { SplashVideo } from '@/components/SplashVideo';
 
-// Keep native Android splash screen visible until splash video is ready to play
+// Keep native splash screen visible until fonts and assets are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
+  const [fontsLoaded, fontError] = useFonts({
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+    'InstrumentSerif-Regular': InstrumentSerif_400Regular,
+    'InstrumentSerif-Italic': InstrumentSerif_400Regular_Italic,
+  });
+
   const [showSplashVideo, setShowSplashVideo] = useState(true);
 
   useEffect(() => {
@@ -25,10 +45,16 @@ export default function RootLayout() {
       })
       .catch(() => {});
   }, []);
+
+  // Hold UI until typography fonts are hydrated
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
+        <StatusBar style="light" />
         <Stack
           screenOptions={{
             headerShown: false,
@@ -96,6 +122,13 @@ export default function RootLayout() {
             options={{
               headerShown: false,
               animation: 'slide_from_right',
+            }}
+          />
+          <Stack.Screen
+            name="dev/kitchen-sink"
+            options={{
+              headerShown: false,
+              animation: 'slide_from_bottom',
             }}
           />
         </Stack>

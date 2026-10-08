@@ -29,7 +29,16 @@ import {
 } from './auth';
 import { clearPendingSaveAction } from './saved-places';
 import { resetHistorySaveGuards } from './history';
-import { clearSavedPlacesCache } from '../storage/saved-places';
+
+// Registry for external caches to clear on sign out without creating circular dependencies
+const signOutCallbacks = new Set<() => Promise<void> | void>();
+
+export function registerSignOutCallback(callback: () => Promise<void> | void): () => void {
+  signOutCallbacks.add(callback);
+  return () => {
+    signOutCallbacks.delete(callback);
+  };
+}
 
 export interface AuthContextValue {
   session: Session | null;
@@ -106,7 +115,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsLoading(false);
       }
       if (event === 'SIGNED_OUT') {
-        await clearSavedPlacesCache();
+        for (const cb of signOutCallbacks) {
+          try {
+            await cb();
+          } catch {
+            // Callback failure tolerated
+          }
+        }
         clearPendingSaveAction();
         resetHistorySaveGuards();
       }
@@ -209,7 +224,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(null);
         setUser(null);
         setError(null);
-        await clearSavedPlacesCache();
+        // Execute decoupled cache clearing callbacks
+        for (const cb of signOutCallbacks) {
+          try {
+            await cb();
+          } catch {
+            // Callback failure tolerated
+          }
+        }
         clearPendingSaveAction();
         resetHistorySaveGuards();
       } else if (result.error) {
