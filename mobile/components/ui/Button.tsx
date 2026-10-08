@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'brand';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -66,7 +66,7 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'primary' ? Colors.canvas : Colors.textPrimary}
+          color={variant === 'primary' || variant === 'brand' ? Colors.canvas : Colors.textPrimary}
         />
       ) : (
         <View style={styles.contentRow}>
@@ -127,6 +127,11 @@ const styles = StyleSheet.create({
   ghost: {
     backgroundColor: 'transparent',
   },
+  brand: {
+    backgroundColor: Colors.racingRed,
+    borderWidth: 1,
+    borderColor: Colors.racingRed,
+  },
 
   // Sizes
   sm: {
@@ -170,6 +175,9 @@ const styles = StyleSheet.create({
   },
   ghostText: {
     color: Colors.textPrimary,
+  },
+  brandText: {
+    color: Colors.ivoryMist,
   },
 
   // Text Sizes

@@ -9,23 +9,34 @@
 import { Platform, TextStyle, ViewStyle } from 'react-native';
 
 export const Colors = {
+  // Core Brand Tokens (MANDATORY BRAND PALETTE)
+  ivoryMist: '#FBF4E3',
+  onyx: '#0C0C0C',
+  racingRed: '#EB2627',
+  icyBlue: '#A6DCF8',
+
   // Surface tokens
-  canvas: '#F7F7F5',       // Primary screen canvas (Warm Alabaster)
-  surface: '#FFFFFF',      // Cards, sheets, and elevated containers
-  surfaceSubtle: '#F0F0ED',// Subdued card backgrounds / pill backgrounds
-  surfaceDark: '#111111',  // Primary buttons & high-emphasis dark blocks
+  canvas: '#FBF4E3',       // Primary screen canvas (Ivory Mist)
+  surface: '#FFFFFF',      // Elevated containers & sheets
+  surfaceIvory: '#FBF4E3', // Pure Ivory Mist surface
+  surfaceSubtle: 'rgba(12, 12, 12, 0.04)', // Subdued tint of Onyx on Ivory Mist
+  surfaceDark: '#0C0C0C',  // Primary buttons & high-emphasis dark blocks (Onyx)
   surfaceDarkElevated: '#181818',
 
   // Text tokens
-  textPrimary: '#111111',  // Primary high-contrast editorial text
-  textSecondary: '#666666',// Descriptive supporting text
-  textMuted: '#8A8A8A',    // Metadata, timestamps, captions
-  textInverse: '#F7F7F5',  // Text on dark surfaces
+  textPrimary: '#0C0C0C',  // Primary high-contrast editorial text (Onyx)
+  textSecondary: '#4A4A4A',// Descriptive supporting text
+  textMuted: '#7A7A76',    // Metadata, timestamps, captions
+  textInverse: '#FBF4E3',  // Text on dark surfaces (Ivory Mist)
+
+  // Brand Semantic Mappings
+  brand: '#EB2627',        // Racing Red (Primary brand CTA)
+  brandAccent: '#A6DCF8',  // Icy Blue (Secondary accent)
 
   // Border & divider tokens
-  borderSubtle: '#E5E5E2', // Hairline neutral borders
-  borderFocus: '#111111',  // Active/focused borders
-  borderAccent: '#C2CBD3', // Subtle slate border highlight
+  borderSubtle: 'rgba(12, 12, 12, 0.10)', // Hairline neutral borders
+  borderFocus: '#0C0C0C',  // Active/focused borders (Onyx)
+  borderAccent: '#A6DCF8', // Icy Blue border highlight
 
   // Semantic verification tokens (matches backend ResponseBuilder)
   verified: '#2D6A4F',        // Forest green (VERIFIED)
@@ -44,13 +55,13 @@ export const Colors = {
   algorithmicSurface: '#F0F0ED',
   algorithmicBorder: '#E5E5E2',
 
-  error: '#C1292E',           // Muted crimson (ERROR / TIMEOUT / FAILED)
-  errorSurface: 'rgba(193, 41, 46, 0.06)',
-  errorBorder: 'rgba(193, 41, 46, 0.20)',
+  error: '#EB2627',           // Racing Red (ERROR / TIMEOUT / FAILED)
+  errorSurface: 'rgba(235, 38, 39, 0.08)',
+  errorBorder: 'rgba(235, 38, 39, 0.20)',
 
-  info: '#4A6FA5',            // Subtle cobalt info accent
-  infoSurface: 'rgba(74, 111, 165, 0.08)',
-  infoBorder: 'rgba(74, 111, 165, 0.20)',
+  info: '#A6DCF8',            // Icy Blue info accent
+  infoSurface: 'rgba(166, 220, 248, 0.12)',
+  infoBorder: 'rgba(166, 220, 248, 0.30)',
 } as const;
 
 export const Spacing = {
@@ -60,8 +71,8 @@ export const Spacing = {
   base: 16,
   lg: 20,
   xl: 24,
-  xxl: 32,
-  xxxl: 40,
+  xxl: 28,
+  xxxl: 32,
   huge: 48,
   massive: 64,
 } as const;
