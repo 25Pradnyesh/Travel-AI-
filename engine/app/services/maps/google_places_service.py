@@ -5,6 +5,11 @@ import re
 import threading
 import requests
 
+from engine.app.services.maps.places_diagnostics import (
+    log_places_diagnostic_error,
+    sanitize_secret,
+)
+
 logger = logging.getLogger(__name__)
 
 _places_search_cache: dict[str, list[dict]] = {}
@@ -21,7 +26,8 @@ def clear_places_search_cache():
 class GooglePlacesService:
 
     def __init__(self):
-        self.api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+        raw_key = os.getenv("GOOGLE_PLACES_API_KEY")
+        self.api_key = raw_key.strip() if raw_key else None
         self.url = "https://places.googleapis.com/v1/places:searchText"
         self.max_results = 5
         self.last_error: dict | None = None
@@ -115,32 +121,52 @@ class GooglePlacesService:
             )
 
             if not response.ok:
-                error_msg = f"Upstream request failed with status {response.status_code}"
-                if response.status_code == 429:
-                    error_msg = "Google Places API quota or rate limit exceeded (HTTP 429)"
-                elif response.status_code == 403:
-                    error_msg = "Google Places API authentication or permission denied (HTTP 403)"
-
+                diag = log_places_diagnostic_error(
+                    service_name="GooglePlacesService.search",
+                    response=response,
+                    secret=self.api_key,
+                    service_logger=logger,
+                )
                 self.last_error = {
                     "status": response.status_code,
-                    "message": error_msg,
+                    "message": diag["error_msg"],
+                    "google_status": diag["google_status"],
+                    "google_message": diag["google_message"],
+                    "diagnostic_category": diag["diagnostic_category"],
+                    "actionable_hint": diag["actionable_hint"],
                 }
-                print("\n========== GOOGLE SEARCH ERROR ==========")
-                print(f"Status: {response.status_code}")
-                print(f"Error : {error_msg}")
-                print("=========================================\n")
                 return []
 
             data = response.json()
 
         except requests.RequestException as e:
-            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
-            self.last_error = {
-                "status": status_code,
-                "error_type": type(e).__name__,
-                "message": f"Network or connection error: {type(e).__name__}",
-            }
-            print(f"❌ Google Places Error: {type(e).__name__} (status: {status_code})")
+            err_resp = getattr(e, "response", None)
+            if err_resp is not None:
+                diag = log_places_diagnostic_error(
+                    service_name="GooglePlacesService.search",
+                    response=err_resp,
+                    secret=self.api_key,
+                    service_logger=logger,
+                )
+                self.last_error = {
+                    "status": diag["status_code"],
+                    "error_type": type(e).__name__,
+                    "message": diag["error_msg"],
+                    "google_status": diag["google_status"],
+                    "google_message": diag["google_message"],
+                    "diagnostic_category": diag["diagnostic_category"],
+                    "actionable_hint": diag["actionable_hint"],
+                }
+            else:
+                status_code = "network_error"
+                clean_err = sanitize_secret(str(e), self.api_key)
+                self.last_error = {
+                    "status": status_code,
+                    "error_type": type(e).__name__,
+                    "message": f"Network or connection error: {type(e).__name__}",
+                }
+                logger.error("❌ Google Places Network Error: %s", clean_err)
+                print(f"❌ Google Places Error: {type(e).__name__} (status: {status_code})")
             return []
         except Exception as e:
             self.last_error = {
