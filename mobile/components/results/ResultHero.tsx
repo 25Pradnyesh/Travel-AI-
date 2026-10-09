@@ -179,37 +179,49 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
         ) : null}
       </View>
 
-      {/* Photo Badges & Attribution (Right Side) */}
-      <View style={styles.metaRow}>
-        {hasPhoto && photoCount > 1 ? (
-          <View style={styles.photoCountBadge}>
-            <Ionicons name="camera-outline" size={12} color={Colors.ivoryMist} />
-            <Text style={styles.photoCountText}>1 of {photoCount}</Text>
-          </View>
-        ) : null}
-
-        {hasPhoto && authorText ? (
-          <View style={styles.attributionBadge}>
-            <Ionicons name="shield-checkmark-outline" size={11} color="rgba(251, 244, 227, 0.85)" />
-            <Text style={styles.attributionText} numberOfLines={1}>
-              Photo: {authorText}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-
-      {/* Bottom Content: Oversized Destination Name + Location Hierarchy */}
+      {/* Bottom Content: Meta Badges + Oversized Destination Name + Location Hierarchy */}
       <View style={styles.bottomContent}>
-        {/* Oversized 64-76px Display Name */}
-        <Text style={styles.destinationName} numberOfLines={2}>
+        {/* Photo Badges & Attribution (Cleanly positioned above title inside dark scrim) */}
+        {(hasPhoto && photoCount > 1) || (hasPhoto && authorText) ? (
+          <View style={styles.heroMetaRow}>
+            {hasPhoto && photoCount > 1 ? (
+              <View style={styles.photoCountBadge}>
+                <Ionicons name="camera-outline" size={12} color={Colors.ivoryMist} />
+                <Text style={styles.photoCountText}>1 of {photoCount}</Text>
+              </View>
+            ) : null}
+
+            {hasPhoto && authorText ? (
+              <View style={styles.attributionBadge}>
+                <Ionicons name="shield-checkmark-outline" size={11} color={Colors.icyBlue} />
+                <Text style={styles.attributionText} numberOfLines={1}>
+                  Photo: {authorText}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* Oversized Display Name with automatic font scaling for long names */}
+        <Text
+          style={styles.destinationName}
+          numberOfLines={2}
+          adjustsFontSizeToFit={true}
+          minimumFontScale={0.55}
+        >
           {destinationName}
         </Text>
 
-        {/* Location Hierarchy */}
+        {/* Location Hierarchy on Frosted Dark Pill for guaranteed contrast */}
         {locationSubtitle ? (
-          <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={14} color={Colors.icyBlue} />
-            <Text style={styles.locationSubtitle} numberOfLines={1}>
+          <View style={styles.locationPill}>
+            <Ionicons name="location-sharp" size={13} color={Colors.icyBlue} />
+            <Text
+              style={styles.locationSubtitle}
+              numberOfLines={1}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.8}
+            >
               {locationSubtitle}
             </Text>
           </View>
@@ -271,22 +283,21 @@ const styles = StyleSheet.create({
     color: Colors.ivoryMist,
     letterSpacing: -0.2,
   },
-  metaRow: {
-    position: 'absolute',
-    right: Spacing.xl,
-    bottom: 110,
-    alignItems: 'flex-end',
-    gap: 6,
-    zIndex: 5,
+  heroMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: Spacing.sm,
+    flexWrap: 'wrap',
   },
   photoCountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    backgroundColor: 'rgba(8, 18, 24, 0.78)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderColor: 'rgba(251, 244, 227, 0.20)',
     borderRadius: Radius.pill,
-    paddingHorizontal: 9,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     gap: 5,
   },
@@ -299,19 +310,19 @@ const styles = StyleSheet.create({
   attributionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    backgroundColor: 'rgba(8, 18, 24, 0.78)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderColor: 'rgba(251, 244, 227, 0.20)',
     borderRadius: Radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    gap: 4,
-    maxWidth: 240,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    gap: 5,
+    maxWidth: 280,
   },
   attributionText: {
-    fontFamily: Fonts.sansRegular,
-    fontSize: 10,
-    color: 'rgba(251, 244, 227, 0.85)',
+    fontFamily: Fonts.sansMedium,
+    fontSize: 11,
+    color: Colors.ivoryMist,
     letterSpacing: -0.1,
   },
   bottomContent: {
@@ -327,17 +338,25 @@ const styles = StyleSheet.create({
     color: Colors.ivoryMist,
     letterSpacing: -1,
   },
-  locationRow: {
+  locationPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(8, 18, 24, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 6,
+    marginTop: 8,
+    maxWidth: '96%',
   },
   locationSubtitle: {
     fontFamily: Fonts.sansMedium,
-    fontSize: 14,
-    lineHeight: 18,
-    color: Colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 17,
+    color: Colors.ivoryMist,
     letterSpacing: -0.2,
   },
   pressed: {

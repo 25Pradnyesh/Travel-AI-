@@ -25,10 +25,12 @@ import MapView, {
 import { Ionicons } from '@expo/vector-icons';
 import { MapMarker } from './MapMarker';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Colors, Radius, Shadows, Spacing, TouchTarget, Typography } from '@/constants/theme';
+import { Colors, Fonts, Radius, Shadows, Spacing, TouchTarget, Typography } from '@/constants/theme';
 import { isValidCoordinate } from '@/lib/maps';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+
+import { DARK_MUTED_MAP_STYLE } from '@/constants/map-style';
 
 export interface TravelMapProps {
   bestGuess?: BestGuess | null;
@@ -291,6 +293,8 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           scrollEnabled={true}
           zoomEnabled={true}
           toolbarEnabled={false}
+          customMapStyle={Platform.OS === 'android' ? DARK_MUTED_MAP_STYLE : undefined}
+          mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
         >
           {validMarkers.map((marker) => {
             const isSelected = selectedPlaceId === marker.id;
@@ -309,6 +313,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
                   isPrimary={marker.isPrimary}
                   isSelected={isSelected}
                   title={marker.name}
+                  category={marker.rawPlace?.category || (marker.rawPlace?.types ? marker.rawPlace.types[0] : undefined)}
                 />
               </Marker>
             );
@@ -373,35 +378,34 @@ const styles = StyleSheet.create({
   pinCountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    paddingHorizontal: Spacing.sm + 2,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(8, 18, 24, 0.85)',
+    paddingHorizontal: Spacing.sm + 4,
+    paddingVertical: 7,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
     ...Shadows.sm,
-    gap: 4,
+    gap: 5,
   },
   pinCountText: {
-    ...Typography.mono,
-    fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 12,
+    color: Colors.ivoryMist,
   },
   recenterButton: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: Radius.full,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(8, 18, 24, 0.85)',
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.md,
   },
   recenterButtonPressed: {
-    backgroundColor: Colors.surfaceSubtle,
-    transform: [{ scale: 0.95 }],
+    backgroundColor: 'rgba(14, 26, 34, 0.95)',
+    transform: [{ scale: 0.94 }],
   },
 });
 

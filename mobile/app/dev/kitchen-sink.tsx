@@ -29,22 +29,35 @@ const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
 
 export default function KitchenSinkScreen() {
   const insets = useSafeAreaInsets();
-  const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo'>('sky');
+  const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo' | 'white'>('sky');
   const stripeTargetRef = React.useRef<View>(null);
   const [inputValue, setInputValue] = useState('');
   const [showInputError, setShowInputError] = useState(false);
   const [selectedChip, setSelectedChip] = useState('Beach');
   const [isPosterSaved, setIsPosterSaved] = useState(false);
 
+  const WHITE_PHOTO_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+
   const handleToggleBackground = () => {
     hapticFeedback.light();
-    setBackgroundMode((prev) => (prev === 'sky' ? 'photo' : 'sky'));
+    setBackgroundMode((prev) => {
+      if (prev === 'sky') return 'photo';
+      if (prev === 'photo') return 'white';
+      return 'sky';
+    });
   };
+
+  const currentBgImage =
+    backgroundMode === 'photo'
+      ? SAMPLE_PHOTO
+      : backgroundMode === 'white'
+      ? { uri: WHITE_PHOTO_URI }
+      : null;
 
   return (
     <AtmosphereBackground
       variant="sky"
-      imageUrl={backgroundMode === 'photo' ? SAMPLE_PHOTO : null}
+      imageUrl={currentBgImage}
     >
       <ScrollView
         contentContainerStyle={[
@@ -72,26 +85,53 @@ export default function KitchenSinkScreen() {
             style={({ pressed }) => [styles.togglePill, pressed && styles.pressed]}
           >
             <Ionicons
-              name={backgroundMode === 'photo' ? 'image' : 'color-palette'}
+              name={
+                backgroundMode === 'photo'
+                  ? 'image'
+                  : backgroundMode === 'white'
+                  ? 'contrast'
+                  : 'color-palette'
+              }
               size={14}
               color={Colors.ivoryMist}
             />
             <Text style={styles.togglePillText}>
-              {backgroundMode === 'photo' ? 'Photo Mode (Blur+Scrim)' : 'Sky Gradient'}
+              {backgroundMode === 'photo'
+                ? 'Photo Mode'
+                : backgroundMode === 'white'
+                ? 'White Photo (Test)'
+                : 'Sky Gradient'}
             </Text>
           </Pressable>
         </View>
 
-        {/* Section 0: Title & Contrast Audit */}
+        {/* Fixtures Route Shortcut Pill */}
+        <View style={styles.fixturesLinkRow}>
+          <Pressable
+            onPress={() => {
+              hapticFeedback.selection();
+              router.push('/dev/results-fixtures');
+            }}
+            style={({ pressed }) => [styles.fixturesPill, pressed && styles.pressed]}
+          >
+            <Ionicons name="flask-outline" size={15} color={Colors.icyBlue} />
+            <Text style={styles.fixturesPillText}>Open Results Fixtures Harness (/dev/results-fixtures)</Text>
+            <Ionicons name="arrow-forward" size={13} color={Colors.icyBlue} />
+          </Pressable>
+        </View>
+
+        {/* Section 0: Title & Contrast Audit on Dark Glass Container */}
         <View style={styles.section}>
-          <Text style={styles.sectionEyebrow}>PHASE 1 PRIMITIVES AUDIT</Text>
-          <Text style={styles.heroTitle}>Tokyo</Text>
-          <Text style={styles.headlineWithAccent}>
-            Drop a reel. <Text style={styles.italicAccent}>Find the place.</Text>
-          </Text>
-          <Text style={styles.subhead}>
-            Atmospheric Canvas & Glassmorphic Primitives
-          </Text>
+          <GlassView variant="dark" style={styles.heroGlassCard}>
+            <Text style={styles.sectionEyebrow}>PHASE 1 PRIMITIVES AUDIT</Text>
+            <Text style={styles.heroTitle}>Tokyo</Text>
+            <Text style={styles.headlineWithAccent}>
+              Drop a reel. <Text style={styles.italicAccent}>Find the place.</Text>
+            </Text>
+            <Text style={styles.subhead}>
+              Atmospheric Canvas & Glassmorphic Primitives
+            </Text>
+          </GlassView>
 
           {/* Contrast Numbers Card (Dark Glass variant) */}
           <GlassView variant="dark" style={styles.contrastCard}>
@@ -107,6 +147,9 @@ export default function KitchenSinkScreen() {
             </Text>
             <Text style={styles.contrastLine}>
               • Ivory Mist on Dark Glass (#0E1A22): <Text style={styles.boldScore}>16.39:1 (AAA)</Text>
+            </Text>
+            <Text style={styles.contrastLine}>
+              • Ivory Mist on Dark Glass over Pure White: <Text style={styles.boldScore}>11.17:1 (AAA ≥ 7:1)</Text>
             </Text>
             <Text style={styles.contrastLine}>
               • Frost Tint (#A8B6BE) on Canvas: <Text style={styles.boldScore}>9.10:1 (AAA)</Text>
@@ -251,8 +294,8 @@ export default function KitchenSinkScreen() {
             <View style={styles.posterColumn}>
               <Text style={styles.cardSublabel}>With Full-Bleed Photo</Text>
               <PosterCard
-                title="Dolomites"
-                subtitle="South Tyrol · Italy"
+                title="Sample Discovery"
+                subtitle="Demo reel · Full bleed"
                 category="Destinations"
                 imageUrl={SAMPLE_PHOTO}
                 isSaved={isPosterSaved}
@@ -265,8 +308,8 @@ export default function KitchenSinkScreen() {
             <View style={styles.posterColumn}>
               <Text style={styles.cardSublabel}>Missing Photo Fallback</Text>
               <PosterCard
-                title="Dolomites"
-                subtitle="South Tyrol · Italy"
+                title="Sample Discovery"
+                subtitle="Demo reel · Missing photo"
                 category="Mountain"
                 imageUrl={null}
                 isSaved={false}
@@ -366,13 +409,42 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     color: Colors.ivoryMist,
   },
+  fixturesLinkRow: {
+    marginBottom: Spacing.xl,
+  },
+  fixturesPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(8, 18, 24, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.35)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 12,
+    minHeight: TouchTarget.minHeight,
+  },
+  fixturesPillText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 12,
+    color: Colors.icyBlue,
+    letterSpacing: -0.1,
+    flex: 1,
+    marginHorizontal: 8,
+  },
+  heroGlassCard: {
+    padding: Spacing.lg,
+    borderRadius: Radius.xxl,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    marginBottom: Spacing.md,
+  },
   subhead: {
     fontFamily: Fonts.sansRegular,
     fontSize: 14,
     lineHeight: 20,
     color: Colors.textSecondary,
     marginTop: 6,
-    marginBottom: Spacing.md,
   },
   contrastCard: {
     padding: Spacing.base,

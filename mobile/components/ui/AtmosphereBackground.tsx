@@ -92,6 +92,12 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
               />
               {/* Soft scrim so the photo's vibrant colors visibly shine */}
               <View style={[StyleSheet.absoluteFill, styles.photoScrim]} />
+              {/* Top vignette scrim protecting floating header chrome */}
+              <LinearGradient
+                colors={['rgba(5, 11, 14, 0.50)', 'transparent']}
+                locations={[0, 1]}
+                style={styles.topVignette}
+              />
               {/* Gentle bottom vignette gradient protecting bottom cards */}
               <LinearGradient
                 colors={['transparent', 'rgba(5, 11, 14, 0.20)', 'rgba(5, 11, 14, 0.70)', 'rgba(5, 11, 14, 0.92)']}

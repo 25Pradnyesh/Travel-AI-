@@ -37,10 +37,10 @@ import { useSavedPlaces } from '@/lib/storage/saved-places';
 const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
 
 const SAMPLE_REEL = {
-  label: 'Alpine Lakes Reel',
+  label: 'Sample Reel',
   url: 'https://www.instagram.com/reel/C8xyzExample1/',
-  destination: 'Dolomites Alpine Lake',
-  country: 'South Tyrol · Italy',
+  destination: 'Sample Discovery',
+  country: 'Demo reel · Tap to analyze',
   photo: SAMPLE_PHOTO,
 };
 
@@ -409,7 +409,7 @@ export default function AnalyzeScreen() {
                       subtitle={SAMPLE_REEL.country}
                       imageUrl={SAMPLE_REEL.photo}
                       category="Sample Discovery"
-                      isSaved={isSaved('sample_dolomites')}
+                      isSaved={isSaved('sample_discovery')}
                       onPress={() => handleSelectExample(SAMPLE_REEL.url)}
                       onToggleSave={() => {}}
                     />
