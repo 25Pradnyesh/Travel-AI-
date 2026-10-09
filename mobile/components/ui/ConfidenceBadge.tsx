@@ -62,6 +62,15 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
     ? 'alert-circle-sharp'
     : 'help-circle-sharp';
 
+  let displayPercent: number | null = null;
+  if (typeof confidence === 'number' && !isNaN(confidence) && confidence > 0) {
+    if (confidence <= 1.0) {
+      displayPercent = Math.round(confidence * 100);
+    } else {
+      displayPercent = Math.round(confidence);
+    }
+  }
+
   return (
     <View
       style={[
@@ -71,15 +80,15 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
       ]}
       accessible={true}
       accessibilityRole="text"
-      accessibilityLabel={`Verification status: ${label}${confidence != null ? `, ${confidence}% confidence` : ''}`}
+      accessibilityLabel={`Verification status: ${label}${displayPercent != null ? `, ${displayPercent}% confidence` : ''}`}
     >
       {showIcon && (
         <Ionicons name={iconName} size={12} color={badgeColor} style={styles.icon} />
       )}
       <Text style={[styles.text, { color: badgeColor }]}>{label}</Text>
-      {confidence != null && confidence > 0 && (
+      {displayPercent != null && displayPercent > 0 && (
         <Text style={[styles.confidenceText, { color: badgeColor }]}>
-          {Math.round(confidence)}%
+          {displayPercent}%
         </Text>
       )}
     </View>

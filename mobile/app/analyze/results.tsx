@@ -200,7 +200,7 @@ export default function ResultsScreen() {
     );
   }
 
-  const scrollBottomPadding = 58 + Math.max(insets.bottom, 16) + Spacing.xl;
+  const scrollBottomPadding = 80 + Math.max(insets.bottom, 16) + 56;
 
   return (
     <View style={styles.screen}>
@@ -235,7 +235,6 @@ export default function ResultsScreen() {
 
             {/* 3. Travel Dossier (Stacked dark-glass rows with circular buttons & expandable tips) */}
             <DestinationBriefing
-              summary={ti.travel_summary}
               intelligence={ti}
               tips={tipsList}
             />

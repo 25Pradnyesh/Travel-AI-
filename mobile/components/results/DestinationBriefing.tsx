@@ -10,6 +10,60 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
+/**
+ * Safely format budget with Intl.NumberFormat and real currency, with no hardcoded '$'
+ */
+export function formatBudget(budget?: string | number, currencyCode?: string): string {
+  if (!budget && budget !== 0) return '';
+  const rawStr = String(budget).trim();
+  if (!rawStr) return '';
+
+  const cleanCurrency = (currencyCode || '').trim().toUpperCase();
+
+  // If a numeric range is given, e.g. "120 - 180" or "$280 - $420"
+  const rangeMatch = rawStr.match(/(\d+)\s*[-–—]\s*(\d+)/);
+  if (rangeMatch) {
+    const low = parseInt(rangeMatch[1], 10);
+    const high = parseInt(rangeMatch[2], 10);
+    if (!isNaN(low) && !isNaN(high)) {
+      if (cleanCurrency && cleanCurrency.length === 3) {
+        try {
+          const formatter = new Intl.NumberFormat(undefined, {
+            style: 'currency',
+            currency: cleanCurrency,
+            maximumFractionDigits: 0,
+          });
+          return `${formatter.format(low)} – ${formatter.format(high)}`;
+        } catch {
+          return `${cleanCurrency} ${low} – ${high}`;
+        }
+      }
+      return `${low} – ${high}`;
+    }
+  }
+
+  // If a single number is given
+  const numericOnly = parseFloat(rawStr.replace(/[^0-9.]/g, ''));
+  if (!isNaN(numericOnly)) {
+    if (cleanCurrency && cleanCurrency.length === 3) {
+      try {
+        const formatter = new Intl.NumberFormat(undefined, {
+          style: 'currency',
+          currency: cleanCurrency,
+          maximumFractionDigits: 0,
+        });
+        return formatter.format(numericOnly);
+      } catch {
+        return `${cleanCurrency} ${numericOnly}`;
+      }
+    }
+    return String(numericOnly);
+  }
+
+  // Fallback: strip leading '$' if currency code provided
+  return cleanCurrency ? `${cleanCurrency} ${rawStr.replace(/^\$+/, '')}` : rawStr;
+}
+
 export interface DestinationBriefingProps {
   summary?: string;
   intelligence?: TravelIntelligence;
@@ -17,18 +71,17 @@ export interface DestinationBriefingProps {
 }
 
 export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
-  summary,
   intelligence = {},
   tips = [],
 }) => {
   const [tipsExpanded, setTipsExpanded] = useState(false);
 
-  const hasSummary = Boolean(summary && summary.trim().length > 0);
   const hasSeason = Boolean(intelligence.best_season && intelligence.best_season.trim().length > 0);
-  const hasBudget = Boolean(
-    (intelligence.estimated_daily_budget && intelligence.estimated_daily_budget.trim().length > 0) ||
-      (intelligence.budget_level && intelligence.budget_level.trim().length > 0)
+  const formattedBudget = formatBudget(
+    intelligence.estimated_daily_budget,
+    intelligence.currency
   );
+  const hasBudget = Boolean(formattedBudget || (intelligence.budget_level && intelligence.budget_level.trim().length > 0));
   const hasStay = Boolean(
     intelligence.recommended_trip_days && intelligence.recommended_trip_days.trim().length > 0
   );
@@ -36,7 +89,7 @@ export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
 
   const hasAnyDossierRow = hasSeason || hasBudget || hasStay || hasTips;
 
-  if (!hasSummary && !hasAnyDossierRow) {
+  if (!hasAnyDossierRow) {
     return null;
   }
 
@@ -48,96 +101,74 @@ export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Optional About Summary Card */}
-      {hasSummary ? (
-        <GlassView variant="dark" borderRadius={Radius.xl} style={styles.summaryCard}>
-          <View style={styles.sectionHeaderRow}>
-            <Ionicons name="document-text-outline" size={13} color={Colors.icyBlue} />
-            <Text style={styles.sectionHeader}>ABOUT THE DESTINATION</Text>
-          </View>
-          <Text style={styles.summaryText}>{summary}</Text>
-        </GlassView>
-      ) : null}
-
       {/* Travel Dossier Section Header */}
-      {hasAnyDossierRow ? (
-        <View style={styles.dossierSection}>
-          <Text style={styles.dossierTitle}>
-            Travel <Text style={styles.dossierTitleItalic}>Dossier</Text>
-          </Text>
+      <View style={styles.dossierSection}>
+        <Text style={styles.dossierTitle}>
+          Travel <Text style={styles.dossierTitleItalic}>Dossier</Text>
+        </Text>
 
-          <View style={styles.rowsStack}>
-            {/* Row 1: Best Season */}
-            {hasSeason ? (
-              <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="calendar-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <Text style={styles.rowLabel}>BEST SEASON</Text>
-                    <Text style={styles.rowValue}>{intelligence.best_season}</Text>
-                    {Array.isArray(intelligence.peak_months) &&
-                    intelligence.peak_months.length > 0 ? (
-                      <Text style={styles.rowSubtext}>
-                        Peak: {intelligence.peak_months.join(', ')}
-                      </Text>
-                    ) : null}
-                  </View>
+        <View style={styles.rowsStack}>
+          {/* Row 1: Best Season */}
+          {hasSeason ? (
+            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="calendar-outline" size={16} color={Colors.icyBlue} />
                 </View>
-                <View style={styles.rowRightStatic}>
-                  <Ionicons name="sunny-outline" size={16} color={Colors.textSecondary} />
-                </View>
-              </GlassView>
-            ) : null}
-
-            {/* Row 2: Daily Budget */}
-            {hasBudget ? (
-              <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="wallet-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <Text style={styles.rowLabel}>DAILY BUDGET</Text>
-                    <Text style={styles.rowValue}>
-                      {intelligence.estimated_daily_budget || intelligence.budget_level}
-                      {intelligence.currency ? ` (${intelligence.currency})` : ''}
+                <View style={styles.rowTextCol}>
+                  <Text style={styles.rowLabel}>BEST SEASON</Text>
+                  <Text style={styles.rowValue}>{intelligence.best_season}</Text>
+                  {Array.isArray(intelligence.peak_months) &&
+                  intelligence.peak_months.length > 0 ? (
+                    <Text style={styles.rowSubtext}>
+                      Peak: {intelligence.peak_months.join(', ')}
                     </Text>
-                    {intelligence.budget_level && intelligence.estimated_daily_budget ? (
-                      <Text style={styles.rowSubtext}>
-                        {intelligence.budget_level} tier
-                      </Text>
-                    ) : null}
-                  </View>
+                  ) : null}
                 </View>
-                <View style={styles.rowRightStatic}>
-                  <Ionicons name="cash-outline" size={16} color={Colors.textSecondary} />
-                </View>
-              </GlassView>
-            ) : null}
+              </View>
+            </GlassView>
+          ) : null}
 
-            {/* Row 3: Ideal Stay */}
-            {hasStay ? (
-              <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="time-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <Text style={styles.rowLabel}>IDEAL STAY</Text>
-                    <Text style={styles.rowValue}>{intelligence.recommended_trip_days}</Text>
-                    <Text style={styles.rowSubtext}>Recommended visit duration</Text>
-                  </View>
+          {/* Row 2: Daily Budget */}
+          {hasBudget ? (
+            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="wallet-outline" size={16} color={Colors.icyBlue} />
                 </View>
-                <View style={styles.rowRightStatic}>
-                  <Ionicons name="hourglass-outline" size={16} color={Colors.textSecondary} />
+                <View style={styles.rowTextCol}>
+                  <Text style={styles.rowLabel}>DAILY BUDGET</Text>
+                  <Text style={styles.rowValue}>
+                    {formattedBudget || intelligence.budget_level || 'Moderate'}
+                  </Text>
+                  {intelligence.budget_level && formattedBudget ? (
+                    <Text style={styles.rowSubtext}>
+                      {intelligence.budget_level} tier
+                    </Text>
+                  ) : null}
                 </View>
-              </GlassView>
-            ) : null}
+              </View>
+            </GlassView>
+          ) : null}
 
-            {/* Row 4: Local Tips (Tap to expand inline!) */}
-            {hasTips ? (
+          {/* Row 3: Ideal Stay */}
+          {hasStay ? (
+            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="time-outline" size={16} color={Colors.icyBlue} />
+                </View>
+                <View style={styles.rowTextCol}>
+                  <Text style={styles.rowLabel}>IDEAL STAY</Text>
+                  <Text style={styles.rowValue}>{intelligence.recommended_trip_days}</Text>
+                  <Text style={styles.rowSubtext}>Recommended visit duration</Text>
+                </View>
+              </View>
+            </GlassView>
+          ) : null}
+
+          {/* Row 4: Local Tips (Tap to expand inline!) */}
+          {hasTips ? (
               <GlassView variant="dark" borderRadius={Radius.lg} style={styles.tipsRowContainer}>
                 <Pressable
                   onPress={handleToggleTips}
@@ -184,10 +215,9 @@ export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
             ) : null}
           </View>
         </View>
-      ) : null}
-    </View>
-  );
-};
+      </View>
+    );
+  };
 
 const styles = StyleSheet.create({
   container: {
@@ -233,7 +263,6 @@ const styles = StyleSheet.create({
   },
   dossierTitleItalic: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontWeight: 'normal',
   },
   rowsStack: {

@@ -22,6 +22,7 @@ import MapView, {
   PROVIDER_DEFAULT,
   Region,
 } from 'react-native-maps';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { MapMarker } from './MapMarker';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -38,6 +39,8 @@ export interface TravelMapProps {
   selectedPlaceId?: string | null;
   onSelectPlace?: (placeId: string, isPrimary: boolean) => void;
   showRecenterButton?: boolean;
+  topOffset?: number;
+  useDarkStyle?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -66,12 +69,26 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
       selectedPlaceId,
       onSelectPlace,
       showRecenterButton = true,
+      topOffset,
+      useDarkStyle = false,
       style,
     },
     ref
   ) => {
+    const insets = useSafeAreaInsets();
     const mapRef = useRef<MapView>(null);
     const [isMapReady, setIsMapReady] = useState(false);
+    const [isLayoutReady, setIsLayoutReady] = useState(false);
+    const [tracksViewChanges, setTracksViewChanges] = useState(true);
+
+    // Keep tracksViewChanges active initially and whenever selected pin changes, then disable for 60fps pans
+    useEffect(() => {
+      setTracksViewChanges(true);
+      const timer = setTimeout(() => {
+        setTracksViewChanges(false);
+      }, 550);
+      return () => clearTimeout(timer);
+    }, [selectedPlaceId]);
 
     // 1. Filter and normalize valid geographic coordinates
     const validMarkers = useMemo<ValidMarkerItem[]>(() => {
@@ -243,16 +260,15 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
       [handleRecenter, animateToPlace]
     );
 
-    // Initial fit once map is ready
+    // Initial fit once both map and native layout are fully ready
     useEffect(() => {
-      if (isMapReady && validMarkers.length > 0) {
-        // Small delay to ensure native view layout is complete
+      if (isMapReady && isLayoutReady && validMarkers.length > 0) {
         const timer = setTimeout(() => {
           handleRecenter();
-        }, 300);
+        }, 350);
         return () => clearTimeout(timer);
       }
-    }, [isMapReady, validMarkers.length, handleRecenter]);
+    }, [isMapReady, isLayoutReady, validMarkers.length, handleRecenter]);
 
     // Animate map when selectedPlaceId changes
     useEffect(() => {
@@ -277,6 +293,8 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
       );
     }
 
+    const resolvedFloatingTop = topOffset ?? Math.max(insets.top, 16) + 62;
+
     return (
       <View style={[styles.container, style]}>
         <MapView
@@ -285,6 +303,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           style={StyleSheet.absoluteFill}
           initialRegion={initialRegion}
           onMapReady={() => setIsMapReady(true)}
+          onLayout={() => setIsLayoutReady(true)}
           showsUserLocation={false}
           showsMyLocationButton={false}
           showsCompass={false}
@@ -293,8 +312,8 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           scrollEnabled={true}
           zoomEnabled={true}
           toolbarEnabled={false}
-          customMapStyle={Platform.OS === 'android' ? DARK_MUTED_MAP_STYLE : undefined}
-          mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+          customMapStyle={useDarkStyle ? DARK_MUTED_MAP_STYLE : undefined}
+          mapType="standard"
         >
           {validMarkers.map((marker) => {
             const isSelected = selectedPlaceId === marker.id;
@@ -303,6 +322,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
                 key={marker.id}
                 coordinate={marker.coordinate}
                 anchor={MARKER_ANCHOR}
+                tracksViewChanges={tracksViewChanges}
                 zIndex={marker.isPrimary ? (isSelected ? 1100 : 1000) : isSelected ? 950 : 500}
                 onPress={() => {
                   hapticFeedback.selection();
@@ -321,7 +341,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
         </MapView>
 
         {/* Floating Controls Bar (Recenter button + pin counter badge) */}
-        <View style={styles.floatingControls}>
+        <View style={[styles.floatingControls, { top: resolvedFloatingTop }]}>
           <View style={styles.pinCountBadge}>
             <Ionicons name="location" size={12} color={Colors.textPrimary} />
             <Text style={styles.pinCountText}>
@@ -378,12 +398,12 @@ const styles = StyleSheet.create({
   pinCountBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(8, 18, 24, 0.85)',
+    backgroundColor: 'rgba(8, 18, 24, 0.94)',
     paddingHorizontal: Spacing.sm + 4,
     paddingVertical: 7,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderColor: 'rgba(251, 244, 227, 0.22)',
     ...Shadows.sm,
     gap: 5,
   },
@@ -396,9 +416,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(8, 18, 24, 0.85)',
+    backgroundColor: 'rgba(8, 18, 24, 0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderColor: 'rgba(251, 244, 227, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
     ...Shadows.md,

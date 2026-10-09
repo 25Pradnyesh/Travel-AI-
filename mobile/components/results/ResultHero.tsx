@@ -273,9 +273,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 7,
     gap: 6,
-    backgroundColor: 'rgba(8, 18, 24, 0.65)',
+    backgroundColor: 'rgba(8, 18, 24, 0.88)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.20)',
+    borderColor: 'rgba(251, 244, 227, 0.24)',
   },
   pillText: {
     fontFamily: Fonts.sansSemiBold,
@@ -332,7 +332,6 @@ const styles = StyleSheet.create({
   },
   destinationName: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontSize: 64,
     lineHeight: 68,
     color: Colors.ivoryMist,

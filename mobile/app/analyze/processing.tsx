@@ -267,7 +267,7 @@ export default function ProcessingScreen() {
 const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 90,
+    paddingBottom: 130,
   },
   bottomPillWrapper: {
     position: 'absolute',

@@ -286,7 +286,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    marginTop: Spacing.md,
+    marginTop: Spacing.base,
+    marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.md,
   },
   captionText: {

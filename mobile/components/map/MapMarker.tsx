@@ -59,7 +59,7 @@ export const MapMarker: React.FC<MapMarkerProps> = React.memo(
     // 1. Primary Destination Pin: Racing Red with soft pulse halo
     if (isPrimary) {
       return (
-        <View style={styles.container}>
+        <View style={styles.container} collapsable={false}>
           <View style={[styles.primaryPulseHalo, isSelected && styles.primaryPulseHaloSelected]} />
           <View
             style={[
@@ -81,7 +81,7 @@ export const MapMarker: React.FC<MapMarkerProps> = React.memo(
     const tint = getCategoryTint(category);
 
     return (
-      <View style={styles.container}>
+      <View style={styles.container} collapsable={false}>
         <View
           style={[
             styles.nearbyHalo,

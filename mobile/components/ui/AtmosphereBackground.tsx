@@ -115,19 +115,57 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
               />
               {/* Top vignette scrim protecting header legibility */}
               <LinearGradient
-                colors={['rgba(5, 11, 14, 0.40)', 'transparent']}
-                locations={[0, 1]}
+                colors={['rgba(8, 18, 24, 0.85)', 'rgba(8, 18, 24, 0.40)', 'transparent']}
+                locations={[0, 0.5, 1]}
                 style={styles.topVignette}
               />
             </View>
           )}
         </BlurTargetView>
 
+        {/* Sticky top dark header scrim protecting status bar when scrolled */}
+        <LinearGradient
+          colors={['rgba(8, 18, 24, 0.94)', 'rgba(8, 18, 24, 0.60)', 'transparent']}
+          locations={[0, 0.5, 1]}
+          style={styles.stickyHeaderScrim}
+          pointerEvents="none"
+        />
+
         {children}
       </View>
     </AtmosphereContext.Provider>
   );
 };
+
+export interface AtmosphereScrollGradientProps {
+  height?: number;
+  style?: ViewStyle;
+}
+
+/**
+ * Anchors the Signature VAMO Sky gradient to the top of scroll content.
+ * When scrolled down, this gradient moves up with the content, leaving deep Onyx canvas behind.
+ */
+export const AtmosphereScrollGradient: React.FC<AtmosphereScrollGradientProps> = ({
+  height = 440,
+  style,
+}) => (
+  <LinearGradient
+    colors={['#A6DCF8', '#2F6275', '#081218']}
+    locations={[0, 0.36, 1]}
+    style={[
+      {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height,
+      },
+      style,
+    ]}
+    pointerEvents="none"
+  />
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -145,6 +183,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 130,
+  },
+  stickyHeaderScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 72,
+    zIndex: 50,
   },
 });
 

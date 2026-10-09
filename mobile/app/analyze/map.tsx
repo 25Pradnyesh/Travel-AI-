@@ -132,6 +132,7 @@ export default function ExplorationMapScreen() {
           selectedPlaceId={selectedPlaceId}
           onSelectPlace={handleSelectPlace}
           showRecenterButton={true}
+          topOffset={Math.max(insets.top, 16) + 60}
         />
       </View>
 
@@ -218,9 +219,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.sm,
-    backgroundColor: 'rgba(8, 18, 24, 0.82)',
+    backgroundColor: 'rgba(8, 18, 24, 0.94)',
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
+    borderColor: 'rgba(251, 244, 227, 0.24)',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.35,

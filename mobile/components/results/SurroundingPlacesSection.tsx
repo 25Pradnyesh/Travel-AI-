@@ -185,7 +185,6 @@ const styles = StyleSheet.create({
   },
   sectionTitleItalic: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontWeight: 'normal',
   },
   subHeader: {

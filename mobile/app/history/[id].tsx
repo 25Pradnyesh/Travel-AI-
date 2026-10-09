@@ -501,7 +501,6 @@ const styles = StyleSheet.create({
   mutedText: {
     ...Typography.caption,
     color: Colors.textMuted,
-    fontStyle: 'italic',
   },
   metaRow: {
     flexDirection: 'row',

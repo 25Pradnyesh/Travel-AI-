@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
     marginRight: Spacing.xs + 2,
   },
   unselected: {
-    backgroundColor: Colors.glassBg,
-    borderColor: Colors.glassBorder,
+    backgroundColor: 'rgba(8, 18, 24, 0.82)',
+    borderColor: 'rgba(251, 244, 227, 0.16)',
   },
   selected: {
     backgroundColor: Colors.onyx,

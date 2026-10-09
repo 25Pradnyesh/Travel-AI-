@@ -131,8 +131,8 @@ export const Fonts = {
   sansMedium: 'Inter-Medium',
   sansSemiBold: 'Inter-SemiBold',
   sansBold: 'Inter-Bold',
-  serifRegular: 'InstrumentSerif-Regular',
-  serifItalic: 'InstrumentSerif-Italic',
+  serifRegular: 'InstrumentSerif_400Regular',
+  serifItalic: 'InstrumentSerif_400Regular_Italic',
 } as const;
 
 export const Typography: Record<string, TextStyle> = {
@@ -174,7 +174,6 @@ export const Typography: Record<string, TextStyle> = {
     fontFamily: Fonts.serifItalic,
     fontSize: 38,
     lineHeight: 42,
-    fontStyle: 'italic',
     color: Colors.ivoryMist,
   },
 

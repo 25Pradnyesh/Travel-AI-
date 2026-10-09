@@ -9,6 +9,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import {
   AtmosphereBackground,
   ConfidenceBadge,
@@ -189,6 +190,56 @@ export default function ResultsFixturesScreen() {
           </View>
         </View>
 
+        {/* Plain MapView Bisect Test Section */}
+        <View style={styles.mapTestSection}>
+          <Text style={styles.sectionLabel}>MAP BISECT HARNESS (PLAIN MAPVIEW)</Text>
+          <GlassView variant="dark" borderRadius={Radius.xl} style={styles.mapTestCard}>
+            <View style={styles.mapTestHeader}>
+              <Ionicons name="map" size={16} color={Colors.icyBlue} />
+              <Text style={styles.mapTestTitle}>Plain MapView (Default Pins, No Styling)</Text>
+            </View>
+            <Text style={styles.mapTestDesc}>
+              Bisect baseline: renders native Google Maps raster tiles with standard red markers to verify tile network requests and coordinates without custom styles.
+            </Text>
+            {bestGuess?.latitude != null && bestGuess?.longitude != null ? (
+              <View style={styles.plainMapWrapper}>
+                <MapView
+                  provider={PROVIDER_DEFAULT}
+                  style={styles.plainMap}
+                  initialRegion={{
+                    latitude: bestGuess.latitude,
+                    longitude: bestGuess.longitude,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                  }}
+                  toolbarEnabled={false}
+                >
+                  <Marker
+                    coordinate={{
+                      latitude: bestGuess.latitude,
+                      longitude: bestGuess.longitude,
+                    }}
+                    title={bestGuess.name}
+                    description="Primary Destination"
+                  />
+                  {nearby.map((p, idx) =>
+                    p.latitude != null && p.longitude != null ? (
+                      <Marker
+                        key={p.place_id || idx}
+                        coordinate={{ latitude: p.latitude, longitude: p.longitude }}
+                        title={p.name}
+                        pinColor="blue"
+                      />
+                    ) : null
+                  )}
+                </MapView>
+              </View>
+            ) : (
+              <Text style={styles.mapEmptyText}>No coordinates available in this scenario.</Text>
+            )}
+          </GlassView>
+        </View>
+
         {/* Live Inline Preview Section */}
         <View style={styles.previewSection}>
           <Text style={styles.sectionLabel}>INLINE LIVE COMPONENT PREVIEW</Text>
@@ -218,7 +269,6 @@ export default function ResultsFixturesScreen() {
 
           {/* Dossier Preview */}
           <DestinationBriefing
-            summary={ti.travel_summary as string | undefined}
             intelligence={ti}
             tips={Array.isArray(ti.travel_tips) ? (ti.travel_tips as string[]) : []}
           />
@@ -402,5 +452,47 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.97 }],
+  },
+  mapTestSection: {
+    marginBottom: Spacing.xxl,
+  },
+  mapTestCard: {
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.14)',
+  },
+  mapTestHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  mapTestTitle: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
+    color: Colors.ivoryMist,
+  },
+  mapTestDesc: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    lineHeight: 16,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  plainMapWrapper: {
+    height: 220,
+    borderRadius: Radius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.12)',
+  },
+  plainMap: {
+    ...StyleSheet.absoluteFill,
+  },
+  mapEmptyText: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    color: Colors.textMuted,
+    paddingVertical: Spacing.sm,
   },
 });

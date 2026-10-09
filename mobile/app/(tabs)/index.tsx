@@ -468,7 +468,6 @@ const styles = StyleSheet.create({
   },
   displayItalicAccent: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontSize: 58,
     lineHeight: 62,
     color: Colors.ivoryMist,
@@ -534,7 +533,6 @@ const styles = StyleSheet.create({
   },
   focusTitleItalic: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     color: Colors.ivoryMist,
   },
   viewAllText: {

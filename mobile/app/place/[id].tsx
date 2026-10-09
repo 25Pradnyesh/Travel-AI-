@@ -143,7 +143,7 @@ export default function PlaceDetailScreen() {
 
   // Shorter poster-hero height (~40% of screen height, min 320px)
   const heroHeight = Math.max(320, Math.round(screenHeight * 0.40));
-  const scrollBottomPadding = 64 + Math.max(insets.bottom, 12) + Spacing.xl;
+  const scrollBottomPadding = 80 + Math.max(insets.bottom, 16) + 48;
 
   return (
     <View style={styles.screen}>
@@ -482,7 +482,6 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontSize: 42,
     lineHeight: 46,
     color: Colors.ivoryMist,

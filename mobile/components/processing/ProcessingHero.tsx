@@ -72,7 +72,6 @@ const styles = StyleSheet.create({
   },
   headline: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontSize: 38,
     lineHeight: 44,
     color: Colors.ivoryMist,
@@ -109,7 +108,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.serifItalic,
     fontSize: 12,
     lineHeight: 17,
-    fontStyle: 'italic',
     color: Colors.icyBlue,
     maxWidth: 290,
     textAlign: 'center',

@@ -94,7 +94,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     fontSize: 24,
     lineHeight: 28,
     color: Colors.ivoryMist,

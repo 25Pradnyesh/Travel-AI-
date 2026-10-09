@@ -330,6 +330,21 @@ export default function KitchenSinkScreen() {
             <SkeletonShimmer height={14} width="40%" borderRadius={Radius.sm} />
           </GlassView>
         </View>
+
+        {/* Section 8: Typography Comparison: Sans Italic vs Instrument Serif Italic */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>8. Font Audit: Sans Italic vs Serif Italic</Text>
+          <GlassView variant="dark" borderRadius={Radius.xl} style={styles.contrastCard}>
+            <View style={styles.fontCompareRow}>
+              <Text style={styles.fontCompareLabel}>Sans-Italic (System / Inter):</Text>
+              <Text style={styles.sansItalicSample}>Finding your place. Amalfi Coast Dossier</Text>
+            </View>
+            <View style={[styles.fontCompareRow, { marginTop: Spacing.md }]}>
+              <Text style={styles.fontCompareLabel}>Instrument Serif Italic (Signature VAMO):</Text>
+              <Text style={styles.serifItalicSample}>Finding your place. Amalfi Coast Dossier</Text>
+            </View>
+          </GlassView>
+        </View>
       </ScrollView>
     </AtmosphereBackground>
   );
@@ -406,7 +421,6 @@ const styles = StyleSheet.create({
   },
   italicAccent: {
     fontFamily: Fonts.serifItalic,
-    fontStyle: 'italic',
     color: Colors.ivoryMist,
   },
   fixturesLinkRow: {
@@ -479,7 +493,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.textMuted,
     marginTop: Spacing.sm,
-    fontStyle: 'italic',
   },
   sectionTitle: {
     fontFamily: Fonts.sansSemiBold,
@@ -582,5 +595,28 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.75,
     transform: [{ scale: 0.97 }],
+  },
+  fontCompareRow: {
+    gap: 4,
+  },
+  fontCompareLabel: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
+    letterSpacing: 1,
+    color: Colors.icyBlue,
+    textTransform: 'uppercase',
+  },
+  sansItalicSample: {
+    fontFamily: Fonts.sansMedium,
+    fontStyle: 'italic',
+    fontSize: 22,
+    lineHeight: 28,
+    color: Colors.ivoryMist,
+  },
+  serifItalicSample: {
+    fontFamily: Fonts.serifItalic,
+    fontSize: 26,
+    lineHeight: 30,
+    color: Colors.ivoryMist,
   },
 });

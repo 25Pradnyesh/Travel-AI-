@@ -28,6 +28,8 @@ export default function RootLayout() {
     'Inter-Medium': Inter_500Medium,
     'Inter-SemiBold': Inter_600SemiBold,
     'Inter-Bold': Inter_700Bold,
+    InstrumentSerif_400Regular,
+    InstrumentSerif_400Regular_Italic,
     'InstrumentSerif-Regular': InstrumentSerif_400Regular,
     'InstrumentSerif-Italic': InstrumentSerif_400Regular_Italic,
   });

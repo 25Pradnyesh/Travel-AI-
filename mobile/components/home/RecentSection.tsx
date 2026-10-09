@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { AnalysisRow, resolveThumbnailUrl } from '@/lib/supabase';
 import { hapticFeedback } from '@/lib/haptics';
 
@@ -193,10 +193,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   quietEmptyText: {
+    fontFamily: Fonts.sansRegular,
     fontSize: 12,
     lineHeight: 16,
-    color: 'rgba(12, 12, 12, 0.35)',
-    fontStyle: 'italic',
+    color: Colors.textMuted,
     textAlign: 'center',
   },
 });

@@ -169,7 +169,12 @@ export const PosterCard: React.FC<PosterCardProps> = ({
         ) : null}
 
         {/* Large Poster Display Name (Instrument Serif) */}
-        <Text style={styles.titleText} numberOfLines={2}>
+        <Text
+          style={styles.titleText}
+          numberOfLines={3}
+          adjustsFontSizeToFit={true}
+          minimumFontScale={0.8}
+        >
           {title}
         </Text>
       </View>
@@ -246,15 +251,16 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontFamily: Fonts.serifRegular,
-    fontSize: 34,
-    lineHeight: 38,
+    fontSize: 28,
+    lineHeight: 32,
     color: Colors.ivoryMist,
-    letterSpacing: -0.6,
+    letterSpacing: -0.4,
   },
   fallbackIconWrapper: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 44,
   },
   pressed: {
     opacity: 0.9,
