@@ -1,8 +1,16 @@
 import copy
+import logging
 import os
 import threading
 
 import requests
+
+from engine.app.services.maps.places_diagnostics import (
+    log_places_diagnostic_error,
+    sanitize_secret,
+)
+
+logger = logging.getLogger(__name__)
 
 _place_details_cache: dict[str, dict] = {}
 _details_cache_lock = threading.Lock()
@@ -18,7 +26,8 @@ def clear_place_details_cache():
 class GooglePlaceDetailsService:
 
     def __init__(self):
-        self.api_key = os.getenv("GOOGLE_PLACES_API_KEY")
+        raw_key = os.getenv("GOOGLE_PLACES_API_KEY")
+        self.api_key = raw_key.strip() if raw_key else None
         self.url = "https://places.googleapis.com/v1/places/"
         self.timeout = 10
         self.last_error: dict | None = None
@@ -115,19 +124,55 @@ class GooglePlaceDetailsService:
                 headers=headers,
                 timeout=self.timeout,
             )
-            response.raise_for_status()
+            if not response.ok:
+                diag = log_places_diagnostic_error(
+                    service_name="GooglePlaceDetailsService.get_details",
+                    response=response,
+                    secret=self.api_key,
+                    service_logger=logger,
+                )
+                self.last_error = {
+                    "status": response.status_code,
+                    "message": diag["error_msg"],
+                    "google_status": diag["google_status"],
+                    "google_message": diag["google_message"],
+                    "diagnostic_category": diag["diagnostic_category"],
+                    "actionable_hint": diag["actionable_hint"],
+                }
+                return None
+
             data = response.json()
 
         except requests.RequestException as e:
-            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
-            self.last_error = {
-                "status": status_code,
-                "error_type": type(e).__name__,
-                "message": f"Place details request failed: {type(e).__name__}",
-            }
-            print(
-                f"❌ Google Place Details Error: {type(e).__name__} (status: {status_code})"
-            )
+            err_resp = getattr(e, "response", None)
+            if err_resp is not None:
+                diag = log_places_diagnostic_error(
+                    service_name="GooglePlaceDetailsService.get_details",
+                    response=err_resp,
+                    secret=self.api_key,
+                    service_logger=logger,
+                )
+                self.last_error = {
+                    "status": diag["status_code"],
+                    "error_type": type(e).__name__,
+                    "message": diag["error_msg"],
+                    "google_status": diag["google_status"],
+                    "google_message": diag["google_message"],
+                    "diagnostic_category": diag["diagnostic_category"],
+                    "actionable_hint": diag["actionable_hint"],
+                }
+            else:
+                status_code = "network_error"
+                clean_err = sanitize_secret(str(e), self.api_key)
+                self.last_error = {
+                    "status": status_code,
+                    "error_type": type(e).__name__,
+                    "message": f"Place details request failed: {type(e).__name__}",
+                }
+                logger.error("❌ Google Place Details Network Error: %s", clean_err)
+                print(
+                    f"❌ Google Place Details Error: {type(e).__name__} (status: {status_code})"
+                )
             return None
         except Exception as e:
             self.last_error = {

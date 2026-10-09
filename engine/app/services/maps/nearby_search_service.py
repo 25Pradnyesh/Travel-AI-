@@ -1,10 +1,18 @@
 import concurrent.futures
 import copy
+import logging
 import math
 import os
 import threading
 
 import requests
+
+from engine.app.services.maps.places_diagnostics import (
+    log_places_diagnostic_error,
+    sanitize_secret,
+)
+
+logger = logging.getLogger(__name__)
 
 _nearby_cache: dict[tuple, dict] = {}
 _nearby_cache_lock = threading.Lock()
@@ -120,9 +128,10 @@ class NearbySearchService:
 
     def __init__(self):
 
-        self.api_key = os.getenv(
+        raw_key = os.getenv(
             "GOOGLE_PLACES_API_KEY"
         )
+        self.api_key = raw_key.strip() if raw_key else None
 
         self.url = (
             "https://places.googleapis.com/v1/places:searchNearby"
@@ -429,12 +438,24 @@ class NearbySearchService:
             )
 
         except requests.RequestException as e:
-            status_code = getattr(getattr(e, "response", None), "status_code", "network_error")
-            print(
-                f"[ERROR] Nearby Search Network Error ({place_type}): {type(e).__name__} (status: {status_code})"
-            )
+            err_resp = getattr(e, "response", None)
+            if err_resp is not None:
+                log_places_diagnostic_error(
+                    service_name=f"NearbySearchService.{place_type}",
+                    response=err_resp,
+                    secret=self.api_key,
+                    service_logger=logger,
+                )
+            else:
+                status_code = "network_error"
+                clean_err = sanitize_secret(str(e), self.api_key)
+                logger.error(f"[ERROR] Nearby Search Network Error ({place_type}): %s", clean_err)
+                print(
+                    f"[ERROR] Nearby Search Network Error ({place_type}): {type(e).__name__} (status: {status_code})"
+                )
             return []
         except Exception as e:
+            logger.error(f"[ERROR] Nearby Search Error ({place_type}): %s", type(e).__name__)
             print(
                 f"[ERROR] Nearby Search Error ({place_type}): {type(e).__name__}"
             )
@@ -445,27 +466,12 @@ class NearbySearchService:
         # --------------------------------------------------
 
         if not response.ok:
-
-            print(
-                "\n========== GOOGLE PLACES ERROR =========="
+            log_places_diagnostic_error(
+                service_name=f"NearbySearchService.{place_type}",
+                response=response,
+                secret=self.api_key,
+                service_logger=logger,
             )
-
-            print(
-                f"Type       : {place_type}"
-            )
-
-            print(
-                f"Status     : {response.status_code}"
-            )
-
-            print(
-                f"Error      : Upstream request failed with status {response.status_code}"
-            )
-
-            print(
-                "=========================================\n"
-            )
-
             return []
 
         data = response.json()

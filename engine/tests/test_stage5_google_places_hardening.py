@@ -542,6 +542,76 @@ class TestStage5GooglePlacesHardening(unittest.TestCase):
         self.assertIsNone(res["latitude"])
         self.assertIsNone(res["distance_km"])
 
+    # ==================================================
+    # 13. Diagnostic Logging & Error Categorization
+    # ==================================================
+
+    def test_google_places_403_diagnostic_logging(self):
+        """HTTP 403 PERMISSION_DENIED records diagnostic error category and actionable hint without leaking secret."""
+        import io
+        secret_key = "AIzaSyTestPlacesSecretKey12345"
+        self.places_service.api_key = secret_key
+
+        mock_resp = MagicMock()
+        mock_resp.ok = False
+        mock_resp.status_code = 403
+        mock_resp.json.return_value = {
+            "error": {
+                "code": 403,
+                "message": "The caller does not have permission",
+                "status": "PERMISSION_DENIED",
+            }
+        }
+        mock_resp.text = '{"error": {"code": 403, "message": "The caller does not have permission", "status": "PERMISSION_DENIED"}}'
+
+        output_capture = io.StringIO()
+        with patch("requests.post", return_value=mock_resp), patch("sys.stdout", output_capture):
+            res = self.places_service.search("Dolomites")
+
+        self.assertEqual(res, [])
+        self.assertIsNotNone(self.places_service.last_error)
+        self.assertEqual(self.places_service.last_error["status"], 403)
+        self.assertEqual(self.places_service.last_error["diagnostic_category"], "BILLING_OR_PROJECT_PERMISSION")
+        self.assertEqual(self.places_service.last_error["google_status"], "PERMISSION_DENIED")
+        self.assertIn("billing", self.places_service.last_error["actionable_hint"].lower())
+        self.assertIn("permission denied", self.places_service.last_error["message"].lower())
+        # Ensure secret key is NEVER printed
+        logged = output_capture.getvalue()
+        self.assertNotIn(secret_key, logged)
+
+    def test_google_places_api_not_enabled_diagnostic(self):
+        """HTTP 403 due to disabled API categorizes as API_NOT_ENABLED."""
+        self.places_service.api_key = "test_key"
+        mock_resp = MagicMock()
+        mock_resp.ok = False
+        mock_resp.status_code = 403
+        mock_resp.json.return_value = {
+            "error": {
+                "code": 403,
+                "message": "Places API (New) has not been used in project 123456 or it is disabled.",
+                "status": "PERMISSION_DENIED",
+            }
+        }
+        mock_resp.text = '{"error": {"message": "Places API (New) has not been used in project 123456 or it is disabled."}}'
+
+        with patch("requests.post", return_value=mock_resp):
+            res = self.places_service.search("Rome")
+
+        self.assertEqual(res, [])
+        self.assertEqual(self.places_service.last_error["diagnostic_category"], "API_NOT_ENABLED")
+        self.assertIn("Enable API", self.places_service.last_error["actionable_hint"])
+
+    def test_google_places_api_key_whitespace_stripping(self):
+        """Trailing whitespace and newlines are stripped from API key on init."""
+        from engine.app.services.maps.nearby_search_service import NearbySearchService
+        with patch.dict("os.environ", {"GOOGLE_PLACES_API_KEY": "  AIzaSyCleanKeyTest \n"}):
+            ps = GooglePlacesService()
+            ds = GooglePlaceDetailsService()
+            ns = NearbySearchService()
+            self.assertEqual(ps.api_key, "AIzaSyCleanKeyTest")
+            self.assertEqual(ds.api_key, "AIzaSyCleanKeyTest")
+            self.assertEqual(ns.api_key, "AIzaSyCleanKeyTest")
+
 
 if __name__ == "__main__":
     unittest.main()
