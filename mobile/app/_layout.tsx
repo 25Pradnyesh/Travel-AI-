@@ -17,6 +17,8 @@ import {
 } from '@expo-google-fonts/instrument-serif';
 import { Colors } from '@/constants/theme';
 import { AuthProvider } from '@/lib/supabase';
+import { NetworkProvider } from '@/hooks/useNetwork';
+import { OfflineGuard } from '@/components/ui/OfflineGuard';
 import { SplashVideo } from '@/components/SplashVideo';
 
 // Keep native splash screen visible until fonts and assets are ready
@@ -55,89 +57,106 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <StatusBar style="light" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: Colors.canvas },
-            animation: 'fade_from_bottom',
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="(auth)/login"
-            options={{
-              presentation: 'modal',
+      <NetworkProvider>
+        <AuthProvider>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
               headerShown: false,
-              animation: 'slide_from_bottom',
+              contentStyle: { backgroundColor: Colors.canvas },
+              animation: 'fade_from_bottom',
             }}
-          />
-          <Stack.Screen
-            name="auth/callback"
-            options={{
-              presentation: 'modal',
-              headerShown: false,
-              animation: 'fade',
-            }}
-          />
-          <Stack.Screen
-            name="analyze/processing"
-            options={{
-              presentation: 'fullScreenModal',
-              headerShown: false,
-              gestureEnabled: false,
-              animation: 'fade',
-            }}
-          />
-          <Stack.Screen
-            name="analyze/results"
-            options={{
-              headerShown: false,
-              animation: 'fade',
-            }}
-          />
-          <Stack.Screen
-            name="analyze/map"
-            options={{
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}
-          />
-          <Stack.Screen
-            name="place/[id]"
-            options={{
-              presentation: 'modal',
-              headerShown: false,
-              animation: 'slide_from_bottom',
-            }}
-          />
-          <Stack.Screen
-            name="history/index"
-            options={{
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}
-          />
-          <Stack.Screen
-            name="history/[id]"
-            options={{
-              headerShown: false,
-              animation: 'slide_from_right',
-            }}
-          />
-          <Stack.Screen
-            name="dev/kitchen-sink"
-            options={{
-              headerShown: false,
-              animation: 'slide_from_bottom',
-            }}
-          />
-        </Stack>
-        {showSplashVideo && (
-          <SplashVideo onFinish={() => setShowSplashVideo(false)} />
-        )}
-      </AuthProvider>
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(auth)/login"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="auth/callback"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'fade',
+              }}
+            />
+            <Stack.Screen
+              name="analyze/processing"
+              options={{
+                presentation: 'fullScreenModal',
+                headerShown: false,
+                gestureEnabled: false,
+                animation: 'fade',
+              }}
+            />
+            <Stack.Screen
+              name="analyze/results"
+              options={{
+                headerShown: false,
+                animation: 'fade',
+              }}
+            />
+            <Stack.Screen
+              name="analyze/map"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="place/[id]"
+              options={{
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="history/index"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="history/[id]"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
+              name="dev/kitchen-sink"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_bottom',
+              }}
+            />
+            <Stack.Screen
+              name="offline"
+              options={{
+                headerShown: false,
+                animation: 'fade',
+              }}
+            />
+            <Stack.Screen
+              name="+not-found"
+              options={{
+                headerShown: false,
+                animation: 'fade',
+              }}
+            />
+          </Stack>
+          <OfflineGuard />
+          {showSplashVideo && (
+            <SplashVideo onFinish={() => setShowSplashVideo(false)} />
+          )}
+        </AuthProvider>
+      </NetworkProvider>
     </SafeAreaProvider>
   );
 }

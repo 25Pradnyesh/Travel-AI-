@@ -23,12 +23,14 @@ import {
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
+import { useNetwork } from '@/hooks/useNetwork';
 
 // Bundled local high-resolution demo photo
 const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
 
 export default function KitchenSinkScreen() {
   const insets = useSafeAreaInsets();
+  const network = useNetwork();
   const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo' | 'white'>('sky');
   const stripeTargetRef = React.useRef<View>(null);
   const [inputValue, setInputValue] = useState('');
@@ -342,6 +344,49 @@ export default function KitchenSinkScreen() {
             <View style={[styles.fontCompareRow, { marginTop: Spacing.md }]}>
               <Text style={styles.fontCompareLabel}>Instrument Serif Italic (Signature VAMO):</Text>
               <Text style={styles.serifItalicSample}>Finding your place. Amalfi Coast Dossier</Text>
+            </View>
+          </GlassView>
+        </View>
+
+        {/* Section 9: Offline & 404 Error Experiences */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>9. Offline & 404 Error Experiences</Text>
+          <GlassView variant="dark" borderRadius={Radius.xl} style={styles.contrastCard}>
+            <Text style={styles.cardSublabel}>
+              Network Status: {network.isOffline ? 'OFFLINE' : 'ONLINE'} ({network.connectionType})
+            </Text>
+            <View style={{ gap: Spacing.sm, marginTop: Spacing.md }}>
+              <PillButton
+                title="Preview Dedicated Offline Screen"
+                variant="brand"
+                onPress={() => router.push('/offline' as any)}
+                iconLeft={<Ionicons name="cloud-offline-outline" size={16} color={Colors.textOnRed} />}
+              />
+              <PillButton
+                title="Test 404 Route (/unmatched-route-test)"
+                variant="glass"
+                onPress={() => router.push('/unmatched-route-test' as any)}
+                iconLeft={<Ionicons name="compass-outline" size={16} color={Colors.ivoryMist} />}
+              />
+              <PillButton
+                title={
+                  network.isSimulatedOffline
+                    ? 'Simulated Offline: ACTIVE (Tap to Restore)'
+                    : 'Simulate Real Offline Disconnection'
+                }
+                variant="primary"
+                onPress={() => {
+                  hapticFeedback.medium();
+                  network.simulateOffline(!network.isSimulatedOffline);
+                }}
+                iconLeft={
+                  <Ionicons
+                    name={network.isSimulatedOffline ? 'wifi-outline' : 'airplane-outline'}
+                    size={16}
+                    color={Colors.ivoryMist}
+                  />
+                }
+              />
             </View>
           </GlassView>
         </View>

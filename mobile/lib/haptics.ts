@@ -43,4 +43,22 @@ export const hapticFeedback = {
       // Ignore unsupported devices
     }
   },
+
+  warning: async () => {
+    if (Platform.OS === 'web') return;
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    } catch {
+      // Ignore unsupported devices
+    }
+  },
+
+  error: async () => {
+    if (Platform.OS === 'web') return;
+    try {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } catch {
+      // Ignore unsupported devices
+    }
+  },
 };
