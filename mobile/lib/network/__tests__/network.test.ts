@@ -11,8 +11,7 @@
 import {
   normalizeNetworkState,
   VamoNetworkState,
-} from '../network';
-import { BOAT_SUNSET_IMAGE } from '@/components/ui/TravelOceanError';
+} from '../../network';
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
@@ -146,11 +145,12 @@ export async function runNetworkValidationTests(): Promise<{ passed: number; fai
   // 3. Bundled Local Asset Contract
   // ============================================================================
   await runTest('verifies boat-at-sunset artwork is bundled locally without remote URL dependencies', () => {
-    assert(BOAT_SUNSET_IMAGE !== undefined && BOAT_SUNSET_IMAGE !== null, 'bundled asset exists');
-    // Local React Native / Metro required images are module objects or resource numbers, never http URLs
-    if (typeof BOAT_SUNSET_IMAGE === 'string') {
+    // In React Native / Metro, bundled assets are required as static module IDs / objects
+    const boatAsset = require('../../../assets/images/boat-sunset.jpg');
+    assert(boatAsset !== undefined && boatAsset !== null, 'boat-sunset.jpg asset must be defined');
+    if (typeof boatAsset === 'string') {
       assert(
-        !BOAT_SUNSET_IMAGE.startsWith('http://') && !BOAT_SUNSET_IMAGE.startsWith('https://'),
+        !boatAsset.startsWith('http://') && !boatAsset.startsWith('https://'),
         'asset must not depend on remote HTTP URL'
       );
     }
