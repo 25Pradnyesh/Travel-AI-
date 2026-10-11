@@ -9,7 +9,7 @@ import {
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { PlainMapBisect } from '@/components/dev';
 import {
   AtmosphereBackground,
   ConfidenceBadge,
@@ -203,36 +203,12 @@ export default function ResultsFixturesScreen() {
             </Text>
             {bestGuess?.latitude != null && bestGuess?.longitude != null ? (
               <View style={styles.plainMapWrapper}>
-                <MapView
-                  provider={PROVIDER_DEFAULT}
-                  style={styles.plainMap}
-                  initialRegion={{
-                    latitude: bestGuess.latitude,
-                    longitude: bestGuess.longitude,
-                    latitudeDelta: 0.05,
-                    longitudeDelta: 0.05,
-                  }}
-                  toolbarEnabled={false}
-                >
-                  <Marker
-                    coordinate={{
-                      latitude: bestGuess.latitude,
-                      longitude: bestGuess.longitude,
-                    }}
-                    title={bestGuess.name}
-                    description="Primary Destination"
-                  />
-                  {nearby.map((p, idx) =>
-                    p.latitude != null && p.longitude != null ? (
-                      <Marker
-                        key={p.place_id || idx}
-                        coordinate={{ latitude: p.latitude, longitude: p.longitude }}
-                        title={p.name}
-                        pinColor="blue"
-                      />
-                    ) : null
-                  )}
-                </MapView>
+                <PlainMapBisect
+                  latitude={bestGuess.latitude}
+                  longitude={bestGuess.longitude}
+                  title={bestGuess.name}
+                  nearby={nearby}
+                />
               </View>
             ) : (
               <Text style={styles.mapEmptyText}>No coordinates available in this scenario.</Text>
