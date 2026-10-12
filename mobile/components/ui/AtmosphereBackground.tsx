@@ -125,8 +125,8 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
 
         {/* Sticky top dark header scrim protecting status bar when scrolled */}
         <LinearGradient
-          colors={['rgba(8, 18, 24, 0.94)', 'rgba(8, 18, 24, 0.60)', 'transparent']}
-          locations={[0, 0.5, 1]}
+          colors={['rgba(8, 18, 24, 0.98)', 'rgba(8, 18, 24, 0.88)', 'rgba(8, 18, 24, 0.45)', 'transparent']}
+          locations={[0, 0.4, 0.75, 1]}
           style={styles.stickyHeaderScrim}
           pointerEvents="none"
         />
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 72,
+    height: 110,
     zIndex: 50,
   },
 });

@@ -10,59 +10,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-/**
- * Safely format budget with Intl.NumberFormat and real currency, with no hardcoded '$'
- */
-export function formatBudget(budget?: string | number, currencyCode?: string): string {
-  if (!budget && budget !== 0) return '';
-  const rawStr = String(budget).trim();
-  if (!rawStr) return '';
-
-  const cleanCurrency = (currencyCode || '').trim().toUpperCase();
-
-  // If a numeric range is given, e.g. "120 - 180" or "$280 - $420"
-  const rangeMatch = rawStr.match(/(\d+)\s*[-–—]\s*(\d+)/);
-  if (rangeMatch) {
-    const low = parseInt(rangeMatch[1], 10);
-    const high = parseInt(rangeMatch[2], 10);
-    if (!isNaN(low) && !isNaN(high)) {
-      if (cleanCurrency && cleanCurrency.length === 3) {
-        try {
-          const formatter = new Intl.NumberFormat(undefined, {
-            style: 'currency',
-            currency: cleanCurrency,
-            maximumFractionDigits: 0,
-          });
-          return `${formatter.format(low)} – ${formatter.format(high)}`;
-        } catch {
-          return `${cleanCurrency} ${low} – ${high}`;
-        }
-      }
-      return `${low} – ${high}`;
-    }
-  }
-
-  // If a single number is given
-  const numericOnly = parseFloat(rawStr.replace(/[^0-9.]/g, ''));
-  if (!isNaN(numericOnly)) {
-    if (cleanCurrency && cleanCurrency.length === 3) {
-      try {
-        const formatter = new Intl.NumberFormat(undefined, {
-          style: 'currency',
-          currency: cleanCurrency,
-          maximumFractionDigits: 0,
-        });
-        return formatter.format(numericOnly);
-      } catch {
-        return `${cleanCurrency} ${numericOnly}`;
-      }
-    }
-    return String(numericOnly);
-  }
-
-  // Fallback: strip leading '$' if currency code provided
-  return cleanCurrency ? `${cleanCurrency} ${rawStr.replace(/^\$+/, '')}` : rawStr;
-}
+import { formatBudget, getCurrencySymbol } from '@/lib/format/budget';
+export { formatBudget, getCurrencySymbol };
 
 export interface DestinationBriefingProps {
   summary?: string;

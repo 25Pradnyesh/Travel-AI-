@@ -254,8 +254,8 @@ export default function KitchenSinkScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>4. PRD Verification Badges (Truthful Styling)</Text>
           <View style={styles.badgeRow}>
-            <ConfidenceBadge status="VERIFIED" confidence={95} />
-            <ConfidenceBadge status="PARTIAL" confidence={68} />
+            <ConfidenceBadge status="VERIFIED" />
+            <ConfidenceBadge status="PARTIAL" />
             <ConfidenceBadge status="UNVERIFIED" />
           </View>
           <Text style={styles.badgeNote}>

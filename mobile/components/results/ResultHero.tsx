@@ -145,7 +145,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           style={({ pressed }) => [styles.pillButton, pressed && styles.pressed]}
         >
           <GlassView
-            variant="frosted"
+            variant="dark"
             borderRadius={Radius.pill}
             style={styles.pillGlass}
           >
@@ -154,7 +154,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           </GlassView>
         </Pressable>
 
-        {/* Floating frosted Share pill (if share handler present) */}
+        {/* Floating dark Share pill (if share handler present) */}
         {onShare ? (
           <Pressable
             onPress={() => {
@@ -168,7 +168,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
             style={({ pressed }) => [styles.pillButton, pressed && styles.pressed]}
           >
             <GlassView
-              variant="frosted"
+              variant="dark"
               borderRadius={Radius.pill}
               style={styles.pillGlass}
             >

@@ -9,6 +9,12 @@
  * - POIs: Stripped of generic bright colored pins
  */
 
+/**
+ * Flag controlling whether custom dark map styling is applied to Google Maps.
+ * Kept OFF by default until raster/vector tiles render reliably in development client.
+ */
+export const ENABLE_DARK_MAP_STYLE = false;
+
 export const DARK_MUTED_MAP_STYLE = [
   {
     elementType: 'geometry',

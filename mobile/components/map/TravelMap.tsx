@@ -31,7 +31,7 @@ import { isValidCoordinate } from '@/lib/maps';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
-import { DARK_MUTED_MAP_STYLE } from '@/constants/map-style';
+import { DARK_MUTED_MAP_STYLE, ENABLE_DARK_MAP_STYLE } from '@/constants/map-style';
 
 export interface TravelMapProps {
   bestGuess?: BestGuess | null;
@@ -312,7 +312,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           scrollEnabled={true}
           zoomEnabled={true}
           toolbarEnabled={false}
-          customMapStyle={useDarkStyle ? DARK_MUTED_MAP_STYLE : undefined}
+          customMapStyle={ENABLE_DARK_MAP_STYLE && useDarkStyle ? DARK_MUTED_MAP_STYLE : undefined}
           mapType="standard"
         >
           {validMarkers.map((marker) => {

@@ -199,6 +199,29 @@ eas login
    Generates production `.ipa` (iOS) and `.aab` (Android App Bundle) artifacts ready for App Store and Google Play Store submission.
    *Note: Ensure `EXPO_PUBLIC_API_URL` is set in your EAS Environment Secrets for the production environment.*
 
+### Google Maps Android API Key Configuration
+
+Native Google Maps on Android in development clients or standalone builds requires an authorized Google Maps SDK for Android API key configured in `android.config.googleMaps.apiKey`. Without this key, the map renders a blank beige canvas showing only the Google logo with zero raster/vector tiles.
+
+1. **Set EAS Secret (Recommended for EAS Cloud Builds):**
+   ```bash
+   eas secret:create --scope project --name GOOGLE_MAPS_ANDROID_API_KEY --value "YOUR_GOOGLE_MAPS_ANDROID_API_KEY"
+   ```
+
+2. **Local Development Client Build:**
+   Add to `mobile/.env.local` (never committed to git):
+   ```bash
+   GOOGLE_MAPS_ANDROID_API_KEY=YOUR_GOOGLE_MAPS_ANDROID_API_KEY
+   ```
+
+3. **Build the Android Development Client:**
+   ```bash
+   eas build --profile development --platform android
+   ```
+   Install the resulting `.apk` on your test device. Dynamic config in `mobile/app.config.ts` reads `process.env.GOOGLE_MAPS_ANDROID_API_KEY` at build time.
+
+*Note: The dark custom map style is gated behind the `ENABLE_DARK_MAP_STYLE` flag in `constants/map-style.ts` (kept `false` by default until native tile authorization renders reliably).*
+
 ---
 
 ## 8. Development & Diagnostic Commands

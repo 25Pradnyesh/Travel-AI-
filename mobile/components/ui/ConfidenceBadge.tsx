@@ -35,7 +35,7 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
   const label = isVerified
     ? 'VERIFIED'
     : isPartial
-    ? 'PARTIAL MATCH'
+    ? 'PARTIAL'
     : 'UNVERIFIED';
 
   const badgeColor = isVerified
@@ -62,15 +62,6 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
     ? 'alert-circle-sharp'
     : 'help-circle-sharp';
 
-  let displayPercent: number | null = null;
-  if (typeof confidence === 'number' && !isNaN(confidence) && confidence > 0) {
-    if (confidence <= 1.0) {
-      displayPercent = Math.round(confidence * 100);
-    } else {
-      displayPercent = Math.round(confidence);
-    }
-  }
-
   return (
     <View
       style={[
@@ -80,17 +71,12 @@ export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
       ]}
       accessible={true}
       accessibilityRole="text"
-      accessibilityLabel={`Verification status: ${label}${displayPercent != null ? `, ${displayPercent}% confidence` : ''}`}
+      accessibilityLabel={`Verification tier: ${label}`}
     >
       {showIcon && (
         <Ionicons name={iconName} size={12} color={badgeColor} style={styles.icon} />
       )}
       <Text style={[styles.text, { color: badgeColor }]}>{label}</Text>
-      {displayPercent != null && displayPercent > 0 && (
-        <Text style={[styles.confidenceText, { color: badgeColor }]}>
-          {displayPercent}%
-        </Text>
-      )}
     </View>
   );
 };
@@ -113,12 +99,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1,
     textTransform: 'uppercase',
-  },
-  confidenceText: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 10,
-    marginLeft: 4,
-    opacity: 0.85,
   },
 });
 
