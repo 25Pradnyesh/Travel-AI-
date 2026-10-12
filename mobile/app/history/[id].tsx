@@ -1,13 +1,13 @@
 /**
- * Travel AI Mobile — Historical Analysis Detail Screen (Stage 6)
+ * VAMO Mobile — Historical Analysis Detail Screen (Stage B)
  *
- * Inspects a saved historical Reel analysis from Supabase:
- * - Verified destination metadata and confidence status
- * - Structured travel intelligence (overview, seasonality, vibe, tips, customs)
- * - Associated places with PlaceCard, directions, and bookmarking
- * - Graceful handling of missing or incomplete fields
- * - Direct link to original Instagram Reel if available
- * - Analysis deletion with confirmation
+ * Reuses the state-of-the-art Results components to render a persisted
+ * travel intelligence dossier from Supabase:
+ * - ResultHero (full poster photography header with Back & Share pills)
+ * - DestinationIdentity (PRD tier-only verification badge & clues)
+ * - DestinationBriefing (stacked glass dossier: season, budget, stay, tips)
+ * - SurroundingPlacesSection (category pills & 2-column poster cards)
+ * - Source Reel & Delete Dossier action controls
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -15,36 +15,40 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  ConfidenceBadge,
+  AtmosphereBackground,
   EmptyState,
-  IconButton,
-  ImageCard,
-  PlaceCard,
-  SectionHeader,
-  StatCard,
-  TopBar,
+  GlassView,
 } from '@/components/ui';
-import { Colors, Radius, Spacing, Typography } from '@/constants/theme';
+import { ResultHero } from '@/components/results/ResultHero';
+import { DestinationIdentity } from '@/components/results/DestinationIdentity';
+import { DestinationBriefing } from '@/components/results/DestinationBriefing';
+import { SurroundingPlacesSection } from '@/components/results/SurroundingPlacesSection';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 import {
   AnalysisDetail,
-  AnalysisPlaceRow,
   deleteAnalysis,
   getAnalysisDetail,
   resolveThumbnailUrl,
 } from '@/lib/supabase';
+import { NearbyPlace, TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
 export default function HistoryDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isSaved, toggleSave } = useSavedPlaces();
 
@@ -54,7 +58,7 @@ export default function HistoryDetailScreen() {
 
   const fetchDetail = useCallback(async () => {
     if (!id) {
-      setError('Invalid analysis ID.');
+      setError('Invalid analysis identifier.');
       setIsLoading(false);
       return;
     }
@@ -65,12 +69,66 @@ export default function HistoryDetailScreen() {
     try {
       const { data, error: fetchErr } = await getAnalysisDetail(id);
       if (fetchErr || !data) {
-        setError(fetchErr || 'Analysis not found.');
+        setError(fetchErr || 'Analysis dossier could not be found.');
       } else {
         setDetail(data);
+
+        // Pre-populate analysis store so map and place details resolve smoothly
+        const a = data.analysis;
+        const mappedNearby: NearbyPlace[] = (data.places || []).map((p) => ({
+          place_id: p.place_id || p.id,
+          name: p.name,
+          category: p.category || 'POI',
+          formatted_address: p.address || '',
+          latitude: p.latitude,
+          longitude: p.longitude,
+          rating: p.rating ?? 0,
+          user_ratings_total: 0,
+          distance_km: null,
+          types: p.category ? [p.category] : [],
+          maps_url: '',
+        }));
+
+        const ti =
+          a.travel_intelligence && typeof a.travel_intelligence === 'object'
+            ? (a.travel_intelligence as Record<string, any>)
+            : {};
+
+        const whyText = String(ti.why || `Verified destination identified from reel analysis.`);
+
+        analysisStore.setAnalysisResult(
+          {
+            success: true,
+            best_guess: {
+              place_id: a.id,
+              name: a.destination,
+              country: a.country || undefined,
+              formatted_address: a.country || a.destination,
+              confidence: a.confidence ? a.confidence / 100 : 0.9,
+              confidence_level: a.confidence && a.confidence >= 80 ? 'VERY_HIGH' : 'MEDIUM',
+              verification_status:
+                a.confidence && a.confidence >= 80
+                  ? 'VERIFIED'
+                  : a.confidence && a.confidence >= 50
+                  ? 'PARTIAL'
+                  : 'UNVERIFIED',
+              why: whyText,
+              gemini_confidence: a.confidence ? a.confidence / 100 : 0.9,
+              gemini_reason: String(ti.gemini_reason || whyText),
+              photos: a.thumbnail_url ? [{ url: resolveThumbnailUrl(a.thumbnail_url) || a.thumbnail_url }] : [],
+              rating: 0,
+              user_ratings_total: 0,
+              types: [],
+              maps_url: '',
+            },
+            travel_intelligence: ti,
+            nearby_places: mappedNearby,
+          },
+          a.reel_url
+        );
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to load analysis details.';
+      const msg = err instanceof Error ? err.message : 'Failed to load historical dossier.';
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -85,10 +143,10 @@ export default function HistoryDetailScreen() {
   const places = detail?.places || [];
 
   // Parse structured travel intelligence safely
-  const ti = useMemo(() => {
+  const ti = useMemo<TravelIntelligence>(() => {
     if (!analysis?.travel_intelligence) return {};
     if (typeof analysis.travel_intelligence === 'object') {
-      return analysis.travel_intelligence as Record<string, unknown>;
+      return analysis.travel_intelligence as TravelIntelligence;
     }
     return {};
   }, [analysis]);
@@ -96,7 +154,7 @@ export default function HistoryDetailScreen() {
   // Extract travel tips list
   const tipsList = useMemo(() => {
     const list: string[] = [];
-    const rawTips = ti.travel_tips;
+    const rawTips = (ti as Record<string, any>).travel_tips;
     if (Array.isArray(rawTips)) {
       rawTips.forEach((t) => {
         if (typeof t === 'string' && t.trim()) list.push(t.trim());
@@ -113,23 +171,40 @@ export default function HistoryDetailScreen() {
       });
     }
     return list;
-  }, [ti.travel_tips]);
+  }, [ti]);
+
+  // Map historical places to NearbyPlace[] for SurroundingPlacesSection
+  const mappedNearbyPlaces = useMemo<NearbyPlace[]>(() => {
+    return places.map((p) => ({
+      place_id: p.place_id || p.id,
+      name: p.name,
+      category: p.category || 'POI',
+      formatted_address: p.address || '',
+      latitude: p.latitude ?? null,
+      longitude: p.longitude ?? null,
+      rating: p.rating ?? 0,
+      user_ratings_total: 0,
+      distance_km: null,
+      types: p.category ? [p.category] : [],
+      maps_url: '',
+    }));
+  }, [places]);
 
   const handleBack = () => {
     hapticFeedback.light();
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/history');
+      router.replace({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
     }
   };
 
   const handleDelete = useCallback(() => {
     if (!analysis) return;
-    hapticFeedback.light();
+    hapticFeedback.medium();
     Alert.alert(
       'Delete Analysis',
-      `Permanently remove "${analysis.destination}" from your cloud history?`,
+      `Permanently delete "${analysis.destination}" from your cloud analysis history?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -139,7 +214,7 @@ export default function HistoryDetailScreen() {
             const { success, error: delErr } = await deleteAnalysis(analysis.id);
             if (success) {
               hapticFeedback.success();
-              router.replace('/history');
+              router.replace({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
             } else {
               Alert.alert('Error', delErr || 'Failed to delete record.');
             }
@@ -149,28 +224,35 @@ export default function HistoryDetailScreen() {
     );
   }, [analysis]);
 
+  const handleShare = useCallback(async () => {
+    if (!analysis) return;
+    try {
+      hapticFeedback.light();
+      await Share.share({
+        message: `Discovered ${analysis.destination} (${analysis.country || 'Verified'}) via VAMO.${
+          analysis.reel_url ? ` Source reel: ${analysis.reel_url}` : ''
+        }`,
+      });
+    } catch {
+      // Quiet fallback
+    }
+  }, [analysis]);
+
   const handleOpenSourceReel = useCallback(async () => {
     if (!analysis?.reel_url) return;
     try {
+      hapticFeedback.light();
       const canOpen = await Linking.canOpenURL(analysis.reel_url);
       if (canOpen) {
         await Linking.openURL(analysis.reel_url);
       }
     } catch {
-      // Link open failure handled silently
+      // Quiet fallback
     }
   }, [analysis?.reel_url]);
 
-  const handleOpenPlaceDirections = useCallback(async (place: AnalysisPlaceRow) => {
-    await openInExternalMaps({
-      latitude: place.latitude,
-      longitude: place.longitude,
-      name: place.name,
-      formattedAddress: place.address || undefined,
-    });
-  }, []);
-
-  const handleOpenPlace = useCallback((place: AnalysisPlaceRow) => {
+  const handleOpenPlace = useCallback((place: NearbyPlace) => {
+    hapticFeedback.light();
     router.push({
       pathname: '/place/[id]',
       params: {
@@ -180,377 +262,204 @@ export default function HistoryDetailScreen() {
     });
   }, []);
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Saved Record';
-    try {
-      return new Date(dateString).toLocaleDateString(undefined, {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      });
-    } catch {
-      return dateString;
-    }
-  };
+  const handleOpenPlaceDirections = useCallback(async (place: NearbyPlace) => {
+    await openInExternalMaps({
+      latitude: place.latitude,
+      longitude: place.longitude,
+      name: place.name,
+      formattedAddress: place.formatted_address,
+    });
+  }, []);
+
+  const handleToggleSaveNearby = useCallback(
+    (place: NearbyPlace) => {
+      hapticFeedback.light();
+      toggleSave(place);
+    },
+    [toggleSave]
+  );
+
+  const handleOpenMap = useCallback(() => {
+    hapticFeedback.light();
+    router.push('/analyze/map');
+  }, []);
+
+  const isPlaceSavedCheck = useCallback(
+    (placeId: string) => isSaved(placeId),
+    [isSaved]
+  );
 
   if (isLoading) {
     return (
-      <View style={styles.screen}>
-        <TopBar title="Historical Analysis" showBack onBackPress={handleBack} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.surfaceDark} />
-          <Text style={styles.loadingText}>Retrieving travel dossier...</Text>
+      <AtmosphereBackground variant="sky">
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.icyBlue} />
+          <Text style={styles.loadingText}>Retrieving saved dossier...</Text>
         </View>
-      </View>
+      </AtmosphereBackground>
     );
   }
 
   if (error || !analysis) {
     return (
-      <View style={styles.screen}>
-        <TopBar title="Historical Analysis" showBack onBackPress={handleBack} />
-        <View style={styles.emptyContainer}>
+      <AtmosphereBackground variant="sky">
+        <View style={styles.centerContainer}>
           <EmptyState
-            icon={<Ionicons name="alert-circle-outline" size={36} color={Colors.error} />}
-            eyebrow="ANALYSIS RECORD"
+            icon={<Ionicons name="alert-circle-outline" size={36} color={Colors.racingRed} />}
+            eyebrow="DOSSIER NOT FOUND"
             title="Analysis Unavailable"
-            description={error || 'This analysis could not be found or was deleted.'}
+            description={error || 'This historical analysis record could not be loaded.'}
             actionLabel="Back to History"
             onActionPress={handleBack}
           />
         </View>
-      </View>
+      </AtmosphereBackground>
     );
   }
 
-  const confidence = analysis.confidence ?? 0;
-  const status = confidence >= 80 ? 'VERIFIED' : confidence >= 50 ? 'PARTIAL' : 'AI_UNVERIFIED';
   const heroImageUrl = resolveThumbnailUrl(analysis.thumbnail_url);
+  const confidenceScore = analysis.confidence ?? 0;
+  const verificationTier =
+    confidenceScore >= 80 ? 'VERIFIED' : confidenceScore >= 50 ? 'PARTIAL' : 'UNVERIFIED';
 
-  // Extract intelligence fields with fallbacks
-  const destinationOverview =
-    (ti.destination_overview as string) ||
-    (ti.summary as string) ||
-    (ti.overview as string) ||
-    null;
-
-  const bestTimeToVisit =
-    (ti.best_time_to_visit as string) ||
-    (ti.seasonality as string) ||
-    'Information not specified in this analysis.';
-
-  const vibe =
-    (ti.vibe as string) ||
-    (ti.atmosphere as string) ||
-    'Scenic travel destination';
-
-  const estimatedBudget =
-    (ti.estimated_budget as string) ||
-    (ti.budget as string) ||
-    (ti.cost_level as string) ||
-    'Moderate';
-
-  const customs =
-    (ti.cultural_etiquette as string) ||
-    (ti.customs as string) ||
-    (ti.local_customs as string) ||
-    null;
-
-  const destinationPlaceId = analysis.reel_id || analysis.destination;
-  const isDestinationSaved = isSaved(destinationPlaceId);
+  const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <View style={styles.screen}>
-      <TopBar
-        title={analysis.destination}
-        showBack
-        onBackPress={handleBack}
-        rightAction={
-          <View style={styles.topRightActions}>
-            <IconButton
-              size={36}
-              variant="subtle"
-              accessibilityLabel={
-                isDestinationSaved
-                  ? 'Remove destination from saved'
-                  : 'Save destination'
-              }
-              onPress={() =>
-                toggleSave(
-                  {
-                    id: destinationPlaceId,
-                    name: analysis.destination,
-                    address: analysis.country || undefined,
-                    category: 'Primary Destination',
-                    saved_at: Date.now(),
-                  },
-                  heroImageUrl || undefined
-                )
-              }
+    <AtmosphereBackground variant="sky">
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: bottomScrollPadding },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 1. Results Hero Header (Full-bleed photo, dark Back & Share pills) */}
+        <ResultHero
+          imageUrl={heroImageUrl}
+          destinationName={analysis.destination}
+          locationSubtitle={analysis.country || 'Verified Destination'}
+          photoCount={heroImageUrl ? 1 : 0}
+          onBack={handleBack}
+          onShare={handleShare}
+        />
+
+        {/* 2. Destination Evidence Panel */}
+        <DestinationIdentity
+          verificationStatus={verificationTier}
+          category={ti.category as string | undefined}
+          why={((ti as Record<string, any>).why as string) || `Analyzed from saved Reel on ${new Date(analysis.created_at).toLocaleDateString()}.`}
+          geminiReason={(ti as Record<string, any>).gemini_reason as string | undefined}
+        />
+
+        {/* 3. Travel Intelligence Dossier */}
+        <DestinationBriefing
+          intelligence={ti}
+          tips={tipsList}
+        />
+
+        {/* 4. Surrounding Places Section (Category PillChips & 2-column poster cards) */}
+        {mappedNearbyPlaces.length > 0 && (
+          <SurroundingPlacesSection
+            places={mappedNearbyPlaces}
+            isPlaceSaved={isPlaceSavedCheck}
+            onOpenPlace={handleOpenPlace}
+            onOpenDirections={handleOpenPlaceDirections}
+            onToggleSavePlace={handleToggleSaveNearby}
+            onOpenMap={handleOpenMap}
+          />
+        )}
+
+        {/* 5. Historical Record Actions Block */}
+        <View style={styles.actionsSection}>
+          {analysis.reel_url ? (
+            <Pressable
+              onPress={handleOpenSourceReel}
+              style={({ pressed }) => [styles.sourceBtn, pressed && styles.pressed]}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Open original Instagram Reel"
             >
-              <Ionicons
-                name={isDestinationSaved ? 'bookmark' : 'bookmark-outline'}
-                size={18}
-                color={isDestinationSaved ? Colors.textPrimary : Colors.textSecondary}
-              />
-            </IconButton>
-            {analysis.reel_url ? (
-              <IconButton
-                size={36}
-                variant="subtle"
-                accessibilityLabel="View original Reel on Instagram"
-                onPress={handleOpenSourceReel}
-              >
-                <Ionicons name="logo-instagram" size={18} color={Colors.textPrimary} />
-              </IconButton>
-            ) : null}
-            <IconButton
-              size={36}
-              variant="subtle"
-              accessibilityLabel="Delete analysis from history"
-              onPress={handleDelete}
-            >
-              <Ionicons name="trash-outline" size={18} color={Colors.error} />
-            </IconButton>
-          </View>
-        }
-      />
+              <GlassView variant="dark" borderRadius={Radius.pill} style={styles.sourcePill}>
+                <Ionicons name="logo-instagram" size={17} color={Colors.icyBlue} />
+                <Text style={styles.sourceBtnText}>Open Original Instagram Reel</Text>
+                <Ionicons name="open-outline" size={14} color={Colors.textSecondary} />
+              </GlassView>
+            </Pressable>
+          ) : null}
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Destination Hero Photography Card */}
-        <View style={styles.heroWrapper}>
-          <ImageCard
-            imageUrl={heroImageUrl || undefined}
-            title={analysis.destination}
-            subtitle={analysis.country || 'Verified Travel Destination'}
-            photoCount={places.length}
-            badge={<ConfidenceBadge status={status} confidence={confidence} />}
-          />
-        </View>
-
-        {/* Intelligence Statistics Grid */}
-        <View style={styles.statsGrid}>
-          <StatCard
-            label="ANALYZED ON"
-            value={formatDate(analysis.created_at)}
-            icon={<Ionicons name="calendar-outline" size={14} color={Colors.textMuted} />}
-          />
-          <StatCard
-            label="CONFIDENCE"
-            value={`${confidence}%`}
-            icon={<Ionicons name="shield-checkmark-outline" size={14} color={Colors.verified} />}
-          />
-        </View>
-
-        <View style={styles.statsGrid}>
-          <StatCard
-            label="ATMOSPHERE"
-            value={vibe}
-            icon={<Ionicons name="sparkles-outline" size={14} color={Colors.info} />}
-          />
-          <StatCard
-            label="EST. BUDGET"
-            value={estimatedBudget}
-            icon={<Ionicons name="wallet-outline" size={14} color={Colors.textMuted} />}
-          />
-        </View>
-
-        {/* Destination Overview */}
-        {destinationOverview && (
-          <View style={styles.section}>
-            <SectionHeader eyebrow="DESTINATION INTEL" title="Overview" />
-            <View style={styles.card}>
-              <Text style={styles.bodyText}>{destinationOverview}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Seasonality & Best Time */}
-        <View style={styles.section}>
-          <SectionHeader eyebrow="TIMING & CLIMATE" title="Best Time to Visit" />
-          <View style={styles.card}>
-            <View style={styles.metaRow}>
-              <Ionicons name="time-outline" size={16} color={Colors.textSecondary} />
-              <Text style={styles.metaHeading}>Seasonality Recommendation</Text>
-            </View>
-            <Text style={styles.bodyText}>{bestTimeToVisit}</Text>
-          </View>
-        </View>
-
-        {/* Travel Tips */}
-        {tipsList.length > 0 && (
-          <View style={styles.section}>
-            <SectionHeader
-              eyebrow="FIELD ADVICE"
-              title="Travel Tips"
-              rightActionLabel={`${tipsList.length} tips`}
-            />
-            <View style={styles.card}>
-              {tipsList.map((tip, index) => (
-                <View
-                  key={index}
-                  style={[styles.tipRow, index < tipsList.length - 1 && styles.tipBorder]}
-                >
-                  <View style={styles.tipDot} />
-                  <Text style={styles.tipText}>{tip}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Cultural Etiquette */}
-        {customs && (
-          <View style={styles.section}>
-            <SectionHeader eyebrow="LOCAL CULTURE" title="Customs & Etiquette" />
-            <View style={styles.card}>
-              <Text style={styles.bodyText}>{customs}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Associated Discovered Places */}
-        <View style={styles.section}>
-          <SectionHeader
-            eyebrow="SURROUNDING PLACES"
-            title="Inspected Points of Interest"
-            rightActionLabel={`${places.length} ${places.length === 1 ? 'place' : 'places'}`}
-          />
-
-          {places.length === 0 ? (
-            <View style={styles.card}>
-              <Text style={styles.mutedText}>
-                No individual points of interest were saved for this analysis.
-              </Text>
-            </View>
-          ) : (
-            places.map((place) => (
-              <PlaceCard
-                key={place.id}
-                name={place.name}
-                category={place.category || 'Point of Interest'}
-                formattedAddress={place.address || undefined}
-                rating={place.rating ?? undefined}
-                photoUrl={resolveThumbnailUrl(place.photo_url) || undefined}
-                isSaved={isSaved(place.place_id || place.name)}
-                onPress={() => handleOpenPlace(place)}
-                onSavePress={() =>
-                  toggleSave(
-                    {
-                      id: place.place_id,
-                      name: place.name,
-                      address: place.address || undefined,
-                      latitude: place.latitude,
-                      longitude: place.longitude,
-                      rating: place.rating ?? undefined,
-                      category: place.category || undefined,
-                      saved_at: Date.now(),
-                    },
-                    resolveThumbnailUrl(place.photo_url) || undefined
-                  )
-                }
-                onDirectionsPress={() => handleOpenPlaceDirections(place)}
-              />
-            ))
-          )}
+          <Pressable
+            onPress={handleDelete}
+            style={({ pressed }) => [styles.deleteRecordBtn, pressed && styles.pressed]}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Delete analysis from cloud history"
+          >
+            <Ionicons name="trash-outline" size={15} color={Colors.racingRed} />
+            <Text style={styles.deleteRecordText}>Delete from Cloud Vault</Text>
+          </Pressable>
         </View>
       </ScrollView>
-    </View>
+    </AtmosphereBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.canvas,
-  },
   scrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.sm,
     paddingBottom: Spacing.huge,
   },
-  topRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  heroWrapper: {
-    marginBottom: Spacing.base,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  section: {
-    marginTop: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: Radius.xl,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: Colors.borderSubtle,
-  },
-  bodyText: {
-    ...Typography.bodySmall,
-    color: Colors.textPrimary,
-    lineHeight: 20,
-  },
-  mutedText: {
-    ...Typography.caption,
-    color: Colors.textMuted,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs + 2,
-  },
-  metaHeading: {
-    ...Typography.caption,
-    fontWeight: '700',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: Spacing.xs + 2,
-  },
-  tipBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderSubtle,
-  },
-  tipDot: {
-    width: 6,
-    height: 6,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.surfaceDark,
-    marginTop: 7,
-    marginRight: Spacing.sm,
-  },
-  tipText: {
-    ...Typography.bodySmall,
-    color: Colors.textPrimary,
-    lineHeight: 20,
-    flex: 1,
-  },
-  loadingContainer: {
+  centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.md,
+    paddingHorizontal: Spacing.xl,
   },
   loadingText: {
-    ...Typography.bodySmall,
+    fontFamily: Fonts.sansMedium,
+    fontSize: 14,
     color: Colors.textSecondary,
+    marginTop: Spacing.md,
   },
-  emptyContainer: {
-    flex: 1,
+  actionsSection: {
+    paddingHorizontal: Spacing.xl,
+    marginTop: Spacing.lg,
+    gap: Spacing.md,
+    alignItems: 'center',
+  },
+  sourceBtn: {
+    width: '100%',
+  },
+  sourcePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.base,
+    paddingVertical: 13,
+    paddingHorizontal: Spacing.lg,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    backgroundColor: 'rgba(8, 18, 24, 0.75)',
+  },
+  sourceBtnText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13,
+    color: Colors.ivoryMist,
+  },
+  deleteRecordBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    minHeight: TouchTarget.minHeight,
+  },
+  deleteRecordText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 13,
+    color: Colors.racingRed,
+  },
+  pressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.985 }],
   },
 });

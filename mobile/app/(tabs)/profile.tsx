@@ -98,7 +98,7 @@ export default function ProfileScreen() {
   const handleHistoryPress = () => {
     hapticFeedback.selection();
     if (isAuthenticated) {
-      router.push('/history');
+      router.push({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
     } else {
       router.push('/(auth)/login');
     }

@@ -177,7 +177,7 @@ export default function AnalyzeScreen() {
 
   const handleViewAllHistory = () => {
     hapticFeedback.light();
-    router.push('/history');
+    router.push({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
   };
 
   const handleOpenProfile = () => {
