@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: config.name || 'Travel AI',
+    name: config.name || 'VAMO',
     slug: config.slug || 'travel-ai',
     android: {
       ...config.android,

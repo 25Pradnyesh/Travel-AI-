@@ -146,7 +146,7 @@ export default function ResultsScreen() {
       const messageParts = [
         `Discovered ${bestGuess.name}`,
         locationSubtitle ? `in ${locationSubtitle}` : '',
-        'via Travel AI.',
+        'via VAMO.',
         sourceUrl ? `Source reel: ${sourceUrl}` : '',
       ].filter(Boolean);
 

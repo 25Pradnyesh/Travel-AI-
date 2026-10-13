@@ -1,14 +1,15 @@
 /**
- * Travel AI Mobile — Login Screen (Stages 3 & 4)
+ * VAMO Mobile — Login / Account Modal
  *
  * Implements Sign in with Apple & Sign in with Google via Supabase Auth:
- * - Clear value proposition (bookmark sync, cross-device analysis history)
- * - Clear loading, cancellation, and error feedback for both providers
- * - Strict preservation of guest mode ("Continue as Guest" / dismissible modal)
- * - Adherence to Travel AI Design System & Apple Human Interface Guidelines
+ * - Pure atmospheric dark-glass presentation (AtmosphereBackground variant="night")
+ * - High-contrast readable "VAMO CLOUD" frosted pill
+ * - Plain language privacy copy ("Private by default. Only you can see your saved places.")
+ * - Apple HIG compliant white button on dark backgrounds + outlined Google glass pill
+ * - Prominent "Continue as Guest" pill + 44px frosted close button
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -20,7 +21,11 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
+import {
+  AtmosphereBackground,
+  toast,
+} from '@/components/ui';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useAuth, clearPendingSaveAction, executePendingSaveAction } from '@/lib/supabase';
 import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 import { hapticFeedback } from '@/lib/haptics';
@@ -38,7 +43,6 @@ export default function LoginScreen() {
     user,
   } = useAuth();
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
-
 
   const handleDismiss = () => {
     hapticFeedback.light();
@@ -66,6 +70,7 @@ export default function LoginScreen() {
 
     if (result.success) {
       hapticFeedback.success();
+      toast.success('Signed in with Apple');
       try {
         const pendingResult = await executePendingSaveAction();
         if (pendingResult.executed && pendingResult.place) {
@@ -77,8 +82,10 @@ export default function LoginScreen() {
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace('/(tabs)/profile');
+        router.replace('/profile');
       }
+    } else if (result.error) {
+      toast.error(result.error);
     }
   };
 
@@ -97,6 +104,7 @@ export default function LoginScreen() {
 
     if (result.success) {
       hapticFeedback.success();
+      toast.success('Signed in with Google');
       try {
         const pendingResult = await executePendingSaveAction();
         if (pendingResult.executed && pendingResult.place) {
@@ -108,23 +116,30 @@ export default function LoginScreen() {
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace('/(tabs)/profile');
+        router.replace('/profile');
       }
+    } else if (result.error) {
+      toast.error(result.error);
     }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
-      {/* Top Header with Dismiss Button */}
-      <View style={styles.header}>
+    <AtmosphereBackground variant="night">
+      {/* Top Header with 44px Frosted Close Button */}
+      <View
+        style={[
+          styles.header,
+          { paddingTop: Math.max(insets.top, Spacing.base) },
+        ]}
+      >
         <Pressable
           onPress={handleDismiss}
-          hitSlop={12}
+          hitSlop={8}
           style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
           accessibilityRole="button"
           accessibilityLabel="Close sign in and continue as guest"
         >
-          <Ionicons name="close" size={22} color={Colors.textPrimary} />
+          <Ionicons name="close" size={20} color={Colors.ivoryMist} />
         </Pressable>
         <Text style={styles.headerTitle}>Account</Text>
         <View style={styles.headerPlaceholder} />
@@ -133,16 +148,16 @@ export default function LoginScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: Math.max(insets.bottom, Spacing.xl) + Spacing.lg },
+          { paddingBottom: Math.max(insets.bottom, Spacing.xl) + Spacing.xl },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Brand & Hero */}
+        {/* Brand Hero with High-Contrast Frosted Pill */}
         <View style={styles.heroSection}>
           <View style={styles.badgeWrapper}>
-            <View style={styles.badge}>
-              <Ionicons name="airplane" size={16} color={Colors.surfaceDark} />
-              <Text style={styles.badgeText}>TRAVEL AI CLOUD</Text>
+            <View style={styles.badgePill}>
+              <Ionicons name="cloud" size={14} color={Colors.icyBlue} />
+              <Text style={styles.badgeText}>VAMO CLOUD</Text>
             </View>
           </View>
 
@@ -156,11 +171,11 @@ export default function LoginScreen() {
           </Text>
         </View>
 
-        {/* Value Proposition Cards */}
-        <View style={styles.benefitsSection}>
+        {/* Value Proposition: Dark Glass Card */}
+        <View style={styles.benefitsCard}>
           <View style={styles.benefitItem}>
             <View style={styles.benefitIconWrapper}>
-              <Ionicons name="bookmark-outline" size={20} color={Colors.textPrimary} />
+              <Ionicons name="bookmark-outline" size={18} color={Colors.icyBlue} />
             </View>
             <View style={styles.benefitText}>
               <Text style={styles.benefitTitle}>Multi-Device Sync</Text>
@@ -170,21 +185,25 @@ export default function LoginScreen() {
             </View>
           </View>
 
+          <View style={styles.benefitDivider} />
+
           <View style={styles.benefitItem}>
             <View style={styles.benefitIconWrapper}>
-              <Ionicons name="shield-checkmark-outline" size={20} color={Colors.verified} />
+              <Ionicons name="shield-checkmark-outline" size={18} color={Colors.verified} />
             </View>
             <View style={styles.benefitText}>
-              <Text style={styles.benefitTitle}>Private & Protected</Text>
+              <Text style={styles.benefitTitle}>Private by Default</Text>
               <Text style={styles.benefitDesc}>
-                Secured by PostgreSQL Row Level Security. Only you can access your travel intelligence.
+                Private by default. Only you can see your saved places.
               </Text>
             </View>
           </View>
 
+          <View style={styles.benefitDivider} />
+
           <View style={styles.benefitItem}>
             <View style={styles.benefitIconWrapper}>
-              <Ionicons name="sparkles-outline" size={20} color={Colors.info} />
+              <Ionicons name="sparkles-outline" size={18} color={Colors.icyBlue} />
             </View>
             <View style={styles.benefitText}>
               <Text style={styles.benefitTitle}>Guest Access Always Preserved</Text>
@@ -195,22 +214,11 @@ export default function LoginScreen() {
           </View>
         </View>
 
-        {/* Status / Cancellation Feedback */}
+        {/* Status / Cancellation Feedback Notice */}
         {statusNotice && !error && (
           <View style={styles.noticeCard}>
-            <Ionicons name="information-circle-outline" size={18} color={Colors.textSecondary} />
+            <Ionicons name="information-circle-outline" size={18} color={Colors.icyBlue} />
             <Text style={styles.noticeText}>{statusNotice}</Text>
-          </View>
-        )}
-
-        {/* Error Feedback */}
-        {error && (
-          <View style={styles.errorCard}>
-            <Ionicons name="alert-circle-outline" size={20} color={Colors.error} />
-            <View style={styles.errorTextContainer}>
-              <Text style={styles.errorTitle}>Sign-In Error</Text>
-              <Text style={styles.errorMessage}>{error}</Text>
-            </View>
           </View>
         )}
 
@@ -219,15 +227,14 @@ export default function LoginScreen() {
           <View style={styles.warningCard}>
             <Ionicons name="warning-outline" size={18} color={Colors.partial} />
             <Text style={styles.warningText}>
-              Supabase credentials not configured. Set EXPO_PUBLIC_SUPABASE_URL and
-              EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY in mobile/.env.local to enable live sign-in.
+              Supabase credentials not configured. Live sign-in requires environment keys.
             </Text>
           </View>
         )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons Stack */}
         <View style={styles.actionSection}>
-          {/* Sign in with Apple */}
+          {/* Sign in with Apple: White button on dark backgrounds strictly following Apple HIG */}
           <Pressable
             onPress={handleAppleSignIn}
             disabled={isAuthenticating}
@@ -241,13 +248,13 @@ export default function LoginScreen() {
             accessibilityState={{ busy: isAuthenticating }}
           >
             {isAuthenticating ? (
-              <ActivityIndicator size="small" color={Colors.canvas} />
+              <ActivityIndicator size="small" color="#000000" />
             ) : (
               <View style={styles.buttonContent}>
                 <Ionicons
                   name="logo-apple"
                   size={19}
-                  color={Colors.canvas}
+                  color="#000000"
                   style={styles.providerIcon}
                 />
                 <Text style={styles.appleButtonText}>Continue with Apple</Text>
@@ -255,7 +262,7 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          {/* Sign in with Google */}
+          {/* Sign in with Google: Outlined frosted glass pill with visible Google G */}
           <Pressable
             onPress={handleGoogleSignIn}
             disabled={isAuthenticating}
@@ -269,13 +276,13 @@ export default function LoginScreen() {
             accessibilityState={{ busy: isAuthenticating }}
           >
             {isAuthenticating ? (
-              <ActivityIndicator size="small" color={Colors.textPrimary} />
+              <ActivityIndicator size="small" color={Colors.ivoryMist} />
             ) : (
               <View style={styles.buttonContent}>
                 <Ionicons
                   name="logo-google"
                   size={17}
-                  color={Colors.textPrimary}
+                  color={Colors.ivoryMist}
                   style={styles.providerIcon}
                 />
                 <Text style={styles.googleButtonText}>Continue with Google</Text>
@@ -283,7 +290,7 @@ export default function LoginScreen() {
             )}
           </Pressable>
 
-          {/* Continue as Guest */}
+          {/* Continue as Guest: Prominent frosted pill */}
           <Pressable
             onPress={handleDismiss}
             disabled={isAuthenticating}
@@ -298,103 +305,106 @@ export default function LoginScreen() {
           </Pressable>
         </View>
 
-        {/* Privacy Note */}
+        {/* Privacy Note with original legal claims preserved, brand updated */}
         <Text style={styles.footerNote}>
-          By signing in, you agree to Travel AI&apos;s privacy principles. Media processed during
+          By signing in, you agree to VAMO&apos;s privacy principles. Media processed during
           analysis remains strictly ephemeral and is never stored in the cloud.
         </Text>
       </ScrollView>
-    </View>
+    </AtmosphereBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.canvas,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderSubtle,
+    paddingBottom: Spacing.xs,
   },
   headerTitle: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 16,
+    color: Colors.ivoryMist,
   },
   closeButton: {
     width: TouchTarget.minWidth,
     height: TouchTarget.minHeight,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.glassFrostedBg,
+    borderWidth: 1,
+    borderColor: Colors.glassFrostedBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Radius.full,
   },
   headerPlaceholder: {
     width: TouchTarget.minWidth,
   },
   scrollContent: {
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   heroSection: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   badgeWrapper: {
     flexDirection: 'row',
     marginBottom: Spacing.sm,
   },
-  badge: {
+  badgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceSubtle,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
+    backgroundColor: Colors.glassFrostedBg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: Colors.glassFrostedBorder,
     gap: 6,
   },
   badgeText: {
-    ...Typography.label,
+    fontFamily: Fonts.sansBold,
     fontSize: 10,
-    fontWeight: '700',
-    color: Colors.surfaceDark,
+    letterSpacing: 1.4,
+    color: Colors.icyBlue,
+    textTransform: 'uppercase',
   },
   title: {
-    ...Typography.h2,
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 24,
+    lineHeight: 30,
+    color: Colors.ivoryMist,
+    letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
   subtitle: {
-    ...Typography.body,
+    fontFamily: Fonts.sansRegular,
+    fontSize: 14,
+    lineHeight: 20,
     color: Colors.textSecondary,
-    lineHeight: 22,
   },
-  benefitsSection: {
-    backgroundColor: Colors.surface,
+  benefitsCard: {
+    backgroundColor: Colors.glassDarkBg,
     borderRadius: Radius.xl,
     padding: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: Colors.glassDarkBorder,
     marginBottom: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   benefitItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
+    paddingVertical: Spacing.xs,
   },
   benefitIconWrapper: {
     width: 36,
     height: 36,
-    borderRadius: Radius.md,
-    backgroundColor: Colors.surfaceSubtle,
+    borderRadius: Radius.lg,
+    backgroundColor: Colors.glassFrostedBg,
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: Colors.glassFrostedBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
@@ -404,71 +414,53 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   benefitTitle: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 14,
+    color: Colors.ivoryMist,
     marginBottom: 2,
   },
   benefitDesc: {
-    ...Typography.caption,
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    lineHeight: 17,
     color: Colors.textSecondary,
-    lineHeight: 18,
+  },
+  benefitDivider: {
+    height: 1,
+    backgroundColor: Colors.glassDarkBorder,
   },
   noticeCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceSubtle,
+    backgroundColor: Colors.glassDarkBg,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.borderSubtle,
+    borderColor: Colors.glassFrostedBorder,
     marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
   noticeText: {
-    ...Typography.caption,
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
     color: Colors.textSecondary,
     flex: 1,
-  },
-  errorCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FDF2F2',
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#F8B4B4',
-    marginBottom: Spacing.md,
-    gap: Spacing.sm,
-  },
-  errorTextContainer: {
-    flex: 1,
-  },
-  errorTitle: {
-    ...Typography.caption,
-    fontWeight: '700',
-    color: Colors.error,
-    marginBottom: 2,
-  },
-  errorMessage: {
-    ...Typography.caption,
-    color: '#9B1C1C',
-    lineHeight: 17,
   },
   warningCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#FFFBEB',
+    backgroundColor: 'rgba(229, 168, 102, 0.12)',
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#FDE68A',
+    borderColor: Colors.partialBorder,
     marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
   warningText: {
-    ...Typography.caption,
-    color: '#92400E',
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    color: Colors.partial,
     flex: 1,
     lineHeight: 17,
   },
@@ -477,7 +469,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   appleButton: {
-    backgroundColor: Colors.surfaceDark,
+    backgroundColor: '#FFFFFF',
     borderRadius: Radius.xl,
     minHeight: 52,
     alignItems: 'center',
@@ -485,14 +477,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   appleButtonText: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.canvas,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 15,
+    color: '#000000',
   },
   googleButton: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.glassFrostedBg,
     borderWidth: 1.5,
-    borderColor: Colors.borderSubtle,
+    borderColor: Colors.glassFrostedBorder,
     borderRadius: Radius.xl,
     minHeight: 52,
     alignItems: 'center',
@@ -500,9 +492,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   googleButtonText: {
-    ...Typography.body,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 15,
+    color: Colors.ivoryMist,
+  },
+  guestButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radius.xl,
+    backgroundColor: 'rgba(251, 244, 227, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+  },
+  guestButtonText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 14,
+    color: Colors.ivoryMist,
   },
   buttonContent: {
     flexDirection: 'row',
@@ -512,20 +518,8 @@ const styles = StyleSheet.create({
   providerIcon: {
     marginRight: Spacing.sm + 2,
   },
-  guestButton: {
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.xl,
-    backgroundColor: 'transparent',
-  },
-  guestButtonText: {
-    ...Typography.body,
-    fontWeight: '500',
-    color: Colors.textSecondary,
-  },
   footerNote: {
-    ...Typography.caption,
+    fontFamily: Fonts.sansRegular,
     fontSize: 11,
     color: Colors.textMuted,
     textAlign: 'center',
@@ -533,10 +527,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.55,
   },
   pressed: {
-    opacity: 0.85,
+    opacity: 0.8,
     transform: [{ scale: 0.985 }],
   },
 });

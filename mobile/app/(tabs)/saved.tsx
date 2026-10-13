@@ -205,6 +205,11 @@ export default function SavedScreen() {
     router.push('/(auth)/login');
   }, []);
 
+  const handleOpenProfile = useCallback(() => {
+    hapticFeedback.light();
+    router.push('/profile');
+  }, []);
+
   const handleOptimisticUnsave = useCallback((place: SavedPlace) => {
     hapticFeedback.light();
     toggleSave(place);
@@ -375,24 +380,37 @@ export default function SavedScreen() {
           </Pressable>
         </GlassView>
 
-        {/* Sync Status Pill */}
-        <View style={styles.syncStatusPill}>
-          {isSyncing ? (
-            <View style={styles.syncRow}>
-              <ActivityIndicator size="small" color={Colors.icyBlue} />
-              <Text style={styles.syncText}>Syncing...</Text>
-            </View>
-          ) : isAuthenticated ? (
-            <View style={styles.syncRow}>
-              <Ionicons name="cloud-done" size={13} color={Colors.verified} />
-              <Text style={styles.syncText}>Cloud Synced</Text>
-            </View>
-          ) : (
-            <View style={styles.syncRow}>
-              <Ionicons name="save-outline" size={13} color={Colors.textSecondary} />
-              <Text style={styles.syncText}>Offline</Text>
-            </View>
-          )}
+        {/* Header Right Actions: Sync Status Pill + Avatar */}
+        <View style={styles.headerRightActions}>
+          <View style={styles.syncStatusPill}>
+            {isSyncing ? (
+              <View style={styles.syncRow}>
+                <ActivityIndicator size="small" color={Colors.icyBlue} />
+                <Text style={styles.syncText}>Syncing...</Text>
+              </View>
+            ) : isAuthenticated ? (
+              <View style={styles.syncRow}>
+                <Ionicons name="cloud-done" size={13} color={Colors.verified} />
+                <Text style={styles.syncText}>Cloud Synced</Text>
+              </View>
+            ) : (
+              <View style={styles.syncRow}>
+                <Ionicons name="save-outline" size={13} color={Colors.textSecondary} />
+                <Text style={styles.syncText}>Offline</Text>
+              </View>
+            )}
+          </View>
+
+          <Pressable
+            onPress={handleOpenProfile}
+            hitSlop={8}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile and settings"
+            style={({ pressed }) => [styles.avatarButton, pressed && styles.pressed]}
+          >
+            <Ionicons name="person" size={14} color={Colors.ivoryMist} />
+          </Pressable>
         </View>
       </View>
 
@@ -515,14 +533,27 @@ export default function SavedScreen() {
           </Pressable>
         </GlassView>
 
-        {/* History Sync Status */}
-        <View style={styles.syncStatusPill}>
-          <View style={styles.syncRow}>
-            <Ionicons name="cloud-outline" size={13} color={Colors.icyBlue} />
-            <Text style={styles.syncText}>
-              {isAuthenticated ? `${analyses.length} Dossiers` : 'Sign-In Required'}
-            </Text>
+        {/* Header Right Actions: History Sync Status + Avatar */}
+        <View style={styles.headerRightActions}>
+          <View style={styles.syncStatusPill}>
+            <View style={styles.syncRow}>
+              <Ionicons name="cloud-outline" size={13} color={Colors.icyBlue} />
+              <Text style={styles.syncText}>
+                {isAuthenticated ? `${analyses.length} Dossiers` : 'Sign-In Required'}
+              </Text>
+            </View>
           </View>
+
+          <Pressable
+            onPress={handleOpenProfile}
+            hitSlop={8}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile and settings"
+            style={({ pressed }) => [styles.avatarButton, pressed && styles.pressed]}
+          >
+            <Ionicons name="person" size={14} color={Colors.ivoryMist} />
+          </Pressable>
         </View>
       </View>
 
@@ -618,7 +649,7 @@ export default function SavedScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground variant="night">
       {activeTab === 'saved' ? (
         <FlatList
           data={filteredPlaces}
@@ -729,6 +760,21 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansBold,
     fontSize: 10,
     color: Colors.ivoryMist,
+  },
+  headerRightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  avatarButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.onyx,
+    borderWidth: 1.5,
+    borderColor: 'rgba(251, 244, 227, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   syncStatusPill: {
     backgroundColor: 'rgba(8, 18, 24, 0.65)',

@@ -19,6 +19,7 @@ import { Colors } from '@/constants/theme';
 import { AuthProvider } from '@/lib/supabase';
 import { NetworkProvider } from '@/hooks/useNetwork';
 import { OfflineGuard } from '@/components/ui/OfflineGuard';
+import { GlobalToast } from '@/components/ui/Toast';
 import { SplashVideo } from '@/components/SplashVideo';
 
 // Keep native splash screen visible until fonts and assets are ready
@@ -144,6 +145,13 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="profile"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen
               name="+not-found"
               options={{
                 headerShown: false,
@@ -152,6 +160,7 @@ export default function RootLayout() {
             />
           </Stack>
           <OfflineGuard />
+          <GlobalToast />
           {showSplashVideo && (
             <SplashVideo onFinish={() => setShowSplashVideo(false)} />
           )}

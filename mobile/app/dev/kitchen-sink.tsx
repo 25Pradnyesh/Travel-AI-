@@ -14,12 +14,17 @@ import { BlurTargetView } from 'expo-blur';
 import {
   AtmosphereBackground,
   ConfidenceBadge,
+  EmptyState,
+  ErrorState,
   GlassInput,
   GlassView,
+  LoadingState,
   PillButton,
   PillChip,
   PosterCard,
   SkeletonShimmer,
+  Toast,
+  toast,
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
@@ -37,6 +42,8 @@ export default function KitchenSinkScreen() {
   const [showInputError, setShowInputError] = useState(false);
   const [selectedChip, setSelectedChip] = useState('Beach');
   const [isPosterSaved, setIsPosterSaved] = useState(false);
+  const [loadingVariant, setLoadingVariant] = useState<'card' | 'list' | 'hero'>('card');
+  const [errorVariant, setErrorVariant] = useState<'network' | 'engine' | 'generic'>('generic');
 
   const WHITE_PHOTO_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
 
@@ -387,6 +394,206 @@ export default function KitchenSinkScreen() {
                   />
                 }
               />
+            </View>
+          </GlassView>
+        </View>
+
+        {/* Section 10: Stage C Shared States Fixtures */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>10. Stage C: Shared States (Loading, Empty, Error, Toast)</Text>
+          <GlassView variant="dark" borderRadius={Radius.xl} style={styles.contrastCard}>
+            <Text style={styles.cardSublabel}>Toast Dispatcher (Safe-Area Aware, Queued)</Text>
+            <View style={styles.buttonRow}>
+              <PillButton
+                title="Info Toast"
+                variant="glass"
+                size="sm"
+                onPress={() => toast.info('VAMO analysis engine connected.')}
+              />
+              <PillButton
+                title="Success Toast"
+                variant="glass"
+                size="sm"
+                onPress={() => toast.success('Saved to your travel dossier.')}
+              />
+              <PillButton
+                title="Warning Toast"
+                variant="glass"
+                size="sm"
+                onPress={() => toast.warning('Places API quota running slow.')}
+              />
+              <PillButton
+                title="Error Toast"
+                variant="brand"
+                size="sm"
+                onPress={() => toast.error('Authentication session expired. Please sign in.')}
+              />
+            </View>
+
+            <View style={{ height: Spacing.lg }} />
+
+            <Text style={styles.cardSublabel}>LoadingState Variants (SkeletonShimmer Powered)</Text>
+            <View style={styles.buttonRow}>
+              <PillButton
+                title="Card"
+                variant={loadingVariant === 'card' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setLoadingVariant('card')}
+              />
+              <PillButton
+                title="List"
+                variant={loadingVariant === 'list' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setLoadingVariant('list')}
+              />
+              <PillButton
+                title="Hero"
+                variant={loadingVariant === 'hero' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setLoadingVariant('hero')}
+              />
+            </View>
+            <View style={{ marginVertical: Spacing.sm }}>
+              <LoadingState variant={loadingVariant} />
+            </View>
+
+            <View style={{ height: Spacing.lg }} />
+
+            <Text style={styles.cardSublabel}>EmptyState with Instrument Serif Accent</Text>
+            <View style={{ marginVertical: Spacing.sm }}>
+              <EmptyState
+                icon={<Ionicons name="bookmark-outline" size={28} color={Colors.icyBlue} />}
+                eyebrow="SAVED VAULT"
+                title="Your collection,"
+                titleAccent="bookmarked."
+                description="Save places from Instagram Reels to build your personal travel guide."
+                actionLabel="Explore Spots"
+                onActionPress={() => toast.info('Navigating to Explore')}
+              />
+            </View>
+
+            <View style={{ height: Spacing.lg }} />
+
+            <Text style={styles.cardSublabel}>ErrorState (Amber Warnings, No Red Walls)</Text>
+            <View style={styles.buttonRow}>
+              <PillButton
+                title="Network"
+                variant={errorVariant === 'network' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setErrorVariant('network')}
+              />
+              <PillButton
+                title="Engine"
+                variant={errorVariant === 'engine' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setErrorVariant('engine')}
+              />
+              <PillButton
+                title="Generic"
+                variant={errorVariant === 'generic' ? 'primary' : 'glass'}
+                size="sm"
+                onPress={() => setErrorVariant('generic')}
+              />
+            </View>
+            <View style={{ marginVertical: Spacing.sm }}>
+              <ErrorState
+                variant={errorVariant}
+                onRetry={() => toast.success('Retrying connection...')}
+                onCancel={() => toast.info('Returned to previous screen')}
+              />
+            </View>
+          </GlassView>
+        </View>
+
+        {/* Section 11: Stage C Profile & Login Modal Fixtures */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>11. Stage C: Profile & Login Screen Fixtures</Text>
+          <GlassView variant="dark" borderRadius={Radius.xl} style={styles.contrastCard}>
+            <Text style={styles.cardSublabel}>Live Screen Navigation</Text>
+            <View style={[styles.buttonRow, { marginBottom: Spacing.lg }]}>
+              <PillButton
+                title="Open Profile (/profile)"
+                variant="brand"
+                onPress={() => router.push('/profile' as any)}
+                iconLeft={<Ionicons name="person" size={15} color={Colors.textOnRed} />}
+              />
+              <PillButton
+                title="Open Login Modal (/(auth)/login)"
+                variant="glass"
+                onPress={() => router.push('/(auth)/login' as any)}
+                iconLeft={<Ionicons name="log-in-outline" size={15} color={Colors.ivoryMist} />}
+              />
+            </View>
+
+            <Text style={styles.cardSublabel}>Apple HIG vs Google Button Comparison (Contrast Verified)</Text>
+            <View style={{ gap: Spacing.sm, marginVertical: Spacing.sm }}>
+              {/* Apple HIG White Button */}
+              <View
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: Radius.lg,
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="logo-apple" size={18} color="#000000" />
+                <Text style={{ fontFamily: Fonts.sansSemiBold, fontSize: 14, color: '#000000' }}>
+                  Sign in with Apple (HIG: White on Dark, 21:1 Contrast)
+                </Text>
+              </View>
+
+              {/* Google Glass Pill */}
+              <View
+                style={{
+                  backgroundColor: Colors.glassFrostedBg,
+                  borderWidth: 1.2,
+                  borderColor: Colors.glassFrostedBorder,
+                  borderRadius: Radius.lg,
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'row',
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="logo-google" size={16} color={Colors.ivoryMist} />
+                <Text style={{ fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.ivoryMist }}>
+                  Continue with Google (Frosted Glass Pill, 14.2:1 Contrast)
+                </Text>
+              </View>
+
+              {/* VAMO CLOUD Frosted Pill */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 4 }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: Colors.glassFrostedBg,
+                    borderWidth: 1,
+                    borderColor: Colors.glassFrostedBorder,
+                    paddingHorizontal: Spacing.md,
+                    paddingVertical: 6,
+                    borderRadius: Radius.pill,
+                    gap: 6,
+                  }}
+                >
+                  <Ionicons name="cloud" size={14} color={Colors.icyBlue} />
+                  <Text
+                    style={{
+                      fontFamily: Fonts.sansBold,
+                      fontSize: 10,
+                      letterSpacing: 1.4,
+                      color: Colors.icyBlue,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    VAMO CLOUD (High Contrast Frosted Pill)
+                  </Text>
+                </View>
+              </View>
             </View>
           </GlassView>
         </View>

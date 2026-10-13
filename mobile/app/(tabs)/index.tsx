@@ -182,7 +182,7 @@ export default function AnalyzeScreen() {
 
   const handleOpenProfile = () => {
     hapticFeedback.light();
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   };
 
   // Combine real recent analyses & saved places for the "In Focus" carousel

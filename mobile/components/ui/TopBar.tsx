@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, TouchTarget, Typography } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface TopBarProps {
@@ -29,7 +29,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   rightAction,
   brandTitle,
   style,
-  transparent = false,
 }) => {
   const insets = useSafeAreaInsets();
 
@@ -37,8 +36,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     <View
       style={[
         styles.container,
-        { paddingTop: insets.top + Spacing.xs },
-        !transparent && styles.borderBottom,
+        { paddingTop: Math.max(insets.top, Spacing.base) },
         style,
       ]}
     >
@@ -54,12 +52,15 @@ export const TopBar: React.FC<TopBarProps> = ({
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Go back"
-              style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.frostedBackPill, pressed && styles.pressed]}
             >
-              <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+              <Ionicons name="chevron-back" size={20} color={Colors.ivoryMist} />
             </Pressable>
           ) : brandTitle ? (
-            <Text style={styles.brandText}>{brandTitle}</Text>
+            <View style={styles.brandPill}>
+              <Text style={styles.brandText}>{brandTitle}</Text>
+              <View style={styles.brandDot} />
+            </View>
           ) : null}
         </View>
 
@@ -79,19 +80,16 @@ export const TopBar: React.FC<TopBarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.canvas,
-    zIndex: 10,
-  },
-  borderBottom: {
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderSubtle,
+    backgroundColor: 'transparent',
+    zIndex: 20,
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.sm,
   },
   contentRow: {
-    height: 48,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.base,
   },
   leftContainer: {
     minWidth: TouchTarget.minWidth,
@@ -111,26 +109,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
   },
-  backButton: {
-    width: TouchTarget.minWidth,
-    height: TouchTarget.minHeight,
-    alignItems: 'flex-start',
+  frostedBackPill: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.glassFrostedBg,
+    borderWidth: 1,
+    borderColor: Colors.glassFrostedBorder,
+    alignItems: 'center',
     justifyContent: 'center',
   },
+  brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    gap: 6,
+  },
   brandText: {
-    ...Typography.h2,
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
+    fontFamily: Fonts.sansBold,
+    fontSize: 13,
+    letterSpacing: 2,
+    color: Colors.ivoryMist,
+  },
+  brandDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: Colors.racingRed,
   },
   titleText: {
-    ...Typography.h3,
+    fontFamily: Fonts.sansSemiBold,
     fontSize: 16,
-    color: Colors.textPrimary,
+    color: Colors.ivoryMist,
     textAlign: 'center',
   },
   pressed: {
-    opacity: 0.6,
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
   },
 });
 

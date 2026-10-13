@@ -33,13 +33,6 @@ export default function TabLayout() {
           tabBarAccessibilityLabel: 'Saved Places Tab',
         }}
       />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarAccessibilityLabel: 'Profile and Settings Tab',
-        }}
-      />
     </Tabs>
   );
 }

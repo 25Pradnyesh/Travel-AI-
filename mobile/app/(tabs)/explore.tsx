@@ -161,7 +161,7 @@ export default function ExploreScreen() {
 
   const handleOpenProfile = useCallback(() => {
     hapticFeedback.light();
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   }, []);
 
   const hasAnyDiscoveries = allDiscoveredPlaces.length > 0;
@@ -326,7 +326,7 @@ export default function ExploreScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground variant="night">
       <FlatList
         data={filteredPlaces}
         keyExtractor={(item) => item.place_id || item.name}
