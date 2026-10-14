@@ -37,6 +37,20 @@ Module.prototype.require = function (id: string) {
   ) {
     return mockModule;
   }
+  if (id === 'expo-device') {
+    return { isDevice: true };
+  }
+  if (id === 'expo-modules-core') {
+    return {
+      EventEmitter: class {
+        addListener() {
+          return { remove: () => {} };
+        }
+        removeListener() {}
+        emit() {}
+      },
+    };
+  }
   return originalRequire.apply(this, arguments);
 };
 

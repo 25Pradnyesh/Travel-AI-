@@ -6,7 +6,12 @@ import { GlassView } from '@/components/ui';
 import { TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+// Enable experimental LayoutAnimation on Android for the Old Architecture only.
+// In the New Architecture (Fabric), layout animations are enabled by default and calling this logs a warning.
+const isFabric = Boolean(
+  (globalThis as unknown as { nativeFabricUIManager?: unknown }).nativeFabricUIManager
+);
+if (Platform.OS === 'android' && !isFabric && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 

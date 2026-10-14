@@ -49,6 +49,7 @@ import {
   clearPendingSaveAction,
   executePendingSaveAction,
 } from '../saved-places';
+import { isSameUser, isSameSession } from '../AuthContext';
 import { AnalysisResponse } from '@/types/analysis';
 import { isDevelopmentOrLoopbackUrl, isValidProductionApiUrl } from '../../../constants/config';
 
@@ -61,16 +62,19 @@ function assert(condition: unknown, message: string): asserts condition {
 export async function runSupabaseBoundaryTests(): Promise<{ passed: number; failed: number }> {
   let passed = 0;
   let failed = 0;
+  let testQueue: Promise<void> = Promise.resolve();
 
-  const runTest = async (name: string, fn: () => void | Promise<void>) => {
-    try {
-      await fn();
-      passed++;
-    } catch (err) {
-      failed++;
-      // eslint-disable-next-line no-console
-      console.error(`[FAIL] ${name}:`, err);
-    }
+  const runTest = (name: string, fn: () => void | Promise<void>) => {
+    testQueue = testQueue.then(async () => {
+      try {
+        await fn();
+        passed++;
+      } catch (err) {
+        failed++;
+        // eslint-disable-next-line no-console
+        console.error(`[FAIL] ${name}:`, err);
+      }
+    });
   };
 
   const originalEnv = { ...process.env };
@@ -1046,6 +1050,148 @@ export async function runSupabaseBoundaryTests(): Promise<{ passed: number; fail
       assert(deleteCall !== undefined, 'Delete executed');
       // In Postgres with RLS, DELETE ... WHERE user_id = auth.uid() AND place_id = 'place-user-a' deletes 0 rows for User B
     });
+
+    // ============================================================================
+    // 7. AuthContext Lifecycle & Equivalence Contracts (Fix for Infinite Update Loop)
+    // ============================================================================
+    runTest('isSameUser correctly identifies equivalent user data across distinct memory references', () => {
+      const userA: any = {
+        id: 'usr-123',
+        email: 'traveler@example.com',
+        role: 'authenticated',
+        updated_at: '2026-10-14T10:00:00Z',
+      };
+      const userB: any = {
+        id: 'usr-123',
+        email: 'traveler@example.com',
+        role: 'authenticated',
+        updated_at: '2026-10-14T10:00:00Z',
+      };
+
+      assert(userA !== userB, 'References should be distinct');
+      assert(isSameUser(userA, userB) === true, 'isSameUser should return true for identical user properties');
+      assert(isSameUser(null, null) === true, 'isSameUser should return true for two null users');
+      assert(isSameUser(userA, null) === false, 'isSameUser should return false if one user is null');
+      assert(isSameUser(null, userB) === false, 'isSameUser should return false if other user is null');
+
+      const userDifferentId = { ...userA, id: 'usr-456' };
+      assert(isSameUser(userA, userDifferentId) === false, 'Different ID returns false');
+
+      const userDifferentEmail = { ...userA, email: 'other@example.com' };
+      assert(isSameUser(userA, userDifferentEmail) === false, 'Different email returns false');
+
+      const userDifferentUpdate = { ...userA, updated_at: '2026-10-14T12:00:00Z' };
+      assert(isSameUser(userA, userDifferentUpdate) === false, 'Different updated_at returns false');
+    });
+
+    runTest('isSameSession identifies identical sessions across distinct references (preventing infinite render loops)', () => {
+      const userA: any = {
+        id: 'usr-abc',
+        email: 'nomad@example.com',
+        role: 'authenticated',
+        updated_at: '2026-10-14T10:00:00Z',
+      };
+      const session1: any = {
+        access_token: 'token-alpha',
+        refresh_token: 'refresh-alpha',
+        expires_at: 1770000000,
+        user: userA,
+      };
+      const session2: any = {
+        access_token: 'token-alpha',
+        refresh_token: 'refresh-alpha',
+        expires_at: 1770000000,
+        user: { ...userA },
+      };
+
+      assert(session1 !== session2, 'Sessions must be distinct objects');
+      assert(isSameSession(session1, session2) === true, 'Equivalent sessions return true');
+      assert(isSameSession(null, null) === true, 'Two null sessions return true');
+      assert(isSameSession(session1, null) === false, 'Signed in vs signed out returns false');
+      assert(isSameSession(null, session2) === false, 'Signed out vs signed in returns false');
+    });
+
+    runTest('isSameSession detects token refreshes (TOKEN_REFRESHED event)', () => {
+      const user: any = {
+        id: 'usr-abc',
+        email: 'nomad@example.com',
+        role: 'authenticated',
+        updated_at: '2026-10-14T10:00:00Z',
+      };
+      const initialSession: any = {
+        access_token: 'token-old',
+        refresh_token: 'refresh-old',
+        expires_at: 1770000000,
+        user,
+      };
+      const refreshedSession: any = {
+        access_token: 'token-new-refreshed',
+        refresh_token: 'refresh-new',
+        expires_at: 1770003600,
+        user,
+      };
+
+      assert(isSameSession(initialSession, refreshedSession) === false, 'Token refresh must not be treated as identical');
+    });
+
+    runTest('repeated equivalent auth events do not trigger state changes', () => {
+      // Simulates the scenario where Supabase onAuthStateChange fires repeatedly
+      // with new session object references that contain the same token data
+      const baseUser: any = {
+        id: 'usr-loop-test',
+        email: 'test@loop.com',
+        role: 'authenticated',
+        updated_at: '2026-10-14T00:00:00Z',
+      };
+      let currentSessionState: any = null;
+      let renderCount = 0;
+
+      // Mock the applySession updater function from AuthContext
+      const applySession = (nextSession: any) => {
+        const nextState = isSameSession(currentSessionState, nextSession)
+          ? currentSessionState // Bailout: keep same reference
+          : nextSession;
+
+        if (nextState !== currentSessionState) {
+          currentSessionState = nextState;
+          renderCount++;
+        }
+      };
+
+      // Initial login
+      applySession({
+        access_token: 'stable-token',
+        refresh_token: 'stable-refresh',
+        expires_at: 1800000000,
+        user: { ...baseUser },
+      });
+      assert(Number(renderCount) === 1, 'Initial session sets state once');
+
+      // 100 consecutive duplicate events with distinct object instances (the infinite loop hazard)
+      for (let i = 0; i < 100; i++) {
+        applySession({
+          access_token: 'stable-token',
+          refresh_token: 'stable-refresh',
+          expires_at: 1800000000,
+          user: { ...baseUser },
+        });
+      }
+
+      // Render count MUST remain 1 because isSameSession bailed out every time!
+      assert(Number(renderCount) === 1, `Render count should remain 1, got ${renderCount}`);
+
+      // Sign out event
+      applySession(null);
+      assert(Number(renderCount) === 2, 'Sign out increments render count exactly once');
+
+      // Duplicate signed-out events
+      for (let i = 0; i < 10; i++) {
+        applySession(null);
+      }
+      assert(Number(renderCount) === 2, 'Duplicate sign out events do not trigger re-render');
+    });
+
+    await testQueue;
   } finally {
     process.env = originalEnv;
   }
