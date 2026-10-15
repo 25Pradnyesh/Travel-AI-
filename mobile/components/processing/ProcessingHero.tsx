@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 
 export interface ProcessingHeroProps {
   isLongRunning?: boolean;
@@ -25,11 +25,15 @@ export const ProcessingHero: React.FC<ProcessingHeroProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.eyebrow}>EDITORIAL REEL RESOLUTION</Text>
+      <View style={styles.eyebrowPill}>
+        <Text style={styles.eyebrow}>EDITORIAL REEL RESOLUTION</Text>
+      </View>
       <Text style={styles.headline}>Finding your place.</Text>
-      <Text style={styles.description}>
-        We're looking for visual clues, landmarks and location signals in the reel.
-      </Text>
+      <View style={styles.descriptionPill}>
+        <Text style={styles.description}>
+          We're looking for visual clues, landmarks and location signals in the reel.
+        </Text>
+      </View>
 
       {isLongRunning && (
         <Animated.View style={[styles.reassuranceWrapper, { opacity: reassuranceAnim }]}>
@@ -44,45 +48,69 @@ export const ProcessingHero: React.FC<ProcessingHeroProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.md,
+    alignItems: 'center',
+  },
+  eyebrowPill: {
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.25)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    marginBottom: Spacing.sm,
   },
   eyebrow: {
-    fontSize: 11,
-    lineHeight: 15,
-    fontWeight: '700',
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
+    lineHeight: 14,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
-    color: 'rgba(12, 12, 12, 0.45)', // Onyx muted
-    marginBottom: Spacing.xs,
+    color: Colors.icyBlue,
   },
   headline: {
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: '700',
-    letterSpacing: -0.7,
-    color: Colors.onyx,
+    fontFamily: Fonts.serifItalic,
+    fontSize: 38,
+    lineHeight: 44,
+    color: Colors.ivoryMist,
+    letterSpacing: -0.5,
+    textAlign: 'center',
   },
-  description: {
-    fontSize: 14,
-    lineHeight: 21,
-    fontWeight: '400',
-    color: 'rgba(12, 12, 12, 0.65)', // Onyx secondary
+  descriptionPill: {
+    backgroundColor: 'rgba(8, 18, 24, 0.70)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderRadius: Radius.xl,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 8,
     marginTop: Spacing.sm,
     maxWidth: 320,
   },
+  description: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 13,
+    lineHeight: 19,
+    color: Colors.ivoryMist,
+    textAlign: 'center',
+  },
   reassuranceWrapper: {
-    marginTop: Spacing.sm + 2,
-    paddingTop: Spacing.xs,
+    marginTop: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(8, 18, 24, 0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.20)',
   },
   reassuranceText: {
+    fontFamily: Fonts.serifItalic,
     fontSize: 12,
-    lineHeight: 18,
-    fontWeight: '500',
-    fontStyle: 'italic',
-    color: 'rgba(12, 12, 12, 0.50)',
-    maxWidth: 320,
+    lineHeight: 17,
+    color: Colors.icyBlue,
+    maxWidth: 290,
+    textAlign: 'center',
   },
 });
 

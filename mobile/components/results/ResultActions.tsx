@@ -1,67 +1,90 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { GlassView } from '@/components/ui';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ResultActionsProps {
   isSaved: boolean;
   onToggleSave: () => void;
-  onShare: () => void;
+  onOpenMap: () => void;
   onOpenDirections: () => void;
 }
 
 export const ResultActions: React.FC<ResultActionsProps> = ({
   isSaved,
   onToggleSave,
-  onShare,
+  onOpenMap,
   onOpenDirections,
 }) => {
-  return (
-    <View style={styles.container}>
-      {/* Primary Save Action */}
-      <Pressable
-        onPress={() => {
-          hapticFeedback.light();
-          onToggleSave();
-        }}
-        accessible={true}
-        accessibilityRole="button"
-        accessibilityLabel={isSaved ? 'Remove from saved collection' : 'Save to collection'}
-        style={({ pressed }) => [
-          styles.saveButton,
-          isSaved ? styles.saveButtonSaved : styles.saveButtonUnsaved,
-          pressed && styles.pressed,
-        ]}
-      >
-        <Ionicons
-          name={isSaved ? 'bookmark' : 'bookmark-outline'}
-          size={18}
-          color={isSaved ? Colors.racingRed : Colors.ivoryMist}
-        />
-        <Text style={[styles.saveText, isSaved ? styles.saveTextSaved : styles.saveTextUnsaved]}>
-          {isSaved ? 'Saved in Collection' : 'Save Destination'}
-        </Text>
-      </Pressable>
+  const insets = useSafeAreaInsets();
 
-      {/* Secondary Actions Row */}
-      <View style={styles.secondaryRow}>
-        {/* Share Button */}
+  return (
+    <View
+      style={[
+        styles.floatingWrapper,
+        { bottom: Math.max(insets.bottom, 12) + 6 },
+      ]}
+      pointerEvents="box-none"
+    >
+      <GlassView
+        variant="dark"
+        borderRadius={Radius.pill}
+        intensity={80}
+        style={styles.floatingBar}
+      >
+        {/* 1. Save (Bookmark Toggle) */}
         <Pressable
           onPress={() => {
             hapticFeedback.light();
-            onShare();
+            onToggleSave();
           }}
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Share destination"
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+          accessibilityLabel={isSaved ? 'Remove from saved places' : 'Save to my places'}
+          style={({ pressed }) => [
+            styles.actionButton,
+            isSaved && styles.saveActiveButton,
+            pressed && styles.pressed,
+          ]}
         >
-          <Ionicons name="share-outline" size={17} color={Colors.onyx} />
-          <Text style={styles.secondaryText}>Share</Text>
+          <Ionicons
+            name={isSaved ? 'bookmark' : 'bookmark-outline'}
+            size={18}
+            color={isSaved ? Colors.racingRed : Colors.ivoryMist}
+          />
+          <Text
+            style={[
+              styles.actionText,
+              isSaved && styles.saveActiveText,
+            ]}
+          >
+            {isSaved ? 'Saved' : 'Save'}
+          </Text>
         </Pressable>
 
-        {/* Directions / Maps Button */}
+        <View style={styles.divider} />
+
+        {/* 2. Map (Route to /analyze/map) */}
+        <Pressable
+          onPress={() => {
+            hapticFeedback.selection();
+            onOpenMap();
+          }}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Open interactive map"
+          style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
+        >
+          <Ionicons name="map-outline" size={18} color={Colors.icyBlue} />
+          <Text style={styles.actionText}>Map</Text>
+        </Pressable>
+
+        <View style={styles.divider} />
+
+        {/* 3. Directions (External Map Handoff) */}
         <Pressable
           onPress={() => {
             hapticFeedback.light();
@@ -69,78 +92,72 @@ export const ResultActions: React.FC<ResultActionsProps> = ({
           }}
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Open in navigation maps"
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+          accessibilityLabel="Get directions in external maps app"
+          style={({ pressed }) => [styles.actionButton, pressed && styles.pressed]}
         >
-          <Ionicons name="navigate-outline" size={17} color={Colors.onyx} />
-          <Text style={styles.secondaryText}>Maps</Text>
+          <Ionicons name="navigate-outline" size={18} color={Colors.ivoryMist} />
+          <Text style={styles.actionText}>Directions</Text>
         </Pressable>
-      </View>
+      </GlassView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.xl, // 24px horizontal padding
-    marginBottom: Spacing.xl,
-    gap: Spacing.sm,
+  floatingWrapper: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    zIndex: 100,
   },
-  saveButton: {
+  floatingBar: {
+    width: '100%',
+    maxWidth: 380,
+    height: 58,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 52,
-    borderRadius: Radius.lg + 2, // 14px refined radius
-    paddingHorizontal: Spacing.lg,
-    gap: 8,
-  },
-  saveButtonUnsaved: {
-    backgroundColor: Colors.racingRed, // Racing Red #EB2627 primary CTA
+    justifyContent: 'space-around',
+    paddingHorizontal: Spacing.sm,
+    backgroundColor: 'rgba(10, 20, 28, 0.88)',
     borderWidth: 1,
-    borderColor: Colors.racingRed,
+    borderColor: 'rgba(251, 244, 227, 0.18)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
   },
-  saveButtonSaved: {
-    backgroundColor: Colors.ivoryMist,
-    borderWidth: 1.5,
-    borderColor: Colors.racingRed,
-  },
-  saveText: {
-    fontSize: 15,
-    fontWeight: '700',
-    letterSpacing: 0.2,
-  },
-  saveTextUnsaved: {
-    color: Colors.ivoryMist,
-  },
-  saveTextSaved: {
-    color: Colors.racingRed,
-  },
-  secondaryRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  secondaryButton: {
+  actionButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.ivoryMist,
-    borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.14)',
-    minHeight: 46,
-    borderRadius: Radius.lg + 2,
-    paddingHorizontal: Spacing.md,
-    gap: 6,
+    height: '100%',
+    gap: 7,
+    minHeight: TouchTarget.minHeight,
+    borderRadius: Radius.pill,
   },
-  secondaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.onyx,
+  saveActiveButton: {
+    backgroundColor: 'rgba(235, 38, 39, 0.08)',
+  },
+  actionText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 13,
+    color: Colors.ivoryMist,
+    letterSpacing: -0.2,
+  },
+  saveActiveText: {
+    color: Colors.ivoryMist,
+  },
+  divider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(251, 244, 227, 0.12)',
   },
   pressed: {
-    opacity: 0.82,
-    transform: [{ scale: 0.985 }],
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
   },
 });
 

@@ -6,6 +6,7 @@
  */
 
 import { Platform } from 'react-native';
+import * as Device from 'expo-device';
 
 /**
  * Detects whether a URL points to local loopback, private LAN addresses, or insecure HTTP.
@@ -57,13 +58,32 @@ const getApiBaseUrl = (): string => {
 
   // 1. In development mode (__DEV__), provide seamless local loopback defaults
   if (__DEV__) {
+    const isAndroid = Platform.OS === 'android';
+    const isEmulator = !Device.isDevice;
+
+    // Android emulator requires 10.0.2.2 to access the host machine's loopback (localhost)
+    if (isAndroid && isEmulator) {
+      if (envUrl) {
+        // If developer provided localhost or 127.0.0.1 in envUrl, map to 10.0.2.2 for the emulator
+        if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+          return envUrl.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
+        }
+        if (envUrl.includes('10.0.2.2')) {
+          return envUrl;
+        }
+      }
+      return 'http://10.0.2.2:8000';
+    }
+
     if (envUrl) {
       return envUrl;
     }
-    // Android emulator uses 10.0.2.2 to access the host machine loopback
-    if (Platform.OS === 'android') {
+
+    // Default Android loopback fallback
+    if (isAndroid) {
       return 'http://10.0.2.2:8000';
     }
+
     // iOS simulator, web, and default fallback
     return 'http://localhost:8000';
   }

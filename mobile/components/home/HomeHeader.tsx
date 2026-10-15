@@ -2,42 +2,69 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, TouchTarget } from '@/constants/theme';
+import { router } from 'expo-router';
+import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface HomeHeaderProps {
   onPressHistory?: () => void;
+  onPressProfile?: () => void;
+  userName?: string | null;
 }
 
-export const HomeHeader: React.FC<HomeHeaderProps> = ({ onPressHistory }) => {
+export const HomeHeader: React.FC<HomeHeaderProps> = ({
+  onPressHistory,
+  onPressProfile,
+  userName,
+}) => {
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
       <View style={styles.contentRow}>
-        {/* Brand Wordmark with signature Racing Red moment */}
-        <View style={styles.brandRow}>
-          <Text style={styles.brandText}>TRAVEL AI</Text>
+        {/* Brand Wordmark in dark frosted pill for 100% readability over sky atmosphere */}
+        <View style={styles.brandPill}>
+          <Text style={styles.brandText}>VAMO</Text>
           <View style={styles.brandDot} />
         </View>
 
-        {/* Minimal History Action */}
-        {onPressHistory && (
-          <Pressable
-            onPress={() => {
-              hapticFeedback.light();
-              onPressHistory();
-            }}
-            hitSlop={8}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="View analysis history"
-            accessibilityHint="Navigates to your past analyzed travel reels"
-            style={({ pressed }) => [styles.historyButton, pressed && styles.pressed]}
-          >
-            <Ionicons name="time-outline" size={20} color={Colors.onyx} />
-          </Pressable>
-        )}
+        {/* Right Actions: DEV Sink, History toggle, Avatar */}
+        <View style={styles.actionsRow}>
+          {/* Dev-only UI Kitchen Sink shortcut */}
+          {__DEV__ && (
+            <Pressable
+              onPress={() => {
+                hapticFeedback.selection();
+                router.push('/dev/kitchen-sink' as any);
+              }}
+              hitSlop={6}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Open UI Kitchen Sink"
+              style={({ pressed }) => [styles.devPill, pressed && styles.pressed]}
+            >
+              <Ionicons name="sparkles" size={12} color={Colors.icyBlue} />
+              <Text style={styles.devPillText}>UI Sink</Text>
+            </Pressable>
+          )}
+
+          {/* Profile Avatar Shortcut */}
+          {onPressProfile && (
+            <Pressable
+              onPress={() => {
+                hapticFeedback.light();
+                onPressProfile();
+              }}
+              hitSlop={8}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={userName ? `Profile for ${userName}` : 'Profile and settings'}
+              style={({ pressed }) => [styles.avatarAction, pressed && styles.pressed]}
+            >
+              <Ionicons name="person" size={15} color={Colors.ivoryMist} />
+            </Pressable>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -45,9 +72,9 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({ onPressHistory }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.ivoryMist,
-    paddingHorizontal: Spacing.xl, // 24px editorial horizontal padding
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.sm,
+    zIndex: 10,
   },
   contentRow: {
     flexDirection: 'row',
@@ -55,37 +82,73 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 44,
   },
-  brandRow: {
+  brandPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    gap: 6,
   },
   brandText: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontFamily: Fonts.sansBold,
+    fontSize: 14,
     letterSpacing: 2.2,
-    color: Colors.onyx,
+    color: Colors.ivoryMist,
   },
   brandDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
     backgroundColor: Colors.racingRed,
-    marginLeft: 6,
   },
-  historyButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  actionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  devPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(12, 12, 12, 0.12)',
-    backgroundColor: Colors.ivoryMist,
+    borderColor: 'rgba(166, 220, 248, 0.40)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: 6,
+    gap: 4,
+    minHeight: 34,
+  },
+  devPillText: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 11,
+    color: Colors.icyBlue,
+  },
+  circleAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: TouchTarget.minWidth / 1.2,
-    minHeight: TouchTarget.minHeight / 1.2,
+  },
+  avatarAction: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.onyx,
+    borderWidth: 1.5,
+    borderColor: 'rgba(251, 244, 227, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pressed: {
-    opacity: 0.65,
+    opacity: 0.75,
     transform: [{ scale: 0.96 }],
   },
 });

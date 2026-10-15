@@ -19,7 +19,7 @@ export class ApiError extends Error {
 }
 
 export class NetworkError extends Error {
-  constructor(message = 'Travel AI engine is unreachable. Please verify network connectivity.') {
+  constructor(message = 'VAMO engine is unreachable. Please verify network connectivity.') {
     super(message);
     this.name = 'NetworkError';
   }
@@ -89,7 +89,7 @@ export class HttpClient {
 
     if (!this.baseUrl) {
       throw new NetworkError(
-        'Travel AI backend URL is not configured. Please set EXPO_PUBLIC_API_URL for production builds.'
+        'VAMO backend URL is not configured. Please set EXPO_PUBLIC_API_URL for production builds.'
       );
     }
 

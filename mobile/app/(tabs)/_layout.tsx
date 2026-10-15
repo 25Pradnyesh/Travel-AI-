@@ -3,10 +3,12 @@ import { Tabs } from 'expo-router';
 import { BottomTabBar } from '@/components/ui/BottomTabBar';
 import { Colors } from '@/constants/theme';
 
+const renderTabBar = (props: any) => <BottomTabBar {...props} />;
+
 export default function TabLayout() {
   return (
     <Tabs
-      tabBar={(props) => <BottomTabBar {...props} />}
+      tabBar={renderTabBar}
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: Colors.canvas },
@@ -31,13 +33,6 @@ export default function TabLayout() {
         options={{
           title: 'Saved',
           tabBarAccessibilityLabel: 'Saved Places Tab',
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarAccessibilityLabel: 'Profile and Settings Tab',
         }}
       />
     </Tabs>

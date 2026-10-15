@@ -30,6 +30,7 @@ import {
 } from './types';
 import { supabase as defaultSupabaseClient, isSupabaseConfigured } from './client';
 import { AnalysisResponse, NearbyPlace } from '@/types/analysis';
+import { Config } from '@/constants/config';
 
 /**
  * Result outcome of a cloud history persistence operation.
@@ -108,7 +109,7 @@ export function resolveThumbnailUrl(photoUrl?: string | null): string | null {
   }
 
   if (trimmed.startsWith('/')) {
-    const baseUrl = (process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '');
+    const baseUrl = (Config.API_BASE_URL || process.env.EXPO_PUBLIC_API_URL || '').replace(/\/+$/, '');
     return baseUrl ? `${baseUrl}${trimmed}` : trimmed;
   }
 

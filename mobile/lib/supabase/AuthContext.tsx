@@ -15,6 +15,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import * as Linking from 'expo-linking';
@@ -29,7 +30,44 @@ import {
 } from './auth';
 import { clearPendingSaveAction } from './saved-places';
 import { resetHistorySaveGuards } from './history';
-import { clearSavedPlacesCache } from '../storage/saved-places';
+
+// Registry for external caches to clear on sign out without creating circular dependencies
+const signOutCallbacks = new Set<() => Promise<void> | void>();
+
+export function registerSignOutCallback(callback: () => Promise<void> | void): () => void {
+  signOutCallbacks.add(callback);
+  return () => {
+    signOutCallbacks.delete(callback);
+  };
+}
+
+/**
+ * Compares two User objects for functional equivalence.
+ */
+export function isSameUser(a: User | null, b: User | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.id === b.id &&
+    a.email === b.email &&
+    a.updated_at === b.updated_at &&
+    a.role === b.role
+  );
+}
+
+/**
+ * Compares two Session objects for functional equivalence.
+ */
+export function isSameSession(a: Session | null, b: Session | null): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.access_token === b.access_token &&
+    a.refresh_token === b.refresh_token &&
+    a.expires_at === b.expires_at &&
+    isSameUser(a.user, b.user)
+  );
+}
 
 export interface AuthContextValue {
   session: Session | null;
@@ -58,59 +96,96 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Tracks settled auth events from onAuthStateChange to prevent older getSession() results
+  // from racing or overwriting newer authentication state during boot.
+  const authEventsProcessedRef = useRef(0);
+
   const configured = isSupabaseConfigured();
+
+  /**
+   * Applies session and user updates idempotently.
+   * If the effective session or user data has not changed, the existing reference is preserved.
+   * This prevents spurious re-renders and eliminates cascading update loops in consumers.
+   */
+  const applySession = useCallback((nextSession: Session | null) => {
+    setSession((prevSession) => {
+      if (isSameSession(prevSession, nextSession)) {
+        return prevSession;
+      }
+      return nextSession;
+    });
+
+    setUser((prevUser) => {
+      const nextUser = nextSession?.user ?? null;
+      if (isSameUser(prevUser, nextUser)) {
+        return prevUser;
+      }
+      return nextUser;
+    });
+
+    setIsLoading((prev) => (prev ? false : prev));
+  }, []);
+
+  const executeSignOutCleanups = useCallback(async () => {
+    for (const cb of signOutCallbacks) {
+      try {
+        await cb();
+      } catch {
+        // Callback failure tolerated
+      }
+    }
+    clearPendingSaveAction();
+    resetHistorySaveGuards();
+  }, []);
 
   // 1. Initial session restoration and auth state change subscription
   useEffect(() => {
     let isMounted = true;
 
-    const initializeAuth = async () => {
-      if (!configured) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
-      }
+    if (!configured) {
+      setIsLoading(false);
+      return;
+    }
 
+    // 1. Subscribe to real-time auth events (INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, TOKEN_REFRESHED)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!isMounted) return;
+
+      authEventsProcessedRef.current += 1;
+      applySession(currentSession);
+
+      if (event === 'SIGNED_OUT') {
+        await executeSignOutCleanups();
+      }
+    });
+
+    // 2. Initial session resolution fallback: only apply if no onAuthStateChange event
+    // has already updated session state (prevents async getSession from racing/overwriting)
+    const initializeAuth = async () => {
       try {
         const { data, error: sessionError } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
         if (sessionError) {
-          if (isMounted) {
-            setError(sessionError.message);
-          }
-        } else if (isMounted) {
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
+          setError((prev) => (prev === sessionError.message ? prev : sessionError.message));
+        } else if (authEventsProcessedRef.current === 0) {
+          applySession(data.session);
         }
       } catch (err: unknown) {
         if (isMounted) {
           const msg = err instanceof Error ? err.message : 'Failed to restore auth session.';
-          setError(msg);
+          setError((prev) => (prev === msg ? prev : msg));
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setIsLoading((prev) => (prev ? false : prev));
         }
       }
     };
 
     initializeAuth();
-
-    // 2. Subscribe to auth state updates (sign in, sign out, token refresh)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (isMounted) {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        setIsLoading(false);
-      }
-      if (event === 'SIGNED_OUT') {
-        await clearSavedPlacesCache();
-        clearPendingSaveAction();
-        resetHistorySaveGuards();
-      }
-    });
 
     // 3. Fallback deep link listener for OAuth redirects
     const handleUrlEvent = async (event: { url: string }) => {
@@ -119,8 +194,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsAuthenticating(true);
           const newSession = await handleAuthRedirect(event.url);
           if (isMounted) {
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
+            applySession(newSession);
             setError(null);
           }
         } catch (redirectErr: unknown) {
@@ -146,7 +220,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       subscription.unsubscribe();
       urlSubscription.remove();
     };
-  }, [configured]);
+  }, [configured, applySession, executeSignOutCleanups]);
 
   // Sign in with Google handler
   const signInWithGoogle = useCallback(async (): Promise<AuthResult> => {
@@ -157,8 +231,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await authSignInWithGoogle();
 
       if (result.success && result.session) {
-        setSession(result.session);
-        setUser(result.session.user);
+        applySession(result.session);
         setError(null);
       } else if (result.error && !result.canceled) {
         setError(result.error);
@@ -172,7 +245,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsAuthenticating(false);
     }
-  }, []);
+  }, [applySession]);
 
   // Sign in with Apple handler
   const signInWithApple = useCallback(async (): Promise<AuthResult> => {
@@ -183,8 +256,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const result = await authSignInWithApple();
 
       if (result.success && result.session) {
-        setSession(result.session);
-        setUser(result.session.user);
+        applySession(result.session);
         setError(null);
       } else if (result.error && !result.canceled) {
         setError(result.error);
@@ -198,7 +270,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsAuthenticating(false);
     }
-  }, []);
+  }, [applySession]);
 
   // Sign out handler
   const signOut = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
@@ -206,12 +278,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const result = await authSignOut();
       if (result.success) {
-        setSession(null);
-        setUser(null);
+        applySession(null);
         setError(null);
-        await clearSavedPlacesCache();
-        clearPendingSaveAction();
-        resetHistorySaveGuards();
+        await executeSignOutCleanups();
       } else if (result.error) {
         setError(result.error);
       }
@@ -219,7 +288,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       setIsAuthenticating(false);
     }
-  }, []);
+  }, [applySession, executeSignOutCleanups]);
 
   const clearError = useCallback(() => {
     setError(null);

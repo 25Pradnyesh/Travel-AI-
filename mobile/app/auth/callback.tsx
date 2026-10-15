@@ -43,7 +43,7 @@ export default function AuthCallbackScreen() {
             setStatus('success');
             hapticFeedback.success();
             setTimeout(() => {
-              router.replace('/(tabs)/profile');
+              router.replace('/profile');
             }, 800);
             return;
           }
@@ -74,10 +74,10 @@ export default function AuthCallbackScreen() {
       <View style={styles.card}>
         {status === 'verifying' && (
           <>
-            <ActivityIndicator size="large" color={Colors.surfaceDark} style={styles.spinner} />
+            <ActivityIndicator size="large" color={Colors.icyBlue} style={styles.spinner} />
             <Text style={styles.title}>Completing Sign-In</Text>
             <Text style={styles.subtitle}>
-              Securing credentials and establishing your Travel AI cloud session...
+              Securing credentials and establishing your VAMO cloud session...
             </Text>
           </>
         )}
@@ -87,7 +87,7 @@ export default function AuthCallbackScreen() {
             <View style={styles.successIconWrapper}>
               <Ionicons name="checkmark-circle" size={48} color={Colors.verified} />
             </View>
-            <Text style={styles.title}>Welcome to Travel AI</Text>
+            <Text style={styles.title}>Welcome to VAMO</Text>
             <Text style={styles.subtitle}>Your account has been connected successfully.</Text>
           </>
         )}

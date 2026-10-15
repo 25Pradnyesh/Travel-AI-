@@ -18,9 +18,9 @@ import {
   setPendingSaveAction,
   clearPendingSaveAction,
   mapSavedPlaceRowToModel,
-  SavedPlaceRow,
-  useAuth,
-} from '@/lib/supabase';
+} from '../supabase/saved-places';
+import { SavedPlaceRow } from '../supabase/types';
+import { useAuth, registerSignOutCallback } from '../supabase/AuthContext';
 
 const STORAGE_KEY = '@travel_ai_saved_places_v1';
 
@@ -370,6 +370,9 @@ export async function clearSavedPlacesCache(): Promise<void> {
   }
   notifyListeners();
 }
+
+// Automatically register cache clearing when user signs out
+registerSignOutCallback(clearSavedPlacesCache);
 
 /**
  * Subscribes to storage changes.

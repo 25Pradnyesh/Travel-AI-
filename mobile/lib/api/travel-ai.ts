@@ -23,9 +23,9 @@ export function getFriendlyErrorMessage(err: unknown): string {
   if (err instanceof NetworkError) {
     const baseUrl = apiClient.getBaseUrl();
     if (!baseUrl) {
-      return 'Travel AI backend URL is not configured. Please configure EXPO_PUBLIC_API_URL for release builds.';
+      return 'VAMO backend URL is not configured. Please configure EXPO_PUBLIC_API_URL for release builds.';
     }
-    return `Travel AI engine is unreachable at ${baseUrl}. Please ensure the backend is running.`;
+    return `VAMO engine is unreachable at ${baseUrl}. Please ensure the backend is running.`;
   }
 
   if (err instanceof ApiError) {
@@ -79,10 +79,10 @@ export function getFriendlyErrorMessage(err: unknown): string {
         return 'The analysis timed out on the engine. Please try again.';
       case 502:
       case 503:
-        return 'Travel AI engine is temporarily degraded or restarting. Please try again.';
+        return 'VAMO engine is temporarily degraded or restarting. Please try again.';
       case 500:
       default:
-        return "Travel AI couldn't complete the analysis. Please try again.";
+        return "VAMO couldn't complete the analysis. Please try again.";
     }
   }
 
@@ -93,7 +93,7 @@ export function getFriendlyErrorMessage(err: unknown): string {
     return err.message || 'An unexpected error occurred. Please try again.';
   }
 
-  return "Travel AI couldn't complete the analysis. Please try again.";
+  return "VAMO couldn't complete the analysis. Please try again.";
 }
 
 export class TravelAiService {
@@ -129,7 +129,7 @@ export class TravelAiService {
     const response = await apiClient.post<AnalysisResponse>('/analyze', payload, requestOptions);
 
     if (!response || typeof response !== 'object') {
-      throw new ApiError('Malformed response from Travel AI engine.', 502);
+      throw new ApiError('Malformed response from VAMO engine.', 502);
     }
 
     // Save into analysis store so Results and Place Detail screens have immediate access
