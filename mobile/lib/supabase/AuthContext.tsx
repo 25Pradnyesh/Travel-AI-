@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return nextUser;
     });
 
-    setIsLoading(false);
+    setIsLoading((prev) => (prev ? false : prev));
   }, []);
 
   const executeSignOutCleanups = useCallback(async () => {
@@ -169,18 +169,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (!isMounted) return;
 
         if (sessionError) {
-          setError(sessionError.message);
+          setError((prev) => (prev === sessionError.message ? prev : sessionError.message));
         } else if (authEventsProcessedRef.current === 0) {
           applySession(data.session);
         }
       } catch (err: unknown) {
         if (isMounted) {
           const msg = err instanceof Error ? err.message : 'Failed to restore auth session.';
-          setError(msg);
+          setError((prev) => (prev === msg ? prev : msg));
         }
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          setIsLoading((prev) => (prev ? false : prev));
         }
       }
     };

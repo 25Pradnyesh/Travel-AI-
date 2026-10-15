@@ -7,11 +7,13 @@ import { TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
 // Enable experimental LayoutAnimation on Android for the Old Architecture only.
-// In the New Architecture (Fabric), layout animations are enabled by default and calling this logs a warning.
-const isFabric = Boolean(
-  (globalThis as unknown as { nativeFabricUIManager?: unknown }).nativeFabricUIManager
+// In the New Architecture (Fabric / Bridgeless), layout animations are enabled by default and calling this logs a warning.
+const isNewArchitecture = Boolean(
+  (globalThis as unknown as { RN$Bridgeless?: unknown }).RN$Bridgeless ||
+  (globalThis as unknown as { nativeFabricUIManager?: unknown }).nativeFabricUIManager ||
+  (globalThis as unknown as { _IS_FABRIC?: unknown })._IS_FABRIC
 );
-if (Platform.OS === 'android' && !isFabric && UIManager.setLayoutAnimationEnabledExperimental) {
+if (Platform.OS === 'android' && !isNewArchitecture && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
