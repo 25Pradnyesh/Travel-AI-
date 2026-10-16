@@ -15,40 +15,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+import {
+  ToastItem,
+  ToastType,
+  showToast,
+  toast,
+  toastListeners,
+} from '@/lib/toast';
 
-export interface ToastItem {
-  id: string;
-  message: string;
-  type?: ToastType;
-  duration?: number;
-}
-
-type ToastListener = (toast: ToastItem) => void;
-const listeners = new Set<ToastListener>();
-
-let toastCounter = 0;
-
-/**
- * Dispatch a toast notification to the global toast queue.
- */
-export const showToast = (message: string, type: ToastType = 'info', duration?: number) => {
-  const item: ToastItem = {
-    id: `toast_${Date.now()}_${++toastCounter}`,
-    message,
-    type,
-    duration: duration ?? (type === 'error' ? 5000 : 3200),
-  };
-  listeners.forEach((listener) => listener(item));
-};
-
-export const toast = {
-  info: (message: string, duration?: number) => showToast(message, 'info', duration),
-  success: (message: string, duration?: number) => showToast(message, 'success', duration),
-  warning: (message: string, duration?: number) => showToast(message, 'warning', duration),
-  error: (message: string, duration?: number) => showToast(message, 'error', duration),
-  show: showToast,
-};
+export type { ToastItem, ToastType };
+export { showToast, toast };
 
 export interface ToastProps {
   message: string;
@@ -203,9 +179,9 @@ export const GlobalToast: React.FC = () => {
       }
     };
 
-    listeners.add(handleNewToast);
+    toastListeners.add(handleNewToast);
     return () => {
-      listeners.delete(handleNewToast);
+      toastListeners.delete(handleNewToast);
       if (dismissTimerRef.current) {
         clearTimeout(dismissTimerRef.current);
       }

@@ -120,10 +120,10 @@ export default function ProcessingScreen() {
       }
       const friendlyMsg = getFriendlyErrorMessage(err);
 
-      if (friendlyMsg.includes('timed out')) {
-        setErrorTitle('Analysis Timed Out');
-      } else if (friendlyMsg.includes('unreachable') || friendlyMsg.includes('network')) {
+      if (friendlyMsg === "Can't reach VAMO right now. Check your connection and try again.") {
         setErrorTitle('Engine Unreachable');
+      } else if (friendlyMsg === 'Check the Reel URL.') {
+        setErrorTitle('Invalid Reel URL');
       } else if (friendlyMsg.includes('could not be accessed')) {
         setErrorTitle('Reel Inaccessible');
       } else {

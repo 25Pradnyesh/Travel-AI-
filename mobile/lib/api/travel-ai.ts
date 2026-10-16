@@ -16,22 +16,26 @@ import { analysisStore } from './analysis-store';
  * Guards against leaking internal stack traces, system paths, or raw keys.
  */
 export function getFriendlyErrorMessage(err: unknown): string {
+  // 1. Timeouts (client-side budget or engine request timeout)
   if (err instanceof TimeoutError) {
-    return 'The analysis timed out. Deep video ingestion may be taking longer than expected. Please try again.';
+    return "Can't reach VAMO right now. Check your connection and try again.";
   }
 
+  // 2. Network failures & unreachable engine
   if (err instanceof NetworkError) {
-    const baseUrl = apiClient.getBaseUrl();
-    if (!baseUrl) {
-      return 'VAMO backend URL is not configured. Please configure EXPO_PUBLIC_API_URL for release builds.';
+    if (__DEV__) {
+      const baseUrl = apiClient.getBaseUrl();
+      // eslint-disable-next-line no-console
+      console.warn(`[VAMO API Diagnostic] Engine unreachable at ${baseUrl || 'unconfigured'}`);
     }
-    return `VAMO engine is unreachable at ${baseUrl}. Please ensure the backend is running.`;
+    return "Can't reach VAMO right now. Check your connection and try again.";
   }
 
+  // 3. Structured API / HTTP errors
   if (err instanceof ApiError) {
     const backendMsg = (err.message || '').trim();
 
-    // Guard against leaking internal stack traces or system paths
+    // Guard against leaking internal stack traces, system paths, or raw keys
     const isLeakingInternal =
       backendMsg.includes('Traceback') ||
       backendMsg.includes('File "') ||
@@ -59,15 +63,17 @@ export function getFriendlyErrorMessage(err: unknown): string {
 
       if (
         backendMsg.includes('Instagram Reel URL') ||
-        backendMsg.includes('valid public Instagram Reel')
+        backendMsg.includes('valid public Instagram Reel') ||
+        backendMsg.includes('malformed') ||
+        backendMsg.includes('unsupported')
       ) {
-        return 'Invalid Instagram Reel URL.';
+        return 'Check the Reel URL.';
       }
     }
 
     switch (err.status) {
       case 400:
-        return 'Invalid Instagram Reel URL.';
+        return 'Check the Reel URL.';
       case 401:
       case 403:
       case 404:
@@ -75,11 +81,10 @@ export function getFriendlyErrorMessage(err: unknown): string {
         return 'The Reel could not be accessed. Make sure it is public and available.';
       case 429:
         return 'Too many requests. Please wait a moment and try again.';
-      case 504:
-        return 'The analysis timed out on the engine. Please try again.';
       case 502:
       case 503:
-        return 'VAMO engine is temporarily degraded or restarting. Please try again.';
+      case 504:
+        return "Can't reach VAMO right now. Check your connection and try again.";
       case 500:
       default:
         return "VAMO couldn't complete the analysis. Please try again.";
@@ -90,7 +95,33 @@ export function getFriendlyErrorMessage(err: unknown): string {
     if (err.name === 'AbortError') {
       return '';
     }
-    return err.message || 'An unexpected error occurred. Please try again.';
+
+    const lower = err.message.toLowerCase();
+    if (
+      lower.includes('unreachable') ||
+      lower.includes('network') ||
+      lower.includes('timeout') ||
+      lower.includes('failed to fetch') ||
+      lower.includes('network request failed')
+    ) {
+      return "Can't reach VAMO right now. Check your connection and try again.";
+    }
+
+    if (
+      lower.includes('reel') ||
+      lower.includes('url') ||
+      lower.includes('malformed') ||
+      lower.includes('unsupported') ||
+      lower.includes('invalid')
+    ) {
+      return 'Check the Reel URL.';
+    }
+
+    if (__DEV__) {
+      // eslint-disable-next-line no-console
+      console.warn('[VAMO API Diagnostic] Unexpected error:', err.message);
+    }
+    return "VAMO couldn't complete the analysis. Please try again.";
   }
 
   return "VAMO couldn't complete the analysis. Please try again.";

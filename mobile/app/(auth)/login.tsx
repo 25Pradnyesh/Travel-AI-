@@ -84,7 +84,7 @@ export default function LoginScreen() {
       } else {
         router.replace('/profile');
       }
-    } else if (result.error) {
+    } else if (result.error && !result.unreachable) {
       toast.error(result.error);
     }
   };
@@ -118,7 +118,7 @@ export default function LoginScreen() {
       } else {
         router.replace('/profile');
       }
-    } else if (result.error) {
+    } else if (result.error && !result.unreachable) {
       toast.error(result.error);
     }
   };
@@ -194,7 +194,7 @@ export default function LoginScreen() {
             <View style={styles.benefitText}>
               <Text style={styles.benefitTitle}>Private by Default</Text>
               <Text style={styles.benefitDesc}>
-                Private by default. Only you can see your saved places.
+                Only you can see your saved places.
               </Text>
             </View>
           </View>
@@ -331,15 +331,18 @@ const styles = StyleSheet.create({
   closeButton: {
     width: TouchTarget.minWidth,
     height: TouchTarget.minHeight,
+    minWidth: 44,
+    minHeight: 44,
     borderRadius: Radius.pill,
-    backgroundColor: Colors.glassFrostedBg,
-    borderWidth: 1,
-    borderColor: Colors.glassFrostedBorder,
+    backgroundColor: 'rgba(251, 244, 227, 0.14)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(251, 244, 227, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerPlaceholder: {
     width: TouchTarget.minWidth,
+    minWidth: 44,
   },
   scrollContent: {
     paddingHorizontal: Spacing.base,

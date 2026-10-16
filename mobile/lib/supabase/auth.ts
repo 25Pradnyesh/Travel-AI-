@@ -17,7 +17,8 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from './client';
+import { toast } from '../toast';
+import { supabase, isSupabaseConfigured, getSupabaseConfig } from './client';
 
 // Ensures any pending auth session popups or redirects are completed cleanly
 WebBrowser.maybeCompleteAuthSession();
@@ -44,9 +45,50 @@ export interface ParsedAuthTokens {
 export interface AuthResult {
   success: boolean;
   canceled?: boolean;
+  unreachable?: boolean;
   error?: string;
   session?: Session | null;
   user?: User | null;
+}
+
+/**
+ * Mutex guard to prevent duplicate browser launches if tapped repeatedly.
+ */
+let isOAuthInFlight = false;
+
+/**
+ * Checks whether the configured Supabase auth health endpoint is reachable.
+ * Uses a bounded ~3-second timeout and safely handles DNS failures (NXDOMAIN),
+ * connection aborts, and non-200/5xx responses.
+ */
+export async function checkSupabaseAuthReachability(timeoutMs = 3000): Promise<boolean> {
+  const { url, isConfigured } = getSupabaseConfig();
+  if (!isConfigured || !url) {
+    return false;
+  }
+
+  const cleanUrl = url.replace(/\/+$/, '');
+  const healthUrl = `${cleanUrl}/auth/v1/health`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    const res = await fetch(healthUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return res.ok || (res.status >= 200 && res.status < 500);
+  } catch {
+    clearTimeout(timer);
+    return false;
+  }
 }
 
 /**
@@ -165,6 +207,14 @@ export async function handleAuthRedirect(url: string): Promise<Session | null> {
 export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResult> {
   const providerLabel = provider === 'apple' ? 'Apple' : 'Google';
 
+  // Prevent duplicate browser launches if tapped repeatedly
+  if (isOAuthInFlight) {
+    return {
+      success: false,
+      canceled: true,
+    };
+  }
+
   // 1. Guard against unconfigured Supabase credentials
   if (!isSupabaseConfigured()) {
     return {
@@ -174,7 +224,21 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
     };
   }
 
+  isOAuthInFlight = true;
+
   try {
+    // 2. Reachability preflight check (bounded ~3-second timeout)
+    const isReachable = await checkSupabaseAuthReachability(3000);
+    if (!isReachable) {
+      const unreachableMsg = "Sign-in isn't available right now. You can keep using VAMO as a guest.";
+      toast.info(unreachableMsg);
+      return {
+        success: false,
+        unreachable: true,
+        error: unreachableMsg,
+      };
+    }
+
     WebBrowser.maybeCompleteAuthSession();
 
     const redirectUrl = getAuthRedirectUrl();
@@ -195,7 +259,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
       };
     }
 
-    // 2. Request authorization URL from Supabase
+    // 3. Request authorization URL from Supabase
     const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options,
@@ -215,10 +279,10 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
       };
     }
 
-    // 3. Open browser auth session
+    // 4. Open browser auth session
     const authSessionResult = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
-    // 4. Handle user cancellation or dismissal
+    // 5. Handle user cancellation or dismissal
     if (authSessionResult.type === 'cancel' || authSessionResult.type === 'dismiss') {
       return {
         success: false,
@@ -226,7 +290,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
       };
     }
 
-    // 5. Handle successful browser redirect
+    // 6. Handle successful browser redirect
     if (authSessionResult.type === 'success' && authSessionResult.url) {
       const session = await handleAuthRedirect(authSessionResult.url);
       return {
@@ -247,6 +311,8 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
       success: false,
       error: message,
     };
+  } finally {
+    isOAuthInFlight = false;
   }
 }
 

@@ -18,7 +18,7 @@ export interface ConfidenceBadgeProps {
  * Truthful PRD verification states:
  * - VERIFIED: Icy Blue #A6DCF8 with checkmark
  * - PARTIAL: Warm Amber #E5A866
- * - UNVERIFIED / SKIPPED: Honest muted slate #7A8991 (STRICTLY NO Icy Blue)
+ * - UNVERIFIED / SKIPPED: Honest muted slate #94A3B8 (STRICTLY NO Icy Blue)
  */
 export const ConfidenceBadge: React.FC<ConfidenceBadgeProps> = ({
   status = 'UNVERIFIED',

@@ -102,7 +102,7 @@ export default function ProfileScreen() {
       } catch {
         // Pending save failure tolerated
       }
-    } else if (result.error) {
+    } else if (result.error && !result.unreachable) {
       toast.error(result.error);
     }
   };
@@ -121,7 +121,7 @@ export default function ProfileScreen() {
       } catch {
         // Pending save failure tolerated
       }
-    } else if (result.error) {
+    } else if (result.error && !result.unreachable) {
       toast.error(result.error);
     }
   };
@@ -472,7 +472,7 @@ export default function ProfileScreen() {
                     },
                   ]}
                 />
-                <Text style={styles.diagnosticName}>FastAPI Engine Boundary</Text>
+                <Text style={styles.diagnosticName}>VAMO engine</Text>
               </View>
               <Text
                 style={[
@@ -497,19 +497,31 @@ export default function ProfileScreen() {
                   style={[
                     styles.statusDot,
                     {
-                      backgroundColor: isPlacesReady ? Colors.icyBlue : Colors.unverified,
+                      backgroundColor: isEngineOnline
+                        ? isPlacesReady
+                          ? Colors.icyBlue
+                          : Colors.unverified
+                        : Colors.unverified,
                     },
                   ]}
                 />
-                <Text style={styles.diagnosticName}>Google Places Service</Text>
+                <Text style={styles.diagnosticName}>Places</Text>
               </View>
               <Text
                 style={[
                   styles.diagnosticValue,
-                  isPlacesReady ? styles.valueReady : styles.valueMuted,
+                  !isEngineOnline
+                    ? styles.valueMuted
+                    : isPlacesReady
+                    ? styles.valueReady
+                    : styles.valueMuted,
                 ]}
               >
-                {isPlacesReady ? 'Ready' : 'Not Configured'}
+                {!isEngineOnline
+                  ? 'Unknown'
+                  : isPlacesReady
+                  ? 'Ready'
+                  : 'Not Configured'}
               </Text>
             </View>
 
@@ -522,19 +534,31 @@ export default function ProfileScreen() {
                   style={[
                     styles.statusDot,
                     {
-                      backgroundColor: isGeminiReady ? Colors.icyBlue : Colors.unverified,
+                      backgroundColor: isEngineOnline
+                        ? isGeminiReady
+                          ? Colors.icyBlue
+                          : Colors.unverified
+                        : Colors.unverified,
                     },
                   ]}
                 />
-                <Text style={styles.diagnosticName}>Gemini Multimodal Vision</Text>
+                <Text style={styles.diagnosticName}>Vision</Text>
               </View>
               <Text
                 style={[
                   styles.diagnosticValue,
-                  isGeminiReady ? styles.valueReady : styles.valueMuted,
+                  !isEngineOnline
+                    ? styles.valueMuted
+                    : isGeminiReady
+                    ? styles.valueReady
+                    : styles.valueMuted,
                 ]}
               >
-                {isGeminiReady ? 'Ready' : 'Not Configured'}
+                {!isEngineOnline
+                  ? 'Unknown'
+                  : isGeminiReady
+                  ? 'Ready'
+                  : 'Not Configured'}
               </Text>
             </View>
 
@@ -577,7 +601,7 @@ export default function ProfileScreen() {
             <View style={styles.cardDivider} />
 
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Intelligence Architecture</Text>
+              <Text style={styles.infoLabel}>Powered by</Text>
               <Text style={styles.infoValue}>Gemini Multimodal · Google Places</Text>
             </View>
 
@@ -1076,16 +1100,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansRegular,
     fontSize: 12,
     color: Colors.textSecondary,
+    marginRight: Spacing.md,
+    flexShrink: 0,
   },
   infoValue: {
     fontFamily: Fonts.sansMedium,
     fontSize: 12,
     color: Colors.ivoryMist,
+    textAlign: 'right',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   infoValueHighlight: {
     fontFamily: Fonts.sansMedium,
     fontSize: 12,
     color: Colors.icyBlue,
+    textAlign: 'right',
+    flex: 1,
+    flexWrap: 'wrap',
   },
   // Shared Utilities
   cardDivider: {

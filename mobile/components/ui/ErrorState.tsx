@@ -37,7 +37,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           iconBg: Colors.partialSurface,
           iconBorder: Colors.partialBorder,
           defaultTitle: 'Connection Offline',
-          defaultMessage: 'Check your Wi-Fi or cellular connection and try again.',
+          defaultMessage: "Can't reach VAMO right now. Check your connection and try again.",
         };
       case 'engine':
         return {
@@ -47,7 +47,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           iconBg: Colors.partialSurface,
           iconBorder: Colors.partialBorder,
           defaultTitle: 'Engine Unreachable',
-          defaultMessage: 'VAMO engine is taking longer to respond. Please retry in a moment.',
+          defaultMessage: "Can't reach VAMO right now. Check your connection and try again.",
         };
       default:
         return {
@@ -57,7 +57,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
           iconBg: Colors.glassFrostedBg,
           iconBorder: Colors.glassFrostedBorder,
           defaultTitle: 'Analysis Unavailable',
-          defaultMessage: "VAMO couldn't complete the analysis. Please check the Reel URL and try again.",
+          defaultMessage: 'Check the Reel URL.',
         };
     }
   };

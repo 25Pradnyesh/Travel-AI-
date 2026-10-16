@@ -233,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (result.success && result.session) {
         applySession(result.session);
         setError(null);
-      } else if (result.error && !result.canceled) {
+      } else if (result.error && !result.canceled && !result.unreachable) {
         setError(result.error);
       }
 
@@ -258,7 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (result.success && result.session) {
         applySession(result.session);
         setError(null);
-      } else if (result.error && !result.canceled) {
+      } else if (result.error && !result.canceled && !result.unreachable) {
         setError(result.error);
       }
 

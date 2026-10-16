@@ -34,6 +34,11 @@ import { useNetwork } from '@/hooks/useNetwork';
 const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
 
 export default function KitchenSinkScreen() {
+  // Gated strictly by __DEV__
+  if (!__DEV__) {
+    return null;
+  }
+
   const insets = useSafeAreaInsets();
   const network = useNetwork();
   const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo' | 'white'>('sky');

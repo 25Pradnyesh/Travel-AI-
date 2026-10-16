@@ -75,9 +75,9 @@ export const Colors = {
   partialSurface: 'rgba(229, 168, 102, 0.16)',
   partialBorder: 'rgba(229, 168, 102, 0.35)',
 
-  unverified: '#7A8991',       // Muted honest slate — NO Icy Blue!
-  unverifiedSurface: 'rgba(122, 137, 145, 0.12)',
-  unverifiedBorder: 'rgba(122, 137, 145, 0.22)',
+  unverified: '#94A3B8',       // Muted honest slate (>= 4.5:1 contrast across all surfaces) — strictly NO Icy Blue!
+  unverifiedSurface: 'rgba(15, 23, 42, 0.88)', // Stable dark slate backing ensuring >= 4.5:1 contrast across dark & light surfaces
+  unverifiedBorder: 'rgba(148, 163, 184, 0.35)',
 
   // Info Tokens (Icy Blue)
   info: '#A6DCF8',
