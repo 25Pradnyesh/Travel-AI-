@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Pressable,
   StyleProp,
@@ -11,6 +11,8 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { AtmospherePalette, PlaceAtmosphereInput } from '@/types/atmosphere';
+import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface PosterCardProps {
@@ -22,6 +24,9 @@ export interface PosterCardProps {
   onPress: () => void;
   onToggleSave?: () => void;
   aspectRatio?: number;
+  city?: string | null;
+  country?: string | null;
+  place?: PlaceAtmosphereInput | null;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -34,9 +39,23 @@ export const PosterCard: React.FC<PosterCardProps> = ({
   onPress,
   onToggleSave,
   aspectRatio = 3 / 4,
+  city,
+  country,
+  place,
   style,
 }) => {
   const [imageError, setImageError] = useState(false);
+
+  // Card's own resolved atmospheric palette when photo is absent
+  const cardPalette = useMemo<AtmospherePalette>(() => {
+    return resolvePalette(
+      place || {
+        name: title,
+        city,
+        country,
+      }
+    );
+  }, [place, title, city, country]);
 
   // Reset error state whenever imageUrl changes
   React.useEffect(() => {
@@ -104,9 +123,9 @@ export const PosterCard: React.FC<PosterCardProps> = ({
           }}
         />
       ) : (
-        // Graceful fallback: Atmospheric sky gradient + outline icon
+        // Graceful fallback: Card's own resolved atmospheric gradient + outline icon
         <LinearGradient
-          colors={Colors.atmosphereSky}
+          colors={[cardPalette.top, cardPalette.mid, cardPalette.bottom]}
           locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFill}
         >

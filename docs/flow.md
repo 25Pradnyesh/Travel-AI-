@@ -16,10 +16,11 @@ mobile/app/_layout.tsx (RootLayout)
         ├─► useFonts() (Inter & Instrument Serif)
         │
         ▼
+        ▼
 SafeAreaProvider ──► NetworkProvider ──► AuthProvider
         │
         ▼
-[Planned for D1] AtmosphereProvider (mobile/context/AtmosphereContext.tsx)
+AtmosphereProvider (mobile/context/AtmosphereContext.tsx)
         │   Initializes with VAMO_DEFAULT_PRESET (#1A2D3A -> #0F1D26 -> #060C10)
         │   activePlace: null
         ▼
@@ -40,7 +41,7 @@ Rendered Canvas (Deep Onyx / Celestial Slate-Teal Atmosphere)
 - **Call sequence:**
   1. `SplashScreen.preventAutoHideAsync()` keeps native splash visible.
   2. `useFonts()` loads `Inter_400Regular`, `Inter_500Medium`, `Inter_600SemiBold`, `Inter_700Bold`, and `InstrumentSerif_400Regular`.
-  3. `RootLayout` mounts provider tree (`SafeAreaProvider` $\rightarrow$ `NetworkProvider` $\rightarrow$ `AuthProvider` $\rightarrow$ `AtmosphereProvider` [*Planned for D1*]).
+  3. `RootLayout` mounts provider tree (`SafeAreaProvider` $\rightarrow$ `NetworkProvider` $\rightarrow$ `AuthProvider` $\rightarrow$ `AtmosphereProvider`).
   4. Expo Router mounts `(tabs)/index.tsx`.
   5. `AtmosphereBackground` renders initial canvas.
 - **Data passed:** None at cold start. `activePlace` is `null`.
@@ -49,7 +50,7 @@ Rendered Canvas (Deep Onyx / Celestial Slate-Teal Atmosphere)
 - **Failure paths:** Missing fonts halt rendering until hydrated. Missing Supabase credentials fallback gracefully to guest mode.
 - **Files/functions changed in Stage D1:**
   * `mobile/app/_layout.tsx` (Add `AtmosphereProvider`).
-  * `mobile/components/ui/AtmosphereBackground.tsx` (Remove `#A6DCF8` sky system, connect to `AtmosphereContext`).
+  * `mobile/components/ui/AtmosphereBackground.tsx` (Remove `#A6DCF8` sky system, connect to `AtmosphereContext`, double-buffered 450ms crossfade).
 - **Verification:** Unit tests and local cold start verification.
 
 ---
@@ -78,15 +79,13 @@ FastAPI Engine Response (AnalysisResponse)
         │
         ├─► analysisStore.setAnalysisResult(response, url) (mobile/lib/api/analysis-store.ts)
         ├─► saveAnalysisHistory(response, url) (mobile/lib/supabase/history.ts)
-        │
-        ├─► [Planned for D1] AtmosphereContext.setActivePlace(response.best_guess)
-        │   Resolves place palette (City/Country/Deterministic)
         ▼
 router.replace('/analyze/results')
         │
         ▼
 mobile/app/analyze/results.tsx (ResultsScreen)
-        │
+        │   Resolves place palette (City/Country/Deterministic)
+        │   AtmosphereContext.setActivePlace(best_guess)
         ▼
 ResultHero + DestinationIdentity + DestinationBriefing + SurroundingPlacesSection
 ```
@@ -97,15 +96,15 @@ ResultHero + DestinationIdentity + DestinationBriefing + SurroundingPlacesSectio
   2. `processing.tsx` initiates `analyzeReel()` via `apiClient`.
   3. Response payload received; stored synchronously in `analysisStore`.
   4. If user is authenticated, history is persisted in Supabase asynchronously.
-  5. *Planned for D1:* `AtmosphereContext.setActivePlace(best_guess)` resolves destination palette.
-  6. Navigates via `router.replace('/analyze/results')`.
+  5. Navigates via `router.replace('/analyze/results')`.
+  6. `results.tsx` computes `placeAtmosphereInput` and calls `AtmosphereContext.setActivePlace(best_guess)`.
 - **Data passed:** `url` query param $\rightarrow$ `AnalysisResponse` (`best_guess`, `travel_intelligence`, `nearby_places`, `gemini`).
 - **State ownership:** `analysisStore` holds active analysis. `AtmosphereContext` holds active place and resolved palette.
 - **Rendering/output:** Full destination briefing and hero photograph rendered over destination's adaptive atmosphere.
 - **Failure paths:** Invalid URL shows inline error toast. Engine or network failure redirects to `TravelOceanError` with retry CTA.
 - **Files/functions changed in Stage D1:**
-  * `mobile/app/analyze/processing.tsx` (Inherit active atmosphere, update active place on success).
-  * `mobile/app/analyze/results.tsx` (Connect to `AtmosphereContext`).
+  * `mobile/app/analyze/processing.tsx` (Inherit active atmosphere).
+  * `mobile/app/analyze/results.tsx` (Connect to `AtmosphereContext`, resolve place palette, pass to `AtmosphereBackground`).
 - **Verification:** Mock reel analysis test running through results navigation.
 
 ---
@@ -128,7 +127,7 @@ mobile/app/place/[id].tsx (PlaceDetailScreen)
         └─► savedPlaces.find(p => p.id === id) (Fallback)
         │
         ▼
-[Planned for D1] AtmosphereContext.setActivePlace(place)
+AtmosphereContext.setActivePlace(place)
         │   Resolves Place Palette immediately
         ▼
 Rendered Place Dossier with Adaptive Atmosphere
@@ -138,13 +137,14 @@ Rendered Place Dossier with Adaptive Atmosphere
 - **Call sequence:**
   1. `handleOpenPlace(place)` navigates to `/place/[id]`.
   2. `PlaceDetailScreen` resolves place metadata from `analysisStore` in-memory index, falling back to persisted `savedPlaces`.
-  3. *Planned for D1:* Resolves and applies place palette immediately.
+  3. Resolves and applies place palette immediately via `resolvePalette(placeAtmosphereInput)`.
+  4. Updates global active place via `setActivePlace(placeAtmosphereInput)`.
 - **Data passed:** `place_id`, `name`, `formatted_address`, `rating`, `photos`.
 - **State ownership:** `analysisStore` / `savedPlaces` $\rightarrow$ `PlaceDetailScreen`.
 - **Rendering/output:** Place details, photo gallery, action bar, external map directions.
 - **Failure paths:** If ID is not found, renders `EmptyState` ("Place Not Found").
 - **Files/functions changed in Stage D1:**
-  * `mobile/app/place/[id].tsx` (Remove `atmosphereSky`, bind to place palette).
+  * `mobile/app/place/[id].tsx` (Remove `atmosphereSky`, bind to place palette, sync `AtmosphereContext`).
 - **Verification:** Navigation check opening nearby place from fixture.
 
 ---
@@ -165,7 +165,7 @@ User taps Saved Item or History Record in mobile/app/(tabs)/saved.tsx
         getAnalysisDetail(id) (mobile/lib/supabase/history.ts)
                 │
                 ▼
-        [Planned for D1] AtmosphereContext.setActivePlace({
+        AtmosphereContext.setActivePlace({
           destination: detail.analysis.destination,
           country: detail.analysis.country
         })
@@ -178,14 +178,14 @@ User taps Saved Item or History Record in mobile/app/(tabs)/saved.tsx
 - **Call sequence:**
   1. User selects item from "Saved Places" list or "History" list.
   2. For History: `getAnalysisDetail(id)` loads persisted dossier from Supabase PostgreSQL.
-  3. *Planned for D1:* `HistoryDetailScreen` sets `activePlace` based on persisted `destination` and `country`.
+  3. `HistoryDetailScreen` sets `activePlace` based on persisted `destination` and `country`.
   4. Palette resolver matches curated city/country preset or deterministic fallback.
 - **Data passed:** `AnalysisDetail` (`analysis`, `places`).
 - **State ownership:** Supabase client cache and local React state.
 - **Rendering/output:** Full historical intelligence dossier rendered in destination atmosphere.
 - **Failure paths:** Network failure displays `ErrorState` with retry button.
 - **Files/functions changed in Stage D1:**
-  * `mobile/app/history/[id].tsx` (Set active atmosphere on load).
+  * `mobile/app/history/[id].tsx` (Set active atmosphere on load, bind to `placePalette`).
 - **Verification:** Test loading mock history detail and checking palette resolution.
 
 ---

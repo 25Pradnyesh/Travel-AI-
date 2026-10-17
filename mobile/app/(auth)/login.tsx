@@ -124,7 +124,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <AtmosphereBackground variant="night">
+    <AtmosphereBackground>
       {/* Top Header with 44px Frosted Close Button */}
       <View
         style={[

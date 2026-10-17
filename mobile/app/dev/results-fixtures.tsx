@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -22,6 +22,7 @@ import { DestinationIdentity } from '@/components/results/DestinationIdentity';
 import { DestinationBriefing } from '@/components/results/DestinationBriefing';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { FIXTURES, FixtureScenario } from '@/lib/fixtures/results-fixtures';
+import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
 
@@ -39,6 +40,16 @@ export default function ResultsFixturesScreen() {
   const ti = activeFixture.data.travel_intelligence || {};
   const photos = Array.isArray(bestGuess?.photos) ? bestGuess.photos : [];
   const nearby = Array.isArray(activeFixture.data.nearby_places) ? activeFixture.data.nearby_places : [];
+
+  const fixturePalette = useMemo(() => {
+    if (!bestGuess) return undefined;
+    return resolvePalette({
+      place_id: bestGuess.place_id,
+      name: bestGuess.name,
+      city: bestGuess.city,
+      country: bestGuess.country,
+    });
+  }, [bestGuess]);
 
   const handleSelectScenario = (id: string) => {
     hapticFeedback.selection();
@@ -69,7 +80,7 @@ export default function ResultsFixturesScreen() {
   };
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground palette={fixturePalette}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,

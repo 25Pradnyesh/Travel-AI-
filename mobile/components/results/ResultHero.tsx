@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { GlassView } from '@/components/ui';
+import { useAtmosphere } from '@/context/AtmosphereContext';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ResultHeroProps {
@@ -35,6 +36,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
 }) => {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
+  const { activePalette } = useAtmosphere();
   const [imageError, setImageError] = useState(false);
 
   // Reset error if image URL changes
@@ -96,7 +98,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
         />
       ) : (
         <LinearGradient
-          colors={Colors.atmosphereSky}
+          colors={[activePalette.top, activePalette.mid, activePalette.bottom]}
           locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFill}
         >

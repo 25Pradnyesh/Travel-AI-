@@ -70,7 +70,6 @@ export default function KitchenSinkScreen() {
 
   return (
     <AtmosphereBackground
-      variant="sky"
       imageUrl={currentBgImage}
     >
       <ScrollView

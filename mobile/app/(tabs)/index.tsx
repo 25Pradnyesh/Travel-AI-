@@ -231,7 +231,7 @@ export default function AnalyzeScreen() {
   const hasInFocus = inFocusItems.length > 0;
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground>
       {/* Top Editorial Header (history clock removed per rule 7) */}
       <HomeHeader
         onPressProfile={handleOpenProfile}

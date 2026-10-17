@@ -2,14 +2,14 @@
  * VAMO — Atmospheric Design System Tokens
  *
  * Visual Language (Cosmos-inspired):
- * - Atmosphere: Full-bleed imagery or vertical sky gradient (Icy Blue #A6DCF8 -> Onyx-Teal #081218)
+ * - Atmosphere: Full-bleed imagery or adaptive 3-stop place gradient (Top -> Mid -> Bottom)
  * - Glass surfaces: Translucent blurred panels (20-28px radii, 1px light hairline border)
  * - Typography: Clean grotesque sans (Inter) + display italic serif (Instrument Serif)
  * - Color discipline:
  *     Ivory Mist #FBF4E3 (text on imagery / dark glass)
  *     Onyx #0C0C0C (solid / active surfaces)
  *     Racing Red #EB2627 (strictly surgical: primary CTA, map pin, single focal mark)
- *     Icy Blue #A6DCF8 (atmosphere start + verification badge)
+ *     Icy Blue #A6DCF8 (verification badge & secondary accent only; never a background)
  * - Contrast Verified:
  *     Ivory #FBF4E3 on Onyx-Teal #081218: 16.8:1 (AAA)
  *     Ivory #FBF4E3 on Glass #0E1A22: 15.5:1 (AAA)
@@ -33,7 +33,9 @@ export const Colors = {
   canvasMuted: '#101C24',       // Elevated dark tone
 
   // Atmospheric Gradient Stops (Top -> Middle -> Bottom)
-  atmosphereSky: ['#A6DCF8', '#2F6275', '#081218'] as const,
+  // Legacy alias redirects to VAMO Default to completely eliminate #A6DCF8 as a background
+  atmosphereSky: ['#1A2D3A', '#0F1D26', '#060C10'] as const,
+  atmosphereDefault: ['#1A2D3A', '#0F1D26', '#060C10'] as const,
   atmosphereNight: ['#182B36', '#0E1A22', '#050B0E'] as const,
   atmosphereScrim: ['transparent', 'rgba(8, 18, 24, 0.65)', '#081218'] as const,
   topVignetteScrim: ['rgba(5, 11, 14, 0.40)', 'transparent'] as const,

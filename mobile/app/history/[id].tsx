@@ -35,6 +35,9 @@ import { DestinationIdentity } from '@/components/results/DestinationIdentity';
 import { DestinationBriefing } from '@/components/results/DestinationBriefing';
 import { SurroundingPlacesSection } from '@/components/results/SurroundingPlacesSection';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useAtmosphere } from '@/context/AtmosphereContext';
+import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
+import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
@@ -51,6 +54,7 @@ export default function HistoryDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isSaved, toggleSave } = useSavedPlaces();
+  const { setActivePlace } = useAtmosphere();
 
   const [detail, setDetail] = useState<AnalysisDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -141,6 +145,25 @@ export default function HistoryDetailScreen() {
 
   const analysis = detail?.analysis;
   const places = detail?.places || [];
+  const heroImageUrl = resolveThumbnailUrl(analysis?.thumbnail_url);
+
+  const placeAtmosphereInput: PlaceAtmosphereInput | null = useMemo(() => {
+    if (!analysis) return null;
+    return {
+      place_id: analysis.id || analysis.destination,
+      name: analysis.destination,
+      country: analysis.country || undefined,
+      heroPhotoUrl: heroImageUrl || null,
+    };
+  }, [analysis, heroImageUrl]);
+
+  const placePalette = useMemo(() => resolvePalette(placeAtmosphereInput), [placeAtmosphereInput]);
+
+  useEffect(() => {
+    if (placeAtmosphereInput) {
+      setActivePlace(placeAtmosphereInput);
+    }
+  }, [placeAtmosphereInput, setActivePlace]);
 
   // Parse structured travel intelligence safely
   const ti = useMemo<TravelIntelligence>(() => {
@@ -291,7 +314,7 @@ export default function HistoryDetailScreen() {
 
   if (isLoading) {
     return (
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={Colors.icyBlue} />
           <Text style={styles.loadingText}>Retrieving saved dossier...</Text>
@@ -302,7 +325,7 @@ export default function HistoryDetailScreen() {
 
   if (error || !analysis) {
     return (
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground>
         <View style={styles.centerContainer}>
           <EmptyState
             icon={<Ionicons name="alert-circle-outline" size={36} color={Colors.racingRed} />}
@@ -317,7 +340,6 @@ export default function HistoryDetailScreen() {
     );
   }
 
-  const heroImageUrl = resolveThumbnailUrl(analysis.thumbnail_url);
   const confidenceScore = analysis.confidence ?? 0;
   const verificationTier =
     confidenceScore >= 80 ? 'VERIFIED' : confidenceScore >= 50 ? 'PARTIAL' : 'UNVERIFIED';
@@ -325,7 +347,7 @@ export default function HistoryDetailScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground palette={placePalette}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,

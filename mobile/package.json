@@ -52,7 +52,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "test:contrast": "tsx scripts/validate-atmosphere-contrast.ts"
   },
   "private": true
 }

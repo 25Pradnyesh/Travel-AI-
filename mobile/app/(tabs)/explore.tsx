@@ -326,7 +326,7 @@ export default function ExploreScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground variant="night">
+    <AtmosphereBackground>
       <FlatList
         data={filteredPlaces}
         keyExtractor={(item) => item.place_id || item.name}

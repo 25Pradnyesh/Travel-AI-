@@ -207,7 +207,7 @@ export default function ProcessingScreen() {
   const isLongRunning = elapsedSeconds >= 35;
 
   return (
-    <AtmosphereBackground variant="sky">
+    <AtmosphereBackground>
       {/* Top Header with Frosted Cancel Pill Top-Left and Frosted Timer Pill Top-Right */}
       <ProcessingHeader
         onCancel={handleCancel}

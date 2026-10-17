@@ -94,7 +94,7 @@ export default function ExplorationMapScreen() {
 
   if (!data || !bestGuess) {
     return (
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground>
         <View style={[styles.topPillWrapper, { top: Math.max(insets.top, 16) + 4 }]}>
           <GlassView variant="frosted" borderRadius={Radius.pill} style={styles.floatingTopPill}>
             <Pressable onPress={handleBack} style={styles.topPillBackBtn} hitSlop={10}>

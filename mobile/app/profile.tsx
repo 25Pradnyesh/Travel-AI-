@@ -158,7 +158,7 @@ export default function ProfileScreen() {
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   return (
-    <AtmosphereBackground variant="night">
+    <AtmosphereBackground>
       {/* Top Header Row: Frosted Back Pill */}
       <View style={[styles.topHeader, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
         <Pressable

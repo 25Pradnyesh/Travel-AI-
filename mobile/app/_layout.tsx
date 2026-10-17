@@ -17,6 +17,7 @@ import {
 } from '@expo-google-fonts/instrument-serif';
 import { Colors } from '@/constants/theme';
 import { AuthProvider } from '@/lib/supabase';
+import { AtmosphereProvider } from '@/context/AtmosphereContext';
 import { NetworkProvider } from '@/hooks/useNetwork';
 import { OfflineGuard } from '@/components/ui/OfflineGuard';
 import { GlobalToast } from '@/components/ui/Toast';
@@ -60,8 +61,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <NetworkProvider>
         <AuthProvider>
-          <StatusBar style="light" />
-          <Stack
+          <AtmosphereProvider>
+            <StatusBar style="light" />
+            <Stack
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: Colors.canvas },
@@ -171,6 +173,7 @@ export default function RootLayout() {
           {showSplashVideo && (
             <SplashVideo onFinish={() => setShowSplashVideo(false)} />
           )}
+          </AtmosphereProvider>
         </AuthProvider>
       </NetworkProvider>
     </SafeAreaProvider>

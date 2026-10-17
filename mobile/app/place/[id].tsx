@@ -18,6 +18,9 @@ import {
   GlassView,
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useAtmosphere } from '@/context/AtmosphereContext';
+import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
+import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { formatCoordinates, formatDistance } from '@/lib/utils';
@@ -80,6 +83,28 @@ export default function PlaceDetailScreen() {
 
   const isBookmarked = isSaved(place?.place_id || id || '');
 
+  const { setActivePlace } = useAtmosphere();
+
+  const placeAtmosphereInput = useMemo<PlaceAtmosphereInput | null>(() => {
+    if (!place) return null;
+    return {
+      place_id: place.place_id,
+      name: place.name,
+      country: place.formatted_address || null,
+      heroPhotoUrl: photoUrl || null,
+    };
+  }, [place, photoUrl]);
+
+  const placePalette = useMemo(() => {
+    return resolvePalette(placeAtmosphereInput);
+  }, [placeAtmosphereInput]);
+
+  React.useEffect(() => {
+    if (placeAtmosphereInput) {
+      setActivePlace(placeAtmosphereInput);
+    }
+  }, [placeAtmosphereInput, setActivePlace]);
+
   const handleDismiss = React.useCallback(() => {
     hapticFeedback.light();
     if (router.canGoBack()) {
@@ -114,7 +139,7 @@ export default function PlaceDetailScreen() {
 
   if (!place) {
     return (
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground palette={placePalette}>
         <View style={[styles.fallbackTopBar, { paddingTop: Math.max(insets.top, 16) + 4 }]}>
           <Pressable onPress={handleDismiss} style={styles.pillBackBtn}>
             <Ionicons name="arrow-back" size={16} color={Colors.ivoryMist} />
@@ -147,7 +172,7 @@ export default function PlaceDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground palette={placePalette}>
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
@@ -168,7 +193,7 @@ export default function PlaceDetailScreen() {
               />
             ) : (
               <LinearGradient
-                colors={Colors.atmosphereSky}
+                colors={[placePalette.top, placePalette.mid, placePalette.bottom]}
                 locations={[0, 0.45, 1]}
                 style={StyleSheet.absoluteFill}
               >

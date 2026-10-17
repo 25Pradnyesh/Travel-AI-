@@ -21,6 +21,9 @@ import {
 } from '@/components/results';
 import { AtmosphereBackground, EmptyState, PillButton } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
+import { useAtmosphere } from '@/context/AtmosphereContext';
+import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
+import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
@@ -31,6 +34,7 @@ export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
   const { data, sourceUrl } = analysisStore.getAnalysisResult();
   const { isSaved, toggleSave } = useSavedPlaces();
+  const { setActivePlace } = useAtmosphere();
   const entranceFade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -66,6 +70,26 @@ export default function ResultsScreen() {
   }, [primaryPhoto?.url]);
 
   const photoAuthor = primaryPhoto?.author;
+
+  const placeAtmosphereInput: PlaceAtmosphereInput | null = useMemo(() => {
+    if (!bestGuess) return null;
+    return {
+      place_id: bestGuess.place_id,
+      name: bestGuess.name,
+      city: bestGuess.city,
+      region: bestGuess.region,
+      country: bestGuess.country,
+      heroPhotoUrl: heroImageUrl || null,
+    };
+  }, [bestGuess, heroImageUrl]);
+
+  const placePalette = useMemo(() => resolvePalette(placeAtmosphereInput), [placeAtmosphereInput]);
+
+  useEffect(() => {
+    if (placeAtmosphereInput) {
+      setActivePlace(placeAtmosphereInput);
+    }
+  }, [placeAtmosphereInput, setActivePlace]);
 
   // Curated travel advice tips
   const tipsList = useMemo(() => {
@@ -184,7 +208,7 @@ export default function ResultsScreen() {
   // If no analysis result is in memory
   if (!data || !bestGuess) {
     return (
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground>
         <ResultHeader onBack={handleBack} />
         <View style={styles.emptyContainer}>
           <EmptyState
@@ -204,7 +228,7 @@ export default function ResultsScreen() {
 
   return (
     <View style={styles.screen}>
-      <AtmosphereBackground variant="sky">
+      <AtmosphereBackground palette={placePalette}>
         <Animated.View style={[styles.flex, { opacity: entranceFade }]}>
           <ScrollView
             contentContainerStyle={[
