@@ -119,7 +119,21 @@ export default function KitchenSinkScreen() {
           </Pressable>
         </View>
 
-        {/* Fixtures Route Shortcut Pill */}
+        {/* Dev Route Shortcuts */}
+        <View style={styles.fixturesLinkRow}>
+          <Pressable
+            onPress={() => {
+              hapticFeedback.selection();
+              router.push('/dev/atmosphere' as any);
+            }}
+            style={({ pressed }) => [styles.fixturesPill, pressed && styles.pressed]}
+          >
+            <Ionicons name="color-palette-outline" size={15} color={Colors.icyBlue} />
+            <Text style={styles.fixturesPillText}>Open Atmosphere Palettes (/dev/atmosphere)</Text>
+            <Ionicons name="arrow-forward" size={13} color={Colors.icyBlue} />
+          </Pressable>
+        </View>
+
         <View style={styles.fixturesLinkRow}>
           <Pressable
             onPress={() => {
