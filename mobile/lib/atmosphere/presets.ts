@@ -116,6 +116,15 @@ export const CITY_PRESETS: PresetDefinition[] = [
     glow: '#467487',
     rationale: 'Reflects the meeting of cold oceanic Atlantic swells against the dark sandstone crags of Table Mountain.',
   },
+  {
+    name: 'Tokyo',
+    scope: 'city',
+    top: '#2A3442',
+    mid: '#18202A',
+    bottom: '#080D14',
+    glow: '#506684',
+    rationale: 'Inspired by Tokyo nocturnal cityscape at dusk, where neon-lit skyline reflections meet cool slate-indigo twilight.',
+  },
 ];
 
 export const COUNTRY_PRESETS: PresetDefinition[] = [

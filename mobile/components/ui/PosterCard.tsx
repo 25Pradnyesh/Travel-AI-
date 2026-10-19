@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
 import { AtmospherePalette, PlaceAtmosphereInput } from '@/types/atmosphere';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
+import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface PosterCardProps {
@@ -49,6 +50,16 @@ export const PosterCard: React.FC<PosterCardProps> = ({
   // Card's own resolved atmospheric palette when photo is absent
   const cardPalette = useMemo<AtmospherePalette>(() => {
     return resolvePalette(
+      place || {
+        name: title,
+        city,
+        country,
+      }
+    );
+  }, [place, title, city, country]);
+
+  const fallbackPhoto = useMemo(() => {
+    return resolveDestinationImage(
       place || {
         name: title,
         city,
@@ -123,16 +134,21 @@ export const PosterCard: React.FC<PosterCardProps> = ({
           }}
         />
       ) : (
-        // Graceful fallback: Card's own resolved atmospheric gradient + outline icon
-        <LinearGradient
-          colors={[cardPalette.top, cardPalette.mid, cardPalette.bottom]}
-          locations={[0, 0.45, 1]}
-          style={StyleSheet.absoluteFill}
-        >
+        // Destination photography fallback + watermark icon
+        <View style={StyleSheet.absoluteFill}>
+          <Image
+            source={
+              typeof fallbackPhoto === 'string' ? { uri: fallbackPhoto } : fallbackPhoto
+            }
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="disk"
+          />
+          <View style={[StyleSheet.absoluteFill, styles.fallbackOverlay]} />
           <View style={styles.fallbackIconWrapper}>
             <Ionicons name="compass-outline" size={32} color="rgba(251, 244, 227, 0.45)" />
           </View>
-        </LinearGradient>
+        </View>
       )}
 
       {/* Scrim Overlay: darkened at the bottom for typography legibility */}
@@ -284,6 +300,9 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.9,
     transform: [{ scale: 0.985 }],
+  },
+  fallbackOverlay: {
+    backgroundColor: 'rgba(6, 12, 16, 0.48)',
   },
 });
 

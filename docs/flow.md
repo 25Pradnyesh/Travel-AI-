@@ -21,7 +21,7 @@ SafeAreaProvider ──► NetworkProvider ──► AuthProvider
         │
         ▼
 AtmosphereProvider (mobile/context/AtmosphereContext.tsx)
-        │   Initializes with VAMO_DEFAULT_PRESET (#1A2D3A -> #0F1D26 -> #060C10)
+        │   Initializes with DEFAULT_DISCOVERY_IMAGE & VAMO_DEFAULT_PRESET
         │   activePlace: null
         ▼
 Stack Navigation (Expo Router)
@@ -31,10 +31,11 @@ mobile/app/(tabs)/index.tsx (AnalyzeScreen / Home)
         │
         ▼
 AtmosphereBackground (mobile/components/ui/AtmosphereBackground.tsx)
-        │   Consumes activePalette from AtmosphereContext
+        │   Consumes activeImage & activePalette from AtmosphereContext
+        │   Renders blurred full-screen travel discovery photography with dark overlay
         │   Mounts BlurTargetView for Android blur resolution
         ▼
-Rendered Canvas (Deep Onyx / Celestial Slate-Teal Atmosphere)
+Rendered Canvas (Cinematic Image-Led Atmosphere with Frosted Glass Chrome)
 ```
 
 - **Entry point:** Application launch in native runtime (`expo-router/entry`).
@@ -43,14 +44,15 @@ Rendered Canvas (Deep Onyx / Celestial Slate-Teal Atmosphere)
   2. `useFonts()` loads `Inter_400Regular`, `Inter_500Medium`, `Inter_600SemiBold`, `Inter_700Bold`, and `InstrumentSerif_400Regular`.
   3. `RootLayout` mounts provider tree (`SafeAreaProvider` $\rightarrow$ `NetworkProvider` $\rightarrow$ `AuthProvider` $\rightarrow$ `AtmosphereProvider`).
   4. Expo Router mounts `(tabs)/index.tsx`.
-  5. `AtmosphereBackground` renders initial canvas.
+  5. `AtmosphereBackground` renders initial canvas with bundled discovery photography (`DEFAULT_DISCOVERY_IMAGE`), tasteful 20px blur, and 60% dark translucent overlay.
 - **Data passed:** None at cold start. `activePlace` is `null`.
-- **State ownership:** `AtmosphereContext` (`activePlace: null`, `activePalette: VAMO_DEFAULT_PRESET`).
+- **State ownership:** `AtmosphereContext` (`activePlace: null`, `activeImage: DEFAULT_DISCOVERY_IMAGE`, `activePalette: VAMO_DEFAULT_PRESET`).
 - **Rendering/output:** Initial baseline canvas rendered in `AtmosphereBackground`.
 - **Failure paths:** Missing fonts halt rendering until hydrated. Missing Supabase credentials fallback gracefully to guest mode.
-- **Files/functions changed in Stage D1:**
-  * `mobile/app/_layout.tsx` (Add `AtmosphereProvider`).
-  * `mobile/components/ui/AtmosphereBackground.tsx` (Remove `#A6DCF8` sky system, connect to `AtmosphereContext`, double-buffered 450ms crossfade).
+- **Files/functions changed in Stage D1 Correction:**
+  * `mobile/lib/atmosphere/imagery-resolver.ts` (Resolves verified place photos, curated destination hubs, or bundled discovery image).
+  * `mobile/context/AtmosphereContext.tsx` (Track `activeImage` and provide double-buffered transition source).
+  * `mobile/components/ui/AtmosphereBackground.tsx` (Photography-first canvas, 450ms crossfade, 60% dark overlay, BlurTargetView).
 - **Verification:** Unit tests and local cold start verification.
 
 ---
@@ -99,12 +101,12 @@ ResultHero + DestinationIdentity + DestinationBriefing + SurroundingPlacesSectio
   5. Navigates via `router.replace('/analyze/results')`.
   6. `results.tsx` computes `placeAtmosphereInput` and calls `AtmosphereContext.setActivePlace(best_guess)`.
 - **Data passed:** `url` query param $\rightarrow$ `AnalysisResponse` (`best_guess`, `travel_intelligence`, `nearby_places`, `gemini`).
-- **State ownership:** `analysisStore` holds active analysis. `AtmosphereContext` holds active place and resolved palette.
-- **Rendering/output:** Full destination briefing and hero photograph rendered over destination's adaptive atmosphere.
+- **State ownership:** `analysisStore` holds active analysis. `AtmosphereContext` holds active place, resolved imagery (`activeImage`), and resolved palette (`activePalette`).
+- **Rendering/output:** Full destination briefing and hero photograph rendered over destination's adaptive image-led atmosphere with double-buffered crossfade.
 - **Failure paths:** Invalid URL shows inline error toast. Engine or network failure redirects to `TravelOceanError` with retry CTA.
-- **Files/functions changed in Stage D1:**
+- **Files/functions changed in Stage D1 Correction:**
   * `mobile/app/analyze/processing.tsx` (Inherit active atmosphere).
-  * `mobile/app/analyze/results.tsx` (Connect to `AtmosphereContext`, resolve place palette, pass to `AtmosphereBackground`).
+  * `mobile/app/analyze/results.tsx` (Connect to `AtmosphereContext`, resolve place photography, pass to `AtmosphereBackground`).
 - **Verification:** Mock reel analysis test running through results navigation.
 
 ---

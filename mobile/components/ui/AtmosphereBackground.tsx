@@ -1,17 +1,17 @@
 /**
  * VAMO Mobile — Adaptive Atmosphere Background Layer
  *
- * Full-bleed atmospheric background layer featuring:
- * - Dynamic 3-stop vertical gradient resolving to the active destination's atmosphere
+ * Full-bleed image-led atmospheric background layer featuring:
+ * - Full-screen destination photography as the primary atmospheric canvas
+ * - Tasteful blur and dark translucent overlay preserving WCAG AAA text readability
  * - 450ms hardware-accelerated double-buffered crossfade transitions between destinations
  * - Immediate 0ms transition when Accessibility Reduce Motion is enabled
- * - Ambient diffuse top glow orb accentuating the active atmosphere
- * - Full-bleed photography on hero screens with subtle scrims
+ * - Restrained ambient diffuse glow accentuating active destination tones
  * - Android BlurTargetView integration ensuring GlassView components receive native blur
- * - Zero dependency additions; 100% compliant with VAMO 60 FPS performance budgets
+ * - Zero external native dependencies; 100% compliant with VAMO 60 FPS budgets
  */
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -31,6 +31,10 @@ import {
 import { VAMO_DEFAULT_PRESET } from '@/lib/atmosphere/presets';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
 import {
+  DEFAULT_DISCOVERY_IMAGE,
+  resolveDestinationImage,
+} from '@/lib/atmosphere/imagery-resolver';
+import {
   AtmosphereContext,
   useAtmosphere,
 } from '@/context/AtmosphereContext';
@@ -42,9 +46,9 @@ export interface AtmosphereBackgroundProps {
   children?: React.ReactNode;
   imageUrl?: string | number | null;
   blurRadius?: number;
-  /** Explicit palette override (e.g., for self-contained cards or preview surfaces) */
+  /** Explicit palette override (for subtle glow accents or preview surfaces) */
   palette?: AtmospherePalette;
-  /** Explicit place override; resolves palette directly for this view */
+  /** Explicit place override; resolves photography and palette directly for this view */
   place?: PlaceAtmosphereInput | null;
   /** Legacy variant prop maintained for backwards-compatibility; mapped to adaptive atmosphere */
   variant?: 'sky' | 'night' | 'destination';
@@ -54,7 +58,7 @@ export interface AtmosphereBackgroundProps {
 export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
   children,
   imageUrl,
-  blurRadius = 24,
+  blurRadius = 20,
   palette: explicitPalette,
   place: explicitPlace,
   variant,
@@ -62,7 +66,6 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
 }) => {
   const context = useAtmosphere();
   const blurTargetRef = context.blurTargetRef || useRef<View>(null);
-  const [imageError, setImageError] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   // Monitor system Accessibility Reduce Motion preference
@@ -80,26 +83,30 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
     };
   }, []);
 
-  // Reset image error whenever imageUrl prop changes
-  useEffect(() => {
-    setImageError(false);
-  }, [imageUrl]);
-
-  const hasPhoto = Boolean(
-    imageUrl &&
-      !imageError &&
-      (typeof imageUrl === 'number' || (typeof imageUrl === 'string' && imageUrl.trim().length > 0))
-  );
-
-  const imageSource = useMemo(() => {
-    if (!hasPhoto) return null;
-    if (typeof imageUrl === 'string') {
-      return { uri: imageUrl };
+  // Priority: explicit imageUrl -> explicit place image -> context activeImage -> DEFAULT_DISCOVERY_IMAGE
+  const resolvedExplicitPlaceImage = useMemo(() => {
+    if (explicitPlace) {
+      return resolveDestinationImage(explicitPlace);
     }
-    return imageUrl;
-  }, [hasPhoto, imageUrl]);
+    return null;
+  }, [explicitPlace]);
 
-  // Determine target palette: explicit prop -> explicit place -> context activePalette
+  const targetImage = useMemo<string | number>(() => {
+    if (imageUrl !== undefined && imageUrl !== null) {
+      if (typeof imageUrl === 'string' && imageUrl.trim().length > 0) {
+        return imageUrl;
+      }
+      if (typeof imageUrl === 'number') {
+        return imageUrl;
+      }
+    }
+    if (resolvedExplicitPlaceImage) {
+      return resolvedExplicitPlaceImage;
+    }
+    return context.activeImage || DEFAULT_DISCOVERY_IMAGE;
+  }, [imageUrl, resolvedExplicitPlaceImage, context.activeImage]);
+
+  // Determine target palette for subtle glow: explicit prop -> explicit place -> context activePalette
   const targetPalette = useMemo<AtmospherePalette>(() => {
     if (explicitPalette) return explicitPalette;
     if (explicitPlace) return resolvePalette(explicitPlace);
@@ -114,31 +121,33 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
     return context.activePalette || VAMO_DEFAULT_PRESET;
   }, [explicitPalette, explicitPlace, variant, context.activePalette]);
 
-  // Double-buffered crossfade state
-  const [basePalette, setBasePalette] = useState<AtmospherePalette>(targetPalette);
-  const [incomingPalette, setIncomingPalette] = useState<AtmospherePalette | null>(null);
+  // Double-buffered crossfade state for destination photography
+  const [baseImage, setBaseImage] = useState<string | number>(targetImage);
+  const [incomingImage, setIncomingImage] = useState<string | number | null>(null);
   const crossfadeAnim = useRef(new Animated.Value(1)).current;
 
+  const handleImageError = useCallback(() => {
+    // Gracefully fall back to bundled default travel discovery photo on error
+    setBaseImage(DEFAULT_DISCOVERY_IMAGE);
+    setIncomingImage(null);
+    crossfadeAnim.setValue(1);
+  }, [crossfadeAnim]);
+
   useEffect(() => {
-    // If target palette matches base palette, no transition needed
-    if (
-      targetPalette.top === basePalette.top &&
-      targetPalette.mid === basePalette.mid &&
-      targetPalette.bottom === basePalette.bottom
-    ) {
+    if (targetImage === baseImage) {
       return;
     }
 
     // Instant swap if Reduce Motion is active
     if (reduceMotion) {
-      setBasePalette(targetPalette);
-      setIncomingPalette(null);
+      setBaseImage(targetImage);
+      setIncomingImage(null);
       crossfadeAnim.setValue(1);
       return;
     }
 
     // Initiate 450ms smooth crossfade
-    setIncomingPalette(targetPalette);
+    setIncomingImage(targetImage);
     crossfadeAnim.setValue(0);
 
     Animated.timing(crossfadeAnim, {
@@ -147,108 +156,98 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
       useNativeDriver: true,
     }).start((result) => {
       if (result.finished) {
-        setBasePalette(targetPalette);
-        setIncomingPalette(null);
+        setBaseImage(targetImage);
+        setIncomingImage(null);
         crossfadeAnim.setValue(1);
       }
     });
-  }, [targetPalette, basePalette, reduceMotion, crossfadeAnim]);
+  }, [targetImage, baseImage, reduceMotion, crossfadeAnim]);
+
+  const toImageSource = (img: string | number) => {
+    if (typeof img === 'string') {
+      return { uri: img };
+    }
+    return img;
+  };
 
   return (
     <View style={[styles.container, style]}>
-      {/* Background layer wrapped in BlurTargetView for native Android blur resolution */}
+      {/* Background composite wrapped in BlurTargetView for native Android glass blur resolution */}
       <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
-        {hasPhoto && imageSource ? (
-          // Full-bleed destination photography with blur and translucent scrim
-          <View style={StyleSheet.absoluteFill}>
+        {/* 1. Underlying dark baseline canvas ensuring zero white flash */}
+        <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.canvas }]} />
+
+        {/* 2. Base Destination Photography Layer */}
+        <Image
+          source={toImageSource(baseImage)}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          blurRadius={blurRadius}
+          cachePolicy="disk"
+          transition={0}
+          onError={handleImageError}
+        />
+
+        {/* 3. Crossfading Incoming Destination Photography Layer */}
+        {incomingImage && (
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: crossfadeAnim }]}>
             <Image
-              source={imageSource}
+              source={toImageSource(incomingImage)}
               style={StyleSheet.absoluteFill}
               contentFit="cover"
               blurRadius={blurRadius}
               cachePolicy="disk"
-              transition={300}
-              onError={(err) => {
-                console.warn(
-                  '[AtmosphereBackground] Background photo failed to load:',
-                  imageUrl,
-                  err.error
-                );
-                setImageError(true);
-              }}
+              transition={0}
+              onError={handleImageError}
             />
-            {/* Soft scrim so the photo's vibrant colors visibly shine */}
-            <View style={[StyleSheet.absoluteFill, styles.photoScrim]} />
-            {/* Top vignette scrim protecting floating header chrome */}
-            <LinearGradient
-              colors={['rgba(5, 11, 14, 0.40)', 'transparent']}
-              locations={[0, 1]}
-              style={styles.topVignette}
-            />
-            {/* Gentle bottom vignette gradient protecting bottom cards */}
-            <LinearGradient
-              colors={[
-                'transparent',
-                'rgba(5, 11, 14, 0.20)',
-                'rgba(5, 11, 14, 0.70)',
-                'rgba(5, 11, 14, 0.92)',
-              ]}
-              locations={[0, 0.35, 0.70, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-          </View>
-        ) : (
-          // Adaptive Atmospheric Palette with Double-Buffered Opacity Crossfade
-          <View style={StyleSheet.absoluteFill}>
-            {/* Base Layer */}
-            <LinearGradient
-              colors={[basePalette.top, basePalette.mid, basePalette.bottom]}
-              locations={[0, 0.38, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-
-            {/* Crossfading Incoming Layer */}
-            {incomingPalette && (
-              <Animated.View style={[StyleSheet.absoluteFill, { opacity: crossfadeAnim }]}>
-                <LinearGradient
-                  colors={[incomingPalette.top, incomingPalette.mid, incomingPalette.bottom]}
-                  locations={[0, 0.38, 1]}
-                  style={StyleSheet.absoluteFill}
-                />
-              </Animated.View>
-            )}
-
-            {/* Ambient diffuse top glow orb */}
-            <View
-              style={[
-                styles.ambientGlow,
-                {
-                  backgroundColor: (incomingPalette || basePalette).glow,
-                },
-              ]}
-              pointerEvents="none"
-            />
-
-            {/* Subtle top vignette protecting status bar legibility */}
-            <LinearGradient
-              colors={['rgba(5, 11, 14, 0.45)', 'rgba(5, 11, 14, 0.15)', 'transparent']}
-              locations={[0, 0.5, 1]}
-              style={styles.topVignette}
-              pointerEvents="none"
-            />
-          </View>
+          </Animated.View>
         )}
+
+        {/* 4. Dark Translucent Overlay preserving WCAG AAA text contrast */}
+        <View style={[StyleSheet.absoluteFill, styles.darkOverlay]} />
+
+        {/* 5. Subtle Ambient Glow Orb reflecting destination lighting with restrained opacity */}
+        <View
+          style={[
+            styles.ambientGlow,
+            {
+              backgroundColor: targetPalette.glow,
+            },
+          ]}
+          pointerEvents="none"
+        />
+
+        {/* 6. Top Vignette Scrim protecting status bar and floating header chrome */}
+        <LinearGradient
+          colors={['rgba(5, 11, 14, 0.72)', 'rgba(5, 11, 14, 0.28)', 'transparent']}
+          locations={[0, 0.45, 1]}
+          style={styles.topVignette}
+          pointerEvents="none"
+        />
+
+        {/* 7. Deep Bottom Vignette Scrim protecting tab bar and floating action cards */}
+        <LinearGradient
+          colors={[
+            'transparent',
+            'rgba(5, 11, 14, 0.25)',
+            'rgba(5, 11, 14, 0.75)',
+            'rgba(6, 11, 14, 0.94)',
+          ]}
+          locations={[0, 0.35, 0.70, 1]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
       </BlurTargetView>
 
       {/* Sticky top dark header scrim protecting status bar when scrolled */}
       <LinearGradient
         colors={[
-          'rgba(8, 18, 24, 0.88)',
+          'rgba(8, 18, 24, 0.90)',
           'rgba(8, 18, 24, 0.65)',
-          'rgba(8, 18, 24, 0.25)',
+          'rgba(8, 18, 24, 0.20)',
           'transparent',
         ]}
-        locations={[0, 0.4, 0.75, 1]}
+        locations={[0, 0.45, 0.8, 1]}
         style={styles.stickyHeaderScrim}
         pointerEvents="none"
       />
@@ -265,15 +264,15 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  photoScrim: {
-    backgroundColor: 'rgba(5, 11, 14, 0.16)', // ~16% scrim so vibrant photo colors shine through
+  darkOverlay: {
+    backgroundColor: 'rgba(6, 12, 16, 0.60)', // Tasteful dark translucent overlay ensuring >= 12:1 text contrast
   },
   topVignette: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
+    height: 140,
   },
   stickyHeaderScrim: {
     position: 'absolute',
@@ -290,7 +289,7 @@ const styles = StyleSheet.create({
     width: 280,
     height: 280,
     borderRadius: 140,
-    opacity: 0.22,
+    opacity: 0.12, // Restrained highlight without coloring overall canvas
   },
 });
 

@@ -20,6 +20,7 @@ import {
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
+import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
@@ -99,6 +100,10 @@ export default function PlaceDetailScreen() {
     return resolvePalette(placeAtmosphereInput);
   }, [placeAtmosphereInput]);
 
+  const fallbackPhoto = useMemo(() => {
+    return resolveDestinationImage(placeAtmosphereInput);
+  }, [placeAtmosphereInput]);
+
   React.useEffect(() => {
     if (placeAtmosphereInput) {
       setActivePlace(placeAtmosphereInput);
@@ -172,7 +177,11 @@ export default function PlaceDetailScreen() {
 
   return (
     <View style={styles.screen}>
-      <AtmosphereBackground palette={placePalette}>
+      <AtmosphereBackground
+        imageUrl={photoUrl}
+        place={placeAtmosphereInput}
+        palette={placePalette}
+      >
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
@@ -192,15 +201,29 @@ export default function PlaceDetailScreen() {
                 onError={() => setImageError(true)}
               />
             ) : (
-              <LinearGradient
-                colors={[placePalette.top, placePalette.mid, placePalette.bottom]}
-                locations={[0, 0.45, 1]}
-                style={StyleSheet.absoluteFill}
-              >
+              <View style={StyleSheet.absoluteFill}>
+                <Image
+                  source={
+                    typeof fallbackPhoto === 'string' ? { uri: fallbackPhoto } : fallbackPhoto
+                  }
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  cachePolicy="disk"
+                />
+                <View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: 'rgba(6, 12, 16, 0.50)' },
+                  ]}
+                />
                 <View style={styles.watermarkContainer}>
-                  <Ionicons name="compass-outline" size={88} color="rgba(251, 244, 227, 0.12)" />
+                  <Ionicons
+                    name="compass-outline"
+                    size={88}
+                    color="rgba(251, 244, 227, 0.16)"
+                  />
                 </View>
-              </LinearGradient>
+              </View>
             )}
 
             {/* Top Vignette Scrim */}

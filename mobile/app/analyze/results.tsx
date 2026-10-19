@@ -228,7 +228,11 @@ export default function ResultsScreen() {
 
   return (
     <View style={styles.screen}>
-      <AtmosphereBackground palette={placePalette}>
+      <AtmosphereBackground
+        imageUrl={heroImageUrl}
+        place={placeAtmosphereInput}
+        palette={placePalette}
+      >
         <Animated.View style={[styles.flex, { opacity: entranceFade }]}>
           <ScrollView
             contentContainerStyle={[

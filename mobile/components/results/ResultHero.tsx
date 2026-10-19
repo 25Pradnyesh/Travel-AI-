@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { GlassView } from '@/components/ui';
 import { useAtmosphere } from '@/context/AtmosphereContext';
+import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ResultHeroProps {
@@ -68,9 +69,12 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
     return String(photoAuthor).trim();
   }, [photoAuthor]);
 
+  const fallbackPhoto = React.useMemo(() => {
+    return resolveDestinationImage({ name: destinationName });
+  }, [destinationName]);
+
   return (
     <View style={[styles.container, { height: heroHeight }]}>
-      {/* Background: Destination Photography or Atmospheric Sky Fallback */}
       {hasPhoto && imageSource ? (
         <Image
           source={imageSource}
@@ -97,15 +101,20 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           accessibilityLabel={`Photography of ${destinationName}`}
         />
       ) : (
-        <LinearGradient
-          colors={[activePalette.top, activePalette.mid, activePalette.bottom]}
-          locations={[0, 0.45, 1]}
-          style={StyleSheet.absoluteFill}
-        >
+        <View style={StyleSheet.absoluteFill}>
+          <Image
+            source={
+              typeof fallbackPhoto === 'string' ? { uri: fallbackPhoto } : fallbackPhoto
+            }
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="disk"
+          />
+          <View style={[StyleSheet.absoluteFill, styles.fallbackPhotoOverlay]} />
           <View style={styles.fallbackWatermark}>
-            <Ionicons name="compass-outline" size={96} color="rgba(251, 244, 227, 0.14)" />
+            <Ionicons name="compass-outline" size={96} color="rgba(251, 244, 227, 0.16)" />
           </View>
-        </LinearGradient>
+        </View>
       )}
 
       {/* Top subtle vignette protecting floating controls */}
@@ -363,6 +372,9 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.97 }],
+  },
+  fallbackPhotoOverlay: {
+    backgroundColor: 'rgba(6, 12, 16, 0.52)',
   },
 });
 

@@ -33,6 +33,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { AtmosphereBackground } from '@/components/ui';
+import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface AtmospherePalette {
@@ -237,6 +239,15 @@ export const CITY_PRESETS: PresetItem[] = [
     bottom: '#071116',
     glow: '#467487',
     rationale: 'Reflects the meeting of cold oceanic Atlantic swells against the dark sandstone crags of Table Mountain.',
+  },
+  {
+    name: 'Tokyo',
+    scope: 'city',
+    top: '#2A3442',
+    mid: '#18202A',
+    bottom: '#080D14',
+    glow: '#506684',
+    rationale: 'Inspired by Tokyo nocturnal cityscape at dusk, where neon-lit skyline reflections meet cool slate-indigo twilight.',
   },
 ];
 
@@ -721,6 +732,17 @@ export const DEV_FIXTURES: FixtureSpec[] = [
     palette: VAMO_DEFAULT_PRESET,
     notes: 'Cold start baseline before reel analysis or saved place selection.',
   },
+  {
+    id: 'f10_tokyo',
+    name: 'Tokyo, Japan',
+    subtitle: 'Kanto Region (Visual Reference)',
+    tier: 'city_preset',
+    city: 'Tokyo',
+    country: 'Japan',
+    isSynthetic: false,
+    palette: CITY_PRESETS.find((c) => c.name === 'Tokyo')!,
+    notes: 'Image-led visual reference destination. Resolves curated Tokyo photography and slate-indigo twilight preset.',
+  },
 ];
 
 export default function AtmosphereDevScreen() {
@@ -762,24 +784,21 @@ export default function AtmosphereDevScreen() {
   const passIvoryBot = cIvoryBot >= 4.5;
   const passRedBot = cRedBot >= 3.0;
   const passRedMap = cRedMap >= 3.0;
+  const previewImage = useMemo(() => {
+    if (activeTab === 'fixtures') {
+      return resolveDestinationImage({
+        name: activeFixture.name,
+        city: activeFixture.city,
+        country: activeFixture.country,
+      });
+    }
+    return resolveDestinationImage({
+      name: activePreset.name,
+    });
+  }, [activeTab, activeFixture, activePreset]);
 
   return (
-    <View style={styles.container}>
-      {/* Background Gradient Preview Layer */}
-      <LinearGradient
-        colors={[displayedPalette.top, displayedPalette.mid, displayedPalette.bottom]}
-        locations={[0, 0.40, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      {/* Top Ambient Glow Orb */}
-      <View
-        style={[
-          styles.ambientGlow,
-          { backgroundColor: displayedPalette.glow, shadowColor: displayedPalette.glow },
-        ]}
-      />
-
+    <AtmosphereBackground imageUrl={previewImage} palette={displayedPalette}>
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -1044,7 +1063,7 @@ export default function AtmosphereDevScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </AtmosphereBackground>
   );
 }
 

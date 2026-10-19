@@ -347,7 +347,11 @@ export default function HistoryDetailScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground palette={placePalette}>
+    <AtmosphereBackground
+      imageUrl={heroImageUrl}
+      place={placeAtmosphereInput}
+      palette={placePalette}
+    >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,

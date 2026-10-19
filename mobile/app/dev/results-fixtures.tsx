@@ -51,6 +51,21 @@ export default function ResultsFixturesScreen() {
     });
   }, [bestGuess]);
 
+  const fixturePhotoUrl = useMemo(() => {
+    return bestGuess?.photos?.[0]?.url;
+  }, [bestGuess]);
+
+  const fixturePlaceInput = useMemo(() => {
+    if (!bestGuess) return null;
+    return {
+      place_id: bestGuess.place_id,
+      name: bestGuess.name,
+      city: bestGuess.city,
+      country: bestGuess.country,
+      heroPhotoUrl: fixturePhotoUrl,
+    };
+  }, [bestGuess, fixturePhotoUrl]);
+
   const handleSelectScenario = (id: string) => {
     hapticFeedback.selection();
     setActiveScenarioId(id);
@@ -80,7 +95,11 @@ export default function ResultsFixturesScreen() {
   };
 
   return (
-    <AtmosphereBackground palette={fixturePalette}>
+    <AtmosphereBackground
+      imageUrl={fixturePhotoUrl}
+      place={fixturePlaceInput}
+      palette={fixturePalette}
+    >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,

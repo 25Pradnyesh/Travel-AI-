@@ -182,3 +182,42 @@ This document is the permanent engineering record of architectural, state-manage
   * `mobile/app/_layout.tsx`
   * `mobile/app/dev/kitchen-sink.tsx`
 - **Validation:** TypeScript type-check passing (`tsc --noEmit`), route gated with `__DEV__`, renders all 9 fixtures with live contrast badges and tier telemetry without crashing.
+
+---
+
+### D-008 — Image-Led Atmospheric Architecture: Destination Photography over Palette Theming
+
+- **Date:** 2026-10-19
+- **Status:** Accepted
+- **Context:** While Stage D1 originally focused on an adaptive mathematical color palette resolver, the resulting user experience felt like a flat city/country color-themed app (blues, greens, terracottas) rather than an immersive, photography-first travel app. VAMO's signature visual identity is image-led, cinematic, and glassmorphic.
+- **Options considered:**
+  1. *Retain palette-dominant background with photography only on hero cards:* Keeps backgrounds colored by preset stops.
+  2. *Full-bleed unblurred photography across all screens:* Distracts from text and makes complex forms/lists hard to read.
+  3. *Full-screen destination photography with tasteful blur (20px), dark translucent scrim (60%), and double-buffered 450ms crossfade:* Places foreground content inside frosted/dark glass surfaces over authentic destination photography.
+- **Decision:** Adopt Option 3: Replace palette-driven background gradients with full-screen blurred destination photography across all screens.
+  * Before analysis: Displays local bundled discovery photography (`DEFAULT_DISCOVERY_IMAGE`).
+  * On destination discovery: Resolves verified Google Places / Reel photos, curated city photography (Positano, Kyoto, Tokyo, etc.), or retains previous valid image on error.
+  * Treatment: Tasteful 20px blur, 60% dark translucent overlay (`rgba(6, 12, 16, 0.60)`), top/bottom protective vignettes, and subtle ambient glow (`0.12` opacity) from the palette resolver.
+  * Contrast: Preserves Ivory Mist (`#FBF4E3`) typography, Onyx surfaces, and Racing Red (`#EB2627`) CTAs.
+  * Android performance: Wraps the background composite in `BlurTargetView` so all `GlassView` components sample the blurred composite natively without re-computing heavy blurs.
+  * Palette resolver role: Retained for small accents, glow highlights, fallback contrast, and badge telemetry—never dictates overall background color.
+- **Rejected alternatives:**
+  * Option 1 was rejected because VAMO is fundamentally an image-led discovery experience, not a palette-themed app.
+  * Option 2 was rejected because raw photography behind complex lists and cards causes severe text legibility issues and fails WCAG contrast standards.
+- **Trade-offs and risks:**
+  * *Gain:* Breathtaking, cinematic, place-aware discovery atmosphere that reacts immediately to destination identification; 100% offline-ready with local bundled fallback.
+  * *Risk:* Image caching must avoid memory leaks; solved by utilizing Expo Image disk caching with zero redundant network requests on render.
+- **Affected files/modules:**
+  * `mobile/lib/atmosphere/imagery-resolver.ts`
+  * `mobile/context/AtmosphereContext.tsx`
+  * `mobile/components/ui/AtmosphereBackground.tsx`
+  * `mobile/components/results/ResultHero.tsx`
+  * `mobile/components/ui/PosterCard.tsx`
+  * `mobile/lib/atmosphere/presets.ts`
+  * `mobile/app/analyze/results.tsx`
+  * `mobile/app/place/[id].tsx`
+  * `mobile/app/history/[id].tsx`
+  * `mobile/app/dev/results-fixtures.tsx`
+  * `mobile/app/dev/atmosphere.tsx`
+- **Validation:** 52/52 presets audited and passed 100% WCAG 2.1 contrast (`npm run test:contrast`); all 49 Supabase boundary tests passing; TypeScript type check passing (`tsc --noEmit`); Android Expo export clean bundle test passing with 0 warnings.
+
