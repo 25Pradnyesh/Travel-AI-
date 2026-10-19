@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface HomeHeaderProps {
@@ -30,22 +30,39 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
         {/* Right Actions: DEV Sink, History toggle, Avatar */}
         <View style={styles.actionsRow}>
-          {/* Dev-only UI Kitchen Sink shortcut */}
+          {/* Dev-only shortcuts */}
           {__DEV__ && (
-            <Pressable
-              onPress={() => {
-                hapticFeedback.selection();
-                router.push('/dev/kitchen-sink' as any);
-              }}
-              hitSlop={6}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Open UI Kitchen Sink"
-              style={({ pressed }) => [styles.devPill, pressed && styles.pressed]}
-            >
-              <Ionicons name="sparkles" size={12} color={Colors.icyBlue} />
-              <Text style={styles.devPillText}>UI Sink</Text>
-            </Pressable>
+            <>
+              <Pressable
+                onPress={() => {
+                  hapticFeedback.selection();
+                  router.push('/dev/backgrounds' as any);
+                }}
+                hitSlop={6}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Open Background Photos Harness"
+                style={({ pressed }) => [styles.devPill, pressed && styles.pressed]}
+              >
+                <Ionicons name="images-outline" size={12} color={Colors.icyBlue} />
+                <Text style={styles.devPillText}>Photos</Text>
+              </Pressable>
+
+              <Pressable
+                onPress={() => {
+                  hapticFeedback.selection();
+                  router.push('/dev/kitchen-sink' as any);
+                }}
+                hitSlop={6}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Open UI Kitchen Sink"
+                style={({ pressed }) => [styles.devPill, pressed && styles.pressed]}
+              >
+                <Ionicons name="sparkles" size={12} color={Colors.icyBlue} />
+                <Text style={styles.devPillText}>UI Sink</Text>
+              </Pressable>
+            </>
           )}
 
           {/* Profile Avatar Shortcut */}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
-import PillButton from './PillButton';
+import { PillButton } from './PillButton';
 
 export interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -39,7 +39,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         </Text>
 
         {description && (
-          <Text style={styles.description} numberOfLines={2}>
+          <Text style={styles.description}>
             {description}
           </Text>
         )}

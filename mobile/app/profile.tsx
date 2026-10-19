@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -14,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import {
   AtmosphereBackground,
-  PillButton,
   SkeletonShimmer,
   toast,
 } from '@/components/ui';
@@ -25,6 +23,7 @@ import { EngineHealthResponse } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 import { useAuth, executePendingSaveAction } from '@/lib/supabase';
 import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
+import { useAtmosphere } from '@/context/AtmosphereContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -39,6 +38,7 @@ export default function ProfileScreen() {
     error: authError,
   } = useAuth();
 
+  const { adaptiveEnabled, setAdaptiveEnabled } = useAtmosphere();
   const [preferredMap, setPreferredMap] = useState<'apple' | 'google'>('google');
   const [health, setHealth] = useState<EngineHealthResponse | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
@@ -429,6 +429,42 @@ export default function ProfileScreen() {
                 </Text>
               </Pressable>
             </View>
+
+            <View style={styles.cardDivider} />
+
+            {/* Adaptive Backgrounds Preference */}
+            <View style={styles.preferenceRow}>
+              <View style={styles.prefIconWrapper}>
+                <Ionicons name="image-outline" size={18} color={Colors.icyBlue} />
+              </View>
+              <View style={styles.prefText}>
+                <Text style={styles.prefTitle}>Adaptive Backgrounds</Text>
+                <Text style={styles.prefSubtitle}>
+                  {adaptiveEnabled ? 'Adapts to active destination' : 'Bundled landscapes only (low data)'}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  hapticFeedback.selection();
+                  setAdaptiveEnabled(!adaptiveEnabled);
+                }}
+                hitSlop={8}
+                style={[
+                  styles.toggleSwitch,
+                  adaptiveEnabled && styles.toggleSwitchActive,
+                ]}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: adaptiveEnabled }}
+                accessibilityLabel="Adaptive backgrounds toggle"
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    adaptiveEnabled && styles.toggleThumbActive,
+                  ]}
+                />
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -611,6 +647,26 @@ export default function ProfileScreen() {
               <Text style={styles.infoLabel}>Privacy Principles</Text>
               <Text style={styles.infoValueHighlight}>Private by default · Ephemeral media</Text>
             </View>
+
+            <View style={styles.cardDivider} />
+
+            <Pressable
+              onPress={() => {
+                hapticFeedback.light();
+                router.push('/dev/backgrounds' as any);
+              }}
+              style={({ pressed }) => [styles.clickableRow, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="View photo credits"
+            >
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Photo credits</Text>
+                <View style={styles.rowRightChevron}>
+                  <Text style={styles.infoValue}>Unsplash & Pexels</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
+                </View>
+              </View>
+            </Pressable>
           </View>
         </View>
       </ScrollView>
@@ -1137,5 +1193,36 @@ const styles = StyleSheet.create({
   },
   rotating: {
     opacity: 0.6,
+  },
+  toggleSwitch: {
+    width: 48,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(251, 244, 227, 0.15)',
+    padding: 2,
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.20)',
+  },
+  toggleSwitchActive: {
+    backgroundColor: Colors.racingRed,
+    borderColor: Colors.racingRed,
+  },
+  toggleThumb: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Colors.ivoryMist,
+  },
+  toggleThumbActive: {
+    alignSelf: 'flex-end',
+  },
+  clickableRow: {
+    paddingVertical: 2,
+  },
+  rowRightChevron: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });

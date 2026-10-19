@@ -34,14 +34,9 @@ import {
 } from '@/lib/supabase';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 
-const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
-
 const SAMPLE_REEL = {
-  label: 'Sample Reel',
+  label: 'Tokyo Street Reel',
   url: 'https://www.instagram.com/reel/C8xyzExample1/',
-  destination: 'Sample Discovery',
-  country: 'Demo reel · Tap to analyze',
-  photo: SAMPLE_PHOTO,
 };
 
 const DISCOVERY_CHIPS = [
@@ -187,7 +182,7 @@ export default function AnalyzeScreen() {
 
   // Combine real recent analyses & saved places for the "In Focus" carousel
   const inFocusItems = useMemo(() => {
-    const items: Array<{
+    const items: {
       id: string;
       title: string;
       subtitle: string;
@@ -195,7 +190,7 @@ export default function AnalyzeScreen() {
       category: string;
       isSavedPlace: boolean;
       originalItem: any;
-    }> = [];
+    }[] = [];
 
     // Prioritize recent analyses
     recentAnalyses.forEach((a) => {
@@ -334,13 +329,13 @@ export default function AnalyzeScreen() {
               </ScrollView>
             </View>
 
-            {/* "In Focus" Poster Carousel Section */}
-            <View style={styles.focusSection}>
-              <View style={styles.focusHeaderRow}>
-                <Text style={styles.focusTitle}>
-                  In <Text style={styles.focusTitleItalic}>Focus</Text>
-                </Text>
-                {hasInFocus ? (
+            {/* "In Focus" Poster Carousel Section - only shown when real recents or saved places exist */}
+            {hasInFocus ? (
+              <View style={styles.focusSection}>
+                <View style={styles.focusHeaderRow}>
+                  <Text style={styles.focusTitle}>
+                    In <Text style={styles.focusTitleItalic}>Focus</Text>
+                  </Text>
                   <Pressable
                     onPress={handleViewAllHistory}
                     hitSlop={8}
@@ -350,11 +345,9 @@ export default function AnalyzeScreen() {
                   >
                     <Text style={styles.viewAllText}>View All</Text>
                   </Pressable>
-                ) : null}
-              </View>
+                </View>
 
-              {hasInFocus ? (
-                /* Horizontal FlatList Carousel with ~72% card peek */
+                {/* Horizontal FlatList Carousel with ~72% card peek */}
                 <FlatList
                   data={inFocusItems}
                   keyExtractor={(item) => item.id}
@@ -400,26 +393,8 @@ export default function AnalyzeScreen() {
                     </View>
                   )}
                 />
-              ) : (
-                /* Designed Empty State: Single Featured Sample Reel Poster Card with 72% width */
-                <View style={styles.emptyContainer}>
-                  <View style={{ width: cardWidth, alignSelf: 'flex-start' }}>
-                    <PosterCard
-                      title={SAMPLE_REEL.destination}
-                      subtitle={SAMPLE_REEL.country}
-                      imageUrl={SAMPLE_REEL.photo}
-                      category="Sample Discovery"
-                      isSaved={isSaved('sample_discovery')}
-                      onPress={() => handleSelectExample(SAMPLE_REEL.url)}
-                      onToggleSave={() => {}}
-                    />
-                  </View>
-                  <Text style={styles.emptyCaption}>
-                    Tap to analyze this sample reel or paste any travel reel above.
-                  </Text>
-                </View>
-              )}
-            </View>
+              </View>
+            ) : null}
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
@@ -465,6 +440,9 @@ const styles = StyleSheet.create({
     lineHeight: 58,
     color: Colors.ivoryMist,
     letterSpacing: -1.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   displayItalicAccent: {
     fontFamily: Fonts.serifItalic,
@@ -473,6 +451,9 @@ const styles = StyleSheet.create({
     color: Colors.ivoryMist,
     letterSpacing: -0.5,
     marginTop: -2,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   heroDescription: {
     fontFamily: Fonts.sansRegular,
@@ -481,6 +462,9 @@ const styles = StyleSheet.create({
     color: Colors.ivoryMist,
     marginTop: Spacing.md,
     maxWidth: 320,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   inputWrapper: {
     paddingHorizontal: Spacing.xl,

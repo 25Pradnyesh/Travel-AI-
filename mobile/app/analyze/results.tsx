@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Linking,
@@ -19,7 +19,7 @@ import {
   SourceReelSection,
   SurroundingPlacesSection,
 } from '@/components/results';
-import { AtmosphereBackground, EmptyState, PillButton } from '@/components/ui';
+import { AtmosphereBackground, EmptyState } from '@/components/ui';
 import { Colors, Spacing } from '@/constants/theme';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
@@ -60,16 +60,28 @@ export default function ResultsScreen() {
       .join(', ');
   }, [bestGuess]);
 
-  // Primary photography details
-  const primaryPhoto = useMemo(() => {
-    return Array.isArray(bestGuess?.photos) ? bestGuess.photos[0] : undefined;
+  // Photo list and cycling
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const photosList = useMemo(() => {
+    return Array.isArray(bestGuess?.photos) ? bestGuess.photos : [];
   }, [bestGuess?.photos]);
 
-  const heroImageUrl = useMemo(() => {
-    return analysisStore.resolvePhotoUrl(primaryPhoto?.url);
-  }, [primaryPhoto?.url]);
+  const activePhoto = useMemo(() => {
+    if (photosList.length === 0) return undefined;
+    return photosList[photoIndex % photosList.length];
+  }, [photosList, photoIndex]);
 
-  const photoAuthor = primaryPhoto?.author;
+  const heroImageUrl = useMemo(() => {
+    return analysisStore.resolvePhotoUrl(activePhoto?.url);
+  }, [activePhoto?.url]);
+
+  const photoAuthor = activePhoto?.author;
+
+  const handleNextPhoto = useCallback(() => {
+    if (photosList.length > 1) {
+      setPhotoIndex((prev: number) => (prev + 1) % photosList.length);
+    }
+  }, [photosList.length]);
 
   const placeAtmosphereInput: PlaceAtmosphereInput | null = useMemo(() => {
     if (!bestGuess) return null;
@@ -241,13 +253,16 @@ export default function ResultsScreen() {
             ]}
             showsVerticalScrollIndicator={false}
           >
-            {/* 1. Full-Bleed Poster Hero (Top ~54% of screen) */}
+            {/* 1. Full-Bleed Destination Hero Viewport */}
             <ResultHero
-              imageUrl={heroImageUrl}
               destinationName={bestGuess.name}
               locationSubtitle={locationSubtitle}
-              photoCount={Array.isArray(bestGuess.photos) ? bestGuess.photos.length : 0}
+              photoCount={photosList.length}
+              currentPhotoIndex={photoIndex % Math.max(photosList.length, 1)}
+              onNextPhoto={photosList.length > 1 ? handleNextPhoto : undefined}
               photoAuthor={photoAuthor}
+              verificationStatus={bestGuess.verification_status}
+              confidence={bestGuess.confidence}
               onBack={handleBack}
               onShare={handleShare}
             />

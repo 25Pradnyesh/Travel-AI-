@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -7,13 +7,10 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
-import { GlassView } from '@/components/ui';
-import { useAtmosphere } from '@/context/AtmosphereContext';
-import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
+import { ConfidenceBadge, GlassView } from '@/components/ui';
 import { hapticFeedback } from '@/lib/haptics';
 
 export interface ResultHeroProps {
@@ -21,44 +18,32 @@ export interface ResultHeroProps {
   destinationName: string;
   locationSubtitle?: string;
   photoCount?: number;
+  currentPhotoIndex?: number;
+  onNextPhoto?: () => void;
   photoAuthor?: string[] | string | null;
+  verificationStatus?: string;
+  confidence?: number;
   onBack: () => void;
   onShare?: () => void;
 }
 
 export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
-  imageUrl,
   destinationName,
   locationSubtitle,
   photoCount = 0,
+  currentPhotoIndex = 0,
+  onNextPhoto,
   photoAuthor,
+  verificationStatus,
+  confidence,
   onBack,
   onShare,
 }) => {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = useWindowDimensions();
-  const { activePalette } = useAtmosphere();
-  const [imageError, setImageError] = useState(false);
 
-  // Reset error if image URL changes
-  React.useEffect(() => {
-    setImageError(false);
-  }, [imageUrl]);
-
-  const heroHeight = Math.max(420, Math.round(screenHeight * 0.54));
-  const hasPhoto = Boolean(
-    imageUrl &&
-      !imageError &&
-      (typeof imageUrl === 'number' || (typeof imageUrl === 'string' && imageUrl.trim().length > 0))
-  );
-
-  const imageSource = React.useMemo(() => {
-    if (!hasPhoto) return null;
-    if (typeof imageUrl === 'string') {
-      return { uri: imageUrl };
-    }
-    return imageUrl;
-  }, [hasPhoto, imageUrl]);
+  // Hero takes ~58% of screen height as the primary photo view zone
+  const heroHeight = Math.max(440, Math.round(screenHeight * 0.58));
 
   // Clean author attribution string
   const authorText = React.useMemo(() => {
@@ -69,71 +54,22 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
     return String(photoAuthor).trim();
   }, [photoAuthor]);
 
-  const fallbackPhoto = React.useMemo(() => {
-    return resolveDestinationImage({ name: destinationName });
-  }, [destinationName]);
-
   return (
     <View style={[styles.container, { height: heroHeight }]}>
-      {hasPhoto && imageSource ? (
-        <Image
-          source={imageSource}
-          style={StyleSheet.absoluteFill}
-          contentFit="cover"
-          cachePolicy="disk"
-          transition={300}
-          onLoad={(e) => {
-            if (__DEV__) {
-              console.log(
-                `[ResultHero] Destination photo loaded: "${destinationName}" (${e.source.width}x${e.source.height})`
-              );
-            }
-          }}
-          onError={(err) => {
-            console.warn(
-              `[ResultHero] Destination photo failed for "${destinationName}":`,
-              imageUrl,
-              err.error
-            );
-            setImageError(true);
-          }}
-          accessible={true}
-          accessibilityLabel={`Photography of ${destinationName}`}
-        />
-      ) : (
-        <View style={StyleSheet.absoluteFill}>
-          <Image
-            source={
-              typeof fallbackPhoto === 'string' ? { uri: fallbackPhoto } : fallbackPhoto
-            }
-            style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            cachePolicy="disk"
-          />
-          <View style={[StyleSheet.absoluteFill, styles.fallbackPhotoOverlay]} />
-          <View style={styles.fallbackWatermark}>
-            <Ionicons name="compass-outline" size={96} color="rgba(251, 244, 227, 0.16)" />
-          </View>
-        </View>
-      )}
-
-      {/* Top subtle vignette protecting floating controls */}
+      {/* Top subtle vignette protecting floating Back & Share controls */}
       <LinearGradient
-        colors={['rgba(5, 11, 14, 0.55)', 'transparent']}
+        colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
         locations={[0, 1]}
         style={styles.topVignette}
+        pointerEvents="none"
       />
 
-      {/* Deep bottom scrim protecting oversized typography */}
+      {/* Local soft bottom gradient backplate behind the text zone (max ~35-45% opacity) */}
       <LinearGradient
-        colors={[
-          'transparent',
-          'rgba(5, 11, 14, 0.25)',
-          'rgba(5, 11, 14, 0.78)',
-          'rgba(8, 18, 24, 1)',
-        ]}
-        locations={[0, 0.35, 0.72, 1]}
-        style={StyleSheet.absoluteFill}
+        colors={['transparent', 'rgba(5, 11, 14, 0.25)', 'rgba(6, 12, 16, 0.60)']}
+        locations={[0, 0.45, 1]}
+        style={styles.bottomVignette}
+        pointerEvents="none"
       />
 
       {/* Floating Top Bar (Back and Share pills) */}
@@ -190,30 +126,52 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
         ) : null}
       </View>
 
-      {/* Bottom Content: Meta Badges + Oversized Destination Name + Location Hierarchy */}
+      {/* Bottom Content: Meta Badges + Huge Instrument Serif Destination Name + Location Hierarchy */}
       <View style={styles.bottomContent}>
-        {/* Photo Badges & Attribution (Cleanly positioned above title inside dark scrim) */}
-        {(hasPhoto && photoCount > 1) || (hasPhoto && authorText) ? (
-          <View style={styles.heroMetaRow}>
-            {hasPhoto && photoCount > 1 ? (
-              <View style={styles.photoCountBadge}>
-                <Ionicons name="camera-outline" size={12} color={Colors.ivoryMist} />
-                <Text style={styles.photoCountText}>1 of {photoCount}</Text>
-              </View>
-            ) : null}
+        {/* Photo Badges & Attribution (Cleanly positioned above title) */}
+        <View style={styles.heroMetaRow}>
+          {verificationStatus ? (
+            <ConfidenceBadge
+              status={verificationStatus}
+              confidence={confidence}
+            />
+          ) : null}
 
-            {hasPhoto && authorText ? (
-              <View style={styles.attributionBadge}>
-                <Ionicons name="shield-checkmark-outline" size={11} color={Colors.icyBlue} />
-                <Text style={styles.attributionText} numberOfLines={1}>
-                  Photo: {authorText}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+          {photoCount > 1 ? (
+            <Pressable
+              onPress={() => {
+                if (onNextPhoto) {
+                  hapticFeedback.selection();
+                  onNextPhoto();
+                }
+              }}
+              disabled={!onNextPhoto}
+              hitSlop={6}
+              style={({ pressed }) => [
+                styles.photoCountBadge,
+                onNextPhoto && pressed && styles.pressed,
+              ]}
+              accessible={true}
+              accessibilityLabel={`Photo ${currentPhotoIndex + 1} of ${photoCount}. Tap to cycle.`}
+            >
+              <Ionicons name="camera-outline" size={12} color={Colors.ivoryMist} />
+              <Text style={styles.photoCountText}>
+                {currentPhotoIndex + 1} of {photoCount}
+              </Text>
+            </Pressable>
+          ) : null}
 
-        {/* Oversized Display Name with automatic font scaling for long names */}
+          {authorText ? (
+            <View style={styles.attributionBadge}>
+              <Ionicons name="shield-checkmark-outline" size={11} color={Colors.icyBlue} />
+              <Text style={styles.attributionText} numberOfLines={1}>
+                Photo: {authorText}
+              </Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Huge Display Name directly on the photo with soft backplate & text shadow */}
         <Text
           style={styles.destinationName}
           numberOfLines={2}
@@ -248,21 +206,23 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: Colors.canvas,
+    backgroundColor: 'transparent',
     justifyContent: 'space-between',
-  },
-  fallbackWatermark: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topVignette: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
+    height: 110,
+    zIndex: 2,
+  },
+  bottomVignette: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 220,
     zIndex: 2,
   },
   topBar: {
@@ -343,10 +303,13 @@ const styles = StyleSheet.create({
   },
   destinationName: {
     fontFamily: Fonts.serifItalic,
-    fontSize: 64,
-    lineHeight: 68,
+    fontSize: 68,
+    lineHeight: 72,
     color: Colors.ivoryMist,
     letterSpacing: -1,
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   locationPill: {
     flexDirection: 'row',
@@ -372,9 +335,6 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.97 }],
-  },
-  fallbackPhotoOverlay: {
-    backgroundColor: 'rgba(6, 12, 16, 0.52)',
   },
 });
 

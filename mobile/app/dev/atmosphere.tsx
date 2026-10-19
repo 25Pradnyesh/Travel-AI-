@@ -30,9 +30,8 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { AtmosphereBackground } from '@/components/ui';
 import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { hapticFeedback } from '@/lib/haptics';
@@ -746,10 +745,6 @@ export const DEV_FIXTURES: FixtureSpec[] = [
 ];
 
 export default function AtmosphereDevScreen() {
-  if (!__DEV__) {
-    return null;
-  }
-
   const insets = useSafeAreaInsets();
   const [activeFixtureId, setActiveFixtureId] = useState<string>('f1_positano');
   const [activeTab, setActiveTab] = useState<'fixtures' | 'all_presets'>('fixtures');
@@ -796,6 +791,10 @@ export default function AtmosphereDevScreen() {
       name: activePreset.name,
     });
   }, [activeTab, activeFixture, activePreset]);
+
+  if (!__DEV__) {
+    return null;
+  }
 
   return (
     <AtmosphereBackground imageUrl={previewImage} palette={displayedPalette}>
@@ -932,7 +931,7 @@ export default function AtmosphereDevScreen() {
                 </View>
               ) : (
                 <View style={[styles.statusBadge, { borderColor: Colors.icyBlue }]}>
-                  <Text style={[styles.statusBadgeText, { color: Colors.icyBlue }]}>VERIFIED</Text>
+                  <Text style={[styles.statusBadgeText, { color: Colors.icyBlue }]}>PRESET</Text>
                 </View>
               )}
             </View>

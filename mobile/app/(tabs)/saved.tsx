@@ -22,7 +22,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Keyboard,
   ListRenderItem,
   Platform,
   Pressable,
@@ -86,16 +85,6 @@ export default function SavedScreen() {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
 
-  // Focus effect: synchronize cloud saved places and analysis history
-  useFocusEffect(
-    useCallback(() => {
-      if (isAuthenticated) {
-        refreshCloudPlaces();
-        fetchHistory(true);
-      }
-    }, [isAuthenticated, refreshCloudPlaces])
-  );
-
   const fetchHistory = useCallback(async (isRefresh = false) => {
     if (!isAuthenticated || !user?.id) return;
     if (!isRefresh) setIsHistoryLoading(true);
@@ -112,6 +101,16 @@ export default function SavedScreen() {
       setIsRefreshingHistory(false);
     }
   }, [isAuthenticated, user?.id]);
+
+  // Focus effect: synchronize cloud saved places and analysis history
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        refreshCloudPlaces();
+        fetchHistory(true);
+      }
+    }, [isAuthenticated, refreshCloudPlaces, fetchHistory])
+  );
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -343,7 +342,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'saved' ? 'bookmark' : 'bookmark-outline'}
               size={13}
-              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textMuted}
+              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textSecondary}
             />
             <Text style={[styles.segmentLabel, activeTab === 'saved' && styles.segmentLabelActive]}>
               Saved
@@ -367,7 +366,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'history' ? 'time' : 'time-outline'}
               size={13}
-              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textMuted}
+              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textSecondary}
             />
             <Text style={[styles.segmentLabel, activeTab === 'history' && styles.segmentLabelActive]}>
               History
@@ -496,7 +495,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'saved' ? 'bookmark' : 'bookmark-outline'}
               size={13}
-              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textMuted}
+              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textSecondary}
             />
             <Text style={[styles.segmentLabel, activeTab === 'saved' && styles.segmentLabelActive]}>
               Saved
@@ -520,7 +519,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'history' ? 'time' : 'time-outline'}
               size={13}
-              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textMuted}
+              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textSecondary}
             />
             <Text style={[styles.segmentLabel, activeTab === 'history' && styles.segmentLabelActive]}>
               History
@@ -597,6 +596,14 @@ export default function SavedScreen() {
   );
 
   const renderSavedEmpty = () => {
+    if (isSavedLoading && savedPlaces.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={Colors.icyBlue} />
+        </View>
+      );
+    }
+
     if (savedPlaces.length === 0) {
       return (
         <View style={styles.emptyContainer}>
@@ -631,6 +638,14 @@ export default function SavedScreen() {
 
   const renderHistoryEmpty = () => {
     if (!isAuthenticated) return null;
+
+    if (isHistoryLoading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator size="large" color={Colors.icyBlue} />
+        </View>
+      );
+    }
 
     return (
       <View style={styles.emptyContainer}>
@@ -741,7 +756,7 @@ const styles = StyleSheet.create({
   segmentLabel: {
     fontFamily: Fonts.sansMedium,
     fontSize: 13,
-    color: Colors.textMuted,
+    color: Colors.textSecondary,
   },
   segmentLabelActive: {
     fontFamily: Fonts.sansSemiBold,
@@ -804,6 +819,9 @@ const styles = StyleSheet.create({
     color: Colors.icyBlue,
     marginBottom: 4,
     textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroTitle: {
     fontFamily: Fonts.serifRegular,
@@ -811,6 +829,9 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     color: Colors.ivoryMist,
     letterSpacing: -0.4,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   serifAccent: {
     fontFamily: Fonts.serifItalic,

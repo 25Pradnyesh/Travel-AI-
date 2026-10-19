@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -20,7 +19,6 @@ import {
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
-import { resolveDestinationImage } from '@/lib/atmosphere/imagery-resolver';
 import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
@@ -33,7 +31,6 @@ export default function PlaceDetailScreen() {
   const { height: screenHeight } = useWindowDimensions();
   const { id, name: paramName } = useLocalSearchParams<{ id: string; name?: string }>();
   const { isSaved, toggleSave, savedPlaces } = useSavedPlaces();
-  const [imageError, setImageError] = useState(false);
 
   // 1. Look up place from active analysis session first, then reactive savedPlaces for cold-start resilience
   const place = useMemo(() => {
@@ -71,17 +68,6 @@ export default function PlaceDetailScreen() {
     return analysisStore.resolvePhotoUrl(foundSaved?.photo);
   }, [id, savedPlaces]);
 
-  React.useEffect(() => {
-    setImageError(false);
-  }, [photoUrl]);
-
-  const hasPhoto = Boolean(
-    photoUrl &&
-      !imageError &&
-      typeof photoUrl === 'string' &&
-      photoUrl.trim().length > 0
-  );
-
   const isBookmarked = isSaved(place?.place_id || id || '');
 
   const { setActivePlace } = useAtmosphere();
@@ -98,10 +84,6 @@ export default function PlaceDetailScreen() {
 
   const placePalette = useMemo(() => {
     return resolvePalette(placeAtmosphereInput);
-  }, [placeAtmosphereInput]);
-
-  const fallbackPhoto = useMemo(() => {
-    return resolveDestinationImage(placeAtmosphereInput);
   }, [placeAtmosphereInput]);
 
   React.useEffect(() => {
@@ -171,8 +153,8 @@ export default function PlaceDetailScreen() {
   const isPrimary = place.category === 'Primary Destination';
   const categoryLabel = isPrimary ? 'DESTINATION' : (place.category || 'POINT OF INTEREST').toUpperCase();
 
-  // Shorter poster-hero height (~40% of screen height, min 320px)
-  const heroHeight = Math.max(320, Math.round(screenHeight * 0.40));
+  // Photo view zone (~45% of screen height)
+  const heroHeight = Math.max(340, Math.round(screenHeight * 0.45));
   const scrollBottomPadding = 80 + Math.max(insets.bottom, 16) + 48;
 
   return (
@@ -189,60 +171,22 @@ export default function PlaceDetailScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {/* 1. Poster Hero Modal Header (~320-360px) */}
+          {/* 1. Full-Bleed Destination Hero Viewport */}
           <View style={[styles.heroContainer, { height: heroHeight }]}>
-            {hasPhoto ? (
-              <Image
-                source={{ uri: photoUrl }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                cachePolicy="disk"
-                transition={250}
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <View style={StyleSheet.absoluteFill}>
-                <Image
-                  source={
-                    typeof fallbackPhoto === 'string' ? { uri: fallbackPhoto } : fallbackPhoto
-                  }
-                  style={StyleSheet.absoluteFill}
-                  contentFit="cover"
-                  cachePolicy="disk"
-                />
-                <View
-                  style={[
-                    StyleSheet.absoluteFill,
-                    { backgroundColor: 'rgba(6, 12, 16, 0.50)' },
-                  ]}
-                />
-                <View style={styles.watermarkContainer}>
-                  <Ionicons
-                    name="compass-outline"
-                    size={88}
-                    color="rgba(251, 244, 227, 0.16)"
-                  />
-                </View>
-              </View>
-            )}
-
             {/* Top Vignette Scrim */}
             <LinearGradient
-              colors={['rgba(5, 11, 14, 0.55)', 'transparent']}
+              colors={['rgba(5, 11, 14, 0.45)', 'transparent']}
               locations={[0, 1]}
               style={styles.topVignette}
+              pointerEvents="none"
             />
 
-            {/* Deep Bottom Vignette Scrim */}
+            {/* Local Bottom Vignette Scrim behind text */}
             <LinearGradient
-              colors={[
-                'transparent',
-                'rgba(5, 11, 14, 0.30)',
-                'rgba(5, 11, 14, 0.82)',
-                'rgba(8, 18, 24, 1)',
-              ]}
-              locations={[0, 0.28, 0.68, 1]}
-              style={StyleSheet.absoluteFill}
+              colors={['transparent', 'rgba(5, 11, 14, 0.25)', 'rgba(6, 12, 16, 0.55)']}
+              locations={[0, 0.45, 1]}
+              style={styles.bottomVignette}
+              pointerEvents="none"
             />
 
             {/* Floating Top Bar (Back and Category Pill) */}
@@ -447,14 +391,8 @@ const styles = StyleSheet.create({
   heroContainer: {
     width: '100%',
     position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: Colors.canvas,
+    backgroundColor: 'transparent',
     justifyContent: 'space-between',
-  },
-  watermarkContainer: {
-    ...StyleSheet.absoluteFill,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   topVignette: {
     position: 'absolute',
@@ -462,6 +400,14 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 100,
+    zIndex: 2,
+  },
+  bottomVignette: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 180,
     zIndex: 2,
   },
   heroTopBar: {
@@ -530,10 +476,13 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     fontFamily: Fonts.serifItalic,
-    fontSize: 42,
-    lineHeight: 46,
+    fontSize: 54,
+    lineHeight: 58,
     color: Colors.ivoryMist,
-    letterSpacing: -0.6,
+    letterSpacing: -0.8,
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   locationPill: {
     flexDirection: 'row',

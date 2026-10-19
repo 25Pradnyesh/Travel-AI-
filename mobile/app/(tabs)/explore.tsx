@@ -220,7 +220,7 @@ export default function ExploreScreen() {
       <View style={styles.editorialTitleSection}>
         <Text style={styles.eyebrow}>DISCOVERY STREAM</Text>
         <Text style={styles.heroTitle}>
-          Curated spots,{' '}
+          Your discoveries,{' '}
           <Text style={styles.serifAccent}>verified.</Text>
         </Text>
       </View>
@@ -412,6 +412,9 @@ const styles = StyleSheet.create({
     color: Colors.icyBlue,
     marginBottom: 4,
     textTransform: 'uppercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroTitle: {
     fontFamily: Fonts.serifRegular,
@@ -419,6 +422,9 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     color: Colors.ivoryMist,
     letterSpacing: -0.4,
+    textShadowColor: 'rgba(0, 0, 0, 0.85)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   serifAccent: {
     fontFamily: Fonts.serifItalic,
