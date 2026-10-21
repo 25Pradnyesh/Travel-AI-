@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "travelai",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#0C0C0C",
     "ios": {
       "bundleIdentifier": "com.travelai.mobile",
       "buildNumber": "1",
@@ -15,8 +16,9 @@
     "android": {
       "package": "com.travelai.mobile",
       "versionCode": 1,
+      "backgroundColor": "#0C0C0C",
       "adaptiveIcon": {
-        "backgroundColor": "#F7F7F5",
+        "backgroundColor": "#0C0C0C",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -32,7 +34,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#F7F7F5"
+          "backgroundColor": "#0C0C0C"
         }
       ],
       "expo-video"

@@ -1,17 +1,25 @@
 /**
  * VAMO Mobile — Login / Account Modal
  *
- * Implements Sign in with Apple & Sign in with Google via Supabase Auth:
- * - Pure atmospheric dark-glass presentation (AtmosphereBackground variant="night")
- * - High-contrast readable "VAMO CLOUD" frosted pill
- * - Plain language privacy copy ("Private by default. Only you can see your saved places.")
- * - Apple HIG compliant white button on dark backgrounds + outlined Google glass pill
- * - Prominent "Continue as Guest" pill + 44px frosted close button
+ * Implements Google & Apple OAuth via Supabase Auth with robust offline/error handling:
+ * - Persistent root atmospheric background (no per-screen background remounts)
+ * - Apple button shown ONLY on iOS; Android shows Google + Continue as Guest
+ * - Sign-in unavailable handling (preflight health check & mock state):
+ *     - Google button disabled with "Sign-in isn't available right now"
+ *     - Continue as Guest becomes primary pill
+ *     - Toast notification explains
+ *     - Zero dead browser tabs
+ * - __DEV__ Diagnostic Panel:
+ *     - Host DNS resolution status
+ *     - /auth/v1/health status
+ *     - Exact redirect URL in use (Expo Go vs travelai://auth/callback)
+ *     - Last auth error
+ * - __DEV__ Fixtures bar: instant testing of guest, signed-in, loading, error, and unavailable
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,13 +30,23 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  AtmosphereBackground,
+  AuthButton,
   toast,
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
-import { useAuth, clearPendingSaveAction, executePendingSaveAction } from '@/lib/supabase';
+import {
+  useAuth,
+  clearPendingSaveAction,
+  executePendingSaveAction,
+} from '@/lib/supabase';
+import {
+  checkSupabaseHealthDetails,
+  getLastAuthError,
+  SupabaseHealthDetails,
+} from '@/lib/supabase/auth';
 import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 import { hapticFeedback } from '@/lib/haptics';
+import { DevAuthFixtures } from '@/components/dev/DevAuthFixtures';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,8 +59,48 @@ export default function LoginScreen() {
     error,
     clearError,
     user,
+    mockState,
   } = useAuth();
+
   const [statusNotice, setStatusNotice] = useState<string | null>(null);
+  const [healthDetails, setHealthDetails] = useState<SupabaseHealthDetails | null>(null);
+  const [isPreflightChecking, setIsPreflightChecking] = useState(true);
+  const [hasShownUnavailableToast, setHasShownUnavailableToast] = useState(false);
+
+  // Preflight check on mount
+  useEffect(() => {
+    let mounted = true;
+    checkSupabaseHealthDetails()
+      .then((details) => {
+        if (mounted) {
+          setHealthDetails(details);
+          setIsPreflightChecking(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setIsPreflightChecking(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Determine if sign-in is unavailable (live preflight failed, unconfigured, or mock unavailable)
+  const isSignInUnavailable =
+    mockState === 'unavailable' ||
+    (!isConfigured && mockState === 'real') ||
+    (!isPreflightChecking && healthDetails !== null && !healthDetails.reachable && mockState === 'real');
+
+  // Show one toast when sign-in is determined to be unavailable
+  useEffect(() => {
+    if (isSignInUnavailable && !hasShownUnavailableToast) {
+      setHasShownUnavailableToast(true);
+      toast.info("Sign-in isn't available right now. You can keep using VAMO as a guest.");
+    }
+  }, [isSignInUnavailable, hasShownUnavailableToast]);
 
   const handleDismiss = () => {
     hapticFeedback.light();
@@ -56,6 +114,10 @@ export default function LoginScreen() {
   };
 
   const handleAppleSignIn = async () => {
+    if (isSignInUnavailable) {
+      toast.info("Sign-in isn't available right now. You can continue as a guest.");
+      return;
+    }
     hapticFeedback.selection();
     clearError();
     setStatusNotice(null);
@@ -90,6 +152,10 @@ export default function LoginScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (isSignInUnavailable) {
+      toast.info("Sign-in isn't available right now. You can continue as a guest.");
+      return;
+    }
     hapticFeedback.selection();
     clearError();
     setStatusNotice(null);
@@ -123,8 +189,10 @@ export default function LoginScreen() {
     }
   };
 
+  const lastAuthErr = error || getLastAuthError();
+
   return (
-    <AtmosphereBackground>
+    <View style={styles.screenContainer}>
       {/* Top Header with 44px Frosted Close Button */}
       <View
         style={[
@@ -152,6 +220,9 @@ export default function LoginScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
+        {/* __DEV__ Auth Fixtures Bar */}
+        {__DEV__ && <DevAuthFixtures />}
+
         {/* Brand Hero with High-Contrast Frosted Pill */}
         <View style={styles.heroSection}>
           <View style={styles.badgeWrapper}>
@@ -222,100 +293,147 @@ export default function LoginScreen() {
           </View>
         )}
 
-        {/* Unconfigured Warning Notice */}
-        {!isConfigured && (
-          <View style={styles.warningCard}>
-            <Ionicons name="warning-outline" size={18} color={Colors.partial} />
-            <Text style={styles.warningText}>
-              Supabase credentials not configured. Live sign-in requires environment keys.
-            </Text>
+        {/* Error Feedback Notice */}
+        {error && (
+          <View style={styles.errorNoticeCard}>
+            <Ionicons name="alert-circle-outline" size={18} color={Colors.unverified} />
+            <Text style={styles.errorNoticeText}>{error}</Text>
           </View>
         )}
 
         {/* Action Buttons Stack */}
         <View style={styles.actionSection}>
-          {/* Sign in with Apple: White button on dark backgrounds strictly following Apple HIG */}
-          <Pressable
-            onPress={handleAppleSignIn}
-            disabled={isAuthenticating}
-            style={({ pressed }) => [
-              styles.appleButton,
-              isAuthenticating && styles.buttonDisabled,
-              pressed && !isAuthenticating && styles.pressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in with Apple"
-            accessibilityState={{ busy: isAuthenticating }}
-          >
-            {isAuthenticating ? (
-              <ActivityIndicator size="small" color="#000000" />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Ionicons
-                  name="logo-apple"
-                  size={19}
-                  color="#000000"
-                  style={styles.providerIcon}
-                />
-                <Text style={styles.appleButtonText}>Continue with Apple</Text>
-              </View>
-            )}
-          </Pressable>
+          {/* Apple button: ONLY on iOS */}
+          {Platform.OS === 'ios' && (
+            <AuthButton
+              provider="apple"
+              title="Continue with Apple"
+              onPress={handleAppleSignIn}
+              isLoading={isAuthenticating}
+              disabled={isAuthenticating || isSignInUnavailable}
+            />
+          )}
 
-          {/* Sign in with Google: Outlined frosted glass pill with visible Google G */}
-          <Pressable
-            onPress={handleGoogleSignIn}
-            disabled={isAuthenticating}
-            style={({ pressed }) => [
-              styles.googleButton,
-              isAuthenticating && styles.buttonDisabled,
-              pressed && !isAuthenticating && styles.pressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in with Google"
-            accessibilityState={{ busy: isAuthenticating }}
-          >
-            {isAuthenticating ? (
-              <ActivityIndicator size="small" color={Colors.ivoryMist} />
-            ) : (
-              <View style={styles.buttonContent}>
-                <Ionicons
-                  name="logo-google"
-                  size={17}
-                  color={Colors.ivoryMist}
-                  style={styles.providerIcon}
-                />
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
-              </View>
-            )}
-          </Pressable>
+          {/* Google Button: If unavailable, disabled with "Sign-in isn't available right now" */}
+          {isSignInUnavailable ? (
+            <View style={styles.disabledGoogleContainer}>
+              <Text style={styles.disabledGoogleText}>Sign-in isn&apos;t available right now</Text>
+            </View>
+          ) : (
+            <AuthButton
+              provider="google"
+              title="Continue with Google"
+              onPress={handleGoogleSignIn}
+              isLoading={isAuthenticating}
+              disabled={isAuthenticating}
+            />
+          )}
 
-          {/* Continue as Guest: Prominent frosted pill */}
+          {/* Continue as Guest: When sign-in is unavailable, becomes the primary prominent pill */}
           <Pressable
             onPress={handleDismiss}
             disabled={isAuthenticating}
             style={({ pressed }) => [
               styles.guestButton,
+              isSignInUnavailable && styles.guestButtonPrimary,
               pressed && !isAuthenticating && styles.pressed,
             ]}
             accessibilityRole="button"
             accessibilityLabel="Continue as guest"
           >
-            <Text style={styles.guestButtonText}>Continue as Guest</Text>
+            <Text
+              style={[
+                styles.guestButtonText,
+                isSignInUnavailable && styles.guestButtonTextPrimary,
+              ]}
+            >
+              Continue as Guest
+            </Text>
           </Pressable>
         </View>
 
-        {/* Privacy Note with original legal claims preserved, brand updated */}
+        {/* Privacy Note */}
         <Text style={styles.footerNote}>
           By signing in, you agree to VAMO&apos;s privacy principles. Media processed during
           analysis remains strictly ephemeral and is never stored in the cloud.
         </Text>
+
+        {/* __DEV__ Diagnostic Panel */}
+        {__DEV__ && (
+          <View style={styles.devPanel}>
+            <View style={styles.devPanelHeader}>
+              <Ionicons name="analytics-outline" size={13} color={Colors.icyBlue} />
+              <Text style={styles.devPanelTitle}>__DEV__ AUTH DIAGNOSTICS</Text>
+            </View>
+
+            <View style={styles.devRow}>
+              <Text style={styles.devLabel}>Supabase Host:</Text>
+              <Text style={styles.devValue} numberOfLines={1}>
+                {healthDetails?.host || 'Checking...'}
+              </Text>
+            </View>
+
+            <View style={styles.devRow}>
+              <Text style={styles.devLabel}>Host Resolves:</Text>
+              <Text
+                style={[
+                  styles.devValue,
+                  healthDetails?.hostResolves ? styles.textSuccess : styles.textDanger,
+                ]}
+              >
+                {healthDetails?.hostResolves ? 'Yes (DNS OK)' : 'Failed (NXDOMAIN / Network Error)'}
+              </Text>
+            </View>
+
+            <View style={styles.devRow}>
+              <Text style={styles.devLabel}>/auth/v1/health:</Text>
+              <Text
+                style={[
+                  styles.devValue,
+                  healthDetails?.reachable ? styles.textSuccess : styles.textDanger,
+                ]}
+              >
+                {healthDetails?.status ? `HTTP ${healthDetails.status}` : 'Unreachable'}
+              </Text>
+            </View>
+
+            <View style={styles.devRowCol}>
+              <Text style={styles.devLabel}>Exact Redirect URL in Use:</Text>
+              <Text style={styles.devCodeSnippet} numberOfLines={2} selectable>
+                {healthDetails?.exactRedirectUrl || 'Generating...'}
+              </Text>
+            </View>
+
+            <View style={styles.devRowCol}>
+              <Text style={styles.devLabel}>Standalone Scheme URL:</Text>
+              <Text style={styles.devCodeSnippet} selectable>
+                {healthDetails?.standaloneRedirectUrl || 'travelai://auth/callback'}
+              </Text>
+            </View>
+
+            <View style={styles.devRowCol}>
+              <Text style={styles.devLabel}>Last Auth Error:</Text>
+              <Text
+                style={[
+                  styles.devValue,
+                  lastAuthErr ? styles.textDanger : styles.textMuted,
+                ]}
+              >
+                {lastAuthErr || 'None'}
+              </Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
-    </AtmosphereBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -346,7 +464,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
   },
   heroSection: {
     marginBottom: Spacing.lg,
@@ -449,55 +567,41 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     flex: 1,
   },
-  warningCard: {
+  errorNoticeCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(229, 168, 102, 0.12)',
+    alignItems: 'center',
+    backgroundColor: 'rgba(235, 38, 39, 0.12)',
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: Colors.partialBorder,
+    borderColor: 'rgba(235, 38, 39, 0.35)',
     marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
-  warningText: {
+  errorNoticeText: {
     fontFamily: Fonts.sansRegular,
     fontSize: 12,
-    color: Colors.partial,
+    color: Colors.ivoryMist,
     flex: 1,
-    lineHeight: 17,
   },
   actionSection: {
     gap: Spacing.sm + 2,
     marginBottom: Spacing.lg,
   },
-  appleButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl,
+  disabledGoogleContainer: {
     minHeight: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
-  },
-  appleButtonText: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 15,
-    color: '#000000',
-  },
-  googleButton: {
-    backgroundColor: Colors.glassFrostedBg,
-    borderWidth: 1.5,
-    borderColor: Colors.glassFrostedBorder,
     borderRadius: Radius.xl,
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: 'rgba(251, 244, 227, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.10)',
     paddingHorizontal: Spacing.lg,
   },
-  googleButtonText: {
-    fontFamily: Fonts.sansSemiBold,
-    fontSize: 15,
-    color: Colors.ivoryMist,
+  disabledGoogleText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 14,
+    color: Colors.textMuted,
   },
   guestButton: {
     minHeight: 48,
@@ -508,18 +612,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.16)',
   },
+  guestButtonPrimary: {
+    minHeight: 52,
+    backgroundColor: Colors.ivoryMist,
+    borderColor: Colors.ivoryMist,
+    shadowColor: Colors.ivoryMist,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
+  },
   guestButtonText: {
     fontFamily: Fonts.sansMedium,
     fontSize: 14,
     color: Colors.ivoryMist,
   },
-  buttonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  providerIcon: {
-    marginRight: Spacing.sm + 2,
+  guestButtonTextPrimary: {
+    fontFamily: Fonts.sansSemiBold,
+    color: Colors.onyx,
+    fontSize: 15,
   },
   footerNote: {
     fontFamily: Fonts.sansRegular,
@@ -528,9 +639,68 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
     paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.base,
   },
-  buttonDisabled: {
-    opacity: 0.55,
+  devPanel: {
+    backgroundColor: 'rgba(8, 14, 18, 0.95)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.30)',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginTop: Spacing.sm,
+    gap: 8,
+  },
+  devPanelHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(166, 220, 248, 0.15)',
+  },
+  devPanelTitle: {
+    fontFamily: Fonts.sansBold,
+    fontSize: 10,
+    letterSpacing: 1.2,
+    color: Colors.icyBlue,
+  },
+  devRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  devRowCol: {
+    paddingVertical: 2,
+    gap: 2,
+  },
+  devLabel: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  devValue: {
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 11,
+    color: Colors.ivoryMist,
+  },
+  devCodeSnippet: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 10,
+    color: Colors.icyBlue,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: Radius.xs,
+  },
+  textSuccess: {
+    color: Colors.verified,
+  },
+  textDanger: {
+    color: Colors.unverified,
+  },
+  textMuted: {
+    color: Colors.textMuted,
   },
   pressed: {
     opacity: 0.8,

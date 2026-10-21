@@ -47,7 +47,7 @@ export const Colors = {
   glassFrostedBorder: 'rgba(251, 244, 227, 0.22)',
 
   // Dark Glass for text-dense panels (dossier, briefings, contrast cards)
-  glassDarkBg: 'rgba(10, 20, 28, 0.78)',
+  glassDarkBg: 'rgba(8, 14, 18, 0.82)',
   glassDarkBorder: 'rgba(251, 244, 227, 0.14)',
 
   glassBg: 'rgba(14, 26, 34, 0.65)',

@@ -31,7 +31,8 @@ import { hapticFeedback } from '@/lib/haptics';
 import PillButton from './PillButton';
 
 // Bundled local image asset — never relies on remote network connection
-export const BOAT_SUNSET_IMAGE = require('@/assets/images/boat-sunset.jpg');
+export const BOAT_SUNSET_IMAGE = require('@/assets/backgrounds/tropical_lagoon_island.webp');
+export const OCEAN_OFFLINE_IMAGE = BOAT_SUNSET_IMAGE;
 
 export type TravelErrorMode = 'offline' | 'not-found';
 
@@ -48,6 +49,7 @@ export interface TravelOceanErrorProps {
   statusLabel?: string;
   style?: StyleProp<ViewStyle>;
   customNotice?: string | null;
+  backgroundImage?: any;
 }
 
 export const TravelOceanError: React.FC<TravelOceanErrorProps> = ({
@@ -63,6 +65,7 @@ export const TravelOceanError: React.FC<TravelOceanErrorProps> = ({
   statusLabel,
   style,
   customNotice,
+  backgroundImage = BOAT_SUNSET_IMAGE,
 }) => {
   const insets = useSafeAreaInsets();
   const [internalIsRetrying, setInternalIsRetrying] = useState(false);
@@ -123,7 +126,7 @@ export const TravelOceanError: React.FC<TravelOceanErrorProps> = ({
       {/* 1. HERO BACKGROUND: Bundled local sailboat sunset artwork */}
       <View style={StyleSheet.absoluteFill}>
         <Image
-          source={BOAT_SUNSET_IMAGE}
+          source={backgroundImage || BOAT_SUNSET_IMAGE}
           style={styles.heroImage}
           contentFit="cover"
           contentPosition="center"

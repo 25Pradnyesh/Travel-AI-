@@ -31,14 +31,14 @@ export const ProcessingHero: React.FC<ProcessingHeroProps> = ({
       <Text style={styles.headline}>Finding your place.</Text>
       <View style={styles.descriptionPill}>
         <Text style={styles.description}>
-          We're looking for visual clues, landmarks and location signals in the reel.
+          We&apos;re looking for visual clues, landmarks and location signals in the reel.
         </Text>
       </View>
 
       {isLongRunning && (
         <Animated.View style={[styles.reassuranceWrapper, { opacity: reassuranceAnim }]}>
           <Text style={styles.reassuranceText}>
-            Deep location resolution can take a little time. We're pinpointing the exact coordinates.
+            Deep location resolution can take a little time. We&apos;re pinpointing the exact coordinates.
           </Text>
         </Animated.View>
       )}

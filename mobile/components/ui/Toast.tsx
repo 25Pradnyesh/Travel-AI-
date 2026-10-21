@@ -105,6 +105,8 @@ export const GlobalToast: React.FC = () => {
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
+  const presentToastRef = useRef<(item: ToastItem) => void>(() => {});
+
   const dismissCurrent = useCallback(() => {
     if (dismissTimerRef.current) {
       clearTimeout(dismissTimerRef.current);
@@ -129,7 +131,7 @@ export const GlobalToast: React.FC = () => {
       // Process next item in queue if available
       if (queueRef.current.length > 0) {
         const next = queueRef.current.shift()!;
-        presentToast(next);
+        presentToastRef.current(next);
       }
     });
   }, [opacity, translateY]);
@@ -168,6 +170,8 @@ export const GlobalToast: React.FC = () => {
     },
     [dismissCurrent, opacity, translateY]
   );
+
+  presentToastRef.current = presentToast;
 
   useEffect(() => {
     const handleNewToast = (item: ToastItem) => {

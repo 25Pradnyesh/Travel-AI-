@@ -55,6 +55,25 @@ export interface AuthResult {
  * Mutex guard to prevent duplicate browser launches if tapped repeatedly.
  */
 let isOAuthInFlight = false;
+let lastAuthError: string | null = null;
+
+export function getLastAuthError(): string | null {
+  return lastAuthError;
+}
+
+export function setLastAuthError(err: string | null): void {
+  lastAuthError = err;
+}
+
+export interface SupabaseHealthDetails {
+  reachable: boolean;
+  status: number | null;
+  error: string | null;
+  host: string;
+  hostResolves: boolean;
+  exactRedirectUrl: string;
+  standaloneRedirectUrl: string;
+}
 
 /**
  * Checks whether the configured Supabase auth health endpoint is reachable.
@@ -62,7 +81,7 @@ let isOAuthInFlight = false;
  * connection aborts, and non-200/5xx responses.
  */
 export async function checkSupabaseAuthReachability(timeoutMs = 3000): Promise<boolean> {
-  const { url, isConfigured } = getSupabaseConfig();
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
   if (!isConfigured || !url) {
     return false;
   }
@@ -80,6 +99,7 @@ export async function checkSupabaseAuthReachability(timeoutMs = 3000): Promise<b
       method: 'GET',
       headers: {
         Accept: 'application/json',
+        ...(anonKey ? { apikey: anonKey } : {}),
       },
       signal: controller.signal,
     });
@@ -88,6 +108,79 @@ export async function checkSupabaseAuthReachability(timeoutMs = 3000): Promise<b
   } catch {
     clearTimeout(timer);
     return false;
+  }
+}
+
+/**
+ * Detailed diagnostic check for __DEV__ panel on Login.
+ */
+export async function checkSupabaseHealthDetails(timeoutMs = 4000): Promise<SupabaseHealthDetails> {
+  const { url, anonKey, isConfigured } = getSupabaseConfig();
+  let host = '';
+  try {
+    host = new URL(url).hostname;
+  } catch {
+    host = url;
+  }
+
+  const exactRedirectUrl = Linking.createURL('auth/callback', { scheme: 'travelai' });
+  const standaloneRedirectUrl = 'travelai://auth/callback';
+
+  if (!isConfigured || !url) {
+    return {
+      reachable: false,
+      status: null,
+      error: 'Supabase credentials not configured in environment',
+      host: host || 'Not set',
+      hostResolves: false,
+      exactRedirectUrl,
+      standaloneRedirectUrl,
+    };
+  }
+
+  const cleanUrl = url.replace(/\/+$/, '');
+  const healthUrl = `${cleanUrl}/auth/v1/health`;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => {
+    controller.abort();
+  }, timeoutMs);
+
+  try {
+    const res = await fetch(healthUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(anonKey ? { apikey: anonKey } : {}),
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return {
+      reachable: res.ok || (res.status >= 200 && res.status < 500),
+      status: res.status,
+      error: res.ok ? null : `HTTP ${res.status}`,
+      host,
+      hostResolves: true,
+      exactRedirectUrl,
+      standaloneRedirectUrl,
+    };
+  } catch (err: any) {
+    clearTimeout(timer);
+    const msg = err instanceof Error ? err.message : String(err);
+    const isDnsError =
+      msg.toLowerCase().includes('network request failed') ||
+      msg.toLowerCase().includes('nxdomain') ||
+      msg.toLowerCase().includes('failed to fetch');
+    return {
+      reachable: false,
+      status: null,
+      error: isDnsError ? 'DNS NXDOMAIN / Network Failed' : msg,
+      host,
+      hostResolves: false,
+      exactRedirectUrl,
+      standaloneRedirectUrl,
+    };
   }
 }
 
@@ -266,16 +359,20 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
     });
 
     if (oauthError) {
+      const err = oauthError.message || `Failed to initialize ${providerLabel} OAuth session.`;
+      setLastAuthError(err);
       return {
         success: false,
-        error: oauthError.message || `Failed to initialize ${providerLabel} OAuth session.`,
+        error: err,
       };
     }
 
     if (!data?.url) {
+      const err = `Supabase did not return an authorization URL. Check that the ${providerLabel} provider is enabled in the Supabase Dashboard.`;
+      setLastAuthError(err);
       return {
         success: false,
-        error: `Supabase did not return an authorization URL. Check that the ${providerLabel} provider is enabled in the Supabase Dashboard.`,
+        error: err,
       };
     }
 
@@ -293,6 +390,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
     // 6. Handle successful browser redirect
     if (authSessionResult.type === 'success' && authSessionResult.url) {
       const session = await handleAuthRedirect(authSessionResult.url);
+      setLastAuthError(null);
       return {
         success: true,
         session,
@@ -300,13 +398,16 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
       };
     }
 
+    const browserClosedErr = 'Authentication browser window was closed without completing sign-in.';
+    setLastAuthError(browserClosedErr);
     return {
       success: false,
-      error: 'Authentication browser window was closed without completing sign-in.',
+      error: browserClosedErr,
     };
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : `${providerLabel} sign-in encountered an unexpected error.`;
+    setLastAuthError(message);
     return {
       success: false,
       error: message,

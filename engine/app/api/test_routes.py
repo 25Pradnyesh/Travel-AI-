@@ -1,6 +1,19 @@
-from fastapi import APIRouter
+import os
+from fastapi import APIRouter, HTTPException, status
 
 router = APIRouter()
+
+
+def check_dev_mode():
+    """
+    AUDIT-002: Prevents diagnostic test routes from running outside development environments.
+    """
+    env = os.getenv("ENVIRONMENT", "development").strip().lower()
+    if env not in ("development", "dev", "test"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Diagnostic test routes are disabled outside development environment.",
+        )
 
 
 def get_provider():
@@ -34,7 +47,7 @@ def get_places():
 
 @router.post("/provider")
 def provider_test():
-
+    check_dev_mode()
     return get_provider().extract(
         "https://www.instagram.com/reel/DN2XxxY2O7-/"
     )
@@ -46,7 +59,7 @@ def provider_test():
 
 @router.get("/frames")
 def test_frames():
-
+    check_dev_mode()
     extracted = get_frames().extract(
         video_path="engine/assets/sample.mp4",
         output_dir="engine/assets/frames",
@@ -64,7 +77,7 @@ def test_frames():
 
 @router.get("/ocr")
 def test_ocr():
-
+    check_dev_mode()
     text = get_ocr().extract_text(
         "engine/assets/frames/frame_002.jpg"
     )
@@ -80,7 +93,7 @@ def test_ocr():
 
 @router.get("/speech")
 def test_speech():
-
+    check_dev_mode()
     text = get_speech().extract(
         "engine/assets/sample.mp4"
     )
@@ -96,9 +109,15 @@ def test_speech():
 
 @router.get("/places")
 def test_places():
+    check_dev_mode()
+    places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+    if not places_enabled:
+        return {
+            "status": "disabled",
+            "message": "Place lookup is unavailable right now",
+            "results": [],
+        }
 
     return get_places().search(
         "Seebensee Austria"
     )
-
-

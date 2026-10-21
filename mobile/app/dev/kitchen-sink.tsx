@@ -17,13 +17,13 @@ import {
   EmptyState,
   ErrorState,
   GlassInput,
+  AuthButton,
   GlassView,
   LoadingState,
   PillButton,
   PillChip,
   PosterCard,
   SkeletonShimmer,
-  Toast,
   toast,
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
@@ -31,14 +31,9 @@ import { hapticFeedback } from '@/lib/haptics';
 import { useNetwork } from '@/hooks/useNetwork';
 
 // Bundled local high-resolution demo photo
-const SAMPLE_PHOTO = require('@/assets/images/sample-destination.jpg');
+const SAMPLE_PHOTO = require('@/assets/backgrounds/zermatt_matterhorn.webp');
 
 export default function KitchenSinkScreen() {
-  // Gated strictly by __DEV__
-  if (!__DEV__) {
-    return null;
-  }
-
   const insets = useSafeAreaInsets();
   const network = useNetwork();
   const [backgroundMode, setBackgroundMode] = useState<'sky' | 'photo' | 'white'>('sky');
@@ -49,6 +44,11 @@ export default function KitchenSinkScreen() {
   const [isPosterSaved, setIsPosterSaved] = useState(false);
   const [loadingVariant, setLoadingVariant] = useState<'card' | 'list' | 'hero'>('card');
   const [errorVariant, setErrorVariant] = useState<'network' | 'engine' | 'generic'>('generic');
+
+  // Gated strictly by __DEV__
+  if (!__DEV__) {
+    return null;
+  }
 
   const WHITE_PHOTO_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
 
@@ -544,44 +544,20 @@ export default function KitchenSinkScreen() {
             </View>
 
             <Text style={styles.cardSublabel}>Apple HIG vs Google Button Comparison (Contrast Verified)</Text>
-            <View style={{ gap: Spacing.sm, marginVertical: Spacing.sm }}>
-              {/* Apple HIG White Button */}
-              <View
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: Radius.lg,
-                  minHeight: 48,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                }}
-              >
-                <Ionicons name="logo-apple" size={18} color="#000000" />
-                <Text style={{ fontFamily: Fonts.sansSemiBold, fontSize: 14, color: '#000000' }}>
-                  Sign in with Apple (HIG: White on Dark, 21:1 Contrast)
-                </Text>
-              </View>
+            <View style={{ gap: Spacing.md, marginVertical: Spacing.sm }}>
+              <AuthButton
+                provider="apple"
+                title="Sign in with Apple"
+                caption="Apple HIG: White on Dark, 21:1 Contrast, 52px height, 24px icon slot"
+                onPress={() => hapticFeedback.selection()}
+              />
 
-              {/* Google Glass Pill */}
-              <View
-                style={{
-                  backgroundColor: Colors.glassFrostedBg,
-                  borderWidth: 1.2,
-                  borderColor: Colors.glassFrostedBorder,
-                  borderRadius: Radius.lg,
-                  minHeight: 48,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: 8,
-                }}
-              >
-                <Ionicons name="logo-google" size={16} color={Colors.ivoryMist} />
-                <Text style={{ fontFamily: Fonts.sansSemiBold, fontSize: 14, color: Colors.ivoryMist }}>
-                  Continue with Google (Frosted Glass Pill, 14.2:1 Contrast)
-                </Text>
-              </View>
+              <AuthButton
+                provider="google"
+                title="Continue with Google"
+                caption="Dark Glass Pill: 14.2:1 Contrast, 52px height, 24px icon slot"
+                onPress={() => hapticFeedback.selection()}
+              />
 
               {/* VAMO CLOUD Frosted Pill */}
               <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 4 }}>

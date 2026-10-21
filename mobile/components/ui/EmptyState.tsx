@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    color: Colors.icyBlue,
+    color: Colors.ivoryMist,
     marginBottom: Spacing.xs,
   },
   title: {
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansRegular,
     fontSize: 13,
     lineHeight: 18,
-    color: Colors.textSecondary,
+    color: 'rgba(251, 244, 227, 0.90)',
     textAlign: 'center',
     marginTop: 2,
   },

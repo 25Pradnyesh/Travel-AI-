@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -22,6 +24,15 @@ import { NetworkProvider } from '@/hooks/useNetwork';
 import { OfflineGuard } from '@/components/ui/OfflineGuard';
 import { GlobalToast } from '@/components/ui/Toast';
 import { SplashVideo } from '@/components/SplashVideo';
+import { RootAtmosphereBackground } from '@/components/ui/RootAtmosphereBackground';
+
+const navigationDarkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    background: 'transparent',
+  },
+};
 
 // Keep native splash screen visible until fonts and assets are ready
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -63,123 +74,135 @@ export default function RootLayout() {
         <AuthProvider>
           <AtmosphereProvider>
             <StatusBar style="light" />
-            <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: Colors.canvas },
-              animation: 'fade_from_bottom',
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(auth)/login"
-              options={{
-                presentation: 'modal',
-                headerShown: false,
-                animation: 'slide_from_bottom',
-              }}
-            />
-            <Stack.Screen
-              name="auth/callback"
-              options={{
-                presentation: 'modal',
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="analyze/processing"
-              options={{
-                presentation: 'fullScreenModal',
-                headerShown: false,
-                gestureEnabled: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="analyze/results"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="analyze/map"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen
-              name="place/[id]"
-              options={{
-                presentation: 'modal',
-                headerShown: false,
-                animation: 'slide_from_bottom',
-              }}
-            />
-            <Stack.Screen
-              name="history/index"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen
-              name="history/[id]"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen
-              name="dev/kitchen-sink"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_bottom',
-              }}
-            />
-            <Stack.Screen
-              name="dev/atmosphere"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_bottom',
-              }}
-            />
-            <Stack.Screen
-              name="dev/backgrounds"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_bottom',
-              }}
-            />
-            <Stack.Screen
-              name="offline"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-            <Stack.Screen
-              name="profile"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen
-              name="+not-found"
-              options={{
-                headerShown: false,
-                animation: 'fade',
-              }}
-            />
-          </Stack>
-          <OfflineGuard />
-          <GlobalToast />
-          {showSplashVideo && (
-            <SplashVideo onFinish={() => setShowSplashVideo(false)} />
-          )}
+            <View style={{ flex: 1, backgroundColor: '#000000' }}>
+              <RootAtmosphereBackground />
+              <ThemeProvider value={navigationDarkTheme}>
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: 'transparent' },
+                    animation: 'fade_from_bottom',
+                  }}
+                >
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="(auth)/login"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="auth/callback"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false,
+                      animation: 'fade',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="analyze/processing"
+                    options={{
+                      presentation: 'fullScreenModal',
+                      headerShown: false,
+                      gestureEnabled: false,
+                      animation: 'fade',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="analyze/results"
+                    options={{
+                      headerShown: false,
+                      animation: 'fade',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="analyze/map"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="place/[id]"
+                    options={{
+                      presentation: 'modal',
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="history/index"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="history/[id]"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="dev/kitchen-sink"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="dev/atmosphere"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="dev/backgrounds"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="dev/results-fixtures"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_bottom',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="offline"
+                    options={{
+                      headerShown: false,
+                      animation: 'fade',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile"
+                    options={{
+                      headerShown: false,
+                      animation: 'slide_from_right',
+                    }}
+                  />
+                  <Stack.Screen
+                    name="+not-found"
+                    options={{
+                      headerShown: false,
+                      animation: 'fade',
+                    }}
+                  />
+                </Stack>
+              </ThemeProvider>
+              <OfflineGuard />
+              <GlobalToast />
+              {showSplashVideo && (
+                <SplashVideo onFinish={() => setShowSplashVideo(false)} />
+              )}
+            </View>
           </AtmosphereProvider>
         </AuthProvider>
       </NetworkProvider>

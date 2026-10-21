@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import {
-  AtmosphereBackground,
+  AuthButton,
   SkeletonShimmer,
   toast,
 } from '@/components/ui';
@@ -24,6 +24,7 @@ import { hapticFeedback } from '@/lib/haptics';
 import { useAuth, executePendingSaveAction } from '@/lib/supabase';
 import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
 import { useAtmosphere } from '@/context/AtmosphereContext';
+import { DevAuthFixtures } from '@/components/dev/DevAuthFixtures';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -36,9 +37,15 @@ export default function ProfileScreen() {
     signInWithApple,
     signOut,
     error: authError,
+    mockState,
   } = useAuth();
 
-  const { adaptiveEnabled, setAdaptiveEnabled } = useAtmosphere();
+  const {
+    adaptiveEnabled,
+    setAdaptiveEnabled,
+    slideshowEnabled,
+    setSlideshowEnabled,
+  } = useAtmosphere();
   const [preferredMap, setPreferredMap] = useState<'apple' | 'google'>('google');
   const [health, setHealth] = useState<EngineHealthResponse | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
@@ -138,8 +145,27 @@ export default function ProfileScreen() {
   };
 
   const isEngineOnline = health?.status === 'ok';
-  const isPlacesReady = Boolean(health?.configuration?.google_places_ready);
   const isGeminiReady = Boolean(health?.configuration?.gemini_ready);
+
+  // Status truth for Places: Ready / Disabled / Unreachable / Unknown
+  const getPlacesStatus = (): 'Ready' | 'Disabled' | 'Unreachable' | 'Unknown' => {
+    if (healthError) return 'Unreachable';
+    if (!health || !isEngineOnline) return 'Unknown';
+    const cfg = (health as any)?.configuration;
+    if (!cfg) return 'Unknown';
+    // If the engine provides google_places_enabled:
+    if (cfg.google_places_enabled === false) return 'Disabled';
+    if (cfg.google_places_enabled === true) {
+      return cfg.google_places_ready ? 'Ready' : 'Disabled';
+    }
+    // If google_places_enabled is missing from /health, Places is disabled by default
+    // in the engine (GOOGLE_PLACES_ENABLED defaults to false):
+    if (cfg.google_places_enabled === undefined) {
+      return 'Disabled';
+    }
+    return cfg.google_places_ready ? 'Ready' : 'Disabled';
+  };
+  const placesStatus = getPlacesStatus();
 
   // Derived user display name, provider, and initials
   const displayName =
@@ -158,7 +184,7 @@ export default function ProfileScreen() {
   const appVersion = Constants.expoConfig?.version || '1.0.0';
 
   return (
-    <AtmosphereBackground>
+    <View style={styles.container}>
       {/* Top Header Row: Frosted Back Pill */}
       <View style={[styles.topHeader, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
         <Pressable
@@ -275,61 +301,39 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.authButtonsStack}>
-                {/* White button with black text/logo strictly following Apple HIG on dark atmospheres */}
-                <Pressable
-                  onPress={handleQuickAppleSignIn}
-                  disabled={isAuthenticating}
-                  style={({ pressed }) => [
-                    styles.appleButton,
-                    pressed && styles.pressed,
-                    isAuthenticating && styles.buttonDisabled,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel="Sign in with Apple"
-                >
-                  {isAuthenticating ? (
-                    <ActivityIndicator size="small" color="#000000" />
-                  ) : (
-                    <View style={styles.buttonInner}>
-                      <Ionicons name="logo-apple" size={18} color="#000000" />
-                      <Text style={styles.appleButtonText}>Sign in with Apple</Text>
-                    </View>
-                  )}
-                </Pressable>
-
-                {/* Outlined glass pill with visible Google G */}
-                <View style={styles.googleRow}>
-                  <Pressable
-                    onPress={handleQuickGoogleSignIn}
+                {Platform.OS === 'ios' && (
+                  <AuthButton
+                    provider="apple"
+                    title="Sign in with Apple"
+                    onPress={handleQuickAppleSignIn}
+                    isLoading={isAuthenticating}
                     disabled={isAuthenticating}
-                    style={({ pressed }) => [
-                      styles.googleButton,
-                      pressed && styles.pressed,
-                      isAuthenticating && styles.buttonDisabled,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Continue with Google"
-                  >
-                    <View style={styles.buttonInner}>
-                      <Ionicons name="logo-google" size={16} color={Colors.ivoryMist} />
-                      <Text style={styles.googleButtonText}>Continue with Google</Text>
-                    </View>
-                  </Pressable>
+                  />
+                )}
 
-                  <Pressable
-                    onPress={handleSignInDetailsPress}
-                    hitSlop={8}
-                    style={({ pressed }) => [styles.detailsButton, pressed && styles.pressed]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Learn more about cloud sync"
-                  >
-                    <Text style={styles.detailsButtonText}>Details</Text>
-                    <Ionicons name="chevron-forward" size={14} color={Colors.textSecondary} />
-                  </Pressable>
-                </View>
+                <AuthButton
+                  provider="google"
+                  title={mockState === 'unavailable' ? "Sign-in isn't available right now" : "Continue with Google"}
+                  onPress={handleQuickGoogleSignIn}
+                  isLoading={isAuthenticating}
+                  disabled={isAuthenticating || mockState === 'unavailable'}
+                />
+
+                <Pressable
+                  onPress={handleSignInDetailsPress}
+                  hitSlop={8}
+                  style={({ pressed }) => [styles.detailsButton, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel="Learn more about cloud sync"
+                >
+                  <Text style={styles.detailsButtonText}>Cloud Sync Details & Privacy</Text>
+                  <Ionicons name="chevron-forward" size={14} color={Colors.textSecondary} />
+                </Pressable>
               </View>
             </View>
           )}
+
+          {__DEV__ && <DevAuthFixtures />}
         </View>
 
         {/* Section B: History */}
@@ -427,6 +431,42 @@ export default function ProfileScreen() {
                 >
                   Google Maps
                 </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.cardDivider} />
+
+            {/* Background Slideshow Preference */}
+            <View style={styles.preferenceRow}>
+              <View style={styles.prefIconWrapper}>
+                <Ionicons name="images-outline" size={18} color={Colors.icyBlue} />
+              </View>
+              <View style={styles.prefText}>
+                <Text style={styles.prefTitle}>Background slideshow</Text>
+                <Text style={styles.prefSubtitle}>
+                  {slideshowEnabled ? 'Cycling bundled photos (4s crossfade)' : 'Static single photo'}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => {
+                  hapticFeedback.selection();
+                  setSlideshowEnabled(!slideshowEnabled);
+                }}
+                hitSlop={8}
+                style={[
+                  styles.toggleSwitch,
+                  slideshowEnabled && styles.toggleSwitchActive,
+                ]}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: slideshowEnabled }}
+                accessibilityLabel="Background slideshow toggle"
+              >
+                <View
+                  style={[
+                    styles.toggleThumb,
+                    slideshowEnabled && styles.toggleThumbActive,
+                  ]}
+                />
               </Pressable>
             </View>
 
@@ -533,11 +573,12 @@ export default function ProfileScreen() {
                   style={[
                     styles.statusDot,
                     {
-                      backgroundColor: isEngineOnline
-                        ? isPlacesReady
+                      backgroundColor:
+                        placesStatus === 'Ready'
                           ? Colors.icyBlue
-                          : Colors.unverified
-                        : Colors.unverified,
+                          : placesStatus === 'Disabled'
+                          ? Colors.partial
+                          : Colors.unverified,
                     },
                   ]}
                 />
@@ -546,18 +587,14 @@ export default function ProfileScreen() {
               <Text
                 style={[
                   styles.diagnosticValue,
-                  !isEngineOnline
-                    ? styles.valueMuted
-                    : isPlacesReady
+                  placesStatus === 'Ready'
                     ? styles.valueReady
+                    : placesStatus === 'Disabled'
+                    ? styles.valueAmber
                     : styles.valueMuted,
                 ]}
               >
-                {!isEngineOnline
-                  ? 'Unknown'
-                  : isPlacesReady
-                  ? 'Ready'
-                  : 'Not Configured'}
+                {placesStatus}
               </Text>
             </View>
 
@@ -662,7 +699,7 @@ export default function ProfileScreen() {
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Photo credits</Text>
                 <View style={styles.rowRightChevron}>
-                  <Text style={styles.infoValue}>Unsplash & Pexels</Text>
+                  <Text style={styles.infoValue}>22 Bundled & Remote</Text>
                   <Ionicons name="chevron-forward" size={14} color={Colors.textMuted} />
                 </View>
               </View>
@@ -670,11 +707,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
-    </AtmosphereBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   topHeader: {
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.xs,

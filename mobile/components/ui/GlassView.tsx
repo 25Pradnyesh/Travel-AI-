@@ -30,15 +30,15 @@ export interface GlassViewProps {
  * Translucent glass panel with native BlurView.
  * - Android: explicitly uses blurMethod="dimezisBlurView" and receives blurTarget from AtmosphereContext.
  * - Variants:
- *     'frosted' (default): Light translucent frosted tint for chrome (inputs, chips, tab bar).
- *     'dark': Deeper translucent onyx-teal tint for text-dense panels (dossier, contrast cards).
+ *     'dark' (default): BlurView tint="dark" + explicit fill rgba(8,14,18,0.82) for high legibility over all photography.
+ *     'frosted': Light translucent frosted tint reserved only for non-text chrome (accents, decorators).
  * - Degrades to high-contrast solid surface only when reduce-transparency is enabled.
  */
 export const GlassView: React.FC<GlassViewProps> = ({
   children,
   intensity = 55,
   tint,
-  variant = 'frosted',
+  variant = 'dark',
   borderRadius = Radius.xxl,
   hasBorder = true,
   blurTarget: customBlurTarget,

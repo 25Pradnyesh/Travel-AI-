@@ -16,7 +16,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  AtmosphereBackground,
   GlassInput,
   PillChip,
   PosterCard,
@@ -226,7 +225,7 @@ export default function AnalyzeScreen() {
   const hasInFocus = inFocusItems.length > 0;
 
   return (
-    <AtmosphereBackground>
+    <View style={styles.container}>
       {/* Top Editorial Header (history clock removed per rule 7) */}
       <HomeHeader
         onPressProfile={handleOpenProfile}
@@ -398,11 +397,15 @@ export default function AnalyzeScreen() {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </AtmosphereBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   flex: {
     flex: 1,
   },

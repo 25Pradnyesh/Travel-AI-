@@ -144,10 +144,10 @@ export async function runNetworkValidationTests(): Promise<{ passed: number; fai
   // ============================================================================
   // 3. Bundled Local Asset Contract
   // ============================================================================
-  await runTest('verifies boat-at-sunset artwork is bundled locally without remote URL dependencies', () => {
+  await runTest('verifies bundled artwork is available locally without remote URL dependencies', () => {
     // In React Native / Metro, bundled assets are required as static module IDs / objects
-    const boatAsset = require('../../../assets/images/boat-sunset.jpg');
-    assert(boatAsset !== undefined && boatAsset !== null, 'boat-sunset.jpg asset must be defined');
+    const boatAsset = require('../../../assets/backgrounds/tropical_lagoon_island.webp');
+    assert(boatAsset !== undefined && boatAsset !== null, 'bundled background asset must be defined');
     if (typeof boatAsset === 'string') {
       assert(
         !boatAsset.startsWith('http://') && !boatAsset.startsWith('https://'),

@@ -261,18 +261,19 @@ export default function HistoryDetailScreen() {
     }
   }, [analysis]);
 
+  const reelUrl = analysis?.reel_url;
   const handleOpenSourceReel = useCallback(async () => {
-    if (!analysis?.reel_url) return;
+    if (!reelUrl) return;
     try {
       hapticFeedback.light();
-      const canOpen = await Linking.canOpenURL(analysis.reel_url);
+      const canOpen = await Linking.canOpenURL(reelUrl);
       if (canOpen) {
-        await Linking.openURL(analysis.reel_url);
+        await Linking.openURL(reelUrl);
       }
     } catch {
       // Quiet fallback
     }
-  }, [analysis?.reel_url]);
+  }, [reelUrl]);
 
   const handleOpenPlace = useCallback((place: NearbyPlace) => {
     hapticFeedback.light();

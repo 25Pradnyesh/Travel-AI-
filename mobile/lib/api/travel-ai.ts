@@ -48,7 +48,9 @@ export function getFriendlyErrorMessage(err: unknown): string {
       if (
         backendMsg.includes('No destination') ||
         backendMsg.includes('No verified destination') ||
-        backendMsg.includes('unresolved')
+        backendMsg.includes('unresolved') ||
+        backendMsg.includes('Place lookup is unavailable') ||
+        backendMsg.includes('unavailable right now')
       ) {
         return backendMsg;
       }

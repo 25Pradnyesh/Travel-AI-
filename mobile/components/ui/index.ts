@@ -1,4 +1,6 @@
 export * from './AtmosphereBackground';
+export * from './RootAtmosphereBackground';
+export * from './PhotoCredit';
 export * from './GlassView';
 export * from './PillButton';
 export * from './PillChip';
@@ -27,3 +29,4 @@ export * from './TravelOceanError';
 export * from './OfflineScreen';
 export * from './NotFoundScreen';
 export * from './OfflineGuard';
+export * from './AuthButton';

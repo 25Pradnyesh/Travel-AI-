@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { GlassView } from './GlassView';
 import { hapticFeedback } from '@/lib/haptics';
 
@@ -106,38 +106,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
             };
 
             const iconName = isFocused ? tab.activeIcon : tab.inactiveIcon;
-
-            // Center primary tab (Analyze) has special filled Onyx pill when active
-            if (tab.isCenterPrimary) {
-              return (
-                <Pressable
-                  key={route.key}
-                  accessibilityRole="button"
-                  accessibilityState={isFocused ? { selected: true } : {}}
-                  accessibilityLabel={options.tabBarAccessibilityLabel || tab.label}
-                  onPress={onPress}
-                  style={({ pressed }) => [
-                    styles.centerTabItem,
-                    isFocused && styles.centerTabItemActive,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <Ionicons
-                    name={iconName}
-                    size={17}
-                    color={isFocused ? Colors.ivoryMist : Colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.centerLabel,
-                      isFocused ? styles.centerLabelActive : styles.centerLabelInactive,
-                    ]}
-                  >
-                    {tab.label}
-                  </Text>
-                </Pressable>
-              );
-            }
+            const iconColor = isFocused ? Colors.ivoryMist : 'rgba(251, 244, 227, 0.85)';
 
             return (
               <Pressable
@@ -148,13 +117,14 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
                 onPress={onPress}
                 style={({ pressed }) => [
                   styles.tabItem,
+                  isFocused && styles.tabItemActive,
                   pressed && styles.pressed,
                 ]}
               >
                 <Ionicons
                   name={iconName}
-                  size={18}
-                  color={isFocused ? Colors.ivoryMist : Colors.textSecondary}
+                  size={16}
+                  color={iconColor}
                 />
                 <Text
                   style={[
@@ -184,64 +154,49 @@ const styles = StyleSheet.create({
   glassPill: {
     width: '100%',
     maxWidth: 360,
-    height: 60,
+    height: 56,
     justifyContent: 'center',
+    backgroundColor: 'rgba(8, 14, 18, 0.90)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.16)',
   },
   tabRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: Spacing.xs + 2,
     height: '100%',
+    gap: 4,
   },
   tabItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    minWidth: TouchTarget.minWidth,
-  },
-  centerTabItem: {
-    flex: 1.2,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 44,
+    height: 42,
     borderRadius: Radius.pill,
-    backgroundColor: 'transparent',
     gap: 6,
-    paddingHorizontal: Spacing.base,
+    paddingHorizontal: Spacing.xs,
   },
-  centerTabItemActive: {
+  tabItemActive: {
     backgroundColor: Colors.onyx,
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.35)',
   },
   tabLabel: {
-    fontSize: 11,
-    fontFamily: Fonts.sansMedium,
-    marginTop: 2,
+    fontSize: 12,
+    fontFamily: Fonts.sansSemiBold,
+    letterSpacing: 0.1,
   },
   tabLabelInactive: {
-    color: Colors.textSecondary,
+    color: 'rgba(251, 244, 227, 0.85)',
   },
   tabLabelActive: {
     color: Colors.ivoryMist,
-    fontFamily: Fonts.sansSemiBold,
-  },
-  centerLabel: {
-    fontSize: 13,
-    fontFamily: Fonts.sansSemiBold,
-  },
-  centerLabelInactive: {
-    color: Colors.textSecondary,
-  },
-  centerLabelActive: {
-    color: Colors.ivoryMist,
   },
   pressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.96 }],
+    opacity: 0.8,
+    transform: [{ scale: 0.97 }],
   },
 });
 

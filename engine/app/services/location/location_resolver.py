@@ -1,5 +1,6 @@
 import concurrent.futures
 import logging
+import os
 import re
 import time
 
@@ -161,7 +162,7 @@ class LocationResolver:
         self,
         message: str,
     ):
-        print(f"📍 {message}")
+        logger.info("[RESOLVER] %s", message)
 
     # ==================================================
     # Business Filter
@@ -486,6 +487,15 @@ class LocationResolver:
         self.log(
             f"Generated {len(candidates)} search candidate(s)"
         )
+
+        # Check GOOGLE_PLACES_ENABLED flag (default false)
+        is_places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+        if not is_places_enabled:
+            self.last_resolver_error = "Place lookup is unavailable right now"
+            if ctx:
+                ctx.places_resolution_status = "DISABLED"
+            self.log("GOOGLE_PLACES_ENABLED is false; skipping place search.")
+            return None
 
         if not candidates:
             self.last_resolver_error = "No location candidates generated from evidence."

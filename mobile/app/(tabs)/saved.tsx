@@ -35,7 +35,6 @@ import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  AtmosphereBackground,
   ConfidenceBadge,
   EmptyState,
   GlassView,
@@ -329,7 +328,7 @@ export default function SavedScreen() {
     <View style={styles.headerBlock}>
       {/* Top Segmented Glass Pill: Saved | History */}
       <View style={styles.segmentWrapper}>
-        <GlassView variant="frosted" borderRadius={Radius.pill} style={styles.segmentPill}>
+        <GlassView variant="dark" borderRadius={Radius.pill} style={styles.segmentPill}>
           <Pressable
             onPress={() => {
               hapticFeedback.selection();
@@ -342,7 +341,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'saved' ? 'bookmark' : 'bookmark-outline'}
               size={13}
-              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textSecondary}
+              color={activeTab === 'saved' ? Colors.ivoryMist : 'rgba(251, 244, 227, 0.85)'}
             />
             <Text style={[styles.segmentLabel, activeTab === 'saved' && styles.segmentLabelActive]}>
               Saved
@@ -366,7 +365,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'history' ? 'time' : 'time-outline'}
               size={13}
-              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textSecondary}
+              color={activeTab === 'history' ? Colors.ivoryMist : 'rgba(251, 244, 227, 0.85)'}
             />
             <Text style={[styles.segmentLabel, activeTab === 'history' && styles.segmentLabelActive]}>
               History
@@ -434,7 +433,7 @@ export default function SavedScreen() {
         >
           <GlassView variant="dark" borderRadius={Radius.xl} style={styles.syncBanner}>
             <View style={styles.bannerIconWrapper}>
-              <Ionicons name="cloud-upload-outline" size={20} color={Colors.icyBlue} />
+              <Ionicons name="cloud-upload-outline" size={20} color={Colors.ivoryMist} />
             </View>
             <View style={styles.bannerTextCol}>
               <Text style={styles.bannerTitle}>Sync Across Devices</Text>
@@ -442,7 +441,7 @@ export default function SavedScreen() {
                 Sign in with Apple or Google to safeguard and back up your saved places to your personal cloud.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={16} color={Colors.ivoryMist} />
           </GlassView>
         </Pressable>
       )}
@@ -482,7 +481,7 @@ export default function SavedScreen() {
     <View style={styles.headerBlock}>
       {/* Top Segmented Glass Pill: Saved | History */}
       <View style={styles.segmentWrapper}>
-        <GlassView variant="frosted" borderRadius={Radius.pill} style={styles.segmentPill}>
+        <GlassView variant="dark" borderRadius={Radius.pill} style={styles.segmentPill}>
           <Pressable
             onPress={() => {
               hapticFeedback.selection();
@@ -495,7 +494,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'saved' ? 'bookmark' : 'bookmark-outline'}
               size={13}
-              color={activeTab === 'saved' ? Colors.ivoryMist : Colors.textSecondary}
+              color={activeTab === 'saved' ? Colors.ivoryMist : 'rgba(251, 244, 227, 0.85)'}
             />
             <Text style={[styles.segmentLabel, activeTab === 'saved' && styles.segmentLabelActive]}>
               Saved
@@ -519,7 +518,7 @@ export default function SavedScreen() {
             <Ionicons
               name={activeTab === 'history' ? 'time' : 'time-outline'}
               size={13}
-              color={activeTab === 'history' ? Colors.ivoryMist : Colors.textSecondary}
+              color={activeTab === 'history' ? Colors.ivoryMist : 'rgba(251, 244, 227, 0.85)'}
             />
             <Text style={[styles.segmentLabel, activeTab === 'history' && styles.segmentLabelActive]}>
               History
@@ -571,7 +570,7 @@ export default function SavedScreen() {
         >
           <GlassView variant="dark" borderRadius={Radius.xl} style={styles.syncBanner}>
             <View style={styles.bannerIconWrapper}>
-              <Ionicons name="lock-closed-outline" size={20} color={Colors.icyBlue} />
+              <Ionicons name="lock-closed-outline" size={20} color={Colors.ivoryMist} />
             </View>
             <View style={styles.bannerTextCol}>
               <Text style={styles.bannerTitle}>Sign In for Analysis History</Text>
@@ -579,7 +578,7 @@ export default function SavedScreen() {
                 Every Reel you analyze is automatically archived into a full destination dossier when signed in.
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={16} color={Colors.textSecondary} />
+            <Ionicons name="chevron-forward" size={16} color={Colors.ivoryMist} />
           </GlassView>
         </Pressable>
       )}
@@ -664,7 +663,7 @@ export default function SavedScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground>
+    <View style={styles.container}>
       {activeTab === 'saved' ? (
         <FlatList
           data={filteredPlaces}
@@ -712,11 +711,15 @@ export default function SavedScreen() {
           removeClippedSubviews={Platform.OS === 'android'}
         />
       )}
-    </AtmosphereBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   listContainer: {
     paddingHorizontal: Spacing.xl,
   },
@@ -735,7 +738,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 3,
-    backgroundColor: 'rgba(8, 18, 24, 0.72)',
+    backgroundColor: 'rgba(8, 14, 18, 0.82)',
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.16)',
   },
@@ -751,15 +754,16 @@ const styles = StyleSheet.create({
   segmentTabActive: {
     backgroundColor: Colors.onyx,
     borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.28)',
+    borderColor: 'rgba(251, 244, 227, 0.35)',
   },
   segmentLabel: {
-    fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    color: Colors.textSecondary,
+    fontFamily: Fonts.sansSemiBold,
+    fontSize: 12,
+    color: 'rgba(251, 244, 227, 0.85)',
   },
   segmentLabelActive: {
     fontFamily: Fonts.sansSemiBold,
+    fontSize: 12,
     color: Colors.ivoryMist,
   },
   tabBadge: {
@@ -816,12 +820,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansBold,
     fontSize: 10,
     letterSpacing: 1.6,
-    color: Colors.icyBlue,
+    color: Colors.ivoryMist,
     marginBottom: 4,
     textTransform: 'uppercase',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
   heroTitle: {
     fontFamily: Fonts.serifRegular,
@@ -846,14 +850,14 @@ const styles = StyleSheet.create({
     padding: Spacing.base,
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.16)',
-    backgroundColor: 'rgba(8, 18, 24, 0.78)',
+    backgroundColor: 'rgba(8, 14, 18, 0.82)',
     gap: Spacing.md,
   },
   bannerIconWrapper: {
     width: 38,
     height: 38,
     borderRadius: Radius.md,
-    backgroundColor: 'rgba(166, 220, 248, 0.12)',
+    backgroundColor: 'rgba(251, 244, 227, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -870,7 +874,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansRegular,
     fontSize: 11,
     lineHeight: 16,
-    color: Colors.textSecondary,
+    color: 'rgba(251, 244, 227, 0.90)',
   },
   categoriesRow: {
     gap: Spacing.sm,

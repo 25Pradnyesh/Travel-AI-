@@ -28,7 +28,6 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  AtmosphereBackground,
   EmptyState,
   GlassView,
   PillChip,
@@ -228,13 +227,13 @@ export default function ExploreScreen() {
       {/* Frosted Search Pill */}
       {hasAnyDiscoveries ? (
         <View style={styles.searchWrapper}>
-          <GlassView variant="frosted" borderRadius={Radius.pill} style={styles.searchPill}>
-            <Ionicons name="search" size={16} color={Colors.textSecondary} style={styles.searchIcon} />
+          <GlassView variant="dark" borderRadius={Radius.pill} style={styles.searchPill}>
+            <Ionicons name="search" size={16} color={Colors.ivoryMist} style={styles.searchIcon} />
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder="Search destinations, places, categories..."
-              placeholderTextColor={Colors.textMuted}
+              placeholderTextColor="rgba(251, 244, 227, 0.55)"
               selectionColor={Colors.racingRed}
               style={styles.searchInput}
               autoCorrect={false}
@@ -251,7 +250,7 @@ export default function ExploreScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Clear search text"
               >
-                <Ionicons name="close-circle" size={16} color={Colors.textSecondary} />
+                <Ionicons name="close-circle" size={16} color={Colors.ivoryMist} />
               </Pressable>
             )}
           </GlassView>
@@ -326,7 +325,7 @@ export default function ExploreScreen() {
   const bottomScrollPadding = Math.max(insets.bottom, 16) + 100;
 
   return (
-    <AtmosphereBackground>
+    <View style={styles.container}>
       <FlatList
         data={filteredPlaces}
         keyExtractor={(item) => item.place_id || item.name}
@@ -351,11 +350,15 @@ export default function ExploreScreen() {
         windowSize={5}
         removeClippedSubviews={Platform.OS === 'android'}
       />
-    </AtmosphereBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
   listContainer: {
     paddingHorizontal: Spacing.xl,
   },
@@ -409,12 +412,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansBold,
     fontSize: 10,
     letterSpacing: 1.6,
-    color: Colors.icyBlue,
+    color: Colors.ivoryMist,
     marginBottom: 4,
     textTransform: 'uppercase',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    textShadowRadius: 4,
   },
   heroTitle: {
     fontFamily: Fonts.serifRegular,
@@ -440,7 +443,7 @@ const styles = StyleSheet.create({
     height: 48,
     borderWidth: 1,
     borderColor: 'rgba(251, 244, 227, 0.20)',
-    backgroundColor: 'rgba(8, 18, 24, 0.65)',
+    backgroundColor: 'rgba(8, 14, 18, 0.82)',
   },
   searchIcon: {
     marginRight: Spacing.sm,

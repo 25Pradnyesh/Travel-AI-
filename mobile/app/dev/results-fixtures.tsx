@@ -30,10 +30,6 @@ export default function ResultsFixturesScreen() {
   const insets = useSafeAreaInsets();
   const [activeScenarioId, setActiveScenarioId] = useState<string>('full');
 
-  // Gated strictly by __DEV__
-  if (!__DEV__) {
-    return null;
-  }
 
   const activeFixture: FixtureScenario = FIXTURES[activeScenarioId] || FIXTURES.full;
   const bestGuess = activeFixture.data.best_guess;
@@ -93,6 +89,10 @@ export default function ResultsFixturesScreen() {
       });
     }
   };
+
+  if (!__DEV__) {
+    return null;
+  }
 
   return (
     <AtmosphereBackground

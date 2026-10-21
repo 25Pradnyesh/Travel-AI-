@@ -343,13 +343,18 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 from engine.app.api.analyze import router as analyze_router
 from engine.app.api.health import router as health_router
-from engine.app.api.test_routes import router as test_router
 
 app.include_router(analyze_router)
 app.include_router(health_router)
-app.include_router(test_router)
 
-print("✅ Routers registered: /analyze, /health, diagnostic routes")
+# AUDIT-002: Gate diagnostic test routes (/places, /speech, /frames, /provider) outside dev
+env = os.getenv("ENVIRONMENT", "development").strip().lower()
+if env in ("development", "dev", "test"):
+    from engine.app.api.test_routes import router as test_router
+    app.include_router(test_router)
+    print("✅ Routers registered: /analyze, /health, diagnostic test routes")
+else:
+    print("🔒 Diagnostic test routes (/places, /speech, /frames, /provider) disabled outside dev environment")
 
 
 # ==================================================

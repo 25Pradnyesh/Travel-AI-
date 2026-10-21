@@ -197,6 +197,35 @@ def get_place_photo(name: str):
             detail="Invalid photo reference name.",
         )
 
+    places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
+    if not places_enabled:
+        logger.info("[API] Photo proxy blocked: GOOGLE_PLACES_ENABLED is false.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Place lookup is unavailable right now",
+        )
+
+    import hashlib
+    photo_cache_dir = Path("engine/assets/cache/photos")
+    photo_cache_dir.mkdir(parents=True, exist_ok=True)
+    cache_key = hashlib.sha256(clean_name.encode("utf-8")).hexdigest()
+    cached_file = photo_cache_dir / f"{cache_key}.jpg"
+
+    if cached_file.exists() and cached_file.is_file():
+        try:
+            cached_data = cached_file.read_bytes()
+            if cached_data:
+                return Response(
+                    content=cached_data,
+                    media_type="image/jpeg",
+                    headers={
+                        "Cache-Control": "public, max-age=604800, immutable",
+                        "X-Cache": "HIT",
+                    },
+                )
+        except Exception as e:
+            logger.warning("[API] Failed to read cached photo: %s", e)
+
     api_key = os.getenv("GOOGLE_PLACES_API_KEY", "")
     if not api_key:
         logger.warning("[API] GOOGLE_PLACES_API_KEY missing for photo proxy.")
@@ -222,11 +251,17 @@ def get_place_photo(name: str):
             )
 
         content_type = resp.headers.get("content-type", "image/jpeg")
+        try:
+            cached_file.write_bytes(resp.content)
+        except Exception as e:
+            logger.warning("[API] Failed to write photo to disk cache: %s", e)
+
         return Response(
             content=resp.content,
             media_type=content_type,
             headers={
-                "Cache-Control": "public, max-age=86400, stale-while-revalidate=43200",
+                "Cache-Control": "public, max-age=604800, immutable",
+                "X-Cache": "MISS",
             },
         )
     except requests.RequestException as e:

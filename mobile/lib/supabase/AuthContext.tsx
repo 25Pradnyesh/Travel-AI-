@@ -30,6 +30,14 @@ import {
 } from './auth';
 import { clearPendingSaveAction } from './saved-places';
 import { resetHistorySaveGuards } from './history';
+import {
+  getMockAuthState,
+  setMockAuthState,
+  subscribeMockAuthState,
+  MOCK_USER,
+  MOCK_SESSION,
+  MockAuthState,
+} from './mock-auth';
 
 // Registry for external caches to clear on sign out without creating circular dependencies
 const signOutCallbacks = new Set<() => Promise<void> | void>();
@@ -77,6 +85,8 @@ export interface AuthContextValue {
   error: string | null;
   isConfigured: boolean;
   isAuthenticated: boolean;
+  mockState: MockAuthState;
+  setMockState: (state: MockAuthState) => void;
   signInWithGoogle: () => Promise<AuthResult>;
   signInWithApple: () => Promise<AuthResult>;
   signOut: () => Promise<{ success: boolean; error?: string }>;
@@ -95,6 +105,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [mockState, setMockStateState] = useState<MockAuthState>(getMockAuthState());
+
+  useEffect(() => {
+    return subscribeMockAuthState((st) => {
+      setMockStateState(st);
+    });
+  }, []);
+
+  const setMockState = useCallback((state: MockAuthState) => {
+    setMockAuthState(state);
+  }, []);
 
   // Tracks settled auth events from onAuthStateChange to prevent older getSession() results
   // from racing or overwriting newer authentication state during boot.
@@ -294,27 +315,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   }, []);
 
+  const effectiveSession = useMemo(() => {
+    if (mockState === 'signed-in') return MOCK_SESSION;
+    if (mockState === 'guest' || mockState === 'error' || mockState === 'unavailable') return null;
+    return session;
+  }, [mockState, session]);
+
+  const effectiveUser = useMemo(() => {
+    if (mockState === 'signed-in') return MOCK_USER;
+    if (mockState === 'guest' || mockState === 'error' || mockState === 'unavailable') return null;
+    return user;
+  }, [mockState, user]);
+
+  const effectiveIsLoading = useMemo(() => {
+    if (mockState === 'loading') return true;
+    if (mockState !== 'real') return false;
+    return isLoading;
+  }, [mockState, isLoading]);
+
+  const effectiveIsAuthenticating = useMemo(() => {
+    if (mockState === 'loading') return true;
+    if (mockState !== 'real') return false;
+    return isAuthenticating;
+  }, [mockState, isAuthenticating]);
+
+  const effectiveError = useMemo(() => {
+    if (mockState === 'error') return 'OAuth authentication cancelled or failed.';
+    if (mockState === 'unavailable') return "Sign-in isn't available right now. You can keep using VAMO as a guest.";
+    return error;
+  }, [mockState, error]);
+
+  const effectiveIsConfigured = useMemo(() => {
+    if (mockState === 'unavailable') return false;
+    return configured;
+  }, [mockState, configured]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
-      session,
-      user,
-      isLoading,
-      isAuthenticating,
-      error,
-      isConfigured: configured,
-      isAuthenticated: Boolean(session && user),
+      session: effectiveSession,
+      user: effectiveUser,
+      isLoading: effectiveIsLoading,
+      isAuthenticating: effectiveIsAuthenticating,
+      error: effectiveError,
+      isConfigured: effectiveIsConfigured,
+      isAuthenticated: Boolean(effectiveSession && effectiveUser),
+      mockState,
+      setMockState,
       signInWithGoogle,
       signInWithApple,
       signOut,
       clearError,
     }),
     [
-      session,
-      user,
-      isLoading,
-      isAuthenticating,
-      error,
-      configured,
+      effectiveSession,
+      effectiveUser,
+      effectiveIsLoading,
+      effectiveIsAuthenticating,
+      effectiveError,
+      effectiveIsConfigured,
+      mockState,
+      setMockState,
       signInWithGoogle,
       signInWithApple,
       signOut,

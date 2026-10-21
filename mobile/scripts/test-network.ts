@@ -63,6 +63,9 @@ Module.prototype.require = function (id: string) {
 (require as any).extensions['.png'] = (module: any, filename: string) => {
   module.exports = { uri: filename, width: 512, height: 512 };
 };
+(require as any).extensions['.webp'] = (module: any, filename: string) => {
+  module.exports = { uri: filename, width: 1170, height: 2532 };
+};
 
 (globalThis as any).__DEV__ = true;
 
