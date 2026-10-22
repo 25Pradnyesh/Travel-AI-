@@ -36,15 +36,17 @@ class GeminiService:
             return
 
         try:
-            import google.generativeai as genai
+            from engine.app.services.gemini.client_adapter import GeminiClientAdapter
 
-            genai.configure(
-                api_key=self.api_key,
+            configured_model = os.getenv("GEMINI_MODEL", "").strip()
+            model_name = (
+                configured_model
+                if configured_model and configured_model not in ("gemini-2.5-flash", "gemini-1.5-flash")
+                else "gemini-3.8-flash"
             )
 
-            model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-
-            self.model = genai.GenerativeModel(
+            self.model = GeminiClientAdapter(
+                api_key=self.api_key,
                 model_name=model_name,
                 generation_config={
                     "temperature": 0.0,
@@ -54,6 +56,7 @@ class GeminiService:
                     "response_mime_type": "application/json",
                 },
             )
+            self.model_name = model_name
             self.available = True
             logger.info("[GEMINI] GeminiService initialized successfully with model: %s", model_name)
 
@@ -71,8 +74,14 @@ class GeminiService:
         prompt: str,
     ) -> dict | None:
 
+        from engine.app.services.gemini.gemini_counter import gemini_counter
+
         if not self.available or not self.model:
             logger.warning("[GEMINI] Service unavailable. Skipping Gemini request.")
+            return None
+
+        if gemini_counter.is_quota_exhausted():
+            logger.warning("[GEMINI] Daily quota exhausted. Skipping request.")
             return None
 
         try:
@@ -85,9 +94,46 @@ class GeminiService:
                 response = self.model.generate_content(
                     prompt,
                 )
+            gemini_counter.increment()
         except Exception as e:
-            logger.error("[GEMINI] API Error: %s", type(e).__name__)
-            return None
+            err_str = str(e).lower()
+            err_name = type(e).__name__
+            if "notfound" in err_name.lower() or "not found" in err_str:
+                current_m = getattr(self, "model_name", "unknown")
+                fallback_model = "gemini-flash-latest" if current_m != "gemini-flash-latest" else "gemini-3.8-flash"
+                if current_m == fallback_model:
+                    logger.error("[GEMINI] Model %s returned NotFound and no distinct fallback available.", current_m)
+                    return None
+                logger.warning("[GEMINI] Model %s returned NotFound. Attempting fallback to %s.", current_m, fallback_model)
+                try:
+                    from engine.app.services.gemini.client_adapter import GeminiClientAdapter
+                    self.model = GeminiClientAdapter(
+                        api_key=self.api_key,
+                        model_name=fallback_model,
+                        generation_config={
+                            "temperature": 0.0,
+                            "top_p": 0.9,
+                            "top_k": 20,
+                            "max_output_tokens": 2048,
+                            "response_mime_type": "application/json",
+                        },
+                    )
+                    self.model_name = fallback_model
+                    try:
+                        response = self.model.generate_content(prompt, request_options={"timeout": 15.0})
+                    except TypeError:
+                        response = self.model.generate_content(prompt)
+                    gemini_counter.increment()
+                except Exception as fb_exc:
+                    logger.error("[GEMINI] Fallback to %s failed: %s", fallback_model, type(fb_exc).__name__)
+                    return None
+            elif "429" in err_str or "quota" in err_str or "resourceexhausted" in str(type(e)).lower():
+                logger.warning("[GEMINI] 429 / Quota exhausted received: %s. Marking quota exhausted.", e)
+                gemini_counter.mark_quota_exhausted()
+                return None
+            else:
+                logger.error("[GEMINI] API Error: %s", type(e).__name__)
+                return None
 
         text = getattr(
             response,

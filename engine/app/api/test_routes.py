@@ -37,8 +37,9 @@ def get_speech():
 
 
 def get_places():
-    from engine.app.services.maps.google_places_service import GooglePlacesService
-    return GooglePlacesService()
+    from engine.app.services.places.factory import get_places_provider
+    return get_places_provider()
+
 
 
 # ==================================================
@@ -104,20 +105,20 @@ def test_speech():
 
 
 # ==================================================
-# Google Places Test
+# Places Test
 # ==================================================
 
 @router.get("/places")
 def test_places():
     check_dev_mode()
-    places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
-    if not places_enabled:
+    provider = get_places()
+    if not provider.is_available:
         return {
             "status": "disabled",
-            "message": "Place lookup is unavailable right now",
+            "message": f"Place lookup is unavailable right now ({provider.name} provider not configured)",
             "results": [],
         }
 
-    return get_places().search(
+    return provider.search(
         "Seebensee Austria"
     )

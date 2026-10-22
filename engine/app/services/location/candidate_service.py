@@ -68,6 +68,31 @@ GENERIC_LOCATION_WORDS = {
     "scenery",
     "landscape",
     "outdoors",
+    "paradise",
+    "spot",
+    "spots",
+    "place",
+    "places",
+    "destination",
+    "destinations",
+    "gem",
+    "gems",
+    "corner",
+    "corners",
+    "haven",
+    "oasis",
+    "wonder",
+    "wonders",
+    "location",
+    "locations",
+    "area",
+    "areas",
+    "region",
+    "regions",
+    "site",
+    "sites",
+    "attraction",
+    "attractions",
 }
 
 
@@ -97,9 +122,11 @@ STOP_WORDS = {
     "holiday",
     "visit",
     "visiting",
+    "explore",
     "exploring",
     "discover",
     "discovering",
+    "capturing",
     "staying",
     "walking",
     "hiking",
@@ -175,6 +202,24 @@ COMMON_VERBS_AND_PARTICIPLES = {
     "loves",
     "loved",
     "loving",
+    "find",
+    "finding",
+    "saw",
+    "see",
+    "seeing",
+    "visited",
+    "visit",
+    "explored",
+    "explore",
+    "discovered",
+    "discover",
+    "shot",
+    "shooting",
+    "headed",
+    "traveled",
+    "travelled",
+    "travelling",
+    "traveling",
 }
 
 DEMONYM_ADJECTIVES = {
@@ -208,6 +253,31 @@ DEMONYM_ADJECTIVES = {
 }
 
 DETERMINERS_AND_PRONOUNS = {
+    "i",
+    "me",
+    "my",
+    "myself",
+    "we",
+    "us",
+    "our",
+    "ours",
+    "ourselves",
+    "you",
+    "your",
+    "yours",
+    "yourself",
+    "yourselves",
+    "he",
+    "him",
+    "his",
+    "himself",
+    "she",
+    "her",
+    "hers",
+    "herself",
+    "it",
+    "its",
+    "itself",
     "this",
     "that",
     "these",
@@ -357,6 +427,113 @@ TEMPORAL_WORDS = {
     "tonight",
 }
 
+SOCIAL_AND_GENERAL_WORDS = {
+    "friend",
+    "friends",
+    "vibe",
+    "vibes",
+    "fun",
+    "love",
+    "smile",
+    "smiles",
+    "happy",
+    "memory",
+    "memories",
+    "life",
+    "lifestyle",
+    "style",
+    "look",
+    "looks",
+    "outfit",
+    "ootd",
+    "girl",
+    "girls",
+    "boy",
+    "boys",
+    "family",
+    "crew",
+    "squad",
+    "team",
+    "people",
+    "sun",
+    "sunset",
+    "sunsets",
+    "sunrise",
+    "sky",
+    "cloud",
+    "clouds",
+    "weather",
+    "food",
+    "coffee",
+    "drink",
+    "drinks",
+    "dinner",
+    "lunch",
+    "breakfast",
+    "brunch",
+    "fitness",
+    "gym",
+    "workout",
+    "fit",
+    "health",
+    "wellness",
+    "music",
+    "dance",
+    "song",
+    "party",
+    "nightlife",
+    "mood",
+    "energy",
+    "aesthetic",
+    "art",
+    "photo",
+    "photos",
+    "photography",
+    "photographer",
+    "video",
+    "videos",
+    "reels",
+    "reel",
+    "dog",
+    "dogs",
+    "cat",
+    "cats",
+    "pet",
+    "pets",
+    "animal",
+    "animals",
+    "car",
+    "cars",
+    "bike",
+    "bikes",
+    "ride",
+    "drive",
+    "fashion",
+    "beauty",
+    "hair",
+    "makeup",
+    "moment",
+    "moments",
+    "day",
+    "days",
+    "trip",
+    "trips",
+    "travel",
+    "travels",
+    "traveler",
+    "travelers",
+    "nature",
+    "wild",
+    "adventure",
+    "wanderlust",
+    "peace",
+    "blessed",
+    "gratitude",
+    "goals",
+    "inspo",
+    "inspiration",
+}
+
 INVALID_SINGLE_WORDS = (
     STOP_WORDS
     | COMMON_VERBS_AND_PARTICIPLES
@@ -364,6 +541,48 @@ INVALID_SINGLE_WORDS = (
     | DETERMINERS_AND_PRONOUNS
     | BOILERPLATE_WORDS
     | TEMPORAL_WORDS
+    | SOCIAL_AND_GENERAL_WORDS
+)
+
+DESCRIPTIVE_MODIFIERS = {
+    "hidden",
+    "secret",
+    "incredible",
+    "amazing",
+    "beautiful",
+    "breathtaking",
+    "stunning",
+    "magical",
+    "unreal",
+    "epic",
+    "best",
+    "top",
+    "favorite",
+    "favourite",
+    "famous",
+    "ancient",
+    "historic",
+    "historical",
+    "old",
+    "new",
+    "little",
+    "great",
+    "small",
+    "big",
+    "pure",
+    "real",
+    "true",
+    "lost",
+    "undiscovered",
+    "gorgeous",
+    "picturesque",
+    "charming",
+}
+
+ALL_NON_PROPER_WORDS = (
+    GENERIC_LOCATION_WORDS
+    | INVALID_SINGLE_WORDS
+    | DESCRIPTIVE_MODIFIERS
 )
 
 
@@ -479,6 +698,10 @@ KNOWN_GEOGRAPHIC_ENTITIES = {
     "Bali",
     "Enshi",
     "Houtouwan",
+    "Dali",
+    "Erhai",
+    "Yunnan",
+    "Lijiang",
 }
 
 # Include recognized world countries as geographic entities
@@ -486,20 +709,22 @@ KNOWN_GEOGRAPHIC_ENTITIES.update(
     {c.title() for c in COUNTRIES if len(c) > 2}
 )
 
+KNOWN_GEOGRAPHIC_ENTITIES_LOWER = {e.lower() for e in KNOWN_GEOGRAPHIC_ENTITIES}
+
 
 # ==================================================
 # Strong Compound Patterns
 # ==================================================
 
 KEYWORD_PATTERNS = [
-    r"((?:(?:[A-Z][A-Za-z0-9']+|St\.|Mt\.)(?:\s+[A-Z][A-Za-z0-9']+)*\s+)?National\s+Park)",
-    r"((?:Mount|Mt\.?|Lake|Cape|Point|Bay|River|Gulf|Loch|Isle)\s+[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+)*)",
-    r"((?:St\.?\s+)?[A-Z][A-Za-z0-9']+(?:'s)?(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Cathedral|Cathederal|Shrine|Church|Basilica|Abbey|Monastery)(?:\s*\([A-Za-z0-9'\s\.]+\))?)",
-    r"((?:The\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+)*\s+(?:Mill|Bridge|Tower|Castle|Palace|Fort|Waterfall|Falls|Beach|Island|Forest|Rainforest|Valley|Peak|Pass|Canyon|Gorge|Recreation\s+Area))",
-    r"(Lago\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
-    r"(Val\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
-    r"((?:[Ss]alto|[Cc]ascada|[Cc]ataratas)\s+(?:de\s+|del\s+|el\s+)?[A-Za-z]+(?:\s+[A-Za-z]+)*)",
-    r"(Isola\s+di\s+[A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+)*)",
+    r"((?:(?:[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+|St\.|Mt\.)(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+)*\s+)?National\s+Park)",
+    r"((?:Mount|Mt\.?|Lake|Cape|Point|Bay|River|Gulf|Loch|Isle)\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+)*)",
+    r"((?:St\.?\s+)?[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+(?:'s)?(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+)*\s+(?:Cathedral|Cathederal|Shrine|Church|Basilica|Abbey|Monastery)(?:\s*\([A-Za-z0-9'\s\.]+\))?)",
+    r"((?:The\s+)?[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']*(?:\s+(?:of|the|de|di|du|d'|and|&|[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']*))*\s+(?i:Lake|Loch|Mill|Bridge|Tower|Castle|Palace|Fort|Waterfall|Falls|Beach|Island|Forest|Rainforest|Valley|Peak|Pass|Canyon|Gorge|Recreation\s+Area))",
+    r"(Lago\s+di\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)*)",
+    r"(Val\s+di\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)*)",
+    r"((?:[Ss]alto|[Cc]ascada|[Cc]ataratas)\s+(?:de\s+|del\s+|el\s+)?[a-zA-Z\u00C0-\u024F]+(?:\s+[a-zA-Z\u00C0-\u024F]+)*)",
+    r"(Isola\s+di\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)*)",
     r"(Swiss\s+Alps)",
 ]
 
@@ -509,10 +734,10 @@ KEYWORD_PATTERNS = [
 # ==================================================
 
 LOCATION_TRIGGER_PATTERNS = [
-    r"(?i:trip to|travel to|welcome to|visiting|visit to|explore|exploring|heart of|hidden in|located in|situated in|drive to|road trip to|road trip from|heading to|escape to|flight to|fly to)\s+((?:St\.\s+|Mt\.\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+){0,3}(?:,\s*[A-Z][A-Za-z]+)*)",
-    r"(?i:places in|destinations in|best of|gems in)\s+((?:St\.\s+|Mt\.\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+){0,3}(?:,\s*[A-Z][A-Za-z]+)*)",
-    r"(?i:\bin\s+)((?:St\.\s+|Mt\.\s+)?[A-Z][A-Za-z0-9']+(?:\s+[A-Z][A-Za-z0-9']+){0,2}(?:,\s*[A-Z][A-Za-z]+)?)",
-    r"([A-Z][A-Za-z]+)\s+(?i:is\s+(?:one\s+of|a|an)\s+(?:the\s+)?(?:oldest|most|best|famous|beautiful|inhabited|ancient)?\s*(?:cities|city|towns|town|places|place|destinations|destination|villages|village|countries|country))\b",
+    r"(?i:trip to|travel to|welcome to|visiting|visit to|explore|exploring|heart of|hidden in|located in|situated in|drive to|road trip to|road trip from|heading to|escape to|flight to|fly to)\s+((?:St\.\s+|Mt\.\s+)?[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+){0,3}(?:,\s*[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)*)",
+    r"(?i:places in|destinations in|best of|gems in)\s+((?:St\.\s+|Mt\.\s+)?[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+){0,3}(?:,\s*[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)*)",
+    r"(?i:\b(?:at|in|near|around)\s+)((?:St\.\s+|Mt\.\s+)?[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+(?:\s+[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F0-9']+){0,2}(?:,\s*[A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)?)",
+    r"([A-Z\u00C0-\u00DC][a-zA-Z\u00C0-\u024F]+)\s+(?i:is\s+(?:one\s+of|a|an)\s+(?:the\s+)?(?:oldest|most|best|famous|beautiful|inhabited|ancient)?\s*(?:cities|city|towns|town|places|place|destinations|destination|villages|village|countries|country))\b",
 ]
 
 
@@ -622,6 +847,23 @@ class CandidateService:
 
         return " ".join(output)
 
+    def strip_leading_words(
+        self,
+        text: str,
+    ) -> str:
+        words = text.split()
+        strip_tokens = (
+            STOP_WORDS
+            | COMMON_VERBS_AND_PARTICIPLES
+            | DETERMINERS_AND_PRONOUNS
+            | {"the", "a", "an", "this", "that", "in", "at", "to", "from", "on", "into", "our", "my", "your"}
+        ) - BOILERPLATE_WORDS
+        while words and words[0].lower() in strip_tokens:
+            if words[0] in ("The", "St.", "Mt.", "San", "Santa", "El", "La", "Le", "Isla", "Val", "Lago") and len(words) > 1 and words[1][0].isupper():
+                break
+            words = words[1:]
+        return " ".join(words)
+
     # ==================================================
     # Normalize
     # ==================================================
@@ -631,7 +873,11 @@ class CandidateService:
         candidate: str,
     ) -> str:
         candidate = self.deduplicate_words(candidate)
-        candidate = re.sub(r"\s+", " ", candidate)
+        candidate = self.strip_leading_words(candidate)
+        candidate = re.sub(r"\s+", " ", candidate).strip()
+        # Strip trailing possessives without stripping internal apostrophes (e.g. "South Korea's" -> "South Korea", but preserve "St. Joseph's Cathedral")
+        candidate = re.sub(r"['’]s$", "", candidate, flags=re.IGNORECASE)
+        candidate = re.sub(r"(?<=[a-zA-Z])['’]$", "", candidate)
         return candidate.strip(" ,.-'\"")
 
     # ==================================================
@@ -648,22 +894,31 @@ class CandidateService:
         if len(lower) < 3:
             return False
 
-        if lower in INVALID_SINGLE_WORDS:
+        if lower in INVALID_SINGLE_WORDS or lower in GENERIC_LOCATION_WORDS:
             return False
 
         words = lower.split()
+        if not words:
+            return False
 
         # Reject if starts with a boilerplate/non-location indicator
-        if words and words[0] in BOILERPLATE_WORDS:
+        if words[0] in BOILERPLATE_WORDS:
             return False
 
-        # Reject if all words are generic location tokens (e.g. "beach park")
-        if all(word in GENERIC_LOCATION_WORDS for word in words):
-            return False
-
-        # Reject if all words are invalid single words or temporal words
-        if all(word in INVALID_SINGLE_WORDS for word in words):
-            return False
+        # Multi-part candidate (e.g. "Varenna, Lake Como"): at least one segment must contain a proper entity
+        comma_parts = [p.strip() for p in lower.split(",") if p.strip()]
+        if len(comma_parts) > 1:
+            has_proper_part = any(
+                any(w not in ALL_NON_PROPER_WORDS for w in part.split())
+                for part in comma_parts
+            )
+            if not has_proper_part:
+                return False
+        else:
+            # Single-part: MUST contain at least one distinguishing word that is NOT generic, NOT a verb/stop word, and NOT a descriptive modifier
+            # Systematically rejects "Found Lake", "Hidden Paradise", "Beautiful Beach", "Explore Mountain", "Found Waterfalls", etc.
+            if all(word in ALL_NON_PROPER_WORDS for word in words):
+                return False
 
         if candidate.isdigit():
             return False
@@ -673,7 +928,7 @@ class CandidateService:
 
         # Single word validation: must not be in generic, stop, verb, demonym, boilerplate, or temporal sets
         if len(words) == 1:
-            if words[0] in GENERIC_LOCATION_WORDS or words[0] in INVALID_SINGLE_WORDS:
+            if words[0] in GENERIC_LOCATION_WORDS or words[0] in INVALID_SINGLE_WORDS or words[0] in DESCRIPTIVE_MODIFIERS:
                 return False
 
         return True
@@ -699,6 +954,11 @@ class CandidateService:
 
             for existing in final:
                 if lower != existing.lower() and lower in existing.lower():
+                    # Preserve individual constituent parts if existing is hierarchical (e.g. "Varenna, Lake Como" preserves both "Varenna" and "Lake Como")
+                    if "," in existing:
+                        parts_lower = [p.strip().lower() for p in existing.split(",") if p.strip()]
+                        if parts_lower and lower in parts_lower:
+                            continue
                     keep = False
                     break
 
@@ -722,6 +982,10 @@ class CandidateService:
 
                 if candidate.lower() in other.lower():
                     if len(other.split()) > len(candidate.split()):
+                        if "," in other:
+                            parts_lower = [p.strip().lower() for p in other.split(",") if p.strip()]
+                            if parts_lower and candidate.lower() in parts_lower:
+                                continue
                         keep = False
                         break
 
@@ -837,6 +1101,47 @@ class CandidateService:
                         candidates.append(pt)
 
         # ------------------------------------------
+        # 2b. Delimiter-separated locations line-by-line (e.g. "Jeju Island - South Korea")
+        # ------------------------------------------
+        for line in cleaned.splitlines():
+            delimiter_matches = re.findall(
+                r"\b([A-Za-z0-9'\.]+(?:\s+[A-Za-z0-9'\.]+)*)\s+[-–—|•]\s+([A-Za-z0-9'\.]+(?:\s+[A-Za-z0-9'\.]+)*)\b",
+                line,
+            )
+            for p1, p2 in delimiter_matches:
+                p1_clean = p1.strip()
+                words2 = p2.split()
+                for k in range(min(3, len(words2)), 0, -1):
+                    sub_country = " ".join(words2[:k])
+                    sub_clean = re.sub(r"['’]s$", "", sub_country, flags=re.IGNORECASE).strip()
+                    if sub_clean.lower() in COUNTRIES and self.is_valid_candidate(p1_clean):
+                        compound = f"{p1_clean}, {sub_clean}"
+                        candidates.append(compound)
+                        candidates.append(p1_clean)
+                        candidates.append(sub_clean)
+                        break
+
+        # ------------------------------------------
+        # 2c. Hierarchical "in" relationships (e.g. "Erhai Lake in Dali, China")
+        # ------------------------------------------
+        for line in cleaned.splitlines():
+            in_matches = re.findall(
+                r"\b([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Za-z0-9'\.]+)*)\s+in\s+([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Z][A-Za-z0-9'\.]+)*(?:,\s*[A-Z][A-Za-z]+)*)\b",
+                line,
+            )
+            for p1, p2 in in_matches:
+                p1_clean = p1.strip()
+                p2_clean = p2.strip()
+                words1 = p1_clean.split()
+                if words1 and words1[0].lower() in INVALID_SINGLE_WORDS:
+                    if len(words1) >= 2:
+                        p1_clean = " ".join(words1[1:])
+                if self.is_valid_candidate(p1_clean) and self.is_valid_candidate(p2_clean):
+                    candidates.append(f"{p1_clean}, {p2_clean}")
+                    candidates.append(p1_clean)
+                    candidates.append(p2_clean)
+
+        # ------------------------------------------
         # 3. Contextual Location Triggers
         # ------------------------------------------
         for pattern in LOCATION_TRIGGER_PATTERNS:
@@ -855,6 +1160,7 @@ class CandidateService:
                 matches = re.findall(pattern, line)
                 for m in matches:
                     cand = m.strip() if isinstance(m, str) else m[0].strip()
+                    cand = self.strip_leading_words(cand)
                     if cand and cand[0].islower():
                         cand = cand.title()
                     if self.is_valid_candidate(cand):
@@ -873,15 +1179,9 @@ class CandidateService:
                 clause,
             )
             for ttw in two_three_words:
-                words = ttw.split()
-                if words[0].lower() in INVALID_SINGLE_WORDS:
-                    if len(words) > 2:
-                        sub = " ".join(words[1:])
-                        if self.is_valid_candidate(sub):
-                            candidates.append(sub)
-                    continue
-                if self.is_valid_candidate(ttw):
-                    candidates.append(ttw)
+                cand_ttw = self.strip_leading_words(ttw)
+                if self.is_valid_candidate(cand_ttw):
+                    candidates.append(cand_ttw)
 
         # ------------------------------------------
         # 6. Recognized Single-Word Geographic Entities
@@ -896,6 +1196,8 @@ class CandidateService:
             # OCR / transcription typo tolerance for recognized destinations
             if source in ("ocr", "speech") and len(geo_lower) >= 5:
                 for w in words_lower:
+                    if w in GENERIC_LOCATION_WORDS or w in INVALID_SINGLE_WORDS:
+                        continue
                     if len(w) >= 4 and abs(len(w) - len(geo_lower)) <= 2:
                         ratio = difflib.SequenceMatcher(None, w, geo_lower).ratio()
                         if ratio >= 0.70:
@@ -952,12 +1254,28 @@ class CandidateService:
             key = candidate.lower()
             score = SOURCE_PRIORITY.get(source, 0)
 
-            # Phrase Bonus
+            is_country = (
+                key in COUNTRIES
+                or candidate.lower() in COUNTRIES
+                or ("," in key and key.split(",")[-1].strip() in COUNTRIES and len(key.split(",")) == 1)
+            )
+
+            # Phrase Bonus (multi-word destinations)
             score += len(candidate.split()) * 10
 
-            # Known entity bonus
-            if candidate in KNOWN_GEOGRAPHIC_ENTITIES:
+            # Known entity bonus (specific destinations only, never broad countries)
+            if candidate in KNOWN_GEOGRAPHIC_ENTITIES and not is_country:
                 score += 20
+
+            # Country penalty in candidate generation: specific destinations must rank ahead of generic countries
+            if is_country:
+                score -= 30
+
+            # Landmark / POI Bonus: prioritize specific physical landmarks over generic cities/countries
+            cand_lower_words = set(key.replace(",", " ").split())
+            poi_words = {"lake", "waterfall", "falls", "beach", "island", "mountain", "peak", "valley", "canyon", "temple", "shrine", "cathedral", "castle", "palace", "fort", "park"}
+            if cand_lower_words & poi_words:
+                score += 25
 
             # Character Bonus
             score += min(len(candidate), 20)
@@ -1040,6 +1358,22 @@ class CandidateService:
 
             if tag.lower() in GENERIC_LOCATION_WORDS or tag.lower() in INVALID_SINGLE_WORDS:
                 continue
+
+            # A single-word hashtag must not be an uncorroborated generic social tag.
+            # Require it to be in KNOWN_GEOGRAPHIC_ENTITIES, end with a travel suffix,
+            # or be corroborated by other evidence text (caption, speech, ocr, title).
+            if len(tag.split()) == 1:
+                cand_lower = tag.lower()
+                is_known_geo = cand_lower in KNOWN_GEOGRAPHIC_ENTITIES_LOWER or cand_lower in COUNTRIES
+                has_loc_suffix = any(cand_lower.endswith(sfx) for sfx in ("island", "beach", "lake", "mountain", "falls", "valley", "canyon", "city", "park"))
+                is_corroborated = (
+                    cand_lower in metadata.get("caption", "").lower()
+                    or cand_lower in speech_text.lower()
+                    or cand_lower in ocr_text.lower()
+                    or cand_lower in metadata.get("title", "").lower()
+                )
+                if not (is_known_geo or has_loc_suffix or is_corroborated):
+                    continue
 
             key = tag.lower()
             score = SOURCE_PRIORITY.get("hashtags", 2)

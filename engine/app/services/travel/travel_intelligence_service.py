@@ -61,6 +61,8 @@ class TravelIntelligenceService:
 
         season = self.season.get(
             category,
+            latitude=place.get("latitude"),
+            longitude=place.get("longitude"),
         )
 
         place.update(
@@ -173,6 +175,34 @@ class TravelIntelligenceService:
 
             "estimated_daily_budget": place.get(
                 "estimated_daily_budget",
+            ),
+
+            "budget_basis": place.get(
+                "budget_basis",
+                "estimate",
+            ),
+
+            "weather_basis": place.get(
+                "weather_basis",
+            ),
+
+            "weather_source": place.get(
+                "weather_source",
+            ),
+
+            "peak_months": place.get(
+                "peak_months",
+                [],
+            ),
+
+            "shoulder_months": place.get(
+                "shoulder_months",
+                [],
+            ),
+
+            "avoid_months": place.get(
+                "avoid_months",
+                [],
             ),
 
             "travel_tips": place.get(

@@ -143,12 +143,19 @@ class ResponseBuilder:
             elif isinstance(author_raw, str):
                 author = author_raw
 
+            license_str = item.get("license") or item.get("license_short_name")
+            license_url = item.get("license_url")
+            source_url = item.get("source_url")
+
             normalized.append(
                 DestinationPhoto(
                     url=url,
                     width=width,
                     height=height,
                     author=author,
+                    license=license_str,
+                    license_url=license_url,
+                    source_url=source_url,
                 )
             )
 
@@ -164,6 +171,8 @@ class ResponseBuilder:
         gemini_reason: str,
         verification_status: str,
     ) -> str:
+        provider = os.getenv("PLACES_PROVIDER", "osm").lower()
+        provider_label = "OpenStreetMap" if provider == "osm" else "Google Places"
 
         # 1. If Gemini verified with a meaningful reason, use it
         if gemini_reason and len(gemini_reason) > 10 and verification_status in ("VERIFIED", "PARTIAL"):
@@ -174,13 +183,13 @@ class ResponseBuilder:
         if matched_sources:
             sources_str = ", ".join(sorted(str(s).upper() for s in matched_sources))
             if verification_status in ("VERIFIED", "PARTIAL"):
-                return f"Verified from Reel's {sources_str} and Google Places location data."
-            return f"Identified from Reel's {sources_str} and Google Places location data (unverified)."
+                return f"Verified from Reel's {sources_str} and {provider_label} location data."
+            return f"Identified from Reel's {sources_str} and {provider_label} location data (unverified)."
 
         # 3. Fallback
         if verification_status in ("VERIFIED", "PARTIAL"):
-            return "Top scoring travel destination matching Reel context and Google Places data."
-        return "Top scoring travel destination matching Reel context and Google Places data (unverified)."
+            return f"Top scoring travel destination matching Reel context and {provider_label} data."
+        return f"Top scoring travel destination matching Reel context and {provider_label} data (unverified)."
 
     # ==================================================
     # Build Travel Intelligence
@@ -202,6 +211,9 @@ class ResponseBuilder:
                 "category": enriched.get("category", "Destination"),
                 "category_emoji": enriched.get("category_emoji", "📍"),
                 "best_season": enriched.get("best_season", "All Year"),
+                "weather_basis": enriched.get("weather_basis"),
+                "weather_source": enriched.get("weather_source"),
+                "budget_basis": enriched.get("budget_basis", "estimate"),
                 "peak_months": enriched.get("peak_months", []),
                 "shoulder_months": enriched.get("shoulder_months", []),
                 "avoid_months": enriched.get("avoid_months", []),
@@ -268,8 +280,12 @@ class ResponseBuilder:
                     item.get("longitude"),
                 )
 
-                rating = float(item.get("rating") or 0.0)
-                user_ratings = int(item.get("user_rating_count") or item.get("user_ratings_total") or 0)
+                raw_rating = item.get("rating")
+                rating = float(raw_rating) if raw_rating is not None else None
+
+                raw_user_ratings = item.get("user_rating_count") if item.get("user_rating_count") is not None else item.get("user_ratings_total")
+                user_ratings = int(raw_user_ratings) if raw_user_ratings is not None else None
+
                 types = [str(t) for t in (item.get("types") or []) if t]
                 maps_url = item.get("google_maps_url") or item.get("maps_url") or ""
 
@@ -292,6 +308,7 @@ class ResponseBuilder:
                         distance_km=distance_km,
                         maps_url=maps_url,
                         category=cat_label,
+                        photos=self.normalize_photos(item.get("photos")),
                     )
                 )
 
@@ -331,16 +348,27 @@ class ResponseBuilder:
             place.get("longitude"),
         )
 
-        rating = float(place.get("rating") or 0.0)
-        user_ratings = int(
-            place.get("user_rating_count")
-            or place.get("user_ratings_total")
-            or 0
-        )
+        raw_rating = place.get("rating")
+        rating = float(raw_rating) if raw_rating is not None else None
+
+        raw_user_ratings = place.get("user_rating_count") if place.get("user_rating_count") is not None else place.get("user_ratings_total")
+        user_ratings = int(raw_user_ratings) if raw_user_ratings is not None else None
         types = [str(t) for t in (place.get("types") or []) if t]
 
         maps_url = self.build_maps_url(place, lat, lng, place_id)
         photos = self.normalize_photos(place.get("photos"))
+
+        verification_status = str(
+            (gemini_result.get("verification_status") if gemini_result else None)
+            or place.get("verification_status")
+            or "UNVERIFIED"
+        ).upper()
+
+        confidence_level = str(
+            winner.get("confidence")
+            or place.get("confidence")
+            or "LOW"
+        )
 
         # Confidence handling
         raw_score = winner.get("score")
@@ -355,20 +383,11 @@ class ResponseBuilder:
         except (ValueError, TypeError):
             confidence_int = 0
 
-        confidence_level = str(
-            winner.get("confidence")
-            or place.get("confidence")
-            or "LOW"
-        )
-
-        verification_status = str(
-            (gemini_result.get("verification_status") if gemini_result else None)
-            or place.get("verification_status")
-            or "FAILED"
-        ).upper()
-
+        # Never claim VERIFIED if verification status is not VERIFIED
         if verification_status != "VERIFIED" and confidence_level == "VERIFIED":
-            confidence_level = "VERY_HIGH"
+            confidence_level = "VERY_HIGH" if confidence_int >= 90 else "HIGH"
+        elif verification_status == "VERIFIED" and confidence_int >= 85:
+            confidence_level = "VERIFIED"
 
         gemini_conf = 0.0
         if verification_status in ("VERIFIED", "PARTIAL"):

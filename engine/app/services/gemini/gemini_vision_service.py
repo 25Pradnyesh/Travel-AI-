@@ -33,12 +33,14 @@ class GeminiVisionService:
 
         if self.api_key:
             try:
-                import google.generativeai as genai
+                from engine.app.services.gemini.client_adapter import GeminiClientAdapter
 
-                genai.configure(api_key=self.api_key)
-                model_name = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
-                self.model = genai.GenerativeModel(
-                    model_name,
+                model_name = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
+                if model_name in ("gemini-2.5-flash", "gemini-1.5-flash"):
+                    model_name = "gemini-3.8-flash"
+                self.model = GeminiClientAdapter(
+                    api_key=self.api_key,
+                    model_name=model_name,
                     generation_config={
                         "temperature": 0.1,
                         "max_output_tokens": 1024,
@@ -74,9 +76,18 @@ class GeminiVisionService:
         if not path_obj.exists() or not path_obj.is_file():
             return self.parser.empty("Image file not found.")
 
+        from engine.app.services.gemini.gemini_counter import gemini_counter
+
         if not self.available or not self.model:
             logger.warning("[GEMINI] Vision service unavailable.")
             return self.parser.empty("Gemini Vision service unavailable.")
+
+        if gemini_counter.is_quota_exhausted():
+            logger.warning("[GEMINI] Vision quota exhausted. Skipping.")
+            result = self.parser.empty("Unverified (vision skipped)")
+            result["status"] = "Unverified (vision skipped)"
+            result["scene"] = scene_info
+            return result
 
         # ------------------------------------------
         # Scene Analysis (optional enrichment)
@@ -117,6 +128,7 @@ Vegetation: {scene_info.get('vegetation', 'None')}
                     response = self.model.generate_content(
                         [prompt, pil_image],
                     )
+            gemini_counter.increment()
 
             text = getattr(response, "text", "") or ""
             result = self.parser.parse(text)
@@ -124,6 +136,14 @@ Vegetation: {scene_info.get('vegetation', 'None')}
             return result
 
         except Exception as e:
+            err_str = str(e).lower()
+            if "429" in err_str or "quota" in err_str or "resourceexhausted" in str(type(e)).lower():
+                logger.warning("[GEMINI] Vision 429/quota exhausted: %s", e)
+                gemini_counter.mark_quota_exhausted()
+                result = self.parser.empty("Unverified (vision skipped)")
+                result["status"] = "Unverified (vision skipped)"
+                result["scene"] = scene_info
+                return result
             logger.error("[GEMINI] Vision verification error: %s", type(e).__name__)
             result = self.parser.empty(f"Vision error: {type(e).__name__}")
             result["scene"] = scene_info

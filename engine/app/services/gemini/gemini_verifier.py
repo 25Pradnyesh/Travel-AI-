@@ -83,10 +83,15 @@ class GeminiVerifier:
         verification_status: str,
         gemini_confidence: float = 0.0,
     ) -> str:
+        v_status = (verification_status or "").upper()
 
-        if verification_status == "VERIFIED" and (score >= 90 or gemini_confidence >= 0.85):
+        if v_status == "VERIFIED" and (score >= 85 or gemini_confidence >= 0.80):
             return "VERIFIED"
 
+        if v_status == "VERIFIED":
+            return "HIGH"
+
+        # Heuristic confidence based on evidence score
         if score >= 90:
             return "VERY_HIGH"
         if score >= 80:
@@ -180,6 +185,12 @@ class GeminiVerifier:
         text_winner_idx = text_result.get("winner_index")
         gemini_conf = text_result.get("confidence", 0.0)
         gemini_reason = text_result.get("reason", "")
+
+        from engine.app.services.gemini.gemini_counter import gemini_counter
+        if gemini_counter.is_quota_exhausted() or text_status == "Unverified (vision skipped)" or (vision_result and vision_result.get("status") == "Unverified (vision skipped)"):
+            logger.info("[GEMINI] Quota exhausted or vision skipped. Returning Unverified (vision skipped).")
+            winner = copy.deepcopy(scoring_top)
+            return winner, "SKIPPED", 0.0, "Unverified (vision skipped)"
 
         # --------------------------------------------------
         # Case 1: Gemini failed or unavailable
@@ -381,6 +392,34 @@ class GeminiVerifier:
                 "winner": winner,
                 "confidence": winner.get("score", 0.0),
                 "reason": "Scoring confidence already high.",
+                "verification_status": "SKIPPED",
+                "vision": None,
+            }
+
+        from engine.app.services.gemini.gemini_counter import gemini_counter
+        if gemini_counter.is_quota_exhausted():
+            logger.info("[GEMINI] Daily quota exhausted. Skipping verification: Unverified (vision skipped).")
+            ctx = get_current_context()
+            if ctx:
+                ctx.record_event("gemini_verification", "quota_exhausted")
+                ctx.gemini_verification_status = "SKIPPED"
+            winner = copy.deepcopy(top_candidates[0])
+            winner["place"]["verification_status"] = "SKIPPED"
+            winner["place"]["gemini_verified"] = False
+            winner["place"]["gemini_reason"] = "Unverified (vision skipped)"
+            winner["place"]["gemini_confidence"] = None
+
+            final_conf = self.calculate_confidence_level(
+                score=winner.get("score", 0.0),
+                verification_status="SKIPPED",
+            )
+            winner["confidence"] = final_conf
+            winner["place"]["confidence"] = final_conf
+
+            return {
+                "winner": winner,
+                "confidence": winner.get("score", 0.0),
+                "reason": "Unverified (vision skipped)",
                 "verification_status": "SKIPPED",
                 "vision": None,
             }

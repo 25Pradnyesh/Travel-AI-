@@ -176,7 +176,7 @@ class EvidenceBuilder:
 
         print(
 
-            f"📝 OCR Finished in "
+            f"[OCR] Finished in "
 
             f"{time.perf_counter()-start:.2f}s"
 
@@ -222,7 +222,7 @@ class EvidenceBuilder:
 
         print(
 
-            f"🎤 Speech Finished in "
+            f"[SPEECH] Finished in "
 
             f"{time.perf_counter()-start:.2f}s"
 
@@ -322,6 +322,9 @@ class EvidenceBuilder:
         print(
             f"Combined Length : {len(evidence['combined_text'])}"
         )
+
+        for src_name, w_len in weights.items():
+            print(f"  Source [{src_name}]: {w_len} chars")
 
         print(
             f"Evidence Score  : {round(evidence['evidence_score'],2)}"

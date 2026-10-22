@@ -12,7 +12,7 @@ import {
   ProcessingStages,
 } from '@/components/processing';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
-import { travelAiApi, getFriendlyErrorMessage } from '@/lib/api/travel-ai';
+import { travelAiApi, classifyError } from '@/lib/api/travel-ai';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAnalysisToCloudHistory } from '@/lib/supabase';
@@ -118,19 +118,9 @@ export default function ProcessingScreen() {
         // eslint-disable-next-line no-console
         console.warn('[PROCESSING] Analysis failed:', err);
       }
-      const friendlyMsg = getFriendlyErrorMessage(err);
-
-      if (friendlyMsg === "Can't reach VAMO right now. Check your connection and try again.") {
-        setErrorTitle('Engine Unreachable');
-      } else if (friendlyMsg === 'Check the Reel URL.') {
-        setErrorTitle('Invalid Reel URL');
-      } else if (friendlyMsg.includes('could not be accessed')) {
-        setErrorTitle('Reel Inaccessible');
-      } else {
-        setErrorTitle('Analysis Incomplete');
-      }
-
-      setErrorMessage(friendlyMsg);
+      const classification = classifyError(err);
+      setErrorTitle(classification.title);
+      setErrorMessage(classification.message);
       setIsLoading(false);
     } finally {
       isAnalyzingRef.current = false;

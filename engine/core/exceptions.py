@@ -18,7 +18,27 @@ class TravelAIException(Exception):
 
 class MediaExtractionError(TravelAIException):
     def __init__(self, message: str = "This Reel couldn't be accessed. Make sure it's publicly available."):
-        super().__init__(message, category=ErrorCategory.MEDIA_UNAVAILABLE, status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        super().__init__(message, category=ErrorCategory.MEDIA_UNAVAILABLE, status_code=status.HTTP_422_UNPROCESSABLE_CONTENT)
+
+
+class InstagramEmptyMediaError(MediaExtractionError):
+    def __init__(self, message: str = "Instagram sent an empty response. The Reel may be restricted, blocked, or unavailable."):
+        super().__init__(message)
+
+
+class InstagramPrivateError(MediaExtractionError):
+    def __init__(self, message: str = "This Reel is private, age-restricted, or requires login to view."):
+        super().__init__(message)
+
+
+class InstagramUnsupportedUrlError(TravelAIException):
+    def __init__(self, message: str = "The provided URL is not a supported Instagram Reel."):
+        super().__init__(message, category=ErrorCategory.EXTRACTION_FAILURE, status_code=status.HTTP_400_BAD_REQUEST)
+
+
+class InstagramTransientError(TravelAIException):
+    def __init__(self, message: str = "Instagram extraction timed out or connection was reset. Please try again."):
+        super().__init__(message, category=ErrorCategory.TIMEOUT, status_code=status.HTTP_504_GATEWAY_TIMEOUT)
 
 
 class MediaTimeoutError(TravelAIException):

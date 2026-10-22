@@ -1,15 +1,29 @@
+import logging
+import os
 from pathlib import Path
 
-import google.generativeai as genai
+logger = logging.getLogger(__name__)
 
 
 class SceneClassifier:
 
     def __init__(self):
+        try:
+            from engine.app.services.gemini.client_adapter import GeminiClientAdapter
 
-        self.model = genai.GenerativeModel(
-            "gemini-2.5-flash",
-        )
+            api_key = os.getenv("GEMINI_API_KEY", "")
+            if not api_key:
+                self.model = None
+                return
+
+            model_name = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
+            if model_name in ("gemini-2.5-flash", "gemini-1.5-flash"):
+                model_name = "gemini-3.8-flash"
+
+            self.model = GeminiClientAdapter(api_key=api_key, model_name=model_name)
+        except Exception as exc:
+            logger.warning("[VISION] Failed to initialize SceneClassifier model: %s", exc)
+            self.model = None
 
     # ==================================================
     # Classify Scene
@@ -21,6 +35,9 @@ class SceneClassifier:
     ):
 
         image = Path(image_path)
+
+        if not self.model:
+            return self.empty("Vision model unavailable.")
 
         if not image.exists():
 

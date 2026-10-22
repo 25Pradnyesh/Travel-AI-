@@ -675,7 +675,7 @@ export default function ProfileScreen() {
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Powered by</Text>
-              <Text style={styles.infoValue}>Gemini Multimodal · Google Places</Text>
+              <Text style={styles.infoValue}>Gemini Multimodal · OpenStreetMap</Text>
             </View>
 
             <View style={styles.cardDivider} />
@@ -683,6 +683,15 @@ export default function ProfileScreen() {
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Privacy Principles</Text>
               <Text style={styles.infoValueHighlight}>Private by default · Ephemeral media</Text>
+            </View>
+
+            <View style={styles.cardDivider} />
+
+            <View style={styles.dataSourcesBlock}>
+              <Text style={styles.infoLabel}>Data sources</Text>
+              <Text style={styles.dataSourceText}>• Map data © OpenStreetMap contributors (ODbL)</Text>
+              <Text style={styles.dataSourceText}>• Weather data by Open-Meteo (CC BY 4.0)</Text>
+              <Text style={styles.dataSourceText}>• Photos via Wikimedia Commons & Wikipedia (CC BY / CC BY-SA / PD)</Text>
             </View>
 
             <View style={styles.cardDivider} />
@@ -1265,5 +1274,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+  },
+  dataSourcesBlock: {
+    paddingVertical: Spacing.xs,
+    gap: 4,
+  },
+  dataSourceText: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 11,
+    color: Colors.textMuted,
+    lineHeight: 16,
+    paddingLeft: Spacing.xs,
   },
 });

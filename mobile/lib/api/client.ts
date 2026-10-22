@@ -182,19 +182,41 @@ export class HttpClient {
         throw err;
       }
 
+      if (err instanceof NetworkError) {
+        throw err;
+      }
+
+      const errorObj = err as { name?: string; message?: string };
+      if (errorObj?.name === 'TimeoutError' || err instanceof TimeoutError) {
+        throw new TimeoutError();
+      }
+
       if (
         err instanceof TypeError &&
         (err.message.includes('fetch') ||
           err.message.includes('network') ||
           err.message.includes('Network request failed') ||
-          err.message.includes('Failed to fetch'))
+          err.message.includes('Failed to fetch') ||
+          err.message.includes('NetworkError') ||
+          err.message.includes('Load failed'))
       ) {
-        throw new NetworkError();
+        throw new NetworkError('VAMO engine is unreachable. Please verify network connectivity.');
       }
 
-      const errorObj = err as { name?: string; message?: string };
-      if (errorObj?.name === 'TimeoutError') {
-        throw new TimeoutError();
+      // If it's an Error that mentions network / unreachable
+      if (err instanceof Error) {
+        const lowerMsg = err.message.toLowerCase();
+        if (
+          lowerMsg.includes('network') ||
+          lowerMsg.includes('connection refused') ||
+          lowerMsg.includes('econnrefused') ||
+          lowerMsg.includes('failed to connect') ||
+          lowerMsg.includes('unreachable')
+        ) {
+          throw new NetworkError('VAMO engine is unreachable. Please verify network connectivity.');
+        }
+        // Unexpected runtime/client error
+        throw new ApiError(err.message || 'Client error during request', 0, err);
       }
 
       throw new NetworkError();

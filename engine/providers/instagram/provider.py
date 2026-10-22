@@ -1,12 +1,23 @@
+import logging
 import re
 import time
 import uuid
 from pathlib import Path
 
+import yt_dlp
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
+from engine.core.exceptions import (
+    InstagramEmptyMediaError,
+    InstagramPrivateError,
+    InstagramTransientError,
+    InstagramUnsupportedUrlError,
+    MediaExtractionError,
+)
 from engine.providers.base import BaseProvider
+
+logger = logging.getLogger(__name__)
 
 
 class InstagramYtDlpProvider(BaseProvider):
@@ -21,6 +32,9 @@ class InstagramYtDlpProvider(BaseProvider):
             parents=True,
             exist_ok=True,
         )
+
+        self.ytdlp_version = getattr(getattr(yt_dlp, "version", None), "__version__", getattr(yt_dlp, "__version__", "unknown"))
+        logger.info("[INSTAGRAM] InstagramYtDlpProvider initialized with yt-dlp version: %s", self.ytdlp_version)
 
     # ==================================================
     # yt-dlp Options
@@ -165,6 +179,8 @@ class InstagramYtDlpProvider(BaseProvider):
                     break
             except DownloadError as e:
                 err_msg = str(e).lower()
+                logger.warning("[INSTAGRAM] Download attempt %d failed: %s", attempt + 1, e)
+
                 if "no video" in err_msg or "no video formats" in err_msg:
                     info = self._extract_metadata_without_video(url)
                     if info:
@@ -172,15 +188,44 @@ class InstagramYtDlpProvider(BaseProvider):
                         break
                     else:
                         self._cleanup_partial_files(file_id)
-                        raise RuntimeError(f"Instagram download failed.\n\n{e}")
-                elif attempt < download_attempts - 1:
-                    time.sleep(1.5)
+                        raise InstagramEmptyMediaError("Instagram post contains no downloadable video stream.")
+
+                # Non-retryable: Private account, age-restricted, or login wall
+                if any(phrase in err_msg for phrase in ["login required", "account is private", "private account", "restricted video", "age-restricted"]):
+                    self._cleanup_partial_files(file_id)
+                    raise InstagramPrivateError("This Reel is private, restricted, or requires login to view.")
+
+                # Non-retryable: Unsupported or invalid URL
+                if any(phrase in err_msg for phrase in ["unsupported url", "not a valid url", "is not a valid url", "unknown url type"]):
+                    self._cleanup_partial_files(file_id)
+                    raise InstagramUnsupportedUrlError("The provided URL is not a recognized or supported Instagram Reel.")
+
+                # Retryable once: Empty media response
+                if "empty media response" in err_msg:
+                    if attempt < download_attempts - 1:
+                        time.sleep(1.0)
+                        continue
+                    self._cleanup_partial_files(file_id)
+                    raise InstagramEmptyMediaError("Instagram sent an empty response. The Reel may be restricted, blocked, or unavailable.")
+
+                # Retryable once: Transient network / timeout errors
+                if any(phrase in err_msg for phrase in ["timed out", "timeout", "connection reset", "name resolution"]):
+                    if attempt < download_attempts - 1:
+                        time.sleep(1.0)
+                        continue
+                    self._cleanup_partial_files(file_id)
+                    raise InstagramTransientError("Instagram extraction timed out. Please try again in a moment.")
+
+                # Fallback for remaining download errors
+                if attempt < download_attempts - 1:
+                    time.sleep(1.0)
                     continue
                 else:
                     self._cleanup_partial_files(file_id)
-                    raise RuntimeError(
-                        f"Instagram download failed.\n\n{e}"
-                    )
+                    raise MediaExtractionError(f"Instagram download could not be completed. Make sure the Reel is public and available.")
+            except (InstagramEmptyMediaError, InstagramPrivateError, InstagramUnsupportedUrlError, InstagramTransientError, MediaExtractionError):
+                self._cleanup_partial_files(file_id)
+                raise
             except Exception:
                 self._cleanup_partial_files(file_id)
                 raise

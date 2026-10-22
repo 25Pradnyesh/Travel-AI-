@@ -43,6 +43,10 @@ WORKSPACE_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(WORKSPACE_DIR / ".env.local", override=False)
 load_dotenv(WORKSPACE_DIR / ".env", override=False)
 
+# Default APP_CONTACT if unset in environment to comply with OpenStreetMap User-Agent policy
+if "APP_CONTACT" not in os.environ and not os.getenv("APP_CONTACT", "").strip():
+    os.environ["APP_CONTACT"] = "contact@travelai.local"
+
 
 # ==================================================
 # FastAPI App
@@ -63,15 +67,21 @@ def validate_configuration() -> dict[str, bool]:
     """
     Validates essential engine configuration without exposing secrets.
     """
+    places_provider = os.getenv("PLACES_PROVIDER", "osm").strip().lower()
     places_key = os.getenv("GOOGLE_PLACES_API_KEY", "").strip()
+    google_places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
     gemini_key = os.getenv("GEMINI_API_KEY", "").strip()
     rate_limit_enabled = os.getenv("RATE_LIMIT_ENABLED", "true").lower() in ("true", "1", "yes")
     supabase_url = os.getenv("SUPABASE_URL", "").strip()
     supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
     env = os.getenv("ENVIRONMENT", "development").strip().lower()
+    app_contact = os.getenv("APP_CONTACT", "").strip()
 
     status_dict = {
+        "places_provider": places_provider,
+        "osm_configured": bool(app_contact),
         "google_places_configured": bool(places_key),
+        "google_places_enabled": google_places_enabled,
         "gemini_configured": bool(gemini_key),
         "supabase_configured": bool(supabase_url and supabase_key),
         "rate_limiting_enabled": rate_limit_enabled,
@@ -82,6 +92,16 @@ def validate_configuration() -> dict[str, bool]:
         print("   Destination candidate resolution and nearby search require this key.")
     else:
         print("✅ Google Places API configured.")
+
+    if places_provider == "osm":
+        print(f"✅ OSM Places Provider active (OpenStreetMap / Nominatim / Overpass; contact: {app_contact}).")
+    elif places_provider == "google":
+        if google_places_enabled:
+            print("✅ Google Places API enabled.")
+        else:
+            print("ℹ️ Google Places API configured but GOOGLE_PLACES_ENABLED is false.")
+    else:
+        print(f"ℹ️ Places provider is '{places_provider}'.")
 
     if not gemini_key:
         print("ℹ️ GEMINI_API_KEY not set. Gemini verification running in fallback mode.")

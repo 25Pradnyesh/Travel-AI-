@@ -216,6 +216,8 @@ class SeasonService:
     def get(
         self,
         category: str,
+        latitude: float | None = None,
+        longitude: float | None = None,
     ):
 
         season = self.CATEGORY_SEASONS.get(
@@ -226,9 +228,35 @@ class SeasonService:
 
         )
 
+        if latitude is not None and longitude is not None:
+            try:
+                from engine.app.services.places.open_meteo_client import OpenMeteoClient
+                client = OpenMeteoClient()
+                hist_weather = client.get_historical_best_months(latitude, longitude)
+                if hist_weather and hist_weather.get("best_months"):
+                    return {
+                        "best_months": hist_weather["best_months"],
+                        "peak_months": hist_weather.get("peak_months", hist_weather["best_months"][:3]),
+                        "shoulder_months": hist_weather.get("shoulder_months", hist_weather["best_months"][3:]),
+                        "avoid_months": hist_weather.get("avoid_months", []),
+                        "peak_season": season["peak_season"],
+                        "avoid_season": ", ".join(hist_weather.get("avoid_months", [])) or season["avoid"],
+                        "recommended": ", ".join(hist_weather["best_months"]),
+                        "weather_basis": "based on historical weather",
+                        "weather_source": "Open-Meteo Historical Weather",
+                    }
+            except Exception:
+                pass
+
         return {
 
             "best_months": season["best_months"],
+
+            "peak_months": season["best_months"][:3],
+
+            "shoulder_months": season["best_months"][3:],
+
+            "avoid_months": [season["avoid"]],
 
             "peak_season": season["peak_season"],
 
@@ -239,5 +267,7 @@ class SeasonService:
                 season["best_months"]
 
             ),
+
+            "weather_basis": "category heuristic",
 
         }

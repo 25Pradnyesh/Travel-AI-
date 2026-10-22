@@ -7,6 +7,9 @@ class DestinationPhoto(BaseModel):
     width: int | None = None
     height: int | None = None
     author: list[str] | str | None = None
+    license: str | None = None
+    license_url: str | None = None
+    source_url: str | None = None
 
 
 class BestGuess(BaseModel):
@@ -18,8 +21,8 @@ class BestGuess(BaseModel):
     region: str | None = None
     latitude: float | None = None
     longitude: float | None = None
-    rating: float = 0.0
-    user_ratings_total: int = 0
+    rating: float | None = None
+    user_ratings_total: int | None = None
     types: list[str] = Field(default_factory=list)
     photos: list[DestinationPhoto] = Field(default_factory=list)
     maps_url: str = ""
@@ -37,12 +40,13 @@ class NearbyPlace(BaseModel):
     formatted_address: str = ""
     latitude: float | None = None
     longitude: float | None = None
-    rating: float = 0.0
-    user_ratings_total: int = 0
+    rating: float | None = None
+    user_ratings_total: int | None = None
     types: list[str] = Field(default_factory=list)
     distance_km: float | None = None
     maps_url: str = ""
     category: str = ""
+    photos: list[DestinationPhoto] = Field(default_factory=list)
 
 
 class GeminiInfo(BaseModel):

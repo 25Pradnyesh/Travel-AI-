@@ -91,15 +91,11 @@ class BudgetEstimator:
             "Destination",
         )
 
-        rating = place.get(
-            "rating",
-            0,
-        )
+        raw_rating = place.get("rating")
+        rating = float(raw_rating) if raw_rating is not None else 0.0
 
-        reviews = place.get(
-            "user_rating_count",
-            0,
-        )
+        raw_reviews = place.get("user_rating_count") or place.get("user_ratings_total")
+        reviews = int(raw_reviews) if raw_reviews is not None else 0
 
         multiplier = (
 
@@ -117,25 +113,19 @@ class BudgetEstimator:
 
         )
 
-        # Premium destinations
+        # Premium destinations (only apply if real rating is present)
+        if raw_rating is not None:
+            if rating >= 4.8:
+                multiplier *= 1.10
+            elif rating < 4.0:
+                multiplier *= 0.95
 
-        if rating >= 4.8:
-
-            multiplier *= 1.10
-
-        elif rating < 4.0:
-
-            multiplier *= 0.95
-
-        # Popular destinations
-
-        if reviews > 100000:
-
-            multiplier *= 1.10
-
-        elif reviews > 10000:
-
-            multiplier *= 1.05
+        # Popular destinations (only apply if real reviews are present)
+        if raw_reviews is not None:
+            if reviews > 100000:
+                multiplier *= 1.10
+            elif reviews > 10000:
+                multiplier *= 1.05
 
         base_budget = 100
 
@@ -150,6 +140,8 @@ class BudgetEstimator:
             ),
 
             "estimated_daily_budget": estimated_daily_budget,
+
+            "budget_basis": "estimate",
 
             "currency": place.get(
                 "currency",

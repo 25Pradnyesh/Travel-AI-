@@ -171,26 +171,18 @@ class LocationFormatter:
             # Popularity
             # ==================================================
 
-            "rating": float(
-                place.get(
-                    "rating",
-                    0.0,
-                )
-                or 0.0
-            ),
+            "rating": float(place["rating"]) if place.get("rating") is not None else None,
 
-            "user_rating_count": int(
-                place.get(
-                    "user_rating_count",
-                    0,
-                )
-                or 0
-            ),
+            "user_rating_count": int(place["user_rating_count"]) if place.get("user_rating_count") is not None else None,
 
             "price_level": place.get(
                 "price_level",
                 "",
             ),
+
+            "wikidata": place.get("wikidata"),
+            "wikipedia": place.get("wikipedia"),
+            "extratags": place.get("extratags", {}),
 
             # ==================================================
             # Travel Metadata

@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+import re
 import time
 import uuid
 
@@ -37,11 +38,21 @@ obs_logger = get_logger("engine.app.pipelines.location_pipeline")
 
 class LocationPipeline:
 
-    def __init__(self):
+    def __init__(
+        self,
+        resolver: LocationResolver | None = None,
+        places_provider=None,
+    ):
+        from engine.app.services.places.factory import get_places_provider
 
         self.builder = EvidenceBuilder()
         self.frames = FrameExtractor()
-        self.resolver = LocationResolver()
+        if resolver is not None:
+            self.resolver = resolver
+        elif places_provider is not None:
+            self.resolver = LocationResolver(provider=places_provider)
+        else:
+            self.resolver = LocationResolver(provider=get_places_provider())
         self.gemini = GeminiVerifier()
         self.travel = TravelIntelligenceService()
         self.response_builder = ResponseBuilder()
@@ -172,6 +183,7 @@ class LocationPipeline:
         if ctx:
             perf["request_id"] = ctx.request_id
             perf["metrics"] = ctx.get_telemetry_dict()
+            perf["external_calls"] = ctx.external_call_counts
             get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
             obs_logger.info(
                 "pipeline",
@@ -179,7 +191,9 @@ class LocationPipeline:
                 winner=ctx.selected_candidate,
                 confidence=ctx.confidence,
                 confidence_level=ctx.confidence_level,
+                external_calls=ctx.external_call_counts,
             )
+            logger.info("[ANALYSIS_CALLS] External call counts: %s", ctx.external_call_counts)
 
         resp.performance = perf
         return resp.model_dump()
@@ -217,12 +231,12 @@ class LocationPipeline:
             )
         except Exception as exc:
             logger.error("[GEMINI] Verification failed with exception: %s", type(exc).__name__)
-            # Fallback to top candidate gracefully
+            # Fallback to top candidate gracefully with FAILED verification status
             top_winner = ranked[0]
             top_winner["place"]["verification_status"] = "FAILED"
             top_winner["place"]["gemini_verified"] = False
             top_winner["place"]["gemini_confidence"] = 0.0
-            top_winner["place"]["gemini_reason"] = f"Gemini error: {type(exc).__name__}"
+            top_winner["place"]["gemini_reason"] = f"Gemini verification unavailable ({type(exc).__name__})"
             fallback_conf = self.gemini.calculate_confidence_level(
                 score=top_winner.get("score", 0.0),
                 verification_status="FAILED",
@@ -231,10 +245,11 @@ class LocationPipeline:
             top_winner["confidence"] = fallback_conf
             top_winner["place"]["confidence"] = fallback_conf
             return {
+                "status": "FAILED",
+                "verification_status": "FAILED",
                 "winner": top_winner,
                 "confidence": 0.0,
-                "reason": f"Gemini error: {type(exc).__name__}",
-                "verification_status": "FAILED",
+                "reason": f"Gemini verification unavailable ({type(exc).__name__})",
                 "vision": None,
             }
 
@@ -299,6 +314,7 @@ class LocationPipeline:
         resolver_result: dict | None,
         gemini_result: dict | None = None,
         stage: str = "caption",
+        has_video: bool = False,
     ) -> bool:
         """
         Validates that a resolved destination meets the minimum evidence credibility threshold.
@@ -312,27 +328,89 @@ class LocationPipeline:
         if not winner or not isinstance(winner, dict):
             return False
 
+        place = winner.get("place") or {}
+        score = float(winner.get("score") or 0.0)
+        matched_sources = place.get("matched_sources") or []
         gemini_status = (gemini_result.get("verification_status") if gemini_result else "").upper()
+
         if gemini_status == "VERIFIED":
             return True
 
-        score = float(winner.get("score") or 0.0)
-        place = winner.get("place") or {}
-        matched_sources = place.get("matched_sources") or []
+        # Rule 1: A candidate with low score (< 60.0) cannot survive FAILED verification
+        if gemini_status == "FAILED" and score < 60.0:
+            logger.info(
+                "[PIPELINE] Candidate '%s' rejected: score %.1f < 60.0 with FAILED verification",
+                place.get("travel_name"),
+                score,
+            )
+            return False
+
+        # Rule 2: Minimum score threshold for any unverified destination
+        if score < 45.0:
+            logger.info(
+                "[PIPELINE] Candidate '%s' rejected: score %.1f < 45.0",
+                place.get("travel_name"),
+                score,
+            )
+            return False
+
+        # Rule 3: Reject candidate if matched candidate has no substantive entity
+        matched_cand = (place.get("matched_candidate") or "").lower()
+        if matched_cand:
+            from engine.app.services.location.candidate_service import ALL_NON_PROPER_WORDS
+            cand_tokens = set(matched_cand.replace(",", " ").split())
+            if cand_tokens and all(w in ALL_NON_PROPER_WORDS for w in cand_tokens):
+                logger.info(
+                    "[PIPELINE] Candidate '%s' rejected: matched candidate '%s' has no substantive entity",
+                    place.get("travel_name"),
+                    matched_cand,
+                )
+                return False
+
+        # Check if candidate is merely a broad country or administrative territory
+        from engine.app.services.scoring.scoring_service import COUNTRIES
+        travel_name = (place.get("travel_name") or place.get("display_name") or "").lower()
+        country_name = (place.get("country") or "").lower()
+        first_part = travel_name.split(",")[0].strip()
+        first_clean = re.sub(r"['’]s$", "", first_part).strip()
+        is_country_only = (
+            first_clean in COUNTRIES
+            or travel_name in COUNTRIES
+            or (country_name and first_clean == country_name)
+            or place.get("primary_type") in ("country", "administrative_area_level_1")
+        )
+
+        # Stage 1 (Caption): If video is present, never early-exit on an unverified country or moderate score
+        if stage == "caption" and has_video:
+            if is_country_only:
+                logger.info(
+                    "[PIPELINE] Caption candidate '%s' is country-only; continuing to OCR to find specific destination",
+                    place.get("travel_name"),
+                )
+                return False
+            if score < 75.0 or len(matched_sources) < 2:
+                logger.info(
+                    "[PIPELINE] Caption candidate '%s' has uncorroborated score (%.1f); continuing to OCR",
+                    place.get("travel_name"),
+                    score,
+                )
+                return False
 
         # Multi-source corroboration (e.g. caption + speech, or caption + OCR)
         if len(matched_sources) >= 2 and score >= 45.0:
             return True
 
         # Stage-specific credibility gates:
-        # Caption is author-written text: requires at least score >= 45.0
+        # Caption is author-written text: requires at least score >= 45.0 (and not pure country if unverified)
         if stage == "caption":
+            if is_country_only and gemini_status != "VERIFIED":
+                return False
             return score >= 45.0
 
         # OCR is video frame text: easily corrupted by fonts, subtitles, or watermarks.
         # Reject if score is VERY_LOW (< 60.0) and unverified
         if stage == "ocr":
-            if score < 60.0:
+            if score < 60.0 and len(matched_sources) < 2:
                 logger.info(
                     "[PIPELINE] OCR candidate '%s' rejected for insufficient credibility (score=%.1f < 60.0, unverified)",
                     place.get("travel_name"),
@@ -343,7 +421,7 @@ class LocationPipeline:
 
         # Speech is audio transcription: phoneme noise
         if stage == "speech":
-            if score < 55.0:
+            if score < 55.0 and len(matched_sources) < 2:
                 logger.info(
                     "[PIPELINE] Speech candidate '%s' rejected for insufficient credibility (score=%.1f < 55.0, unverified)",
                     place.get("travel_name"),
@@ -381,6 +459,7 @@ class LocationPipeline:
 
         frame_paths = []
         extract_seconds = 0.0
+        has_video = bool(video_path and Path(video_path).exists())
 
         try:
             # ==================================================
@@ -406,7 +485,7 @@ class LocationPipeline:
                         frame_paths,
                     )
                 verify_seconds = time.perf_counter() - t_ver
-                if self._is_credible_destination(resolver, gemini, stage="caption"):
+                if self._is_credible_destination(resolver, gemini, stage="caption", has_video=has_video):
                     return self.build_response(
                         "caption",
                         evidence,
@@ -423,7 +502,7 @@ class LocationPipeline:
             # ==================================================
             print("\n--- Stage 2: OCR ---")
             t_ext = time.perf_counter()
-            if video_path and Path(video_path).exists():
+            if has_video:
                 try:
                     req_folder = (ctx.request_id if (ctx and ctx.request_id) else uuid.uuid4().hex).replace(":", "_")
                     frames_dir = Path("engine/assets/frames") / req_folder
@@ -457,7 +536,7 @@ class LocationPipeline:
                         frame_paths,
                     )
                 verify_seconds = time.perf_counter() - t_ver
-                if self._is_credible_destination(resolver, gemini, stage="ocr"):
+                if self._is_credible_destination(resolver, gemini, stage="ocr", has_video=has_video):
                     return self.build_response(
                         "ocr",
                         evidence,
@@ -474,7 +553,7 @@ class LocationPipeline:
             # ==================================================
             print("\n--- Stage 3: Speech ---")
             t_ext = time.perf_counter()
-            if video_path and Path(video_path).exists():
+            if has_video:
                 try:
                     with measure_stage(PipelineStage.EVIDENCE_SPEECH):
                         evidence = self.builder.build_speech(
@@ -500,7 +579,7 @@ class LocationPipeline:
                         frame_paths,
                     )
                 verify_seconds = time.perf_counter() - t_ver
-                if self._is_credible_destination(resolver, gemini, stage="speech"):
+                if self._is_credible_destination(resolver, gemini, stage="speech", has_video=has_video):
                     return self.build_response(
                         "speech",
                         evidence,
@@ -536,9 +615,13 @@ class LocationPipeline:
             if isinstance(raw_err, str):
                 err_msg = raw_err
             elif attempted:
-                err_msg = "No credible travel destination found (candidates lacked sufficient confidence)."
+                ev_present = [src for src in ["caption", "ocr", "speech"] if src in getattr(ctx, "evidence_sources", [])]
+                ev_missing = [src for src in ["caption", "ocr", "speech"] if src not in ev_present]
+                missing_str = f" Missing corroboration from: {', '.join(ev_missing)}." if ev_missing else " Candidates lacked sufficient verification certainty."
+                cand_summary = f"Candidates ({', '.join(attempted[:3])})"
+                err_msg = f"No verified destination resolved. {cand_summary} could not be confirmed.{missing_str}"
             else:
-                err_msg = "No destination candidates found from the Reel."
+                err_msg = "No destination candidates found from the Reel (missing location text in caption, OCR, and speech)."
 
             if ctx:
                 ctx.final_stage = "failed"

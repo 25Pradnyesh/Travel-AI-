@@ -11,6 +11,15 @@ import { validateReelUrl } from '@/lib/utils';
 import { apiClient, ApiError, NetworkError, TimeoutError, RequestOptions } from './client';
 import { analysisStore } from './analysis-store';
 
+export interface ErrorClassification {
+  title: string;
+  message: string;
+  isNetworkFailure: boolean;
+  isTimeout: boolean;
+  isHttpError: boolean;
+  statusCode?: number;
+}
+
 /**
  * Translates low-level HTTP / API / network errors into user-friendly messages.
  * Guards against leaking internal stack traces, system paths, or raw keys.
@@ -18,7 +27,7 @@ import { analysisStore } from './analysis-store';
 export function getFriendlyErrorMessage(err: unknown): string {
   // 1. Timeouts (client-side budget or engine request timeout)
   if (err instanceof TimeoutError) {
-    return "Can't reach VAMO right now. Check your connection and try again.";
+    return 'The analysis took longer than expected. Please try again.';
   }
 
   // 2. Network failures & unreachable engine
@@ -28,7 +37,7 @@ export function getFriendlyErrorMessage(err: unknown): string {
       // eslint-disable-next-line no-console
       console.warn(`[VAMO API Diagnostic] Engine unreachable at ${baseUrl || 'unconfigured'}`);
     }
-    return "Can't reach VAMO right now. Check your connection and try again.";
+    return "Can't reach VAMO engine. Please check your connection and verify the engine is running.";
   }
 
   // 3. Structured API / HTTP errors
@@ -64,6 +73,21 @@ export function getFriendlyErrorMessage(err: unknown): string {
       }
 
       if (
+        backendMsg.includes('empty response') ||
+        backendMsg.includes('empty media')
+      ) {
+        return 'Instagram sent an empty response. This Reel may be restricted, blocked, or unavailable.';
+      }
+
+      if (
+        backendMsg.includes('private') ||
+        backendMsg.includes('login to view') ||
+        backendMsg.includes('age-restricted')
+      ) {
+        return 'This Reel is private, restricted, or requires login to view.';
+      }
+
+      if (
         backendMsg.includes('Instagram Reel URL') ||
         backendMsg.includes('valid public Instagram Reel') ||
         backendMsg.includes('malformed') ||
@@ -78,15 +102,17 @@ export function getFriendlyErrorMessage(err: unknown): string {
         return 'Check the Reel URL.';
       case 401:
       case 403:
+        return 'Access denied. The Reel could not be retrieved.';
       case 404:
+        return 'The requested engine endpoint was not found.';
       case 422:
-        return 'The Reel could not be accessed. Make sure it is public and available.';
+        return 'The Reel URL is invalid or could not be processed.';
       case 429:
         return 'Too many requests. Please wait a moment and try again.';
       case 502:
       case 503:
       case 504:
-        return "Can't reach VAMO right now. Check your connection and try again.";
+        return 'Travel AI service is temporarily unavailable. Please try again in a moment.';
       case 500:
       default:
         return "VAMO couldn't complete the analysis. Please try again.";
@@ -127,6 +153,68 @@ export function getFriendlyErrorMessage(err: unknown): string {
   }
 
   return "VAMO couldn't complete the analysis. Please try again.";
+}
+
+/**
+ * Classifies any error into structured title, message, and diagnostic attributes.
+ */
+export function classifyError(err: unknown): ErrorClassification {
+  if (err instanceof TimeoutError) {
+    return {
+      title: 'Analysis Timed Out',
+      message: 'The analysis took longer than expected. Please try again.',
+      isNetworkFailure: false,
+      isTimeout: true,
+      isHttpError: false,
+    };
+  }
+
+  if (err instanceof NetworkError) {
+    const baseUrl = apiClient.getBaseUrl();
+    return {
+      title: 'Engine Unreachable',
+      message: `Can't reach VAMO engine at ${baseUrl || 'unconfigured'}. Check your network connection.`,
+      isNetworkFailure: true,
+      isTimeout: false,
+      isHttpError: false,
+    };
+  }
+
+  if (err instanceof ApiError) {
+    const friendlyMsg = getFriendlyErrorMessage(err);
+    let title = 'Analysis Incomplete';
+    if (err.status === 400) {
+      title = 'Invalid Reel URL';
+    } else if (err.status === 404) {
+      title = 'Endpoint Not Found';
+    } else if (err.status === 422) {
+      title = 'Reel Inaccessible';
+    } else if (err.status === 429) {
+      title = 'Rate Limit Exceeded';
+    } else if (err.status >= 502 && err.status <= 504) {
+      title = 'Service Unavailable';
+    } else if (err.status === 500) {
+      title = 'Analysis Incomplete';
+    }
+
+    return {
+      title,
+      message: friendlyMsg,
+      isNetworkFailure: false,
+      isTimeout: false,
+      isHttpError: true,
+      statusCode: err.status,
+    };
+  }
+
+  const friendlyMsg = getFriendlyErrorMessage(err);
+  return {
+    title: 'Analysis Incomplete',
+    message: friendlyMsg,
+    isNetworkFailure: false,
+    isTimeout: false,
+    isHttpError: false,
+  };
 }
 
 export class TravelAiService {

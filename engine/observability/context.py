@@ -31,6 +31,7 @@ class RequestContext:
     stage_start_times: dict[str, float] = field(default_factory=dict)
     external_latencies: dict[str, float] = field(default_factory=dict)
     retry_counts: dict[str, int] = field(default_factory=dict)
+    external_call_counts: dict[str, int] = field(default_factory=dict)
     evidence_sources: list[str] = field(default_factory=list)
     candidate_count: int = 0
     selected_candidate: str | None = None
@@ -67,6 +68,7 @@ class RequestContext:
     def record_external_call(self, service: str, latency: float, retries: int = 0) -> None:
         current = self.external_latencies.get(service, 0.0)
         self.external_latencies[service] = round(current + latency, 3)
+        self.external_call_counts[service] = self.external_call_counts.get(service, 0) + 1
         if retries > 0:
             self.retry_counts[service] = self.retry_counts.get(service, 0) + retries
 

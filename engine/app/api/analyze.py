@@ -22,6 +22,7 @@ from engine.core.security import (
     rate_limiter,
     concurrency_limiter,
 )
+from engine.core.exceptions import TravelAIException
 
 logger = logging.getLogger(__name__)
 obs_logger = get_logger("engine.app.api.analyze")
@@ -29,6 +30,7 @@ obs_logger = get_logger("engine.app.api.analyze")
 router = APIRouter(tags=["Analysis"])
 
 _provider = None
+_places_provider = None
 _pipeline = None
 
 
@@ -40,12 +42,22 @@ def get_provider():
     return _provider
 
 
+def get_places_provider_instance():
+    global _places_provider
+    if _places_provider is None:
+        from engine.app.services.places.factory import get_places_provider
+        _places_provider = get_places_provider()
+    return _places_provider
+
+
 def get_pipeline():
     global _pipeline
     if _pipeline is None:
         from engine.app.pipelines.location_pipeline import LocationPipeline
-        _pipeline = LocationPipeline()
+        places_prov = get_places_provider_instance()
+        _pipeline = LocationPipeline(places_provider=places_prov)
     return _pipeline
+
 
 
 # ==================================================
@@ -104,6 +116,14 @@ def analyze(payload: AnalyzeRequest, request: Request = None):
             provider_duration = time.perf_counter() - provider_start
             ctx.record_external_call("instagram_download", provider_duration)
             video_path = provider_output.get("video_path") if isinstance(provider_output, dict) else None
+        except TravelAIException as e:
+            obs_logger.warning("instagram_extraction", f"Reel extraction domain error ({type(e).__name__}): {e.message}")
+            ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, e.category, e.message)
+            get_metrics_aggregator().record_request(ctx.get_telemetry_dict())
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=e.message,
+            )
         except ValueError as e:
             obs_logger.warning("instagram_extraction", f"Validation error: {type(e).__name__}")
             ctx.record_failure(PipelineStage.INSTAGRAM_EXTRACTION, ErrorCategory.EXTRACTION_FAILURE, str(e))

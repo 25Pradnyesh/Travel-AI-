@@ -54,6 +54,91 @@ COUNTRIES = {
 }
 
 
+GENERIC_LOCATION_WORDS = {
+    "lake",
+    "river",
+    "beach",
+    "mountain",
+    "park",
+    "garden",
+    "forest",
+    "falls",
+    "waterfall",
+    "temple",
+    "fort",
+    "palace",
+    "museum",
+    "road",
+    "street",
+    "city",
+    "country",
+    "island",
+    "view",
+    "viewpoint",
+    "peak",
+    "pass",
+    "valley",
+    "canyon",
+    "gorge",
+    "lago",
+    "rio",
+    "mont",
+    "monte",
+    "valle",
+    "isola",
+    "church",
+    "shrine",
+    "cathedral",
+    "cathederal",
+    "mill",
+    "bridge",
+    "mountains",
+    "beaches",
+    "lakes",
+    "rivers",
+    "parks",
+    "gardens",
+    "forests",
+    "islands",
+    "waterfalls",
+    "temples",
+    "canyons",
+    "valleys",
+    "views",
+    "peaks",
+    "nature",
+    "wildlife",
+    "scenery",
+    "landscape",
+    "outdoors",
+    "paradise",
+    "spot",
+    "spots",
+    "place",
+    "places",
+    "destination",
+    "destinations",
+    "gem",
+    "gems",
+    "corner",
+    "corners",
+    "haven",
+    "oasis",
+    "wonder",
+    "wonders",
+    "location",
+    "locations",
+    "area",
+    "areas",
+    "region",
+    "regions",
+    "site",
+    "sites",
+    "attraction",
+    "attractions",
+}
+
+
 TRAVEL_KEYWORDS = {
     "lake",
     "mountain",
@@ -95,13 +180,27 @@ TRAVEL_KEYWORDS = {
 GOOD_PLACE_TYPES = {
     "natural_feature": 70,
     "tourist_attraction": 65,
+    "lake": 65,
+    "waterfall": 65,
+    "water": 60,
     "national_park": 60,
     "mountain_peak": 60,
+    "beach": 60,
+    "island": 60,
+    "valley": 55,
+    "viewpoint": 55,
+    "temple": 55,
+    "castle": 55,
     "locality": 55,
     "church": 50,
     "place_of_worship": 50,
     "historical_landmark": 50,
+    "monument": 50,
+    "historic": 50,
+    "city": 50,
     "park": 45,
+    "town": 45,
+    "village": 40,
     "campground": 20,
     "administrative_area_level_1": 15,
     "administrative_area_level_2": 10,
@@ -512,15 +611,9 @@ class ScoringService:
 
             ]
 
-            rating = place.get(
-                "rating",
-                0,
-            )
+            rating = place.get("rating") or 0.0
 
-            reviews = place.get(
-                "user_rating_count",
-                0,
-            )
+            reviews = place.get("user_rating_count") or 0
 
             business_status = place.get(
                 "business_status",
@@ -569,7 +662,8 @@ class ScoringService:
             # Exact Match Signals
             # ==========================================================
 
-            if verified_query and verified_query in caption:
+            vq_in_caption = bool(verified_query and verified_query in caption)
+            if vq_in_caption:
                 if len(verified_query.split()) > 1:
                     score += 50
                 elif primary_type in GOOD_PLACE_TYPES or any(t in GOOD_PLACE_TYPES for t in types):
@@ -579,13 +673,22 @@ class ScoringService:
                 matched_sources.add("caption")
                 matched_terms.add(verified_query)
 
-            if travel_name and travel_name in caption:
-                score += 40
+            tn_in_caption = bool(travel_name and travel_name in caption)
+            if tn_in_caption:
+                # If verified_query already matched caption and is identical to travel_name, avoid double counting full bonus
+                if vq_in_caption and verified_query.strip().lower() == travel_name.strip().lower():
+                    score += 10
+                else:
+                    score += 40
                 matched_sources.add("caption")
                 matched_terms.add(travel_name)
 
             if city and city in caption:
-                score += 35
+                # If city is identical to travel_name or verified_query, avoid duplicate full bonus
+                if (travel_name and city.strip().lower() == travel_name.strip().lower()) or (verified_query and city.strip().lower() == verified_query.strip().lower()):
+                    score += 10
+                else:
+                    score += 35
                 matched_sources.add("caption")
                 matched_terms.add(city)
 
@@ -656,139 +759,134 @@ class ScoringService:
             # Token Matching
             # ==========================================================
 
-            for token in set(self.tokenize(searchable)):
+            # Name and locality proper token matching (excluding generic words to prevent runaway inflation)
+            name_locality_str = f"{travel_name} {city} {region} {verified_query}"
+            candidate_proper_tokens = {
+                t for t in self.tokenize(name_locality_str)
+                if t not in GENERIC_LOCATION_WORDS and len(t) > 3
+            }
 
-                if len(token) <= 3:
-                    continue
-
-                # ----------------------------
-                # Title
-                # ----------------------------
-
-                gained = self.score_index(
-                    token,
-                    title_index,
-                    15,
-                    8,
-                    4,
-                )
-
-                if gained:
-                    matched_sources.add("title")
-                    matched_terms.add(token)
-
-                score += gained
-
-                # ----------------------------
-                # Caption
-                # ----------------------------
-
-                gained = self.score_index(
-                    token,
-                    caption_index,
-                    20,
-                    12,
-                    6,
-                )
-
-                if gained:
+            token_gain = 0
+            for token in candidate_proper_tokens:
+                g = self.score_index(token, caption_index, 15, 8, 4)
+                if g:
                     matched_sources.add("caption")
                     matched_terms.add(token)
+                    token_gain += g
 
-                score += gained
+                g = self.score_index(token, title_index, 10, 6, 3)
+                if g:
+                    matched_sources.add("title")
+                    matched_terms.add(token)
+                    token_gain += g
 
-                # ----------------------------
-                # Speech
-                # ----------------------------
-
-                gained = self.score_index(
-                    token,
-                    speech_index,
-                    18,
-                    10,
-                    5,
-                )
-
-                if gained:
+                g = self.score_index(token, speech_index, 12, 8, 4)
+                if g:
                     matched_sources.add("speech")
                     matched_terms.add(token)
+                    token_gain += g
 
-                score += gained
-
-                # ----------------------------
-                # OCR
-                # ----------------------------
-
-                gained = self.score_index(
-                    token,
-                    ocr_index,
-                    15,
-                    8,
-                    4,
-                )
-
-                if gained:
+                g = self.score_index(token, ocr_index, 10, 6, 3)
+                if g:
                     matched_sources.add("ocr")
                     matched_terms.add(token)
+                    token_gain += g
 
-                score += gained
-
-                # ----------------------------
-                # Hashtags
-                # ----------------------------
-
-                gained = self.score_index(
-                    token,
-                    hashtag_index,
-                    10,
-                    6,
-                    3,
-                )
-
-                if gained:
+                g = self.score_index(token, hashtag_index, 8, 5, 2)
+                if g:
                     matched_sources.add("hashtags")
                     matched_terms.add(token)
+                    token_gain += g
 
-                score += gained
+            # Cap total token matching bonus to 35 points
+            score += min(token_gain, 35)
+
+            # Check if candidate place has any proper name match in evidence
+            cand_tokens = {
+                t for t in self.tokenize(travel_name)
+                if t not in GENERIC_LOCATION_WORDS and len(t) > 3
+            }
+            has_proper_match = any(
+                t in caption or t in speech or t in ocr or t in title or t in hashtags
+                for t in cand_tokens
+            )
+            # If place name has proper tokens, but NONE matched the evidence (e.g. only "lake" matched)
+            if cand_tokens and not has_proper_match:
+                score -= 60
 
             # ==========================================================
             # Country Consistency
             # ==========================================================
 
-            if (
-                travel_name == country
-                and
-                primary_type != "country"
-            ):
-                score -= 50
+            first_component = travel_name.split(",")[0].strip().lower()
+            first_clean = re.sub(r"['’]s$", "", first_component).strip()
+            is_country = (
+                first_clean in COUNTRIES
+                or travel_name in COUNTRIES
+                or (country and first_clean == country)
+                or primary_type in ("country", "administrative_area_level_1")
+            )
+
+            if is_country:
+                score -= 60
 
             combined_sources = " ".join([
                 caption,
                 speech,
                 ocr,
+                hashtags,
             ])
 
-            # Extract distinct mentioned countries with word boundary matching
+            COUNTRY_ALIASES_MAP = {
+                "italy": {"italy", "italia", "italian"},
+                "france": {"france", "french", "français"},
+                "germany": {"germany", "german", "deutschland"},
+                "spain": {"spain", "spanish", "españa"},
+                "switzerland": {"switzerland", "swiss", "suisse", "schweiz"},
+                "china": {"china", "chinese"},
+                "south korea": {"south korea", "korea", "korean"},
+                "japan": {"japan", "japanese"},
+                "india": {"india", "indian"},
+                "canada": {"canada", "canadian"},
+                "usa": {"usa", "united states", "american", "america"},
+                "uk": {"uk", "united kingdom", "england", "british", "scotland", "wales"},
+                "austria": {"austria", "austrian", "österreich"},
+                "greece": {"greece", "greek"},
+                "norway": {"norway", "norwegian"},
+                "mexico": {"mexico", "mexican"},
+                "brazil": {"brazil", "brazilian", "brasil"},
+                "portugal": {"portugal", "portuguese"},
+            }
+
             evidence_countries = set()
+            for base_c, aliases in COUNTRY_ALIASES_MAP.items():
+                for al in aliases:
+                    pattern = r"\b" + re.escape(al) + r"\b"
+                    if re.search(pattern, combined_sources):
+                        evidence_countries.add(base_c)
+                        break
+
             for known_country in COUNTRIES:
                 pattern = r"\b" + re.escape(known_country) + r"\b"
                 if re.search(pattern, combined_sources):
                     evidence_countries.add(known_country)
 
             place_country = (country or "").lower().strip()
-            place_aliases = {place_country} if place_country else set()
-            if place_country in ("usa", "united states"):
-                place_aliases.update({"usa", "united states"})
-            elif place_country in ("uk", "united kingdom", "england"):
-                place_aliases.update({"uk", "united kingdom", "england"})
+            place_canonical = place_country
+            for base_c, aliases in COUNTRY_ALIASES_MAP.items():
+                if place_country in aliases or place_country == base_c:
+                    place_canonical = base_c
+                    break
 
-            if evidence_countries and place_country:
-                # If the place's country matches ANY country mentioned in evidence
-                if evidence_countries.intersection(place_aliases):
-                    score += 25
+            has_country_contradiction = False
+            if evidence_countries and place_canonical:
+                if place_canonical in evidence_countries:
+                    score += 35
+                    matched_sources.add("caption" if place_canonical in caption else "hashtags")
                 else:
-                    # Evidence explicitly mentions other country/countries and this place does not match
-                    score -= 90
+                    # Place country contradicts evidence country (e.g. Canada vs Italy, USA vs France)
+                    score -= 150
+                    has_country_contradiction = True
 
             # ==========================================================
             # Tourism Bias
@@ -927,6 +1025,10 @@ class ScoringService:
 
             score += evidence_bonus
 
+            # If candidate directly contradicts verified evidence country, strictly cap raw score
+            if has_country_contradiction:
+                score = min(score, 110.0)
+
             # ==========================================================
             # Normalize
             # ==========================================================
@@ -939,8 +1041,9 @@ class ScoringService:
             # Store Evidence
             # ==========================================================
 
+            combined_sources = set(matched_sources) | set(place.get("matched_sources") or [])
             place["matched_sources"] = sorted(
-                matched_sources,
+                combined_sources,
             )
 
             place["matched_terms"] = sorted(
@@ -948,7 +1051,7 @@ class ScoringService:
             )
 
             place["evidence_count"] = len(
-                matched_sources,
+                combined_sources,
             )
 
             place["match_strength"] = normalized
@@ -967,11 +1070,42 @@ class ScoringService:
                     "score": normalized,
                     "confidence": self.confidence(
                         normalized,
-                        evidence_count=len(matched_sources),
-                        is_country_only=bool(country and travel_name == country),
+                        evidence_count=len(combined_sources),
+                        is_country_only=is_country,
                     ),
                 }
             )
+
+        # ==========================================================
+        # Stable Deduplication of Ranked Candidates
+        # ==========================================================
+
+        deduped_ranked = []
+        seen_keys = {}
+        for item in ranked:
+            p = item["place"]
+            tname = (p.get("travel_name") or p.get("display_name") or "").strip()
+            pcountry = (p.get("country") or "").strip()
+            nkey = (
+                re.sub(r"[^\w\s]", "", tname.lower()).strip()
+                + "::"
+                + re.sub(r"[^\w\s]", "", pcountry.lower()).strip()
+            )
+            if nkey in seen_keys:
+                existing = seen_keys[nkey]
+                ex_src = set(existing["place"].get("matched_sources", []))
+                new_src = set(p.get("matched_sources", []))
+                merged_src = sorted(ex_src | new_src)
+                existing["place"]["matched_sources"] = merged_src
+                existing["place"]["evidence_count"] = len(merged_src)
+                if item["score"] > existing["score"]:
+                    existing["score"] = item["score"]
+                    existing["raw_score"] = item["raw_score"]
+                    existing["confidence"] = item["confidence"]
+                continue
+            seen_keys[nkey] = item
+            deduped_ranked.append(item)
+        ranked = deduped_ranked
 
         # ==========================================================
         # Final Ranking
@@ -981,8 +1115,8 @@ class ScoringService:
             key=lambda x: (
                 x["score"],
                 x.get("raw_score", 0),
-                min(x["place"].get("user_rating_count", 0), 10000),
-                x["place"].get("rating", 0),
+                min(x["place"].get("user_rating_count") or 0, 10000),
+                x["place"].get("rating") or 0.0,
                 str(x["place"].get("id", "")),
             ),
             reverse=True,

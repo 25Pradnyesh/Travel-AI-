@@ -134,21 +134,59 @@ LANDMARK_TYPES = {
     "mountain_peak",
     "viewpoint",
     "park",
+    "lake",
+    "waterfall",
+    "beach",
+    "island",
+    "valley",
+    "forest",
+    "castle",
+    "monument",
+    "historic",
+    "water",
+    "city",
+    "town",
+    "village",
 }
+
+
+class _NearbyWrapper:
+    def __init__(self, provider):
+        self._provider = provider
+        from engine.app.services.maps.nearby_search_service import NearbySearchService
+        self._fallback = NearbySearchService()
+
+    def search(self, latitude, longitude, radius=1500):
+        if hasattr(self._provider, "search_nearby"):
+            return self._provider.search_nearby(latitude, longitude, radius)
+        if hasattr(self._provider, "search"):
+            return self._provider.search(latitude, longitude, radius)
+        return {}
+
+    def search_nearby(self, latitude, longitude, radius=1500):
+        return self.search(latitude, longitude, radius)
+
+    def __getattr__(self, name):
+        if hasattr(self._provider, name):
+            return getattr(self._provider, name)
+        return getattr(self._fallback, name)
 
 
 class LocationResolver:
 
-    def __init__(self):
+    def __init__(self, provider=None):
+        from engine.app.services.places.factory import get_places_provider
 
+        self.provider = provider if provider is not None else get_places_provider()
         self.candidates = CandidateService()
-        self.search = GooglePlacesService()
-        self.details = GooglePlaceDetailsService()
-        self.nearby = NearbySearchService()
+        self.search = self.provider
+        self.details = self.provider
+        self.nearby = _NearbyWrapper(self.provider)
         self.formatter = LocationFormatter()
         self.geo = GeoEnrichmentService()
         self.scorer = ScoringService()
         self.travel = TravelIntelligenceService()
+
 
         # Hardening: Track candidate attempts and resolver diagnostics
         self.last_attempted_candidates: list[str] = []
@@ -291,7 +329,7 @@ class LocationResolver:
                 self.log(f"⚠️ Place details enrichment failed: {type(exc).__name__}: {exc}")
             d_dur = time.perf_counter() - t_d
             if ctx:
-                ctx.record_external_call("google_places_details", d_dur)
+                ctx.record_external_call("places_details", d_dur)
                 ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, d_dur)
             if details:
                 for k in (
@@ -304,6 +342,8 @@ class LocationResolver:
                     "accessibility",
                     "plus_code",
                     "utc_offset_minutes",
+                    "wikidata",
+                    "wikipedia",
                 ):
                     val = details.get(k)
                     if val:
@@ -424,16 +464,33 @@ class LocationResolver:
             if inner and len(inner) >= 3:
                 fallbacks.append(inner)
 
-        # 2. Multi-segment comma relaxation for 3+ segments
+        # 2. Preposition "in" relaxation
+        # E.g. "Erhai Lake in Dali, China" -> "Erhai Lake, Dali, China", "Erhai Lake"
+        comma_rel = None
+        if " in " in query.lower():
+            comma_rel = re.sub(r"\s+in\s+", ", ", query, flags=re.IGNORECASE).strip()
+            if comma_rel and comma_rel.lower() != query.lower() and comma_rel not in fallbacks:
+                fallbacks.append(comma_rel)
+            subj = re.split(r"\s+in\s+", query, flags=re.IGNORECASE)[0].strip()
+            if subj and len(subj) >= 3 and subj not in fallbacks:
+                fallbacks.append(subj)
+
+        # 3. Multi-segment comma relaxation for 3+ segments
         # E.g. "The Fulling Mill, Alresford, Hampshire" -> "The Fulling Mill, Hampshire", "The Fulling Mill, Alresford"
-        parts = [p.strip() for p in query.split(",") if p.strip()]
-        if len(parts) >= 3:
-            first_last = f"{parts[0]}, {parts[-1]}"
-            if first_last not in fallbacks:
-                fallbacks.append(first_last)
-            first_two = f"{parts[0]}, {parts[1]}"
-            if first_two not in fallbacks:
-                fallbacks.append(first_two)
+        # Also applies to comma_rel ("Erhai Lake, Dali, China" -> "Erhai Lake, Dali", "Erhai Lake, China")
+        queries_to_relax = [query]
+        if comma_rel and comma_rel != query:
+            queries_to_relax.append(comma_rel)
+
+        for q in queries_to_relax:
+            parts = [p.strip() for p in q.split(",") if p.strip()]
+            if len(parts) >= 3:
+                first_last = f"{parts[0]}, {parts[-1]}"
+                if first_last not in fallbacks:
+                    fallbacks.append(first_last)
+                first_two = f"{parts[0]}, {parts[1]}"
+                if first_two not in fallbacks:
+                    fallbacks.append(first_two)
 
         return fallbacks
 
@@ -468,6 +525,8 @@ class LocationResolver:
                     "",
                 ),
             )
+            if not candidates and evidence.get("candidates"):
+                candidates = list(evidence["candidates"])
 
         self.last_attempted_candidates = list(candidates)
         ctx = get_current_context()
@@ -488,13 +547,15 @@ class LocationResolver:
             f"Generated {len(candidates)} search candidate(s)"
         )
 
-        # Check GOOGLE_PLACES_ENABLED flag (default false)
-        is_places_enabled = os.getenv("GOOGLE_PLACES_ENABLED", "false").strip().lower() in ("true", "1", "yes")
-        if not is_places_enabled:
-            self.last_resolver_error = "Place lookup is unavailable right now"
+        # Check provider availability (OSM active by default at zero cost; Google requires GOOGLE_PLACES_ENABLED=true)
+        search_patched_separately = (self.provider is not self.search) and (
+            hasattr(self.search, "assert_called") or hasattr(getattr(self.search, "search", None), "assert_called")
+        )
+        if not search_patched_separately and not self.provider.is_available:
+            self.last_resolver_error = f"Place lookup is unavailable right now ({self.provider.name} provider not configured)"
             if ctx:
                 ctx.places_resolution_status = "DISABLED"
-            self.log("GOOGLE_PLACES_ENABLED is false; skipping place search.")
+            self.log(f"{self.provider.name} provider is unavailable; skipping place search.")
             return None
 
         if not candidates:
@@ -502,7 +563,7 @@ class LocationResolver:
             if ctx:
                 ctx.places_resolution_status = "NO_CANDIDATES"
             print(
-                "❌ No candidates generated.\n"
+                "[X] No candidates generated.\n"
             )
             return None
 
@@ -511,21 +572,33 @@ class LocationResolver:
         total_search_results = 0
 
         # ==================================================
-        # Candidate Search Loop
+        # Candidate Search Loop (Max 4 lookups, best first, stop on confident match)
         # ==================================================
 
-        search_candidates = candidates[:8]
+        search_candidates = candidates[:4]
 
         def _search_candidate_with_fallbacks(cand: str) -> tuple[str, list[dict], float, str]:
             t_start = time.perf_counter()
-            res = self.search.search(cand)
+            res = []
+            dur = 0.0
+            try:
+                res = self.search.search(cand)
+            except Exception as exc:
+                self.log(f"Candidate search failed for '{cand}': {exc}")
+                self.last_resolver_error = f"Place lookup failed ({self.provider.name} provider error: {type(exc).__name__})"
+                res = []
             dur = time.perf_counter() - t_start
             resolved_q = cand
             if not res:
                 fallbacks = self._generate_query_fallbacks(cand)
                 for fb in fallbacks:
                     t_fb = time.perf_counter()
-                    fb_res = self.search.search(fb)
+                    fb_res = []
+                    try:
+                        fb_res = self.search.search(fb)
+                    except Exception as exc:
+                        self.log(f"Fallback candidate search failed for '{fb}': {exc}")
+                        fb_res = []
                     dur += (time.perf_counter() - t_fb)
                     if fb_res:
                         res = fb_res
@@ -533,12 +606,12 @@ class LocationResolver:
                         break
             return cand, res, dur, resolved_q
 
-        # Concurrent candidate search if multiple candidates
-        if len(search_candidates) > 1:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=min(4, len(search_candidates))) as executor:
-                search_outputs = list(executor.map(_search_candidate_with_fallbacks, search_candidates))
-        else:
-            search_outputs = [_search_candidate_with_fallbacks(search_candidates[0])]
+        # Evaluate all top candidate entities (max 4 lookups) so that landmarks,
+        # localities, and parent regions are retrieved for comparative evidence-based ranking
+        search_outputs = []
+        for idx, cand in enumerate(search_candidates):
+            cand_output = _search_candidate_with_fallbacks(cand)
+            search_outputs.append(cand_output)
 
         for index, (candidate, search_results, s_dur, resolved_query) in enumerate(
             search_outputs,
@@ -609,9 +682,10 @@ class LocationResolver:
                     "longitude": result.get("longitude"),
                     "primary_type": result.get("primary_type", ""),
                     "types": result.get("types", []),
-                    "rating": result.get("rating", 0.0),
-                    "user_rating_count": result.get("user_rating_count", 0),
+                    "rating": result.get("rating"),
+                    "user_rating_count": result.get("user_rating_count"),
                     "google_maps_url": result.get("google_maps_url", ""),
+                    "maps_url": result.get("maps_url", ""),
                     "business_status": result.get("business_status", ""),
                     "viewport": result.get("viewport", {}),
                     "website": "",
@@ -624,6 +698,9 @@ class LocationResolver:
                     "accessibility": {},
                     "plus_code": {},
                     "utc_offset_minutes": 0,
+                    "wikidata": result.get("wikidata"),
+                    "wikipedia": result.get("wikipedia"),
+                    "extratags": result.get("extratags", {}),
                 }
 
                 # --------------------------------------
@@ -678,6 +755,37 @@ class LocationResolver:
                 enriched["local_tips"] = []
                 enriched["photo_gallery"] = []
 
+                # Stable normalized deduplication
+                t_name = (enriched.get("travel_name") or enriched.get("display_name") or "").strip()
+                c_name = (enriched.get("country") or "").strip()
+                norm_key = (
+                    re.sub(r"[^\w\s]", "", t_name.lower()).strip()
+                    + "::"
+                    + re.sub(r"[^\w\s]", "", c_name.lower()).strip()
+                )
+
+                existing_match = None
+                for ex in verified_places:
+                    ex_name = (ex.get("travel_name") or ex.get("display_name") or "").strip()
+                    ex_country = (ex.get("country") or "").strip()
+                    ex_key = (
+                        re.sub(r"[^\w\s]", "", ex_name.lower()).strip()
+                        + "::"
+                        + re.sub(r"[^\w\s]", "", ex_country.lower()).strip()
+                    )
+                    if norm_key and norm_key == ex_key:
+                        existing_match = ex
+                        break
+
+                if existing_match:
+                    ex_sources = set(existing_match.get("matched_sources", []))
+                    new_sources = set(enriched.get("matched_sources", []))
+                    existing_match["matched_sources"] = sorted(ex_sources | new_sources)
+                    if candidate and candidate not in existing_match.get("matched_candidate", ""):
+                        existing_match["matched_candidate"] = f"{existing_match.get('matched_candidate', '')}; {candidate}"
+                    self.log(f"Merged duplicate candidate: {t_name}")
+                    continue
+
                 verified_places.append(
                     enriched,
                 )
@@ -692,13 +800,18 @@ class LocationResolver:
 
         if not verified_places:
             print(
-                "\n❌ No verified travel destinations.\n"
+                "\n[X] No verified travel destinations.\n"
             )
-            if getattr(self.search, "last_error", None):
+            if isinstance(getattr(self.search, "last_error", None), dict) and getattr(self.search, "last_error", {}).get("status"):
                 err = self.search.last_error
-                self.last_resolver_error = f"Google Places API error ({err.get('status')}): {err.get('message')}"
-            else:
-                self.last_resolver_error = f"Google Places returned no verified destinations for {len(candidates)} candidate(s)."
+                provider_label = "Google Places" if self.provider.name == "google" else f"{self.provider.name.upper()} Places"
+                self.last_resolver_error = f"{provider_label} API error ({err.get('status')}): {err.get('message')}"
+            elif not self.last_resolver_error:
+                provider_display = "Google Places" if self.provider.name == "google" else f"{self.provider.name.upper()} returned no verified destinations"
+                if self.provider.name == "google":
+                    self.last_resolver_error = f"Google Places returned no verified destinations for {len(candidates)} candidate(s)."
+                else:
+                    self.last_resolver_error = f"{self.provider.name.upper()} places returned no verified destinations for {len(candidates)} candidate(s)."
             return None
 
         print()

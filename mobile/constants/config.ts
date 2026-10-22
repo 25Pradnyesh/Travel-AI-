@@ -7,6 +7,7 @@
 
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 /**
  * Detects whether a URL points to local loopback, private LAN addresses, or insecure HTTP.
@@ -53,38 +54,67 @@ export function isValidProductionApiUrl(url: string): boolean {
   return !isDevelopmentOrLoopbackUrl(lower);
 }
 
-const getApiBaseUrl = (): string => {
+/**
+ * Extracts the Metro / development host IP from Expo Constants.
+ * When running in Expo Go or development client on a physical phone,
+ * hostUri contains e.g. "10.71.100.184:8081".
+ */
+export function getDevHostIp(): string | null {
+  try {
+    const hostUri =
+      Constants.expoConfig?.hostUri ||
+      (Constants as unknown as { manifest2?: { extra?: { expoGo?: { debuggerHost?: string } } } })?.manifest2?.extra?.expoGo?.debuggerHost ||
+      (Constants as unknown as { manifest?: { debuggerHost?: string } })?.manifest?.debuggerHost;
+
+    if (!hostUri || typeof hostUri !== 'string') return null;
+    const host = hostUri.split(':')[0]?.trim();
+    if (!host || host === 'localhost' || host === '127.0.0.1') return null;
+    return host;
+  } catch {
+    return null;
+  }
+}
+
+export const getApiBaseUrl = (): string => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim().replace(/\/+$/, '');
 
-  // 1. In development mode (__DEV__), provide seamless local loopback defaults
+  // 1. In development mode (__DEV__), provide seamless local development reachability
   if (__DEV__) {
     const isAndroid = Platform.OS === 'android';
     const isEmulator = !Device.isDevice;
 
-    // Android emulator requires 10.0.2.2 to access the host machine's loopback (localhost)
+    // A. Android Emulator requires 10.0.2.2 to access host machine loopback
     if (isAndroid && isEmulator) {
       if (envUrl) {
-        // If developer provided localhost or 127.0.0.1 in envUrl, map to 10.0.2.2 for the emulator
         if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
           return envUrl.replace('localhost', '10.0.2.2').replace('127.0.0.1', '10.0.2.2');
         }
-        if (envUrl.includes('10.0.2.2')) {
-          return envUrl;
-        }
+        return envUrl;
       }
       return 'http://10.0.2.2:8000';
     }
 
+    // B. Physical Device (Android or iOS):
+    // If envUrl is explicitly provided with a LAN or public IP (not loopback), use it.
+    if (Device.isDevice) {
+      if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1') && !envUrl.includes('10.0.2.2')) {
+        return envUrl;
+      }
+      // Dynamically detect Metro host IP from Expo Constants so physical devices on LAN connect automatically
+      const hostIp = getDevHostIp();
+      if (hostIp) {
+        return `http://${hostIp}:8000`;
+      }
+      if (envUrl) {
+        return envUrl;
+      }
+      return isAndroid ? 'http://10.0.2.2:8000' : 'http://localhost:8000';
+    }
+
+    // C. iOS Simulator, Web, or non-device development
     if (envUrl) {
       return envUrl;
     }
-
-    // Default Android loopback fallback
-    if (isAndroid) {
-      return 'http://10.0.2.2:8000';
-    }
-
-    // iOS simulator, web, and default fallback
     return 'http://localhost:8000';
   }
 
