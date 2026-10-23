@@ -451,6 +451,7 @@ class ResponseBuilder:
         stage: str = "completed",
         performance: dict | None = None,
         ranked_places: list[dict] | None = None,
+        timings: dict[str, float] | None = None,
     ) -> AnalysisResponse:
 
         logger.info("[RESPONSE] Building final destination response")
@@ -533,6 +534,8 @@ class ResponseBuilder:
             performance["request_id"] = req_id
             performance["metrics"] = ctx.get_telemetry_dict()
 
+        effective_timings = timings or (performance.get("timings") if isinstance(performance, dict) else {}) or {}
+
         response = AnalysisResponse(
             success=True,
             best_guess=best_guess,
@@ -544,6 +547,7 @@ class ResponseBuilder:
             performance=performance,
             request_id=req_id,
             error_category=err_cat,
+            timings=effective_timings,
         )
 
         logger.info("[RESPONSE] Response validation: passed (locations count: %d)", len(locations))
@@ -560,6 +564,7 @@ class ResponseBuilder:
         performance: dict | None = None,
         extracted_candidates: list[str] | None = None,
         error_category: str | None = None,
+        timings: dict[str, float] | None = None,
     ) -> AnalysisResponse:
 
         clean_error = str(error) if isinstance(error, str) else "No destination could be verified from the provided Reel."
@@ -576,6 +581,8 @@ class ResponseBuilder:
         if performance and isinstance(performance, dict) and ctx:
             performance["request_id"] = req_id
             performance["metrics"] = ctx.get_telemetry_dict()
+
+        effective_timings = timings or (performance.get("timings") if isinstance(performance, dict) else {}) or {}
 
         return AnalysisResponse(
             success=False,
@@ -594,4 +601,5 @@ class ResponseBuilder:
             extracted_candidates=clean_candidates,
             request_id=req_id,
             error_category=final_err_cat,
+            timings=effective_timings,
         )

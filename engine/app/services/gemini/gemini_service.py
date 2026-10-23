@@ -42,7 +42,7 @@ class GeminiService:
             model_name = (
                 configured_model
                 if configured_model and configured_model not in ("gemini-2.5-flash", "gemini-1.5-flash")
-                else "gemini-3.8-flash"
+                else "gemini-3.5-flash"
             )
 
             self.model = GeminiClientAdapter(
@@ -88,7 +88,7 @@ class GeminiService:
             try:
                 response = self.model.generate_content(
                     prompt,
-                    request_options={"timeout": 15.0},
+                    request_options={"timeout": 10.0},
                 )
             except TypeError:
                 response = self.model.generate_content(

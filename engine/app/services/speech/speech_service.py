@@ -12,14 +12,17 @@ def get_whisper_model() -> Any:
     """
     Lazy-loads the Whisper model on first invocation to prevent
     slow server startup and high initial memory overhead.
+    Uses 'base' (or 'tiny') model for rapid inference.
     """
     global _whisper_model
     if _whisper_model is None:
         with _model_lock:
             if _whisper_model is None:
+                import os
                 import whisper
-                logger.info("[WHISPER] Loading Whisper 'small' model on-demand...")
-                _whisper_model = whisper.load_model("small")
+                model_name = os.getenv("WHISPER_MODEL", "base")
+                logger.info("[WHISPER] Loading Whisper '%s' model on-demand...", model_name)
+                _whisper_model = whisper.load_model(model_name)
                 logger.info("[WHISPER] ✅ Whisper model loaded successfully.")
     return _whisper_model
 
@@ -40,16 +43,23 @@ class SpeechService:
     def extract(
         self,
         video_path: str,
+        language: str | None = None,
     ):
 
         print(
             f"🎤 Transcribing: {video_path}"
         )
 
+        transcribe_kwargs = {
+            "fp16": False,
+            "verbose": False,
+        }
+        if language and language != "unknown":
+            transcribe_kwargs["language"] = language
+
         result = self.model.transcribe(
             video_path,
-            fp16=False,
-            verbose=False,
+            **transcribe_kwargs,
         )
 
         segments = []
@@ -62,6 +72,9 @@ class SpeechService:
             "segments",
             [],
         ):
+            # Limit transcription to first 25s of audio as per speed budget
+            if segment.get("start", 0.0) > 25.0:
+                continue
 
             probability = 1.0 - abs(
                 segment.get(

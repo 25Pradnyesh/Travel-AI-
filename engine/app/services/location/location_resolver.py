@@ -30,7 +30,29 @@ from engine.app.services.travel.travel_intelligence_service import (
 )
 from engine.observability.context import get_current_context, measure_stage
 from engine.observability.stages import PipelineStage
+import sys
 from engine.observability.errors import ErrorCategory
+
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+
+def _safe_print(*args, **kwargs):
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        try:
+            safe_args = [
+                str(a).encode("ascii", errors="replace").decode("ascii")
+                for a in args
+            ]
+            print(*safe_args, **kwargs)
+        except Exception:
+            pass
+
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +201,7 @@ class LocationResolver:
 
         self.provider = provider if provider is not None else get_places_provider()
         self.candidates = CandidateService()
+        self.candidate_service = self.candidates
         self.search = self.provider
         self.details = self.provider
         self.nearby = _NearbyWrapper(self.provider)
@@ -309,64 +332,82 @@ class LocationResolver:
         item: dict,
     ) -> tuple[dict, float, float]:
         """
-        Enriches a single candidate with place details (if not yet fetched), nearby places, and travel intelligence.
-        Returns: (enriched_item, nearby_duration_seconds, travel_duration_seconds)
+        Enriches a single candidate with place details (photos, summary), nearby places,
+        and travel intelligence concurrently in parallel (Stage 12 & Phase 2 optimization).
+        Returns: (enriched_item, nearby_duration, travel_duration)
         """
         place = item["place"]
         place_id = place.get("id")
-
-        # ------------------------------------------
-        # Deferred Place Details (Stage 11 Optimization)
-        # Fetch full place details only for the winning destination
-        # ------------------------------------------
-        if place_id and not place.get("photos"):
-            ctx = get_current_context()
-            t_d = time.perf_counter()
-            details = None
-            try:
-                details = self.details.get_details(place_id)
-            except Exception as exc:
-                self.log(f"⚠️ Place details enrichment failed: {type(exc).__name__}: {exc}")
-            d_dur = time.perf_counter() - t_d
-            if ctx:
-                ctx.record_external_call("places_details", d_dur)
-                ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, d_dur)
-            if details:
-                for k in (
-                    "website",
-                    "phone",
-                    "opening_hours",
-                    "current_opening_hours",
-                    "price_level",
-                    "photos",
-                    "accessibility",
-                    "plus_code",
-                    "utc_offset_minutes",
-                    "wikidata",
-                    "wikipedia",
-                ):
-                    val = details.get(k)
-                    if val:
-                        place[k] = val
-                if details.get("editorial_summary"):
-                    place["editorial_summary"] = details["editorial_summary"]
-
         latitude = place.get("latitude")
         longitude = place.get("longitude")
 
-        # ------------------------------------------
-        # Nearby Search
-        # ------------------------------------------
-        t_nb_start = time.perf_counter()
+        photos_duration = 0.0
+        nearby_duration = 0.0
+        travel_duration = 0.0
+
+        ctx = get_current_context()
+
+        # Concurrent Phase 2 enrichment: run details and nearby in parallel
+        def _fetch_details():
+            t_start = time.perf_counter()
+            d = None
+            if place_id and not place.get("photos"):
+                try:
+                    d = self.details.get_details(place_id)
+                except Exception as exc:
+                    self.log(f"⚠️ Place details enrichment failed: {type(exc).__name__}: {exc}")
+            return d, time.perf_counter() - t_start
+
+        def _fetch_nearby():
+            t_start = time.perf_counter()
+            nb = {}
+            if latitude is not None and longitude is not None:
+                try:
+                    nb = self.nearby.search(latitude, longitude) or {}
+                except Exception as exc:
+                    self.log(f"⚠️ Nearby search enrichment failed: {type(exc).__name__}: {exc}")
+            return nb, time.perf_counter() - t_start
+
+        details = None
         nearby = {}
-        try:
-            nearby = self.nearby.search(
-                latitude,
-                longitude,
-            ) or {}
-        except Exception as exc:
-            self.log(f"⚠️ Nearby search enrichment failed: {type(exc).__name__}: {exc}")
-        nearby_duration = time.perf_counter() - t_nb_start
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            future_details = executor.submit(_fetch_details)
+            future_nearby = executor.submit(_fetch_nearby)
+
+            try:
+                details, photos_duration = future_details.result(timeout=6.0)
+            except Exception as e:
+                self.log(f"Details future timed out or failed: {e}")
+
+            try:
+                nearby, nearby_duration = future_nearby.result(timeout=6.0)
+            except Exception as e:
+                self.log(f"Nearby future timed out or failed: {e}")
+
+        if ctx:
+            ctx.record_external_call("places_details", photos_duration)
+            ctx.record_stage_duration(PipelineStage.GOOGLE_PLACES_DETAILS, photos_duration)
+            ctx.record_external_call("google_places_nearby", nearby_duration)
+
+        if details:
+            for k in (
+                "website",
+                "phone",
+                "opening_hours",
+                "current_opening_hours",
+                "price_level",
+                "photos",
+                "accessibility",
+                "plus_code",
+                "utc_offset_minutes",
+                "wikidata",
+                "wikipedia",
+            ):
+                val = details.get(k)
+                if val:
+                    place[k] = val
+            if details.get("editorial_summary"):
+                place["editorial_summary"] = details["editorial_summary"]
 
         place = self.attach_nearby(
             place,
@@ -389,9 +430,7 @@ class LocationResolver:
         place["nearby_places_found"] = stats.get("places_found", 0)
         place["nearby_categories"] = stats.get("categories", 0)
 
-        # ------------------------------------------
-        # AI Travel Intelligence
-        # ------------------------------------------
+        # Travel Intelligence & Weather
         t_tr_start = time.perf_counter()
         try:
             place = self.travel.enrich(place)
@@ -533,13 +572,13 @@ class LocationResolver:
         if ctx:
             ctx.candidate_count = len(candidates)
 
-        print(
+        _safe_print(
             "\n========================================"
         )
-        print(
+        _safe_print(
             "      LOCATION RESOLVER STARTED"
         )
-        print(
+        _safe_print(
             "========================================\n"
         )
 
@@ -562,7 +601,7 @@ class LocationResolver:
             self.last_resolver_error = "No location candidates generated from evidence."
             if ctx:
                 ctx.places_resolution_status = "NO_CANDIDATES"
-            print(
+            _safe_print(
                 "[X] No candidates generated.\n"
             )
             return None
@@ -578,11 +617,32 @@ class LocationResolver:
         search_candidates = candidates[:4]
 
         def _search_candidate_with_fallbacks(cand: str) -> tuple[str, list[dict], float, str]:
+            from engine.app.services.location.candidate_service import detect_script
+            script_info = detect_script(cand)
+            countrycodes = script_info.get("country_hint")
+            accept_lang = script_info.get("language", "en")
+
+            bare_countries = {
+                "korea", "south korea", "italy", "france", "japan", "germany", "spain",
+                "switzerland", "iceland", "norway", "portugal", "greece", "thailand",
+            }
+            featuretype = "country" if cand.strip().lower() in bare_countries else None
+
             t_start = time.perf_counter()
             res = []
             dur = 0.0
             try:
-                res = self.search.search(cand)
+                # Introspect if search method accepts multilingual kwargs
+                import inspect
+                sig = inspect.signature(self.search.search)
+                kwargs = {}
+                if "countrycodes" in sig.parameters and countrycodes:
+                    kwargs["countrycodes"] = countrycodes
+                if "accept_language" in sig.parameters and accept_lang:
+                    kwargs["accept_language"] = accept_lang
+                if "featuretype" in sig.parameters and featuretype:
+                    kwargs["featuretype"] = featuretype
+                res = self.search.search(cand, **kwargs)
             except Exception as exc:
                 self.log(f"Candidate search failed for '{cand}': {exc}")
                 self.last_resolver_error = f"Place lookup failed ({self.provider.name} provider error: {type(exc).__name__})"
@@ -595,19 +655,18 @@ class LocationResolver:
                     t_fb = time.perf_counter()
                     fb_res = []
                     try:
-                        fb_res = self.search.search(fb)
+                        res_fb = self.search.search(fb)
                     except Exception as exc:
                         self.log(f"Fallback candidate search failed for '{fb}': {exc}")
-                        fb_res = []
+                        res_fb = []
                     dur += (time.perf_counter() - t_fb)
-                    if fb_res:
-                        res = fb_res
+                    if res_fb:
+                        res = res_fb
                         resolved_q = fb
                         break
             return cand, res, dur, resolved_q
 
-        # Evaluate all top candidate entities (max 4 lookups) so that landmarks,
-        # localities, and parent regions are retrieved for comparative evidence-based ranking
+        # Evaluate top candidate entities (max 4 lookups)
         search_outputs = []
         for idx, cand in enumerate(search_candidates):
             cand_output = _search_candidate_with_fallbacks(cand)
@@ -617,7 +676,7 @@ class LocationResolver:
             search_outputs,
             start=1,
         ):
-            print(
+            _safe_print(
                 f"\n[{index}/{len(search_candidates)}] {candidate}"
             )
             if ctx:
@@ -701,6 +760,7 @@ class LocationResolver:
                     "wikidata": result.get("wikidata"),
                     "wikipedia": result.get("wikipedia"),
                     "extratags": result.get("extratags", {}),
+                    "boundingbox": result.get("boundingbox"),
                 }
 
                 # --------------------------------------
@@ -866,6 +926,7 @@ class LocationResolver:
         # Nearby Search + Travel Intelligence
         # ==================================================
 
+        photos_duration = 0.0
         nearby_duration = 0.0
         travel_duration = 0.0
 
@@ -874,7 +935,13 @@ class LocationResolver:
         # remain available for Gemini comparison without incurring 5x Google Places calls.
         if ranked:
             with measure_stage(PipelineStage.ENRICHMENT):
-                ranked[0], nearby_duration, travel_duration = self._enrich_candidate(ranked[0])
+                enrich_res = self._enrich_candidate(ranked[0])
+                if isinstance(enrich_res, tuple) and len(enrich_res) == 4:
+                    ranked[0], photos_duration, nearby_duration, travel_duration = enrich_res
+                elif isinstance(enrich_res, tuple) and len(enrich_res) == 3:
+                    ranked[0], nearby_duration, travel_duration = enrich_res
+                else:
+                    ranked[0] = enrich_res
             if ctx:
                 ctx.record_external_call("google_places_nearby", nearby_duration)
             for item in ranked[1:]:
@@ -889,165 +956,131 @@ class LocationResolver:
                 p.setdefault("travel_story", "")
 
         # ==================================================
-        # Final Winner
+        # Final Winner & Honest Abstention Check
         # ==================================================
 
-        winner = ranked[0]
+        top_candidate = ranked[0]
+        score = top_candidate.get("score", 0.0)
+        confidence = top_candidate.get("confidence", "VERY_LOW")
 
-        print()
+        statistics = self.build_statistics(
+            candidates,
+            verified_places,
+            total_search_results,
+        )
+
+        # Abstain if score is below 45.0, or VERY_LOW confidence,
+        # or if the top 2 candidates are in an ambiguous tie at low score (<55.0)
+        is_low_score = score < 45.0
+        is_very_low = confidence == "VERY_LOW"
+        is_ambiguous_tie = (
+            len(ranked) > 1
+            and abs(ranked[0].get("score", 0) - ranked[1].get("score", 0)) < 3.0
+            and ranked[0].get("score", 0) < 55.0
+        )
+
+        should_abstain = is_low_score or is_very_low or is_ambiguous_tie
+
+        if should_abstain:
+            self.log(
+                f"Abstaining: Low confidence or ambiguous candidates (Score={score}, Confidence={confidence})"
+            )
+            return {
+                "winner": None,
+                "abstain": True,
+                "abstain_reason": "Low confidence or ambiguous candidates",
+                "suggested_places": [item["place"] for item in ranked[:3]],
+                "ranked_places": ranked,
+                "statistics": statistics,
+                "candidate_count": statistics["candidate_count"],
+                "verified_count": statistics["verified_places"],
+                "search_results": statistics["google_search_results"],
+                "stage_timings": {
+                    "candidate_resolution": candidate_res_duration,
+                    "nearby_places": nearby_duration,
+                    "travel_intelligence": travel_duration,
+                },
+            }
+
+        winner = top_candidate
+
+        _safe_print()
 
         self.log(
-
             f"Winner : {winner['place']['travel_name']}"
-
         )
 
         # ==================================================
-        # Final Logging Starts Here
+        # Final Ranking Display
         # ==================================================
 
-        # ==================================================
-        # Final Ranking
-        # ==================================================
-
-        print(
+        _safe_print(
             "\n=============================================="
         )
-
-        print(
+        _safe_print(
             "             FINAL RANKING"
         )
-
-        print(
+        _safe_print(
             "==============================================\n"
         )
 
         for index, item in enumerate(
-
             ranked,
-
             start=1,
-
         ):
-
             place = item["place"]
-
-            print(
-
-                f"{index}. "
-
-                f"{place.get('travel_name','Unknown')}"
-
+            _safe_print(
+                f"{index}. {place.get('travel_name','Unknown')}"
             )
-
-            print(
-
+            _safe_print(
                 f"   Score       : {item.get('score',0)}"
-
             )
-
-            print(
-
+            _safe_print(
                 f"   Confidence  : {item.get('confidence','LOW')}"
-
             )
-
-            print(
-
-                f"   Rating      : "
-
-                f"{place.get('rating',0)} "
-
-                f"({place.get('user_rating_count',0)} reviews)"
-
+            _safe_print(
+                f"   Rating      : {place.get('rating',0)} ({place.get('user_rating_count',0)} reviews)"
             )
-
-            print(
-
-                f"   Country     : "
-
-                f"{place.get('country','')}"
-
+            _safe_print(
+                f"   Country     : {place.get('country','')}"
             )
-
-            print(
-
-                f"   Category    : "
-
-                f"{place.get('category','')}"
-
+            _safe_print(
+                f"   Category    : {place.get('category','')}"
             )
-
-            print()
-
-        # ==================================================
-        # Resolver Statistics
-        # ==================================================
-
-        statistics = self.build_statistics(
-
-            candidates,
-
-            verified_places,
-
-            total_search_results,
-
-        )
+            _safe_print()
 
         # ==================================================
         # Winner Metadata
         # ==================================================
 
         winner["place"]["resolver_statistics"] = statistics
-
         winner["place"]["candidate_count"] = statistics.get(
-
             "candidate_count",
-
             0,
-
         )
-
         winner["place"]["verified_places"] = statistics.get(
-
             "verified_places",
-
             0,
-
         )
-
         winner["place"]["google_search_results"] = statistics.get(
-
             "google_search_results",
-
             0,
-
         )
-
         winner["place"]["resolver_version"] = "2.0"
-
         winner["place"]["travel_ai"] = True
 
         # ==================================================
         # Footer
         # ==================================================
 
-        print(
-
+        _safe_print(
             "=============================================="
-
         )
-
-        print(
-
+        _safe_print(
             f"Winner : {winner['place']['travel_name']}"
-
         )
-
-        print(
-
+        _safe_print(
             "==============================================\n"
-
         )
 
         # ==================================================
@@ -1055,23 +1088,16 @@ class LocationResolver:
         # ==================================================
 
         return {
-
             "winner": winner,
-
             "ranked_places": ranked,
-
             "statistics": statistics,
-
             "candidate_count": statistics["candidate_count"],
-
             "verified_count": statistics["verified_places"],
-
             "search_results": statistics["google_search_results"],
-
             "stage_timings": {
                 "candidate_resolution": candidate_res_duration,
+                "photos": photos_duration,
                 "nearby_places": nearby_duration,
                 "travel_intelligence": travel_duration,
             },
-
         }

@@ -196,8 +196,13 @@ class EvidenceBuilder:
 
         start = time.perf_counter()
 
+        from engine.app.services.location.candidate_service import detect_script
+        script_info = detect_script(evidence.get("caption", "") or evidence.get("title", ""))
+        language_hint = script_info.get("language")
+
         raw = self.speech.extract(
             video_path,
+            language=language_hint,
         )
 
         cleaned = self.speech_cleaner.clean_segments(

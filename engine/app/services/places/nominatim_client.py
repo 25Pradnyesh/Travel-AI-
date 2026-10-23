@@ -62,12 +62,28 @@ class NominatimClient:
         self.cache_dir = cache_dir or CACHE_DIR
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def _get_cache_path(self, norm_query: str) -> Path:
-        query_hash = hashlib.sha256(norm_query.encode("utf-8")).hexdigest()
+    PLACE_CLASSES = {"boundary", "place", "natural", "tourism", "historic", "waterway"}
+    ALLOWED_PLACE_CLASSES = PLACE_CLASSES
+
+    def _get_cache_path(
+        self,
+        norm_query: str,
+        accept_language: str = "en",
+        countrycodes: str | None = None,
+        featuretype: str | None = None,
+    ) -> Path:
+        cache_key = f"{norm_query}|{accept_language}|{countrycodes or ''}|{featuretype or ''}"
+        query_hash = hashlib.sha256(cache_key.encode("utf-8")).hexdigest()
         return self.cache_dir / f"{query_hash}.json"
 
-    def _read_cache(self, norm_query: str) -> list[dict[str, Any]] | None:
-        cache_path = self._get_cache_path(norm_query)
+    def _read_cache(
+        self,
+        norm_query: str,
+        accept_language: str = "en",
+        countrycodes: str | None = None,
+        featuretype: str | None = None,
+    ) -> list[dict[str, Any]] | None:
+        cache_path = self._get_cache_path(norm_query, accept_language, countrycodes, featuretype)
         if cache_path.exists():
             try:
                 with open(cache_path, "r", encoding="utf-8") as f:
@@ -76,8 +92,15 @@ class NominatimClient:
                 logger.warning("[NOMINATIM] Failed to read disk cache for %s: %s", norm_query, e)
         return None
 
-    def _write_cache(self, norm_query: str, data: list[dict[str, Any]]) -> None:
-        cache_path = self._get_cache_path(norm_query)
+    def _write_cache(
+        self,
+        norm_query: str,
+        data: list[dict[str, Any]],
+        accept_language: str = "en",
+        countrycodes: str | None = None,
+        featuretype: str | None = None,
+    ) -> None:
+        cache_path = self._get_cache_path(norm_query, accept_language, countrycodes, featuretype)
         try:
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -94,17 +117,24 @@ class NominatimClient:
                 time.sleep(1.0 - elapsed)
             _last_nominatim_request_timestamp = time.time()
 
-    def search(self, query: str, limit: int = 3) -> list[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        limit: int = 3,
+        accept_language: str = "en",
+        countrycodes: str | None = None,
+        featuretype: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Executes a Nominatim /search query with limit=3, addressdetails=1, extratags=1, namedetails=1.
-        Returns mapped candidate places matching internal schemas.
+        Filters strictly by place-like classes and ranks by importance.
         """
         norm_q = normalize_query(query)
         if not norm_q or len(norm_q) < 2:
             return []
 
         # Check persistent disk cache first
-        cached = self._read_cache(norm_q)
+        cached = self._read_cache(norm_q, accept_language, countrycodes, featuretype)
         if cached is not None:
             logger.debug("[NOMINATIM] Cache hit for '%s'", norm_q)
             return [self.map_result(item) for item in cached]
@@ -118,11 +148,16 @@ class NominatimClient:
             "addressdetails": "1",
             "extratags": "1",
             "namedetails": "1",
-            "limit": str(limit),
+            "limit": str(limit * 2),  # Retrieve extra to allow place class filtering
         }
+        if countrycodes:
+            params["countrycodes"] = countrycodes.lower()
+        if featuretype:
+            params["featuretype"] = featuretype.lower()
+
         headers = {
             "User-Agent": user_agent,
-            "Accept-Language": "en",
+            "Accept-Language": accept_language,
         }
 
         t_start = time.perf_counter()
@@ -136,7 +171,21 @@ class NominatimClient:
             raw_results = resp.json()
             if not isinstance(raw_results, list):
                 raw_results = []
-            self._write_cache(norm_q, raw_results)
+
+            # Filter to place-like classes only
+            filtered_results = []
+            for item in raw_results:
+                cat = (item.get("category") or item.get("class") or "").lower()
+                if not cat or cat in self.PLACE_CLASSES:
+                    filtered_results.append(item)
+
+            # Sort by importance descending
+            filtered_results.sort(
+                key=lambda x: float(x.get("importance", 0.0) or 0.0),
+                reverse=True,
+            )
+            raw_results = filtered_results[:limit]
+            self._write_cache(norm_q, raw_results, accept_language, countrycodes, featuretype)
         except Exception as exc:
             logger.error("[NOMINATIM] Search failed for '%s': %s", query, exc)
             return []
@@ -230,4 +279,7 @@ class NominatimClient:
             "osm_type": osm_type,
             "osm_id": osm_id,
             "importance": importance,
+            "boundingbox": [float(b) for b in item.get("boundingbox", []) if b is not None] if item.get("boundingbox") else None,
+            "raw_category": category,
+            "raw_type": ptype,
         }

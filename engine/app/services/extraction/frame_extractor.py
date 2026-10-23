@@ -375,6 +375,9 @@ class FrameExtractor:
             reverse=True,
         )
 
+        # Cap at <= 3 frames max as per speed budget
+        selected = selected[:3]
+
         saved = []
 
         print(
@@ -384,6 +387,12 @@ class FrameExtractor:
         for index, item in enumerate(
             selected,
         ):
+            frame_img = item["frame"]
+            h, w = frame_img.shape[:2]
+            if w > 960:
+                new_w = 960
+                new_h = int(h * (960.0 / w))
+                frame_img = cv2.resize(frame_img, (new_w, new_h), interpolation=cv2.INTER_AREA)
 
             filename = (
                 output
@@ -392,7 +401,8 @@ class FrameExtractor:
 
             cv2.imwrite(
                 str(filename),
-                item["frame"],
+                frame_img,
+                [cv2.IMWRITE_JPEG_QUALITY, 80],
             )
 
             saved.append(

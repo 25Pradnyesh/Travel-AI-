@@ -67,6 +67,7 @@ class AnalysisResponse(BaseModel):
     gemini: GeminiInfo = Field(default_factory=GeminiInfo)
     stage: str | None = None
     performance: dict[str, Any] | None = None
+    timings: dict[str, float] = Field(default_factory=dict)
     error: str | None = None
     extracted_candidates: list[str] = Field(default_factory=list)
     request_id: str | None = None

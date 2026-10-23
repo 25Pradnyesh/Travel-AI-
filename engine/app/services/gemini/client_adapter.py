@@ -32,7 +32,7 @@ class GeminiClientAdapter:
     def __init__(
         self,
         api_key: str,
-        model_name: str = "gemini-3.8-flash",
+        model_name: str = "gemini-3.5-flash",
         generation_config: dict[str, Any] | None = None,
     ):
         self.api_key = api_key
@@ -60,30 +60,30 @@ class GeminiClientAdapter:
             except Exception as exc:
                 logger.warning("[GEMINI] Failed initializing google.genai client, falling back: %s", exc)
 
-        # Fallback to google.generativeai with FutureWarning suppression
+        # Fallback to google.generativeai with REST transport (avoids Windows gRPC timeouts)
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=FutureWarning)
                 import google.generativeai as legacy_genai
 
-            legacy_genai.configure(api_key=self.api_key)
+            legacy_genai.configure(api_key=self.api_key, transport="rest")
             self._model = legacy_genai.GenerativeModel(
                 model_name=self.model_name,
                 generation_config=self.generation_config,
             )
             self.flavor = "google.generativeai"
-            logger.info("[GEMINI] Initialized with google.generativeai fallback (model: %s)", self.model_name)
+            logger.info("[GEMINI] Initialized with google.generativeai REST fallback (model: %s)", self.model_name)
         except Exception as exc:
             logger.warning("[GEMINI] Failed to initialize Gemini model: %s", type(exc).__name__)
             raise exc
 
     def generate_content(self, contents: Any, request_options: dict | None = None, **kwargs) -> Any:
-        timeout = 15.0
+        timeout = 10.0
         if request_options and "timeout" in request_options:
             try:
-                timeout = float(request_options["timeout"])
+                timeout = min(10.0, float(request_options["timeout"]))
             except (ValueError, TypeError):
-                timeout = 15.0
+                timeout = 10.0
 
         if self.flavor == "google.genai" and self._client:
             config = dict(self.generation_config)
@@ -93,7 +93,7 @@ class GeminiClientAdapter:
                 config=config,
             )
 
-        # Legacy google.generativeai
+        # Legacy google.generativeai with REST transport and 10s timeout (0 retries)
         if self._model:
             try:
                 return self._model.generate_content(contents, request_options={"timeout": timeout}, **kwargs)

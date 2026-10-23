@@ -43,9 +43,19 @@ WORKSPACE_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(WORKSPACE_DIR / ".env.local", override=False)
 load_dotenv(WORKSPACE_DIR / ".env", override=False)
 
-# Default APP_CONTACT if unset in environment to comply with OpenStreetMap User-Agent policy
-if "APP_CONTACT" not in os.environ and not os.getenv("APP_CONTACT", "").strip():
-    os.environ["APP_CONTACT"] = "contact@travelai.local"
+# Default APP_CONTACT if unset in development/test
+app_contact = os.getenv("APP_CONTACT", "").strip()
+if not app_contact:
+    app_contact = "contact@travelai.local"
+    os.environ["APP_CONTACT"] = app_contact
+
+env = os.getenv("ENVIRONMENT", "development").strip().lower()
+if env not in ("development", "dev", "test") and (app_contact.endswith(".local") or "travelai.local" in app_contact):
+    raise RuntimeError(
+        f"APP_CONTACT is set to placeholder '{app_contact}'. "
+        "Please set a real email or repository URL (e.g., 'contact@yourdomain.com' or 'https://github.com/user/repo') "
+        "to comply with Nominatim and Wikimedia API policies outside the development environment."
+    )
 
 
 # ==================================================

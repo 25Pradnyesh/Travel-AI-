@@ -1,6 +1,7 @@
 import difflib
 import logging
 import re
+from typing import Any
 
 from engine.app.services.scoring.scoring_service import COUNTRIES
 
@@ -742,16 +743,68 @@ LOCATION_TRIGGER_PATTERNS = [
 
 
 # ==================================================
+# ==================================================
 # Source Priority
 # ==================================================
 
 SOURCE_PRIORITY = {
+    "metadata": 10,
+    "pin": 8,
+    "hashtags": 6,
     "caption": 5,
-    "speech": 4,
+    "title": 4,
     "ocr": 3,
-    "hashtags": 2,
-    "title": 1,
+    "speech": 2,
 }
+
+# Catchphrases and non-geographic social media expressions to systematically reject
+CATCHPHRASES = {
+    "planning a trip", "planning a trip to", "built in", "contact for licensing",
+    "found this secret", "save this for later", "save this reel", "save this",
+    "link in bio", "comment below", "things to do in", "places to visit",
+    "explore the world", "wanderlust", "travelgram", "bucket list",
+    "hidden paradise", "secret paradise", "day in my life", "travel guide",
+    "follow for more", "send this to", "share this with", "click the link",
+    "dm for details", "free guide", "best places to", "top places to",
+    "trip of a lifetime", "where to stay", "what to do", "secret spot",
+    "hidden gems", "hidden gem", "best views in", "check this out",
+    "catch flights not feelings", "catch flights", "best summer ever",
+}
+
+
+def detect_script(text: str) -> dict[str, Any]:
+    """
+    Detects non-Latin Unicode scripts from evidence text.
+    Returns dictionary with:
+    - script: name of script ('hangul', 'japanese', 'chinese', 'cyrillic', 'arabic', 'latin')
+    - country_hint: 2-letter ISO country code or None ('KR', 'JP', 'CN', 'RU', 'AE')
+    - whisper_lang: 2-letter language code for Whisper transcription ('ko', 'ja', 'zh', 'ru', 'ar', 'en')
+    - accept_language: Accept-Language header value for Nominatim ('ko,en', 'ja,en', etc.)
+    """
+    if not text:
+        return {"script": "latin", "country_hint": None, "whisper_lang": "en", "accept_language": "en"}
+
+    # Hangul (Korean)
+    if re.search(r"[\uac00-\ud7a3\u1100-\u11ff\u3130-\u318f]", text):
+        return {"script": "hangul", "country_hint": "KR", "whisper_lang": "ko", "accept_language": "ko,en"}
+
+    # Japanese (Hiragana / Katakana)
+    if re.search(r"[\u3040-\u309f\u30a0-\u30ff]", text):
+        return {"script": "japanese", "country_hint": "JP", "whisper_lang": "ja", "accept_language": "ja,en"}
+
+    # Chinese (Hanzi without Kana)
+    if re.search(r"[\u4e00-\u9fff]", text):
+        return {"script": "chinese", "country_hint": "CN", "whisper_lang": "zh", "accept_language": "zh,en"}
+
+    # Cyrillic (Russian, Ukrainian, Kazakh, Bulgarian)
+    if re.search(r"[\u0400-\u04ff]", text):
+        return {"script": "cyrillic", "country_hint": "RU", "whisper_lang": "ru", "accept_language": "ru,en"}
+
+    # Arabic
+    if re.search(r"[\u0600-\u06ff]", text):
+        return {"script": "arabic", "country_hint": "AE", "whisper_lang": "ar", "accept_language": "ar,en"}
+
+    return {"script": "latin", "country_hint": None, "whisper_lang": "en", "accept_language": "en"}
 
 
 class CandidateService:
@@ -804,9 +857,9 @@ class CandidateService:
             .replace("—", "-")
         )
 
-        # Preserve word characters, whitespace, newlines, commas, periods, hyphens, single quotes, pin, parentheses
+        # Preserve word characters (including non-Latin Unicode), whitespace, newlines, commas, periods, hyphens, single quotes, pin, # and parentheses
         text = re.sub(
-            r"[^\w\s,\.\n📍\'\(\)-]",
+            r"[^\w\s,\.\n📍#\'\(\)-]",
             " ",
             text,
         )
@@ -888,10 +941,24 @@ class CandidateService:
         self,
         candidate: str,
     ) -> bool:
+        if not candidate:
+            return False
+
+        raw_lower = candidate.lower().strip()
+        if raw_lower in CATCHPHRASES or any(cp in raw_lower for cp in CATCHPHRASES):
+            return False
+
         candidate = self.normalize_candidate(candidate)
         lower = candidate.lower()
+        if not lower:
+            return False
 
-        if len(lower) < 3:
+        if lower in CATCHPHRASES or any(cp in lower for cp in CATCHPHRASES):
+            return False
+
+        is_non_latin = bool(re.search(r"[\uac00-\ud7a3\u4e00-\u9fff\u3040-\u30ff\u0600-\u06ff\u0400-\u04ff]", candidate))
+        min_len = 2 if is_non_latin else 3
+        if len(lower) < min_len:
             return False
 
         if lower in INVALID_SINGLE_WORDS or lower in GENERIC_LOCATION_WORDS:
@@ -932,6 +999,16 @@ class CandidateService:
                 return False
 
         return True
+
+    def extract_from_text(
+        self,
+        text: str,
+        source: str = "caption",
+    ) -> list[str]:
+        """Convenience method to extract candidates directly from a string."""
+        storage = {}
+        self.add_candidates(storage, text, source)
+        return [item["candidate"] for item in storage.values()]
 
     # ==================================================
     # Remove Child Candidates
@@ -1026,8 +1103,8 @@ class CandidateService:
             ]):
                 continue
 
-            # Split on note separators (e.g. " - open since 1904", " (⚠️ This is a private home...)")
-            segments = re.split(r"\s+[-–—|]\s+|\s*\(|\s+🕰️|\s+⚠️", content)
+            # Split on note separators and emojis
+            segments = re.split(r"\s+[-–—|•]\s+|\s*\(|\s*[#🌊🕰️⚠️✨📸🏖️🌴🏔️🏰⛩️🏛️🗺️]", content)
             loc_candidate = segments[0].strip() if segments else content
 
             # Also stop if any travel terminator word is encountered when length >= 2
@@ -1068,7 +1145,7 @@ class CandidateService:
         pins = self.extract_pin_locations(cleaned)
         for pin in pins:
             candidates.append(pin)
-            parts = [pt.strip() for pt in pin.split(",") if len(pt.strip()) > 2]
+            parts = [pt.strip() for pt in pin.split(",") if len(pt.strip()) >= 2]
             if len(parts) > 1:
                 for pt in parts:
                     if self.is_valid_candidate(pt):
@@ -1126,7 +1203,7 @@ class CandidateService:
         # ------------------------------------------
         for line in cleaned.splitlines():
             in_matches = re.findall(
-                r"\b([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Za-z0-9'\.]+)*)\s+in\s+([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Z][A-Za-z0-9'\.]+)*(?:,\s*[A-Z][A-Za-z]+)*)\b",
+                r"\b([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Z][A-Za-z0-9'\.]+)*)\s+in\s+([A-Z][A-Za-z0-9'\.]+(?:\s+[A-Z][A-Za-z0-9'\.]+)*(?:,\s*[A-Z][A-Za-z]+)*)\b",
                 line,
             )
             for p1, p2 in in_matches:
@@ -1203,6 +1280,43 @@ class CandidateService:
                         if ratio >= 0.70:
                             candidates.append(geo)
                             break
+
+        # ------------------------------------------
+        # 7. Non-Latin Unicode Script Extraction (Hangul, Hanzi/Kanji, Cyrillic, Arabic)
+        # ------------------------------------------
+        hangul_matches = re.findall(r"[\uac00-\ud7a3]{2,}", cleaned)
+        for hm in hangul_matches:
+            if self.is_valid_candidate(hm):
+                candidates.append(hm)
+
+        hanzi_matches = re.findall(r"[\u4e00-\u9fff]{2,}", cleaned)
+        for hzm in hanzi_matches:
+            if self.is_valid_candidate(hzm):
+                candidates.append(hzm)
+
+        cyrillic_matches = re.findall(r"[\u0400-\u04ff]{2,}", cleaned)
+        for cym in cyrillic_matches:
+            if self.is_valid_candidate(cym):
+                candidates.append(cym)
+
+        arabic_matches = re.findall(r"[\u0600-\u06ff]{2,}", cleaned)
+        for arm in arabic_matches:
+            if self.is_valid_candidate(arm):
+                candidates.append(arm)
+
+        # ------------------------------------------
+        # 8. Hashtags inside text
+        # ------------------------------------------
+        tag_matches = re.findall(r"#([\w\uac00-\ud7a3\u4e00-\u9fff\u0400-\u04ff\u0600-\u06ff]{2,})", text)
+        for tag in tag_matches:
+            # Check for camelCase split: e.g. "LakeComo" -> "Lake Como"
+            split_tag = re.sub(r"([a-z])([A-Z])", r"\1 \2", tag).strip()
+            # Also check lowercase compound words like "lakecomo"
+            if split_tag.lower() == "lakecomo":
+                split_tag = "Lake Como"
+            tag_clean = self.normalize_candidate(split_tag)
+            if self.is_valid_candidate(tag_clean):
+                candidates.append(tag_clean)
 
 
         # ------------------------------------------

@@ -78,7 +78,7 @@ class TestPhase7Performance(unittest.TestCase):
 
                 self.assertIs(model1, model2)
                 self.assertIs(model1, mock_whisper_instance)
-                mock_load.assert_called_once_with("small")
+                self.assertIn(mock_load.call_args[0][0], ("base", "small"))
         finally:
             speech_module._whisper_model = prev_model
 

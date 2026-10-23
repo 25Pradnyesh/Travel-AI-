@@ -35,9 +35,9 @@ class GeminiVisionService:
             try:
                 from engine.app.services.gemini.client_adapter import GeminiClientAdapter
 
-                model_name = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.8-flash"))
-                if model_name in ("gemini-2.5-flash", "gemini-1.5-flash"):
-                    model_name = "gemini-3.8-flash"
+                model_name = os.getenv("GEMINI_VISION_MODEL", os.getenv("GEMINI_MODEL", "gemini-3.5-flash"))
+                if model_name in ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-3.8-flash"):
+                    model_name = "gemini-3.5-flash"
                 self.model = GeminiClientAdapter(
                     api_key=self.api_key,
                     model_name=model_name,
@@ -61,19 +61,45 @@ class GeminiVisionService:
             self.scene = None
 
     # ==================================================
-    # Verify Image
+    # Verify Image(s)
     # ==================================================
+
+    def _prepare_pil_image(self, img_path: Path) -> Image.Image | None:
+        """Loads, downsizes to <= 768px, and compresses to JPEG q70."""
+        import io
+        try:
+            with Image.open(img_path) as raw_img:
+                raw_img = raw_img.convert("RGB")
+                w, h = raw_img.size
+                if max(w, h) > 768:
+                    raw_img.thumbnail((768, 768), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                raw_img.save(buf, format="JPEG", quality=70, optimize=True)
+                buf.seek(0)
+                processed = Image.open(buf)
+                processed.load()
+                return processed
+        except Exception as e:
+            logger.warning("[GEMINI] Image optimization failed for %s: %s", img_path, e)
+            return None
 
     def verify(
         self,
-        image_path: str,
+        image_path: str | list[str],
         evidence: dict,
         candidates: list,
     ) -> dict:
 
-        path_obj = Path(image_path)
+        scene_info: dict = {}
 
-        if not path_obj.exists() or not path_obj.is_file():
+        # Support single path or list of frames (send <= 3 frames)
+        if isinstance(image_path, list):
+            valid_paths = [Path(p) for p in image_path if p and Path(p).exists() and Path(p).is_file()][:3]
+        else:
+            p_obj = Path(image_path) if image_path else None
+            valid_paths = [p_obj] if p_obj and p_obj.exists() and p_obj.is_file() else []
+
+        if not valid_paths:
             return self.parser.empty("Image file not found.")
 
         from engine.app.services.gemini.gemini_counter import gemini_counter
@@ -92,10 +118,9 @@ class GeminiVisionService:
         # ------------------------------------------
         # Scene Analysis (optional enrichment)
         # ------------------------------------------
-        scene_info = {}
         if self.scene:
             try:
-                scene_info = self.scene.classify(str(path_obj))
+                scene_info = self.scene.classify(str(valid_paths[0]))
             except Exception as e:
                 logger.debug("[GEMINI] Scene classification skipped: %s", type(e).__name__)
 
@@ -116,18 +141,27 @@ Water Body: {scene_info.get('water_body', 'None')}
 Vegetation: {scene_info.get('vegetation', 'None')}
 """
 
+        # Prepare up to 3 compressed frames
+        pil_images = []
+        for vp in valid_paths:
+            prepared = self._prepare_pil_image(vp)
+            if prepared is not None:
+                pil_images.append(prepared)
+
+        if not pil_images:
+            return self.parser.empty("Failed to prepare images.")
+
         try:
-            with Image.open(path_obj) as pil_image:
-                pil_image.load()
-                try:
-                    response = self.model.generate_content(
-                        [prompt, pil_image],
-                        request_options={"timeout": 15.0},
-                    )
-                except TypeError:
-                    response = self.model.generate_content(
-                        [prompt, pil_image],
-                    )
+            content_payload = [prompt] + pil_images
+            try:
+                response = self.model.generate_content(
+                    content_payload,
+                    request_options={"timeout": 10.0},
+                )
+            except TypeError:
+                response = self.model.generate_content(
+                    content_payload,
+                )
             gemini_counter.increment()
 
             text = getattr(response, "text", "") or ""
@@ -137,14 +171,15 @@ Vegetation: {scene_info.get('vegetation', 'None')}
 
         except Exception as e:
             err_str = str(e).lower()
-            if "429" in err_str or "quota" in err_str or "resourceexhausted" in str(type(e)).lower():
-                logger.warning("[GEMINI] Vision 429/quota exhausted: %s", e)
+            if "429" in err_str or "quota" in err_str or "resourceexhausted" in str(type(e)).lower() or "deadline" in err_str or "timeout" in err_str:
+                logger.warning("[GEMINI] Vision 429/timeout/quota: %s", e)
                 gemini_counter.mark_quota_exhausted()
                 result = self.parser.empty("Unverified (vision skipped)")
                 result["status"] = "Unverified (vision skipped)"
                 result["scene"] = scene_info
                 return result
             logger.error("[GEMINI] Vision verification error: %s", type(e).__name__)
-            result = self.parser.empty(f"Vision error: {type(e).__name__}")
+            result = self.parser.empty("Unverified (vision skipped)")
+            result["status"] = "Unverified (vision skipped)"
             result["scene"] = scene_info
             return result

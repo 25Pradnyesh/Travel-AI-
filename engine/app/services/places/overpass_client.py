@@ -37,6 +37,11 @@ class OverpassClient:
     """
 
     OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+    OVERPASS_MIRRORS = [
+        "https://overpass-api.de/api/interpreter",
+        "https://lz4.overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+    ]
     STATUS_URL = "https://overpass-api.de/api/status"
 
     def __init__(self, cache_dir: Path | None = None):
@@ -58,22 +63,22 @@ class OverpassClient:
         }
 
     def _get_cache_key(self, lat: float, lon: float) -> str:
-        return f"{round(lat, 3)}_{round(lon, 3)}.json"
+        # Round coordinates to 2 decimal places (~1.1km) for destination-level POI caching
+        return f"{round(lat, 2)}_{round(lon, 2)}.json"
 
     def _check_slots_available(self) -> bool:
-        """Checks Overpass /api/status to verify slot availability."""
+        """Non-blocking slot check with 1s timeout."""
         headers = {"User-Agent": get_overpass_user_agent()}
         try:
-            resp = requests.get(self.STATUS_URL, headers=headers, timeout=5)
+            resp = requests.get(self.STATUS_URL, headers=headers, timeout=1.0)
             if resp.status_code == 200:
                 text = resp.text
-                # E.g. "Rate limit: 2" or "Slot available after: ..."
                 if "Slot available after" in text and "0 slots available" in text:
                     logger.warning("[OVERPASS] No slots immediately available.")
                     return False
                 return True
-        except Exception as e:
-            logger.debug("[OVERPASS] Status check skipped: %s", e)
+        except Exception:
+            pass
         return True
 
     def _calculate_distance_km(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -96,11 +101,10 @@ class OverpassClient:
     ) -> dict[str, Any]:
         """
         Executes single Overpass query around (latitude, longitude) for:
-        - Attractions (tourism=attraction|museum|viewpoint|artwork, historic=*)
-        - Dining (amenity=restaurant)
-        - Cafes (amenity=cafe)
-        - Hotels (tourism=hotel|guest_house|hostel)
-        Caps results at ~20 items total.
+        - Attractions, historic landmarks, dining, cafes, and hotels.
+        - Hard 4s timeout per attempt, with one retry on another public mirror.
+        - Persistent disk cache by rounded coordinates (~1.1km).
+        - Degrades to empty + 'Nearby unavailable' on error/timeout.
         """
         if latitude is None or longitude is None:
             return self._empty_result("Coordinates missing")
@@ -108,7 +112,7 @@ class OverpassClient:
         cache_key = self._get_cache_key(latitude, longitude)
         cache_path = self.cache_dir / cache_key
 
-        # Check in-memory negative cache (rate limited, timeout, or server error)
+        # Check in-memory negative cache
         if cache_key in self._negative_cache:
             expiry, cached_res = self._negative_cache[cache_key]
             if time.time() < expiry:
@@ -126,16 +130,9 @@ class OverpassClient:
             except Exception as e:
                 logger.warning("[OVERPASS] Failed reading disk cache: %s", e)
 
-        # Check status slots
-        if not self._check_slots_available():
-            logger.warning("[OVERPASS] Overpass slots busy. Gracefully degrading to empty nearby.")
-            res = self._empty_result("Nearby unavailable (slots busy)")
-            self._negative_cache[cache_key] = (time.time() + 60, res)
-            return res
-
-        # Construct single Overpass QL query with timeout:10
+        # Construct single Overpass QL query with timeout:4
         overpass_ql = f"""
-[out:json][timeout:10];
+[out:json][timeout:4];
 (
   node(around:{radius},{latitude},{longitude})["tourism"~"attraction|museum|viewpoint|artwork"];
   way(around:{radius},{latitude},{longitude})["tourism"~"attraction|museum|viewpoint|artwork"];
@@ -155,63 +152,60 @@ out center 40;
 
         t_start = time.perf_counter()
         elements = []
-        timeout_sec = int(os.getenv("OVERPASS_TIMEOUT", "6"))
-        max_retries = 1
-        for attempt in range(max_retries + 1):
+        timeout_sec = 4.0
+
+        # Try primary, failover to mirror on timeout/error
+        mirrors = self.OVERPASS_MIRRORS[:2]
+        query_success = False
+
+        last_failure_reason = "Nearby unavailable"
+        for mirror_idx, endpoint in enumerate(mirrors):
             try:
+                logger.info("[OVERPASS] Querying endpoint %s (timeout: %ss)...", endpoint, timeout_sec)
                 resp = requests.post(
-                    self.OVERPASS_URL,
+                    endpoint,
                     data={"data": overpass_ql.strip()},
                     headers=headers,
                     timeout=timeout_sec,
                 )
                 if resp.status_code == 429:
+                    logger.warning("[OVERPASS] HTTP 429 rate limit from %s.", endpoint)
                     self.last_status = "rate_limited"
-                    self.consecutive_failures += 1
-                    self.last_failure_time = time.time()
-                    logger.warning("[OVERPASS] HTTP 429 Rate limited. Degenerating to empty nearby.")
-                    res = self._empty_result("Nearby unavailable (rate limited)")
-                    self._negative_cache[cache_key] = (time.time() + 300, res)
-                    return res
+                    last_failure_reason = "Nearby unavailable (rate limited)"
+                    break
                 if resp.status_code in (500, 502, 503, 504):
-                    if attempt < max_retries:
-                        logger.warning("[OVERPASS] HTTP %d Server Error. Retrying once after backoff...", resp.status_code)
-                        time.sleep(1.0)
-                        continue
-                    self.last_status = f"server_error_{resp.status_code}"
-                    self.consecutive_failures += 1
-                    self.last_failure_time = time.time()
-                    logger.warning("[OVERPASS] HTTP %d Server Error from Overpass API. Degenerating to empty nearby.", resp.status_code)
-                    res = self._empty_result(f"Nearby unavailable (HTTP {resp.status_code})")
-                    self._negative_cache[cache_key] = (time.time() + 300, res)
-                    return res
+                    logger.warning("[OVERPASS] HTTP %d from %s. Trying next mirror...", resp.status_code, endpoint)
+                    last_failure_reason = f"Nearby unavailable (HTTP {resp.status_code})"
+                    continue
                 resp.raise_for_status()
                 data = resp.json()
                 elements = data.get("elements", [])
                 self.consecutive_failures = 0
                 self.last_status = "ok"
+                query_success = True
                 break
             except requests.Timeout as exc:
+                logger.warning("[OVERPASS] Endpoint %s timed out.", endpoint)
                 self.last_status = "timeout"
-                self.consecutive_failures += 1
-                self.last_failure_time = time.time()
-                logger.warning("[OVERPASS] Query timed out (%s). Degenerating to empty nearby.", exc)
-                res = self._empty_result("Nearby unavailable (timeout)")
-                self._negative_cache[cache_key] = (time.time() + 300, res)
-                return res
-            except Exception as exc:
-                self.last_status = "error"
-                self.consecutive_failures += 1
-                self.last_failure_time = time.time()
-                logger.warning("[OVERPASS] Query failed: %s. Degenerating to empty nearby.", exc)
-                res = self._empty_result("Nearby unavailable")
-                self._negative_cache[cache_key] = (time.time() + 300, res)
-                return res
-            finally:
-                dur = time.perf_counter() - t_start
-                ctx = get_current_context()
-                if ctx:
-                    ctx.record_external_call("overpass", dur)
+                last_failure_reason = "Nearby unavailable (timeout)"
+                break
+            except requests.RequestException as exc:
+                logger.warning("[OVERPASS] Endpoint %s failed (%s). Retrying on mirror...", endpoint, type(exc).__name__)
+                last_failure_reason = f"Nearby unavailable ({type(exc).__name__})"
+
+        dur = time.perf_counter() - t_start
+        ctx = get_current_context()
+        if ctx:
+            ctx.record_external_call("overpass", dur)
+
+        if not query_success:
+            if self.last_status not in ("timeout", "rate_limited"):
+                self.last_status = "timeout_or_error"
+            self.consecutive_failures += 1
+            self.last_failure_time = time.time()
+            res = self._empty_result(last_failure_reason)
+            self._negative_cache[cache_key] = (time.time() + 180, res)
+            return res
 
         categorized = self._process_elements(elements, latitude, longitude)
 

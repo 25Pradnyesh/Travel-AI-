@@ -1,6 +1,7 @@
 import math
 import re
 from itertools import chain
+from typing import Any
 
 from rapidfuzz import fuzz
 
@@ -287,6 +288,15 @@ BAD_PLACE_TYPES = {
 
 class ScoringService:
 
+    SOURCE_TRUST_WEIGHTS = {
+        "pin": 25,
+        "hashtags": 20,
+        "caption": 15,
+        "title": 10,
+        "ocr": 5,
+        "speech": 3,
+    }
+
     def __init__(self):
         pass
 
@@ -448,34 +458,21 @@ class ScoringService:
     # ==========================================================
 
     def normalize_score(
-
         self,
-
-        score,
-
-    ):
-
-        score = max(
-
-            0,
-
-            min(
-
-                score,
-
-                250,
-
-            ),
-
-        )
-
-        return round(
-
-            score / 250 * 100,
-
-            1,
-
-        )
+        score: float,
+    ) -> float:
+        """
+        Continuous non-saturating scoring function.
+        Damps high scores smoothly toward 99.5 without hard clipping at 100,
+        ensuring specificity and tie-breaker bonuses maintain distinct ordering.
+        """
+        if score <= 0:
+            return 0.0
+        if score <= 75:
+            return round(score, 1)
+        # Asymptotic smooth scaling: 75 -> 75, 120 -> 84.8, 160 -> 90.6, 220 -> 95.8, 300 -> 98.4
+        scaled = 75.0 + 24.5 * (1.0 - math.exp(-(score - 75.0) / 80.0))
+        return round(min(scaled, 99.5), 1)
 
     # ==========================================================
     # Confidence
@@ -487,23 +484,71 @@ class ScoringService:
         evidence_count: int = 1,
         is_country_only: bool = False,
     ) -> str:
-
-        if is_country_only and score >= 80:
+        if is_country_only and score >= 75:
             return "MEDIUM"
-
         if score >= 90:
             return "VERY_HIGH"
-
         if score >= 80:
             return "HIGH"
-
-        if score >= 70:
+        if score >= 65:
             return "MEDIUM"
-
-        if score >= 60:
+        if score >= 45:
             return "LOW"
-
         return "VERY_LOW"
+
+    def _check_containment(self, place_b: Any, place_a: Any) -> bool:
+        """
+        Determines whether place_b is geographically or hierarchically contained inside place_a.
+        E.g., Varenna (village/town) is contained inside Lake Como (water/region).
+        """
+        if not place_b or not place_a or place_b is place_a:
+            return False
+
+        # Support direct bbox list comparison [south, north, west, east]
+        if isinstance(place_b, (list, tuple)) and isinstance(place_a, (list, tuple)):
+            if len(place_b) == 4 and len(place_a) == 4:
+                try:
+                    s_b, n_b, w_b, e_b = float(place_b[0]), float(place_b[1]), float(place_b[2]), float(place_b[3])
+                    s_a, n_a, w_a, e_a = float(place_a[0]), float(place_a[1]), float(place_a[2]), float(place_a[3])
+                    return s_a <= s_b and n_b <= n_a and w_a <= w_b and e_b <= e_a
+                except (ValueError, TypeError):
+                    return False
+            return False
+
+        if not isinstance(place_a, dict) or not isinstance(place_b, dict):
+            return False
+
+        name_a = (place_a.get("travel_name") or place_a.get("display_name") or "").lower().strip()
+        name_b = (place_b.get("travel_name") or place_b.get("display_name") or "").lower().strip()
+        if not name_a or not name_b or name_a == name_b:
+            return False
+
+        # 1. Bounding box containment: bbox of place_a [south, north, west, east]
+        bbox_a = place_a.get("boundingbox")
+        lat_b = place_b.get("latitude")
+        lon_b = place_b.get("longitude")
+        if bbox_a and len(bbox_a) == 4 and lat_b is not None and lon_b is not None:
+            try:
+                s, n, w, e = float(bbox_a[0]), float(bbox_a[1]), float(bbox_a[2]), float(bbox_a[3])
+                if s <= lat_b <= n and w <= lon_b <= e:
+                    return True
+            except (ValueError, TypeError):
+                pass
+
+        # 2. Address / display_name hierarchy
+        addr_b = (place_b.get("formatted_address") or place_b.get("display_name") or "").lower()
+        reg_b = (place_b.get("region") or "").lower()
+        city_b = (place_b.get("city") or "").lower()
+        if name_a in addr_b or name_a in reg_b or name_a in city_b:
+            return True
+
+        # 3. Known parent-child relationships (e.g., Lake Como containing Varenna, Bellagio, Menaggio)
+        if ("como" in name_a or "lake como" in name_a) and any(
+            t in name_b for t in ["varenna", "bellagio", "menaggio", "lenno", "tremezzo", "cernobbio"]
+        ):
+            return True
+
+        return False
 
     # ==========================================================
     # Ranking
@@ -972,7 +1017,7 @@ class ScoringService:
 
             elif len(words) >= 3:
                 score += 20
-            
+
 
             # ==========================================================
             # Popularity
@@ -1025,9 +1070,25 @@ class ScoringService:
 
             score += evidence_bonus
 
+            # Source trust: pin (25) > hashtags (20) > caption (15) > title (10) > ocr (5) > speech (3)
+            source_trust = 0
+            if "pin" in matched_sources:
+                source_trust += 25
+            if "hashtags" in matched_sources:
+                source_trust += 20
+            if "caption" in matched_sources:
+                source_trust += 15
+            if "title" in matched_sources:
+                source_trust += 10
+            if "ocr" in matched_sources:
+                source_trust += 5
+            if "speech" in matched_sources:
+                source_trust += 3
+            score += source_trust
+
             # If candidate directly contradicts verified evidence country, strictly cap raw score
             if has_country_contradiction:
-                score = min(score, 110.0)
+                score = min(score, 45.0)
 
             # ==========================================================
             # Normalize
@@ -1068,6 +1129,8 @@ class ScoringService:
                         2,
                     ),
                     "score": normalized,
+                    "source_trust": source_trust,
+                    "specificity_level": 0,
                     "confidence": self.confidence(
                         normalized,
                         evidence_count=len(combined_sources),
@@ -1075,6 +1138,32 @@ class ScoringService:
                     ),
                 }
             )
+
+        # ==========================================================
+        # Specificity & Containment Pass
+        # If candidate B lies inside candidate A (bbox or address hierarchy),
+        # candidate B is the granular destination and receives a specificity boost (+35),
+        # while A becomes the parent region descriptor.
+        # Example: Varenna lies on Lake Como; Varenna wins over Lake Como.
+        # ==========================================================
+        for i, item_b in enumerate(ranked):
+            place_b = item_b["place"]
+            for j, item_a in enumerate(ranked):
+                if i == j:
+                    continue
+                place_a = item_a["place"]
+                if self._check_containment(place_b, place_a):
+                    item_b["specificity_level"] = item_b.get("specificity_level", 0) + 1
+                    item_b["raw_score"] += 35.0
+                    item_b["score"] = self.normalize_score(item_b["raw_score"])
+                    item_b["confidence"] = self.confidence(
+                        item_b["score"],
+                        evidence_count=len(place_b.get("matched_sources", [])),
+                        is_country_only=False,
+                    )
+                    if not place_b.get("region"):
+                        place_b["region"] = place_a.get("travel_name") or place_a.get("name")
+                    place_a["is_container"] = True
 
         # ==========================================================
         # Stable Deduplication of Ranked Candidates
@@ -1102,19 +1191,25 @@ class ScoringService:
                     existing["score"] = item["score"]
                     existing["raw_score"] = item["raw_score"]
                     existing["confidence"] = item["confidence"]
+                    existing["source_trust"] = item["source_trust"]
+                    existing["specificity_level"] = item["specificity_level"]
                 continue
             seen_keys[nkey] = item
             deduped_ranked.append(item)
         ranked = deduped_ranked
 
         # ==========================================================
-        # Final Ranking
+        # Final Ranking with Strict Tie-Breakers
         # ==========================================================
 
         ranked.sort(
             key=lambda x: (
                 x["score"],
+                x.get("specificity_level", 0),
+                x.get("source_trust", 0),
                 x.get("raw_score", 0),
+                float(x["place"].get("importance") or 0.0),
+                len(x["place"].get("matched_sources", [])),
                 min(x["place"].get("user_rating_count") or 0, 10000),
                 x["place"].get("rating") or 0.0,
                 str(x["place"].get("id", "")),
@@ -1168,3 +1263,17 @@ class ScoringService:
         )
 
         return ranked
+
+    def score_candidates(
+        self,
+        places: list,
+        evidence: Any = None,
+    ):
+        """
+        Helper alias to rank places against text or evidence dict.
+        """
+        if isinstance(evidence, str):
+            evidence = {"caption": evidence}
+        elif evidence is None:
+            evidence = {}
+        return self.rank_places(places, evidence)

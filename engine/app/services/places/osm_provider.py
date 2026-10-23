@@ -51,7 +51,14 @@ class OsmProvider(PlacesProvider):
     # Candidate Resolution
     # ==================================================
 
-    def search(self, query: str) -> list[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        countrycodes: str | None = None,
+        featuretype: str | None = None,
+        accept_language: str = "en",
+        **kwargs: Any,
+    ) -> list[dict[str, Any]]:
         """
         Resolves query to candidate places.
         If query looks like a pure city name without landmark keywords, tries Open-Meteo first.
@@ -60,6 +67,10 @@ class OsmProvider(PlacesProvider):
         query_clean = query.strip()
         if not query_clean or len(query_clean) < 2:
             return []
+
+        # Check if query is likely a bare country name
+        if query_clean.lower() in ("korea", "south korea", "italy", "france", "japan", "spain", "germany") and not featuretype:
+            featuretype = "country"
 
         # Check if query is likely a city name (single or two words, no POI keywords)
         words = query_clean.split()
@@ -71,7 +82,7 @@ class OsmProvider(PlacesProvider):
         has_poi_word = any(w.lower() in poi_indicators for w in words)
 
         results = []
-        if not has_poi_word and len(words) <= 2:
+        if not has_poi_word and len(words) <= 2 and not featuretype and not countrycodes:
             # Try Open-Meteo city search first
             city_results = self.open_meteo.search_city(query_clean, count=2)
             if city_results:
@@ -79,7 +90,13 @@ class OsmProvider(PlacesProvider):
 
         # Query Nominatim for POIs or as comprehensive search
         if not results:
-            nom_results = self.nominatim.search(query_clean, limit=3)
+            nom_results = self.nominatim.search(
+                query_clean,
+                limit=3,
+                accept_language=accept_language,
+                countrycodes=countrycodes,
+                featuretype=featuretype,
+            )
             if nom_results:
                 results.extend(nom_results)
 
