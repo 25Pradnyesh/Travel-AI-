@@ -99,9 +99,9 @@ export default function ResultsScreen() {
 
   useEffect(() => {
     if (placeAtmosphereInput) {
-      setActivePlace(placeAtmosphereInput);
+      setActivePlace(placeAtmosphereInput, photoAuthor);
     }
-  }, [placeAtmosphereInput, setActivePlace]);
+  }, [placeAtmosphereInput, photoAuthor, setActivePlace]);
 
   // Curated travel advice tips
   const tipsList = useMemo(() => {

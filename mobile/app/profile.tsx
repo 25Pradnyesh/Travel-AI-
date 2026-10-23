@@ -23,8 +23,10 @@ import { EngineHealthResponse } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 import { useAuth, executePendingSaveAction } from '@/lib/supabase';
 import { syncCloudPlaceToCache } from '@/lib/storage/saved-places';
+import { Image } from 'expo-image';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { DevAuthFixtures } from '@/components/dev/DevAuthFixtures';
+import { DevCloudCheck } from '@/components/dev/DevCloudCheck';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -167,13 +169,18 @@ export default function ProfileScreen() {
   };
   const placesStatus = getPlacesStatus();
 
-  // Derived user display name, provider, and initials
+  // Derived user display name, provider, initials, and avatar
   const displayName =
     (user?.user_metadata?.full_name as string) ||
     (user?.user_metadata?.name as string) ||
     user?.email?.split('@')[0] ||
     'Traveler';
   const userInitial = displayName.charAt(0).toUpperCase();
+  const avatarUrl =
+    (user?.user_metadata?.avatar_url as string) ||
+    (user?.user_metadata?.picture as string) ||
+    null;
+  const [avatarError, setAvatarError] = useState(false);
 
   const provider =
     (user?.app_metadata?.provider as string) ||
@@ -231,7 +238,16 @@ export default function ProfileScreen() {
             <View style={styles.darkCard}>
               <View style={styles.accountHeaderRow}>
                 <View style={styles.avatarCircle}>
-                  <Text style={styles.avatarInitial}>{userInitial}</Text>
+                  {avatarUrl && !avatarError ? (
+                    <Image
+                      source={{ uri: avatarUrl }}
+                      style={styles.avatarImage}
+                      contentFit="cover"
+                      onError={() => setAvatarError(true)}
+                    />
+                  ) : (
+                    <Text style={styles.avatarInitial}>{userInitial}</Text>
+                  )}
                 </View>
                 <View style={styles.accountInfo}>
                   <View style={styles.accountNameRow}>
@@ -334,6 +350,7 @@ export default function ProfileScreen() {
           )}
 
           {__DEV__ && <DevAuthFixtures />}
+          {__DEV__ && <DevCloudCheck />}
         </View>
 
         {/* Section B: History */}
@@ -809,6 +826,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: Radius.full,
   },
   avatarInitial: {
     fontFamily: Fonts.sansBold,

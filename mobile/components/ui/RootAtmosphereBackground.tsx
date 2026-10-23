@@ -40,6 +40,8 @@ import {
   SLIDESHOW_HOLD_MS,
 } from '@/lib/atmosphere/background-manifest';
 
+import { PhotoCredit } from './PhotoCredit';
+
 export const RootAtmosphereBackground: React.FC = () => {
   const {
     activePalette,
@@ -104,36 +106,51 @@ export const RootAtmosphereBackground: React.FC = () => {
   // If destination is not active, target is handled by slideshow loop
   const targetImage = isDestinationActive && activeDestinationImage ? activeDestinationImage : null;
 
-  // Handle destination photo crossfade in / out
+  // Handle destination photo crossfade in / out with safe prefetch
   useEffect(() => {
+    let cancelled = false;
+
     if (targetImage) {
       if (targetImage === baseImage) return;
 
-      if (typeof targetImage === 'string' && targetImage.startsWith('http')) {
-        Image.prefetch(targetImage).catch(() => {});
-      }
-
-      if (reduceMotion) {
-        setBaseImage(targetImage);
-        setIncomingImage(null);
-        crossfadeAnim.setValue(1);
-        return;
-      }
-
-      setIncomingImage(targetImage);
-      crossfadeAnim.setValue(0);
-
-      Animated.timing(crossfadeAnim, {
-        toValue: 1,
-        duration: SLIDESHOW_CROSSFADE_MS,
-        useNativeDriver: true,
-      }).start((result) => {
-        if (result.finished) {
+      const triggerCrossfade = () => {
+        if (cancelled) return;
+        if (reduceMotion) {
           setBaseImage(targetImage);
           setIncomingImage(null);
           crossfadeAnim.setValue(1);
+          return;
         }
-      });
+
+        setIncomingImage(targetImage);
+        crossfadeAnim.setValue(0);
+
+        Animated.timing(crossfadeAnim, {
+          toValue: 1,
+          duration: SLIDESHOW_CROSSFADE_MS,
+          useNativeDriver: true,
+        }).start((result) => {
+          if (result.finished && !cancelled) {
+            setBaseImage(targetImage);
+            setIncomingImage(null);
+            crossfadeAnim.setValue(1);
+          }
+        });
+      };
+
+      if (typeof targetImage === 'string' && targetImage.startsWith('http')) {
+        Image.prefetch(targetImage)
+          .then((success) => {
+            if (success) {
+              triggerCrossfade();
+            }
+          })
+          .catch(() => {
+            // Keep current slideshow frame if remote prefetch fails; zero dark placeholder
+          });
+      } else {
+        triggerCrossfade();
+      }
     } else {
       // Destination cleared: resume with current slideshow photo
       const currentCycle = cycleRef.current;
@@ -315,6 +332,9 @@ export const RootAtmosphereBackground: React.FC = () => {
           locations={[0, 0.4, 0.75, 1]}
           style={StyleSheet.absoluteFill}
         />
+
+        {/* Global Photo Credit Attribution */}
+        <PhotoCredit />
       </BlurTargetView>
     </View>
   );

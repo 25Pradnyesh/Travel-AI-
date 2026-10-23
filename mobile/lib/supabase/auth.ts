@@ -251,36 +251,45 @@ export function parseAuthUrl(url: string): ParsedAuthTokens {
  * and establishes the active session in the Supabase client.
  */
 export async function handleAuthRedirect(url: string): Promise<Session | null> {
+  console.log('[AUTH:OAuth] Step 5: Parsing redirect URL for code / tokens:', url);
   const { code, accessToken, refreshToken, error, errorDescription } = parseAuthUrl(url);
 
   if (error) {
+    console.error('[AUTH:OAuth] OAuth provider returned error:', error, errorDescription);
     throw new Error(errorDescription || error || 'Authentication was denied by the provider.');
   }
 
   // 1. PKCE flow: Exchange authorization code for session
   if (code) {
+    console.log('[AUTH:OAuth] Step 6: Exchanging authorization code for session via PKCE');
     const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     if (exchangeError) {
+      console.error('[AUTH:OAuth] Exchange code error:', exchangeError.message);
       throw new Error(`Failed to exchange authorization code: ${exchangeError.message}`);
     }
+    console.log('[AUTH:OAuth] Step 7: Session established successfully for user ID:', data.session?.user?.id);
     return data.session;
   }
 
   // 2. Implicit grant: Set session directly from tokens
   if (accessToken && refreshToken) {
+    console.log('[AUTH:OAuth] Step 6: Setting session directly from access & refresh tokens');
     const { data, error: setSessionError } = await supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     });
     if (setSessionError) {
+      console.error('[AUTH:OAuth] Set session error:', setSessionError.message);
       throw new Error(`Failed to establish session from tokens: ${setSessionError.message}`);
     }
+    console.log('[AUTH:OAuth] Step 7: Session established from tokens for user ID:', data.session?.user?.id);
     return data.session;
   }
 
   // Check if session was already picked up by Supabase client
   const { data: currentSessionData } = await supabase.auth.getSession();
   if (currentSessionData.session) {
+    console.log('[AUTH:OAuth] Step 7: Active session found in Supabase client for user ID:', currentSessionData.session.user?.id);
     return currentSessionData.session;
   }
 
@@ -321,8 +330,10 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
 
   try {
     // 2. Reachability preflight check (bounded ~3-second timeout)
+    console.log(`[AUTH:OAuth] Step 1: Checking Supabase auth reachability for ${providerLabel}...`);
     const isReachable = await checkSupabaseAuthReachability(3000);
     if (!isReachable) {
+      console.warn('[AUTH:OAuth] Supabase reachability check failed (offline or blocked).');
       const unreachableMsg = "Sign-in isn't available right now. You can keep using VAMO as a guest.";
       toast.info(unreachableMsg);
       return {
@@ -331,10 +342,12 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
         error: unreachableMsg,
       };
     }
+    console.log('[AUTH:OAuth] Step 1 passed: Supabase auth is reachable.');
 
     WebBrowser.maybeCompleteAuthSession();
 
     const redirectUrl = getAuthRedirectUrl();
+    console.log(`[AUTH:OAuth] Step 2: Preparing OAuth request for ${providerLabel}. Redirect URL:`, redirectUrl);
 
     const options: {
       redirectTo: string;
@@ -353,12 +366,14 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
     }
 
     // 3. Request authorization URL from Supabase
+    console.log('[AUTH:OAuth] Step 2b: Calling supabase.auth.signInWithOAuth with skipBrowserRedirect=true');
     const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options,
     });
 
     if (oauthError) {
+      console.error('[AUTH:OAuth] signInWithOAuth returned error:', oauthError);
       const err = oauthError.message || `Failed to initialize ${providerLabel} OAuth session.`;
       setLastAuthError(err);
       return {
@@ -369,6 +384,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
 
     if (!data?.url) {
       const err = `Supabase did not return an authorization URL. Check that the ${providerLabel} provider is enabled in the Supabase Dashboard.`;
+      console.error('[AUTH:OAuth]', err);
       setLastAuthError(err);
       return {
         success: false,
@@ -377,10 +393,13 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
     }
 
     // 4. Open browser auth session
+    console.log('[AUTH:OAuth] Step 3: Launching WebBrowser.openAuthSessionAsync with URL:', data.url);
     const authSessionResult = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+    console.log('[AUTH:OAuth] Step 4: WebBrowser session finished with result type:', authSessionResult.type);
 
     // 5. Handle user cancellation or dismissal
     if (authSessionResult.type === 'cancel' || authSessionResult.type === 'dismiss') {
+      console.log('[AUTH:OAuth] User dismissed or canceled authentication window.');
       return {
         success: false,
         canceled: true,
@@ -389,8 +408,10 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
 
     // 6. Handle successful browser redirect
     if (authSessionResult.type === 'success' && authSessionResult.url) {
+      console.log('[AUTH:OAuth] Step 4 passed: Redirect URL captured:', authSessionResult.url);
       const session = await handleAuthRedirect(authSessionResult.url);
       setLastAuthError(null);
+      console.log('[AUTH:OAuth] Step 7: Sign-in complete! Logged in as:', session?.user?.email);
       return {
         success: true,
         session,
@@ -407,6 +428,7 @@ export async function signInWithOAuth(provider: OAuthProvider): Promise<AuthResu
   } catch (err: unknown) {
     const message =
       err instanceof Error ? err.message : `${providerLabel} sign-in encountered an unexpected error.`;
+    console.error(`[AUTH:OAuth] ${providerLabel} sign-in exception:`, message);
     setLastAuthError(message);
     return {
       success: false,
