@@ -32,7 +32,7 @@ export const DEFAULT_DISCOVERY_IMAGE = BUNDLED_BACKGROUNDS[0].source;
 export function resolveDestinationImage(
   place?: PlaceAtmosphereInput | null,
   fallbackImage?: string | number | null
-): string | number {
+): string | number | null {
   if (!place) {
     return fallbackImage || DEFAULT_DISCOVERY_IMAGE;
   }
@@ -55,9 +55,10 @@ export function resolveDestinationImage(
     return matchedBundled.source;
   }
 
-  // 3. Fallback: retain previous valid image or return bundled default
-  return fallbackImage || DEFAULT_DISCOVERY_IMAGE;
+  // 3. Fallback: only return fallbackImage if explicitly provided for this destination; never return stale previous image
+  return fallbackImage || null;
 }
+
 
 /**
  * Resolves author attribution for active photo.

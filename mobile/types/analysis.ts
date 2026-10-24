@@ -10,6 +10,60 @@ export interface DestinationPhoto {
   width?: number | null;
   height?: number | null;
   author?: string[] | string | null;
+  photo_tier?: string | null;
+}
+
+export interface DestinationOverview {
+  where?: string | null;
+  size?: string | null;
+  main_city_landmark?: string | null;
+  recognition?: string | null;
+  climate?: string | null;
+}
+
+export interface SeasonCard {
+  name: string;
+  months: string;
+  avg_temp_range: string;
+  avg_rainfall: string;
+  description: string;
+  highlights?: string[];
+}
+
+export interface BudgetTierBreakdown {
+  stay: number;
+  food: number;
+  local_transport: number;
+  activities: number;
+  buffer: number;
+}
+
+export interface BudgetTier {
+  name: string;
+  style: string;
+  total_usd: number;
+  total_local: number;
+  total_inr: number;
+  breakdown_usd: BudgetTierBreakdown;
+  breakdown_local: BudgetTierBreakdown;
+  breakdown_inr: BudgetTierBreakdown;
+}
+
+export interface BudgetModel {
+  tiers: {
+    budget: BudgetTier;
+    mid_range: BudgetTier;
+    comfortable: BudgetTier;
+  };
+  local_currency: string;
+  rate_date: string;
+  per_person: boolean;
+  accommodation_included: boolean;
+  exclusions: string[];
+  assumed_style: Record<string, string>;
+  disclaimer: string;
+  price_level_ratio: number;
+  world_bank_indicator: string;
 }
 
 export interface BestGuess {
@@ -32,6 +86,7 @@ export interface BestGuess {
   gemini_confidence: number;
   gemini_reason: string;
   why: string;
+  overview?: DestinationOverview | null;
 }
 
 export interface NearbyPlace {
@@ -46,6 +101,7 @@ export interface NearbyPlace {
   distance_km?: number | null;
   maps_url: string;
   category: string;
+  photos?: DestinationPhoto[];
 }
 
 export interface GeminiInfo {
@@ -61,6 +117,14 @@ export interface TravelIntelligence {
   category?: string;
   category_emoji?: string;
   best_season?: string;
+  recommended_window?: string;
+  recommended_reason?: string;
+  temperature_range?: string;
+  season_cards?: SeasonCard[];
+  climate_summary?: string;
+  budget_model?: BudgetModel;
+  weather_basis?: string;
+  weather_source?: string;
   peak_months?: string[];
   shoulder_months?: string[];
   avoid_months?: string[];
@@ -75,6 +139,7 @@ export interface TravelIntelligence {
   sample_itinerary?: Array<Record<string, unknown>> | string[];
   travel_summary?: string;
 }
+
 
 export interface PerformanceTelemetry {
   total_seconds?: number;

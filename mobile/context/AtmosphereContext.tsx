@@ -138,7 +138,7 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
     await setBackgroundSlideshowPreference(enabled);
   }, []);
 
-  const lastValidImageRef = useRef<string | number>(DEFAULT_DISCOVERY_IMAGE);
+  const currentPlaceIdRef = useRef<string | null>(null);
 
   const resolved = useMemo(() => {
     return resolveAtmosphere(activePlace);
@@ -147,17 +147,20 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
   // Check if a destination photo is actively displayed
   const isDestinationActive = Boolean(adaptiveEnabled && activePlace);
 
-  // Resolved destination photo (remote or matched bundled)
+  // Resolved destination photo (remote or matched bundled).
+  // Strictly per-destination: never carries over previous destination's photo.
   const activeDestinationImage = useMemo<string | number | null>(() => {
     if (!isDestinationActive || !activePlace) {
       return null;
     }
-    const resolvedImg = resolveDestinationImage(activePlace, lastValidImageRef.current);
-    if (resolvedImg) {
-      lastValidImageRef.current = resolvedImg;
+    const currentId = activePlace.place_id || activePlace.name || null;
+    if (currentId !== currentPlaceIdRef.current) {
+      currentPlaceIdRef.current = currentId;
     }
+    const resolvedImg = resolveDestinationImage(activePlace, null);
     return resolvedImg || null;
   }, [isDestinationActive, activePlace]);
+
 
   // Overall activeImage: destination image if active, otherwise cold start image
   const activeImage = useMemo<string | number>(() => {

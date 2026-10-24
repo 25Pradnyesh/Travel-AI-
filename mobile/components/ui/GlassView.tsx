@@ -48,14 +48,15 @@ export const GlassView: React.FC<GlassViewProps> = ({
   const { blurTargetRef } = useAtmosphere();
 
   useEffect(() => {
-    AccessibilityInfo.isReduceTransparencyEnabled()
-      .then(setReduceTransparency)
-      .catch(() => {});
+    if (typeof AccessibilityInfo?.isReduceTransparencyEnabled === 'function') {
+      AccessibilityInfo.isReduceTransparencyEnabled()
+        .then(setReduceTransparency)
+        .catch(() => {});
+    }
 
-    const sub = AccessibilityInfo.addEventListener(
-      'reduceTransparencyChanged',
-      setReduceTransparency
-    );
+    const sub = typeof AccessibilityInfo?.addEventListener === 'function'
+      ? AccessibilityInfo.addEventListener('reduceTransparencyChanged', setReduceTransparency)
+      : null;
     return () => {
       sub?.remove();
     };

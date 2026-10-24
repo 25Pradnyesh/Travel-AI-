@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { PlainMapBisect } from '@/components/dev';
 import {
   AtmosphereBackground,
-  ConfidenceBadge,
   GlassView,
   PillButton,
   PillChip,
@@ -25,13 +24,13 @@ import { FIXTURES, FixtureScenario } from '@/lib/fixtures/results-fixtures';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
+import { buildLocationSubtitle } from '@/lib/location/display-name';
 
 export default function ResultsFixturesScreen() {
   const insets = useSafeAreaInsets();
-  const [activeScenarioId, setActiveScenarioId] = useState<string>('full');
+  const [activeScenarioId, setActiveScenarioId] = useState<string>('jeju');
 
-
-  const activeFixture: FixtureScenario = FIXTURES[activeScenarioId] || FIXTURES.full;
+  const activeFixture: FixtureScenario = FIXTURES[activeScenarioId] || FIXTURES.jeju;
   const bestGuess = activeFixture.data.best_guess;
   const ti = activeFixture.data.travel_intelligence || {};
   const photos = Array.isArray(bestGuess?.photos) ? bestGuess.photos : [];
@@ -254,9 +253,12 @@ export default function ResultsFixturesScreen() {
               imageUrl={photos[0]?.url}
               destinationName={bestGuess?.name || 'Unknown'}
               locationSubtitle={
-                [bestGuess?.city, bestGuess?.region, bestGuess?.country]
-                  .filter(Boolean)
-                  .join(', ') || bestGuess?.formatted_address
+                buildLocationSubtitle({
+                  name: bestGuess?.name,
+                  city: bestGuess?.city,
+                  region: bestGuess?.region,
+                  country: bestGuess?.country,
+                }) || bestGuess?.formatted_address
               }
               photoCount={photos.length}
               photoAuthor={photos[0]?.author}

@@ -30,6 +30,8 @@ import { useSavedPlaces } from '@/lib/storage/saved-places';
 import { NearbyPlace, TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
+import { buildLocationSubtitle } from '@/lib/location/display-name';
+
 export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
   const { data, sourceUrl } = analysisStore.getAnalysisResult();
@@ -52,12 +54,15 @@ export default function ResultsScreen() {
     [data?.nearby_places]
   );
 
-  // Extract location subtitle: City, Region, Country
+  // Extract canonical location subtitle: Never duplicates country/city/aliases
   const locationSubtitle = useMemo(() => {
     if (!bestGuess) return '';
-    return [bestGuess.city, bestGuess.region, bestGuess.country]
-      .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
-      .join(', ');
+    return buildLocationSubtitle({
+      name: bestGuess.name,
+      city: bestGuess.city,
+      region: bestGuess.region,
+      country: bestGuess.country,
+    });
   }, [bestGuess]);
 
   // Photo list and cycling
@@ -267,14 +272,16 @@ export default function ResultsScreen() {
               onShare={handleShare}
             />
 
-            {/* 2. Glass Evidence Panel (Dark Glass with ConfidenceBadge & Gemini Clues) */}
+            {/* 2. Glass Evidence Panel (Dark Glass with ConfidenceBadge & Factual Overview) */}
             <DestinationIdentity
               confidence={bestGuess.confidence}
               verificationStatus={bestGuess.verification_status}
               category={ti.category || (Array.isArray(bestGuess.types) ? bestGuess.types[0] : undefined)}
+              overview={bestGuess.overview}
               why={bestGuess.why}
               geminiReason={bestGuess.gemini_reason || data.gemini?.reason}
             />
+
 
             {/* 3. Travel Dossier (Stacked dark-glass rows with circular buttons & expandable tips) */}
             <DestinationBriefing
@@ -316,8 +323,9 @@ export default function ResultsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.canvas,
+    backgroundColor: 'transparent',
   },
+
   flex: {
     flex: 1,
   },
