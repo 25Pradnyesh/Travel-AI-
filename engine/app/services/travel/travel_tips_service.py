@@ -113,20 +113,13 @@ class TravelTipsService:
         }
 
         # ==================================================
-        # Safety Tips
+        # Safety Tips (destination/weather specific only)
         # ==================================================
 
         self.safety_rules = {
-
-            "general": [
-
-                "Keep emergency contacts available.",
-                "Carry a valid ID.",
-                "Respect local laws and customs.",
-
-            ]
-
+            "general": []
         }
+
 
         # ==================================================
         # Photography Tips
@@ -719,21 +712,7 @@ class TravelTipsService:
 
         )
 
-        if season:
 
-            recommended = season.get(
-
-                "recommended",
-
-            )
-
-            if recommended:
-
-                travel_tips.append(
-
-                    f"Best season to visit: {recommended}."
-
-                )
 
         return {
 

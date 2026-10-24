@@ -347,11 +347,11 @@ class LocationResolver:
 
         ctx = get_current_context()
 
-        # Concurrent Phase 2 enrichment: run details and nearby in parallel
+        # Concurrent Phase 2 enrichment: run details/photos, nearby, and travel intelligence in parallel with 4.0s caps
         def _fetch_details():
             t_start = time.perf_counter()
             d = None
-            if place_id and not place.get("photos"):
+            if place_id:
                 try:
                     d = self.details.get_details(place_id)
                 except Exception as exc:
@@ -368,21 +368,37 @@ class LocationResolver:
                     self.log(f"⚠️ Nearby search enrichment failed: {type(exc).__name__}: {exc}")
             return nb, time.perf_counter() - t_start
 
+        def _fetch_travel():
+            t_start = time.perf_counter()
+            tr = {}
+            try:
+                tr = self.travel.enrich(place.copy())
+            except Exception as exc:
+                self.log(f"⚠️ Travel intelligence enrichment failed: {type(exc).__name__}: {exc}")
+            return tr, time.perf_counter() - t_start
+
         details = None
         nearby = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        travel_enriched = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             future_details = executor.submit(_fetch_details)
             future_nearby = executor.submit(_fetch_nearby)
+            future_travel = executor.submit(_fetch_travel)
 
             try:
-                details, photos_duration = future_details.result(timeout=6.0)
+                details, photos_duration = future_details.result(timeout=4.0)
             except Exception as e:
                 self.log(f"Details future timed out or failed: {e}")
 
             try:
-                nearby, nearby_duration = future_nearby.result(timeout=6.0)
+                nearby, nearby_duration = future_nearby.result(timeout=4.0)
             except Exception as e:
                 self.log(f"Nearby future timed out or failed: {e}")
+
+            try:
+                travel_enriched, travel_duration = future_travel.result(timeout=4.0)
+            except Exception as e:
+                self.log(f"Travel future timed out or failed: {e}")
 
         if ctx:
             ctx.record_external_call("places_details", photos_duration)
@@ -402,12 +418,31 @@ class LocationResolver:
                 "utc_offset_minutes",
                 "wikidata",
                 "wikipedia",
+                "overview",
             ):
                 val = details.get(k)
                 if val:
                     place[k] = val
             if details.get("editorial_summary"):
                 place["editorial_summary"] = details["editorial_summary"]
+
+        TRAVEL_INTELLIGENCE_KEYS = {
+            "seasons", "best_time_to_visit", "recommended_window", "recommended_reason",
+            "season_cards", "climate_summary", "travel_tips", "local_tips", "hidden_gems",
+            "travel_story", "budget_level", "estimated_daily_budget", "currency",
+            "budget_model", "recommended_trip_days", "safety_rating", "visa_requirement",
+            "primary_language", "electrical_plug", "emergency_numbers", "timezone",
+        }
+        if travel_enriched:
+            for k, val in travel_enriched.items():
+                if val is not None and k not in ("id", "place_id", "latitude", "longitude"):
+                    if k in TRAVEL_INTELLIGENCE_KEYS or (val and not place.get(k)):
+                        place[k] = val
+
+        # Wire climate from travel into overview if not already present
+        if place.get("overview") and isinstance(place["overview"], dict):
+            if not place["overview"].get("climate") and place.get("climate_summary"):
+                place["overview"]["climate"] = place["climate_summary"]
 
         place = self.attach_nearby(
             place,
@@ -418,8 +453,6 @@ class LocationResolver:
         food = nearby.get("food", [])
         stay = nearby.get("stay", [])
         transport = nearby.get("transport", [])
-        shopping = nearby.get("shopping", [])
-        nature = nearby.get("nature", [])
 
         place["featured_attraction"] = must_visit[0] if must_visit else None
         place["recommended_restaurant"] = food[0] if food else None
@@ -430,14 +463,6 @@ class LocationResolver:
         place["nearby_places_found"] = stats.get("places_found", 0)
         place["nearby_categories"] = stats.get("categories", 0)
 
-        # Travel Intelligence & Weather
-        t_tr_start = time.perf_counter()
-        try:
-            place = self.travel.enrich(place)
-        except Exception as exc:
-            self.log(f"⚠️ Travel intelligence enrichment failed: {type(exc).__name__}: {exc}")
-        travel_duration = time.perf_counter() - t_tr_start
-
         place.setdefault("editorial_summary", "")
         place.setdefault("hidden_gems", [])
         place.setdefault("local_tips", [])
@@ -446,6 +471,7 @@ class LocationResolver:
 
         item["place"] = place
         return item, nearby_duration, travel_duration
+
 
     # ==================================================
     # Resolver Statistics

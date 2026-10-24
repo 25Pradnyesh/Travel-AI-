@@ -181,57 +181,53 @@ class TravelIntelligenceService:
                 "budget_basis",
                 "estimate",
             ),
-
+            "budget_model": place.get("budget_model"),
+            "currency": place.get("currency", "USD"),
+            "best_season": place.get("best_season"),
+            "recommended_window": place.get("recommended_window"),
+            "recommended_reason": place.get("recommended_reason"),
+            "temperature_range": place.get("temperature_range"),
+            "season_cards": place.get("season_cards", []),
+            "climate_summary": place.get("climate_summary"),
             "weather_basis": place.get(
                 "weather_basis",
             ),
-
             "weather_source": place.get(
                 "weather_source",
             ),
-
             "peak_months": place.get(
                 "peak_months",
                 [],
             ),
-
             "shoulder_months": place.get(
                 "shoulder_months",
                 [],
             ),
-
             "avoid_months": place.get(
                 "avoid_months",
                 [],
             ),
-
             "travel_tips": place.get(
                 "travel_tips",
                 [],
             ),
-
             "activities": place.get(
                 "activities",
                 [],
             ),
-
             "packing_list": place.get(
                 "packing_list",
                 {},
             ),
-
             "timing": place.get(
                 "timing",
                 {},
             ),
-
             "sample_itinerary": place.get(
                 "sample_itinerary",
                 [],
             ),
-
             "travel_summary": place.get(
                 "travel_summary",
             ),
-
-        }
+        }

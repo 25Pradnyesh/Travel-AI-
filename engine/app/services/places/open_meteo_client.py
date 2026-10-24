@@ -190,42 +190,196 @@ class OpenMeteoClient:
 
         monthly_stats = {}
         month_scores = []
+        month_num_data: dict[int, dict[str, float]] = {}
+
         for m in range(1, 13):
             t_list = month_temps[m]
             p_list = month_precips[m]
             m_name = calendar.month_name[m]
             mean_temp = sum(t_list) / len(t_list) if t_list else 20.0
-            # Total precip per month annualized (divide by 5 years)
             total_precip_annual = (sum(p_list) / 5.0) if p_list else 50.0
 
             monthly_stats[m_name] = {
                 "mean_temp_c": round(mean_temp, 1),
                 "mean_precipitation_mm": round(total_precip_annual, 1),
             }
+            month_num_data[m] = {
+                "name": m_name,
+                "temp": mean_temp,
+                "precip": total_precip_annual,
+            }
 
             # Score travel comfort: ideal temp ~18C-26C, penalty for extreme cold (<5C), heat (>32C), rain (>100mm)
             temp_penalty = abs(mean_temp - 22.0)
             rain_penalty = max(0.0, total_precip_annual - 60.0) / 10.0
             score = 100.0 - (temp_penalty * 2.5) - (rain_penalty * 3.0)
-            month_scores.append((m_name, score, mean_temp, total_precip_annual))
+            month_scores.append((m, m_name, score, mean_temp, total_precip_annual))
 
         # Sort months by comfort score descending
-        month_scores.sort(key=lambda x: x[1], reverse=True)
+        month_scores.sort(key=lambda x: x[2], reverse=True)
 
-        peak_months = [item[0] for item in month_scores[:3]]
-        shoulder_months = [item[0] for item in month_scores[3:6]]
-        avoid_months = [item[0] for item in month_scores[-3:] if item[1] < 60.0]
+        is_tropical = abs(lat_r) <= 23.5
+        is_southern = lat_r < -5.0
 
-        best_months = [item[0] for item in month_scores[:4]]
+        # -------------------------------------------------------------
+        # Season Cards & Recommended Window (Hemisphere & Tropics aware)
+        # -------------------------------------------------------------
+        season_cards = []
+        if is_tropical:
+            # Tropics: Dry Season vs Wet/Monsoon Season (never spring/autumn)
+            # Sort calendar months by rainfall to identify dry and wet clusters
+            dry_months = [m for m in range(1, 13) if month_num_data[m]["precip"] <= 90.0]
+            wet_months = [m for m in range(1, 13) if month_num_data[m]["precip"] > 140.0]
+            if not dry_months:
+                # If all rain is high, lowest 5 months
+                sorted_by_rain = sorted(range(1, 13), key=lambda m: month_num_data[m]["precip"])
+                dry_months = sorted(sorted_by_rain[:5])
+                wet_months = sorted(sorted_by_rain[7:])
+
+            dry_names = [calendar.month_name[m] for m in dry_months]
+            wet_names = [calendar.month_name[m] for m in wet_months]
+
+            dry_temps = [month_num_data[m]["temp"] for m in dry_months]
+            dry_rain = [month_num_data[m]["precip"] for m in dry_months]
+            dry_temp_min = round(min(dry_temps)) if dry_temps else 22
+            dry_temp_max = round(max(dry_temps)) if dry_temps else 28
+            dry_rain_avg = round(sum(dry_rain) / len(dry_rain), 1) if dry_rain else 50.0
+
+            wet_temps = [month_num_data[m]["temp"] for m in wet_months]
+            wet_rain = [month_num_data[m]["precip"] for m in wet_months]
+            wet_temp_min = round(min(wet_temps)) if wet_temps else 24
+            wet_temp_max = round(max(wet_temps)) if wet_temps else 30
+            wet_rain_avg = round(sum(wet_rain) / len(wet_rain), 1) if wet_rain else 220.0
+
+            dry_window_str = f"{dry_names[0]}–{dry_names[-1]}" if len(dry_names) > 1 else (dry_names[0] if dry_names else "Year-round")
+            wet_window_str = f"{wet_names[0]}–{wet_names[-1]}" if len(wet_names) > 1 else (wet_names[0] if wet_names else "Seasonal")
+
+            season_cards = [
+                {
+                    "name": "Dry Season",
+                    "months": dry_window_str,
+                    "avg_temp_range": f"{dry_temp_min}°C–{dry_temp_max}°C",
+                    "avg_rainfall": f"{dry_rain_avg} mm/mo",
+                    "description": "Lowest rainfall and sunny skies; optimal conditions for exploring and outdoor activities.",
+                },
+                {
+                    "name": "Wet Season",
+                    "months": wet_window_str,
+                    "avg_temp_range": f"{wet_temp_min}°C–{wet_temp_max}°C",
+                    "avg_rainfall": f"{wet_rain_avg} mm/mo",
+                    "description": "Tropical downpours and lush landscapes; higher humidity with occasional afternoon storms.",
+                },
+            ]
+
+            recommended_window = f"Dry season: {dry_window_str}"
+            temp_range = f"{dry_temp_min}°C–{dry_temp_max}°C"
+            recommended_reason = f"Warm temperatures ({temp_range}) and minimal rainfall ({dry_rain_avg} mm/mo), ideal for travel."
+            best_season_title = f"Dry Season ({dry_window_str})"
+            best_months = dry_names[:4] if dry_names else [item[1] for item in month_scores[:4]]
+            peak_months = dry_names[:3] if dry_names else [item[1] for item in month_scores[:3]]
+            avoid_months = wet_names[:3]
+
+        else:
+            # Temperate / Subtropical: Spring, Summer, Autumn, Winter
+            if is_southern:
+                season_defs = [
+                    ("Spring", [9, 10, 11]),
+                    ("Summer", [12, 1, 2]),
+                    ("Autumn", [3, 4, 5]),
+                    ("Winter", [6, 7, 8]),
+                ]
+            else:
+                season_defs = [
+                    ("Spring", [3, 4, 5]),
+                    ("Summer", [6, 7, 8]),
+                    ("Autumn", [9, 10, 11]),
+                    ("Winter", [12, 1, 2]),
+                ]
+
+            season_scores = []
+            for s_name, m_list in season_defs:
+                s_temps = [month_num_data[m]["temp"] for m in m_list]
+                s_precips = [month_num_data[m]["precip"] for m in m_list]
+                s_t_min = round(min(s_temps))
+                s_t_max = round(max(s_temps))
+                s_rain_avg = round(sum(s_precips) / len(s_precips), 1)
+                s_m_names = [calendar.month_name[m] for m in m_list]
+                s_window = f"{s_m_names[0]}–{s_m_names[-1]}"
+                # Average comfort score for the season
+                avg_score = sum(next(x[2] for x in month_scores if x[0] == m) for m in m_list) / 3.0
+                season_scores.append((s_name, avg_score, s_window, f"{s_t_min}°C–{s_t_max}°C", s_rain_avg, s_m_names))
+
+                # Descriptive weather statement from data only
+                if s_rain_avg < 60.0 and s_t_max <= 25:
+                    desc = f"Pleasant and dry with mild temperatures ({s_t_min}°C–{s_t_max}°C) and low rainfall ({s_rain_avg} mm/mo)."
+                elif s_t_max > 28:
+                    desc = f"Warm and sunny ({s_t_min}°C–{s_t_max}°C) with higher seasonal rainfall ({s_rain_avg} mm/mo)."
+                elif s_t_min < 5:
+                    desc = f"Crisp and chilly ({s_t_min}°C–{s_t_max}°C); bundle up for outdoor activities."
+                else:
+                    desc = f"Comfortable weather ({s_t_min}°C–{s_t_max}°C) with moderate precipitation ({s_rain_avg} mm/mo)."
+
+                season_cards.append({
+                    "name": s_name,
+                    "months": s_window,
+                    "avg_temp_range": f"{s_t_min}°C–{s_t_max}°C",
+                    "avg_rainfall": f"{s_rain_avg} mm/mo",
+                    "description": desc,
+                })
+
+            season_scores.sort(key=lambda x: x[1], reverse=True)
+            top_season = season_scores[0]
+            second_season = season_scores[1]
+
+            # If top two seasons both have high comfort (e.g. Spring & Autumn), combine them
+            if second_season[1] >= 75.0 and top_season[1] >= 80.0:
+                best_season_title = f"{top_season[0]} & {second_season[0]}"
+                recommended_window = f"{top_season[2]} & {second_season[2]}"
+                temp_range = f"{top_season[3]}"
+                recommended_reason = f"Mild temperatures ({top_season[3]}) and low rainfall, offering optimal conditions for sightseeing."
+                combined_months = top_season[5][:2] + second_season[5][:2]
+                best_months = combined_months
+            else:
+                best_season_title = f"{top_season[0]} ({top_season[2]})"
+                recommended_window = top_season[2]
+                temp_range = top_season[3]
+                recommended_reason = f"Comfortable temperatures ({top_season[3]}) and moderate precipitation ({top_season[4]} mm/mo)."
+                best_months = top_season[5]
+
+            peak_months = best_months[:3]
+            avoid_months = season_scores[-1][5]
+
+        # -------------------------------------------------------------
+        # Climate Normals Summary for Overview Line 5
+        # -------------------------------------------------------------
+        mean_annual_temp = round(sum(m["mean_temp_c"] for m in monthly_stats.values()) / 12.0, 1)
+        total_annual_precip = round(sum(m["mean_precipitation_mm"] for m in monthly_stats.values()))
+
+        if is_tropical:
+            climate_type = "Tropical savanna" if total_annual_precip < 1800 else "Tropical rainforest"
+        elif mean_annual_temp >= 14.5:
+            climate_type = "Humid subtropical" if total_annual_precip > 1000 else "Mediterranean / Subtropical"
+        elif mean_annual_temp >= 8.5:
+            climate_type = "Temperate oceanic" if total_annual_precip < 900 else "Humid continental"
+        else:
+            climate_type = "Cool continental"
+
+        climate_summary = f"{climate_type} • Annual avg {mean_annual_temp}°C • {total_annual_precip:,} mm rain"
 
         result = {
+            "best_season": best_season_title,
+            "recommended_window": recommended_window,
+            "recommended_reason": recommended_reason,
+            "temperature_range": temp_range,
+            "season_cards": season_cards,
             "best_months": best_months,
             "peak_months": peak_months,
-            "shoulder_months": shoulder_months,
             "avoid_months": avoid_months,
             "weather_source": "Open-Meteo Historical Weather",
             "weather_attribution": "based on historical weather",
+            "weather_basis": "based on historical weather",
             "years_analyzed": f"{start_year}-{end_year} (5 full years)",
+            "climate_summary": climate_summary,
             "monthly_summary": monthly_stats,
         }
 
@@ -235,5 +389,4 @@ class OpenMeteoClient:
                 json.dump(result, f, indent=2)
         except Exception:
             pass
-
         return result

@@ -235,13 +235,19 @@ class SeasonService:
                 hist_weather = client.get_historical_best_months(latitude, longitude)
                 if hist_weather and hist_weather.get("best_months"):
                     return {
+                        "best_season": hist_weather.get("best_season") or season["peak_season"],
                         "best_months": hist_weather["best_months"],
                         "peak_months": hist_weather.get("peak_months", hist_weather["best_months"][:3]),
                         "shoulder_months": hist_weather.get("shoulder_months", hist_weather["best_months"][3:]),
                         "avoid_months": hist_weather.get("avoid_months", []),
-                        "peak_season": season["peak_season"],
+                        "peak_season": hist_weather.get("best_season") or season["peak_season"],
                         "avoid_season": ", ".join(hist_weather.get("avoid_months", [])) or season["avoid"],
-                        "recommended": ", ".join(hist_weather["best_months"]),
+                        "recommended": hist_weather.get("recommended_window") or ", ".join(hist_weather["best_months"]),
+                        "recommended_window": hist_weather.get("recommended_window"),
+                        "recommended_reason": hist_weather.get("recommended_reason"),
+                        "temperature_range": hist_weather.get("temperature_range"),
+                        "season_cards": hist_weather.get("season_cards", []),
+                        "climate_summary": hist_weather.get("climate_summary"),
                         "weather_basis": "based on historical weather",
                         "weather_source": "Open-Meteo Historical Weather",
                     }
@@ -249,25 +255,17 @@ class SeasonService:
                 pass
 
         return {
-
+            "best_season": season["peak_season"],
             "best_months": season["best_months"],
-
             "peak_months": season["best_months"][:3],
-
             "shoulder_months": season["best_months"][3:],
-
             "avoid_months": [season["avoid"]],
-
             "peak_season": season["peak_season"],
-
             "avoid_season": season["avoid"],
-
-            "recommended": ", ".join(
-
-                season["best_months"]
-
-            ),
-
+            "recommended": ", ".join(season["best_months"]),
+            "recommended_window": ", ".join(season["best_months"][:2]),
+            "recommended_reason": f"Favorable conditions during {season['peak_season']}.",
+            "temperature_range": None,
+            "season_cards": [],
             "weather_basis": "category heuristic",
-
-        }
+        }

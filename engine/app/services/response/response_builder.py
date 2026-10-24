@@ -156,10 +156,12 @@ class ResponseBuilder:
                     license=license_str,
                     license_url=license_url,
                     source_url=source_url,
+                    photo_tier=item.get("photo_tier"),
                 )
             )
 
         return normalized
+
 
     # ==================================================
     # Build "Why this place"
@@ -211,6 +213,12 @@ class ResponseBuilder:
                 "category": enriched.get("category", "Destination"),
                 "category_emoji": enriched.get("category_emoji", "📍"),
                 "best_season": enriched.get("best_season", "All Year"),
+                "recommended_window": enriched.get("recommended_window"),
+                "recommended_reason": enriched.get("recommended_reason"),
+                "temperature_range": enriched.get("temperature_range"),
+                "season_cards": enriched.get("season_cards", []),
+                "climate_summary": enriched.get("climate_summary"),
+                "budget_model": enriched.get("budget_model"),
                 "weather_basis": enriched.get("weather_basis"),
                 "weather_source": enriched.get("weather_source"),
                 "budget_basis": enriched.get("budget_basis", "estimate"),
@@ -228,6 +236,7 @@ class ResponseBuilder:
                 "sample_itinerary": enriched.get("sample_itinerary", []),
                 "travel_summary": enriched.get("travel_summary", ""),
             }
+
 
         except Exception as e:
             logger.warning("[RESPONSE] Travel intelligence enrichment failed: %s", type(e).__name__)
@@ -438,7 +447,9 @@ class ResponseBuilder:
             gemini_confidence=gemini_conf,
             gemini_reason=gemini_reason,
             why=why,
+            overview=place.get("overview"),
         )
+
 
     # ==================================================
     # Build Canonical Successful Response

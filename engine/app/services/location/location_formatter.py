@@ -347,51 +347,10 @@ class LocationFormatter:
         display_name: str,
         country: str,
     ):
-
-        pieces = []
-
-        if city:
-
-            pieces.append(city)
-
-        elif display_name:
-
-            pieces.append(display_name)
-
-        if (
-
-            region
-
-            and
-
-            country
-
-            and
-
-            region.lower() != country.lower()
-
-        ):
-
-            pieces.append(region)
-
-        if (
-
-            country
-
-            and
-
-            country.lower()
-
-            not in [
-
-                piece.lower()
-
-                for piece in pieces
-
-            ]
-
-        ):
-
-            pieces.append(country)
-
-        return ", ".join(pieces)
+        from engine.app.services.location.canonical_display_name import build_canonical_display_name
+        return build_canonical_display_name(
+            name=city or display_name,
+            city=city,
+            region=region,
+            country=country,
+        )

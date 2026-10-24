@@ -10,6 +10,7 @@ class DestinationPhoto(BaseModel):
     license: str | None = None
     license_url: str | None = None
     source_url: str | None = None
+    photo_tier: str | None = None
 
 
 class BestGuess(BaseModel):
@@ -32,6 +33,7 @@ class BestGuess(BaseModel):
     gemini_confidence: float = 0.0
     gemini_reason: str = ""
     why: str = ""
+    overview: dict[str, str | None] | None = None
 
 
 class NearbyPlace(BaseModel):

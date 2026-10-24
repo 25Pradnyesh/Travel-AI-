@@ -6,9 +6,11 @@ from engine.app.services.places.base import PlacesProvider
 from engine.app.services.places.nominatim_client import NominatimClient
 from engine.app.services.places.open_meteo_client import OpenMeteoClient
 from engine.app.services.places.overpass_client import OverpassClient
+from engine.app.services.places.overview_builder import build_destination_overview
 from engine.app.services.places.wikimedia_client import WikimediaClient
 
 logger = logging.getLogger(__name__)
+
 
 
 class OsmProvider(PlacesProvider):
@@ -125,19 +127,41 @@ class OsmProvider(PlacesProvider):
                 "wikipedia": data.get("wikipedia"),
             }
 
-        lat = data.get("latitude")
-        lon = data.get("longitude")
+        lat = data.get("latitude") or data.get("lat")
+        lon = data.get("longitude") or data.get("lon")
+        if lat is not None:
+            try:
+                lat = float(lat)
+            except (ValueError, TypeError):
+                lat = None
+        if lon is not None:
+            try:
+                lon = float(lon)
+            except (ValueError, TypeError):
+                lon = None
 
+        place_name = data.get("name") or data.get("travel_name") or data.get("display_name")
         photos, editorial_summary = self.wikimedia.resolve_destination_photos(
             extratags=extratags,
             latitude=lat,
             longitude=lon,
+            place_name=place_name,
+        )
+
+        wikidata_id = extratags.get("wikidata") or data.get("wikidata")
+        wikipedia_tag = extratags.get("wikipedia") or data.get("wikipedia")
+        overview = build_destination_overview(
+            wikidata_id=wikidata_id,
+            wikipedia_tag=wikipedia_tag,
+            place_data=data,
+            climate_summary=data.get("climate_summary"),
         )
 
         details: dict[str, Any] = {
             "id": place_id,
             "place_id": place_id,
             "photos": photos,
+            "overview": overview,
             "editorial_summary": editorial_summary or "",
             "rating": None,  # NEVER invent
             "user_rating_count": None,
@@ -145,11 +169,12 @@ class OsmProvider(PlacesProvider):
             "website": extratags.get("website") or extratags.get("contact:website"),
             "phone": extratags.get("phone") or extratags.get("contact:phone"),
             "opening_hours": extratags.get("opening_hours"),
-            "wikidata": extratags.get("wikidata") or data.get("wikidata"),
-            "wikipedia": extratags.get("wikipedia") or data.get("wikipedia"),
+            "wikidata": wikidata_id,
+            "wikipedia": wikipedia_tag,
         }
 
         return details
+
 
     # ==================================================
     # Nearby POI Search

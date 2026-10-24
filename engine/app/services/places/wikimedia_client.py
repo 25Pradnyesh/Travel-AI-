@@ -266,6 +266,118 @@ class WikimediaClient:
         return photos
 
     # ==================================================
+    # Wikidata P18 Image Lookup
+    # ==================================================
+
+    def get_wikidata_p18_image(self, wikidata_id: str) -> dict[str, Any] | None:
+        """
+        Tier 2: Queries Wikidata entity for P18 (image) property and retrieves Commons photo info.
+        """
+        if not wikidata_id or not re.match(r"^Q\d+$", wikidata_id.strip()):
+            return None
+
+        clean_id = wikidata_id.strip()
+        url = f"https://www.wikidata.org/wiki/Special:EntityData/{clean_id}.json"
+        headers = {"User-Agent": get_wikimedia_user_agent()}
+
+        t_start = time.perf_counter()
+        try:
+            resp = requests.get(url, headers=headers, timeout=5)
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            entity = data.get("entities", {}).get(clean_id, {})
+            claims = entity.get("claims", {})
+            p18_claims = claims.get("P18", [])
+            if not p18_claims:
+                return None
+            filename = p18_claims[0].get("mainsnak", {}).get("datavalue", {}).get("value")
+            if not filename or not isinstance(filename, str):
+                return None
+
+            return self.get_image_info(filename)
+        except Exception as exc:
+            logger.warning("[WIKIMEDIA] Wikidata P18 failed for '%s': %s", clean_id, exc)
+            return None
+        finally:
+            ctx = get_current_context()
+            if ctx:
+                ctx.record_external_call("wikidata_p18", time.perf_counter() - t_start)
+
+    # ==================================================
+    # Commons Text Search Fallback
+    # ==================================================
+
+    def search_commons_text(self, query: str, limit: int = 4) -> list[dict[str, Any]]:
+        """
+        Tier 4: Searches Wikimedia Commons by place name text for CC-licensed photography.
+        """
+        if not query or len(query.strip()) < 2:
+            return []
+
+        params = {
+            "action": "query",
+            "generator": "search",
+            "gsrsearch": query.strip(),
+            "gsrnamespace": "6",  # File namespace
+            "gsrlimit": str(limit),
+            "prop": "imageinfo",
+            "iiprop": "url|extmetadata|size",
+            "iiurlwidth": "1600",
+            "format": "json",
+        }
+        headers = {"User-Agent": get_wikimedia_user_agent()}
+
+        t_start = time.perf_counter()
+        try:
+            resp = requests.get(self.COMMONS_API, params=params, headers=headers, timeout=6)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as exc:
+            logger.warning("[WIKIMEDIA] Commons text search failed for '%s': %s", query, exc)
+            return []
+        finally:
+            ctx = get_current_context()
+            if ctx:
+                ctx.record_external_call("commons_text_search", time.perf_counter() - t_start)
+
+        pages = data.get("query", {}).get("pages", {})
+        photos = []
+        for _, page in pages.items():
+            imageinfo = page.get("imageinfo", [])
+            if not imageinfo:
+                continue
+            info = imageinfo[0]
+            extmeta = info.get("extmetadata", {})
+
+            license_short = extmeta.get("LicenseShortName", {}).get("value", "")
+            if not is_allowed_license(license_short):
+                continue
+
+            artist_raw = extmeta.get("Artist", {}).get("value", "")
+            author = strip_html_tags(artist_raw) or "Wikimedia Commons contributor"
+            license_url = extmeta.get("LicenseUrl", {}).get("value", "")
+            title = page.get("title", "")
+            source_url = info.get("descriptionurl") or f"https://commons.wikimedia.org/wiki/{urllib.parse.quote(title)}"
+
+            photo_url = info.get("thumburl") or info.get("url")
+            width = info.get("thumbwidth") or info.get("width")
+            height = info.get("thumbheight") or info.get("height")
+
+            if photo_url:
+                photos.append({
+                    "url": photo_url,
+                    "width": width,
+                    "height": height,
+                    "author": author,
+                    "license": license_short,
+                    "license_url": license_url,
+                    "source_url": source_url,
+                })
+
+        return photos
+
+    # ==================================================
     # Unified Photo & Editorial Resolution
     # ==================================================
 
@@ -274,48 +386,98 @@ class WikimediaClient:
         extratags: dict[str, Any],
         latitude: float | None = None,
         longitude: float | None = None,
+        place_name: str | None = None,
     ) -> tuple[list[dict[str, Any]], str | None]:
         """
-        Resolves photos and editorial summary:
-        1. Checks extratags wikipedia -> summary & lead image -> Commons imageinfo.
-        2. Checks extratags wikidata / wikimedia_commons.
-        3. Fallback: Commons geosearch near coordinates.
+        Engine photo chain:
+        1. Wikipedia lead image -> Commons imageinfo.
+        2. Wikidata P18 -> Commons imageinfo.
+        3. Commons geosearch near coordinates.
+        4. Commons text search by place name.
+        Logs which tier answered and annotates each photo with photo_tier.
         Returns: (photos, editorial_summary)
         """
         photos: list[dict[str, Any]] = []
         editorial_summary: str | None = None
+        answering_tier: str | None = None
 
         wikipedia_tag = extratags.get("wikipedia")
+        wikidata_tag = extratags.get("wikidata")
+        commons_tag = extratags.get("wikimedia_commons")
+
+        # --------------------------------------------------
+        # Tier 1: Wikipedia lead image
+        # --------------------------------------------------
         if wikipedia_tag:
             wiki_summary = self.get_wikipedia_summary(wikipedia_tag)
             if wiki_summary:
                 editorial_summary = wiki_summary.get("extract")
-                # Try lead image from summary
                 lead_img = wiki_summary.get("originalimage", {}) or wiki_summary.get("thumbnail", {})
                 lead_source = lead_img.get("source", "")
                 if lead_source:
-                    # Extract filename from upload.wikimedia.org URL
-                    # e.g. https://upload.wikimedia.org/wikipedia/commons/a/ab/Filename.jpg
-                    file_name = lead_source.split("/")[-1]
-                    # If thumbnail url with width, filename is before the last width part
+                    # Clean filename: strip query string and prefix
+                    clean_source = lead_source.split("?")[0]
+                    file_name = clean_source.split("/")[-1]
                     if re.match(r"^\d+px-", file_name):
                         file_name = file_name.split("-", 1)[1]
                     file_name = urllib.parse.unquote(file_name)
                     photo_info = self.get_image_info(file_name)
                     if photo_info:
+                        photo_info["photo_tier"] = "wikipedia_lead_image"
                         photos.append(photo_info)
+                        answering_tier = "wikipedia_lead_image"
 
         # Check explicit wikimedia_commons tag on OSM node if any
-        commons_tag = extratags.get("wikimedia_commons")
-        if commons_tag and not photos:
+        if not photos and commons_tag:
             photo_info = self.get_image_info(commons_tag)
             if photo_info:
+                photo_info["photo_tier"] = "wikimedia_commons_tag"
                 photos.append(photo_info)
+                answering_tier = "wikimedia_commons_tag"
 
-        # Fallback to geosearch near coordinates if needed
+        # --------------------------------------------------
+        # Tier 2: Wikidata P18
+        # --------------------------------------------------
+        if not photos and wikidata_tag:
+            p18_info = self.get_wikidata_p18_image(wikidata_tag)
+            if p18_info:
+                p18_info["photo_tier"] = "wikidata_p18"
+                photos.append(p18_info)
+                answering_tier = "wikidata_p18"
+
+        # --------------------------------------------------
+        # Tier 3: Commons geosearch
+        # --------------------------------------------------
         if not photos and latitude is not None and longitude is not None:
-            geo_photos = self.geosearch_photos(latitude, longitude, radius=1500, limit=4)
+            geo_photos = self.geosearch_photos(latitude, longitude, radius=3000, limit=4)
             if geo_photos:
+                for p in geo_photos:
+                    p["photo_tier"] = "commons_geosearch"
                 photos.extend(geo_photos)
+                answering_tier = "commons_geosearch"
+
+        # --------------------------------------------------
+        # Tier 4: Commons text search by place_name
+        # --------------------------------------------------
+        if not photos and place_name:
+            text_photos = self.search_commons_text(place_name, limit=4)
+            if text_photos:
+                for p in text_photos:
+                    p["photo_tier"] = "commons_text_search"
+                photos.extend(text_photos)
+                answering_tier = "commons_text_search"
+
+        if answering_tier:
+            logger.info(
+                "[PHOTO_CHAIN] Tier '%s' answered with %d photos for place '%s'",
+                answering_tier,
+                len(photos),
+                place_name or wikipedia_tag or wikidata_tag or "unknown",
+            )
+        else:
+            logger.info(
+                "[PHOTO_CHAIN] No tier found photos for place '%s'; falling back to bundled/slideshow",
+                place_name or wikipedia_tag or wikidata_tag or "unknown",
+            )
 
         return photos, editorial_summary
