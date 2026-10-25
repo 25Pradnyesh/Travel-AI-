@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   highlightTint: {
-    backgroundColor: 'rgba(0, 0, 0, 0.12)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
 });
 

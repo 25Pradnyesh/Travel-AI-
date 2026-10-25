@@ -28,7 +28,7 @@ export interface LoadingStateProps {
 export const LoadingState: React.FC<LoadingStateProps> = React.memo(({
   variant = 'card',
   title = 'Processing...',
-  subtitle = 'VAMO is analyzing geographic clues and candidate landmarks.',
+  subtitle = 'VAMO is resolving destination details and landmarks.',
   onCancel,
   cancelLabel = 'Cancel',
   style,

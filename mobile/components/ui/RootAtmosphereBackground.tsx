@@ -110,46 +110,52 @@ export const RootAtmosphereBackground: React.FC = () => {
   useEffect(() => {
     let cancelled = false;
 
-    if (targetImage) {
-      if (targetImage === baseImage) return;
+    if (isDestinationActive) {
+      if (targetImage) {
+        if (targetImage === baseImage) return;
 
-      const triggerCrossfade = () => {
-        if (cancelled) return;
-        if (reduceMotion) {
-          setBaseImage(targetImage);
-          setIncomingImage(null);
-          crossfadeAnim.setValue(1);
-          return;
-        }
-
-        setIncomingImage(targetImage);
-        crossfadeAnim.setValue(0);
-
-        Animated.timing(crossfadeAnim, {
-          toValue: 1,
-          duration: SLIDESHOW_CROSSFADE_MS,
-          useNativeDriver: true,
-        }).start((result) => {
-          if (result.finished && !cancelled) {
+        const triggerCrossfade = () => {
+          if (cancelled) return;
+          if (reduceMotion) {
             setBaseImage(targetImage);
             setIncomingImage(null);
             crossfadeAnim.setValue(1);
+            return;
           }
-        });
-      };
 
-      if (typeof targetImage === 'string' && targetImage.startsWith('http')) {
-        Image.prefetch(targetImage)
-          .then((success) => {
-            if (success) {
-              triggerCrossfade();
+          setIncomingImage(targetImage);
+          crossfadeAnim.setValue(0);
+
+          Animated.timing(crossfadeAnim, {
+            toValue: 1,
+            duration: SLIDESHOW_CROSSFADE_MS,
+            useNativeDriver: true,
+          }).start((result) => {
+            if (result.finished && !cancelled) {
+              setBaseImage(targetImage);
+              setIncomingImage(null);
+              crossfadeAnim.setValue(1);
             }
-          })
-          .catch(() => {
-            // Keep current slideshow frame if remote prefetch fails; zero dark placeholder
           });
+        };
+
+        if (typeof targetImage === 'string' && targetImage.startsWith('http')) {
+          Image.prefetch(targetImage)
+            .then((success) => {
+              if (success) {
+                triggerCrossfade();
+              }
+            })
+            .catch(() => {
+              // If prefetch fails, keep neutral gradient, never random image
+            });
+        } else {
+          triggerCrossfade();
+        }
       } else {
-        triggerCrossfade();
+        // Destination is active but no photo resolved or loading: clear base image so neutral gradient renders
+        setIncomingImage(null);
+        setBaseImage('');
       }
     } else {
       // Destination cleared: resume with current slideshow photo
@@ -182,7 +188,7 @@ export const RootAtmosphereBackground: React.FC = () => {
         });
       }
     }
-  }, [targetImage, reduceMotion, coldStartImage, baseImage, crossfadeAnim]);
+  }, [isDestinationActive, targetImage, reduceMotion, coldStartImage, baseImage, crossfadeAnim]);
 
   // Slideshow advance timer (active only when no destination photo, app is active, slideshow enabled, not reduce motion)
   useEffect(() => {
@@ -264,18 +270,32 @@ export const RootAtmosphereBackground: React.FC = () => {
 
       {/* 2. BlurTargetView for native Android GlassView sampling */}
       <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
-        {/* Base Layer */}
-        <Animated.View style={StyleSheet.absoluteFill}>
-          <Image
-            source={toImageSource(baseImage)}
+        {/* Neutral place-tinted gradient tier when destination is active but loading or no photo */}
+        {isDestinationActive && !targetImage ? (
+          <LinearGradient
+            colors={[
+              activePalette?.top || '#0D1B22',
+              activePalette?.mid || '#081218',
+              activePalette?.bottom || '#050B0E',
+            ]}
             style={StyleSheet.absoluteFill}
-            contentFit="cover"
-            cachePolicy="memory-disk"
-            recyclingKey={typeof baseImage === 'string' ? baseImage : String(baseImage)}
-            transition={0}
-            onError={handleImageError}
           />
-        </Animated.View>
+        ) : null}
+
+        {/* Base Layer */}
+        {(!isDestinationActive || Boolean(targetImage && baseImage === targetImage)) && Boolean(baseImage) ? (
+          <Animated.View style={StyleSheet.absoluteFill}>
+            <Image
+              source={toImageSource(baseImage)}
+              style={StyleSheet.absoluteFill}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={typeof baseImage === 'string' ? baseImage : String(baseImage)}
+              transition={0}
+              onError={handleImageError}
+            />
+          </Animated.View>
+        ) : null}
 
         {/* Crossfading Incoming Layer */}
         {incomingImage && (
@@ -301,7 +321,7 @@ export const RootAtmosphereBackground: React.FC = () => {
           </Animated.View>
         )}
 
-        {/* Restrained 12% highlight tint */}
+        {/* Restrained 8% uniform highlight tint (<= 10% per PRD) */}
         <View style={[StyleSheet.absoluteFill, styles.highlightTint]} />
 
         {/* Ambient Glow */}
@@ -321,17 +341,19 @@ export const RootAtmosphereBackground: React.FC = () => {
           style={styles.topVignette}
         />
 
-        {/* Soft Bottom Vignette Backplate */}
-        <LinearGradient
-          colors={[
-            'transparent',
-            'rgba(5, 11, 14, 0.20)',
-            'rgba(5, 11, 14, 0.55)',
-            'rgba(6, 11, 14, 0.85)',
-          ]}
-          locations={[0, 0.4, 0.75, 1]}
-          style={StyleSheet.absoluteFill}
-        />
+        {/* Soft Bottom Vignette Backplate — only on general discovery screens, NOT darkening destination hero */}
+        {!isDestinationActive ? (
+          <LinearGradient
+            colors={[
+              'transparent',
+              'rgba(5, 11, 14, 0.20)',
+              'rgba(5, 11, 14, 0.55)',
+              'rgba(6, 11, 14, 0.85)',
+            ]}
+            locations={[0, 0.4, 0.75, 1]}
+            style={StyleSheet.absoluteFill}
+          />
+        ) : null}
 
         {/* Global Photo Credit Attribution */}
         <PhotoCredit />
@@ -354,7 +376,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   highlightTint: {
-    backgroundColor: 'rgba(0, 0, 0, 0.12)',
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   topVignette: {
     position: 'absolute',

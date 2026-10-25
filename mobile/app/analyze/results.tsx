@@ -272,14 +272,13 @@ export default function ResultsScreen() {
               onShare={handleShare}
             />
 
-            {/* 2. Glass Evidence Panel (Dark Glass with ConfidenceBadge & Factual Overview) */}
+            {/* 2. Location Details Panel (ConfidenceBadge & Factual 5-line Overview / Editorial Summary) */}
             <DestinationIdentity
               confidence={bestGuess.confidence}
               verificationStatus={bestGuess.verification_status}
               category={ti.category || (Array.isArray(bestGuess.types) ? bestGuess.types[0] : undefined)}
               overview={bestGuess.overview}
-              why={bestGuess.why}
-              geminiReason={bestGuess.gemini_reason || data.gemini?.reason}
+              editorialSummary={bestGuess.editorial_summary || bestGuess.overview?.summary_fallback}
             />
 
 

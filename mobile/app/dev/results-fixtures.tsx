@@ -266,13 +266,13 @@ export default function ResultsFixturesScreen() {
             />
           </View>
 
-          {/* Evidence Panel Preview */}
+          {/* Location Details Preview */}
           <DestinationIdentity
             confidence={bestGuess?.confidence}
             verificationStatus={bestGuess?.verification_status}
             category={ti.category as string | undefined}
-            why={bestGuess?.why}
-            geminiReason={bestGuess?.gemini_reason}
+            overview={bestGuess?.overview}
+            editorialSummary={bestGuess?.editorial_summary || bestGuess?.overview?.summary_fallback}
           />
 
           {/* Dossier Preview */}

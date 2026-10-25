@@ -17,6 +17,8 @@ import { analysisStore } from '@/lib/api/analysis-store';
 import { hapticFeedback } from '@/lib/haptics';
 import { saveAnalysisToCloudHistory } from '@/lib/supabase';
 
+import { useAtmosphere } from '@/context/AtmosphereContext';
+
 function shortenReelUrl(fullUrl?: string): string {
   if (!fullUrl) return '';
   try {
@@ -32,6 +34,7 @@ function shortenReelUrl(fullUrl?: string): string {
 
 export default function ProcessingScreen() {
   const insets = useSafeAreaInsets();
+  const { resetActivePlace } = useAtmosphere();
   const { url } = useLocalSearchParams<{ url?: string }>();
   const [stageIndex, setStageIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -46,7 +49,8 @@ export default function ProcessingScreen() {
     if (isAnalyzingRef.current) return;
     isAnalyzingRef.current = true;
 
-    // Immediately purge previous analysis result to eliminate stale state leaks
+    // Immediately purge active destination photo and previous analysis result to eliminate stale state leaks
+    resetActivePlace();
     analysisStore.clearAnalysisResult();
     setIsLoading(true);
     setErrorMessage(null);
@@ -85,7 +89,7 @@ export default function ProcessingScreen() {
         setErrorTitle('Destination Unresolved');
         setErrorMessage(
           response.error ||
-            'We analyzed the visual frames and caption context of this reel, but could not detect definitive geographic coordinates or confirmed landmarks. Try another reel with recognizable scenery.'
+            'We analyzed this reel, but could not detect definitive geographic coordinates or confirmed landmarks. Try another reel with recognizable scenery.'
         );
         setIsLoading(false);
         return;
@@ -125,7 +129,7 @@ export default function ProcessingScreen() {
     } finally {
       isAnalyzingRef.current = false;
     }
-  }, []);
+  }, [resetActivePlace]);
 
   useEffect(() => {
     if (!url) {

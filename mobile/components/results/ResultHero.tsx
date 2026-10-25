@@ -27,6 +27,21 @@ export interface ResultHeroProps {
   onShare?: () => void;
 }
 
+export function isLocationPillInformative(title: string, subtitle?: string): boolean {
+  if (!subtitle || !subtitle.trim()) return false;
+  const cleanTitle = title.toLowerCase().trim();
+  const cleanSub = subtitle.toLowerCase().trim();
+  if (cleanTitle === cleanSub) return false;
+
+  const subParts = cleanSub
+    .split(/[\s·,•\-]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 1);
+
+  const novelParts = subParts.filter((part) => !cleanTitle.includes(part));
+  return novelParts.length > 0;
+}
+
 export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
   destinationName,
   locationSubtitle,
@@ -64,13 +79,6 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
         pointerEvents="none"
       />
 
-      {/* Local soft bottom gradient backplate behind the text zone (max ~35-45% opacity) */}
-      <LinearGradient
-        colors={['transparent', 'rgba(5, 11, 14, 0.25)', 'rgba(6, 12, 16, 0.60)']}
-        locations={[0, 0.45, 1]}
-        style={styles.bottomVignette}
-        pointerEvents="none"
-      />
 
       {/* Floating Top Bar (Back and Share pills) */}
       <View
@@ -181,8 +189,8 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           {destinationName}
         </Text>
 
-        {/* Location Hierarchy on Frosted Dark Pill for guaranteed contrast */}
-        {locationSubtitle ? (
+        {/* Location Hierarchy Pill — only rendered if it adds information beyond the title */}
+        {isLocationPillInformative(destinationName, locationSubtitle) ? (
           <View style={styles.locationPill}>
             <Ionicons name="location-sharp" size={13} color={Colors.icyBlue} />
             <Text
@@ -215,14 +223,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 110,
-    zIndex: 2,
-  },
-  bottomVignette: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 220,
     zIndex: 2,
   },
   topBar: {

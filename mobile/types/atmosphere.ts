@@ -49,6 +49,8 @@ export interface PlaceAtmosphereInput {
   country?: string | null;
   name?: string | null;
   place_id?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   heroPhotoUrl?: string | null;
   extractedPalette?: ExtractedPalette | null;
 }

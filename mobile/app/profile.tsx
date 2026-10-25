@@ -632,7 +632,7 @@ export default function ProfileScreen() {
                     },
                   ]}
                 />
-                <Text style={styles.diagnosticName}>Vision</Text>
+                <Text style={styles.diagnosticName}>Analysis Engine</Text>
               </View>
               <Text
                 style={[
@@ -692,7 +692,7 @@ export default function ProfileScreen() {
 
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Powered by</Text>
-              <Text style={styles.infoValue}>Gemini Multimodal · OpenStreetMap</Text>
+              <Text style={styles.infoValue}>VAMO Intelligence · OpenStreetMap</Text>
             </View>
 
             <View style={styles.cardDivider} />

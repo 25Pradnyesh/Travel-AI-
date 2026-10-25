@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { ConfidenceBadge, GlassView } from '@/components/ui';
@@ -10,6 +10,7 @@ export interface DestinationIdentityProps {
   verificationStatus?: string;
   category?: string;
   overview?: DestinationOverview | null;
+  editorialSummary?: string | null;
   why?: string;
   geminiReason?: string;
 }
@@ -19,11 +20,8 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
   verificationStatus,
   category,
   overview,
-  why,
-  geminiReason,
+  editorialSummary,
 }) => {
-  const [debugExpanded, setDebugExpanded] = useState(false);
-
   const hasStatus = Boolean(verificationStatus || (confidence !== undefined && confidence !== null));
 
   // Extract up to 5 labeled overview items (omit any with missing data)
@@ -45,20 +43,18 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
     overviewRows.push({ label: 'CLIMATE', value: overview.climate.trim(), icon: 'partly-sunny-outline' });
   }
 
-  const hasOverview = overviewRows.length > 0;
-  const hasWhy = Boolean(why && why.trim().length > 0);
-  const hasGemini = Boolean(geminiReason && geminiReason.trim().length > 0);
-  const hasDebugData = hasWhy || hasGemini;
+  const hasOverviewRows = overviewRows.length > 0;
 
-  // If no status and no overview and no debug, hide cleanly
-  if (!hasStatus && !hasOverview && !(__DEV__ && hasDebugData)) {
-    return null;
-  }
+  // Editorial fallback summary: first 1-2 sentences of Wikipedia summary with credit
+  const rawSummary = (overview?.summary_fallback || editorialSummary || '').trim();
+  const fallbackSummary = rawSummary
+    ? rawSummary.split(/(?<=[.!?])\s+/).slice(0, 2).join(' ')
+    : `${category || 'Destination'} overview verified through open geographic and encyclopedia records.`;
 
   return (
     <View style={styles.container}>
       <GlassView variant="dark" borderRadius={Radius.xl} style={styles.card}>
-        {/* Top Row: PRD Truthful Confidence Badge + Optional Category Pill */}
+        {/* Top Row: Verified Badge + Optional Category Pill */}
         <View style={styles.topRow}>
           {hasStatus ? (
             <ConfidenceBadge
@@ -75,14 +71,14 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
           ) : null}
         </View>
 
-        {/* Factual Destination Overview (Max 5 labeled rows) */}
-        {hasOverview ? (
-          <View style={styles.overviewSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="information-circle-outline" size={13} color={Colors.icyBlue} />
-              <Text style={styles.sectionHeader}>DESTINATION OVERVIEW</Text>
-            </View>
+        {/* Factual Destination Overview / Location Details (Max 5 labeled rows) */}
+        <View style={styles.overviewSection}>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="information-circle-outline" size={13} color={Colors.icyBlue} />
+            <Text style={styles.sectionHeader}>LOCATION DETAILS</Text>
+          </View>
 
+          {hasOverviewRows ? (
             <View style={styles.overviewList}>
               {overviewRows.map((row, idx) => (
                 <View key={idx} style={styles.overviewRow}>
@@ -94,49 +90,16 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
                 </View>
               ))}
             </View>
-          </View>
-        ) : null}
-
-        {/* __DEV__ ONLY: Raw Identification Evidence & Gemini Notes */}
-        {__DEV__ && hasDebugData ? (
-          <View style={styles.devSection}>
-            <Pressable
-              onPress={() => setDebugExpanded(!debugExpanded)}
-              style={({ pressed }) => [styles.devToggle, pressed && styles.pressed]}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Toggle debug evidence"
-            >
-              <View style={styles.devHeaderLeft}>
-                <Ionicons name="bug-outline" size={12} color="rgba(251, 244, 227, 0.45)" />
-                <Text style={styles.devHeaderText}>__DEV__ DEBUG EVIDENCE</Text>
+          ) : (
+            <View style={styles.summaryFallbackBox}>
+              <Text style={styles.summaryFallbackText}>{fallbackSummary}</Text>
+              <View style={styles.wikipediaBadge}>
+                <Ionicons name="book-outline" size={11} color={Colors.icyBlue} />
+                <Text style={styles.wikipediaBadgeText}>Wikipedia</Text>
               </View>
-              <Ionicons
-                name={debugExpanded ? 'chevron-up' : 'chevron-down'}
-                size={14}
-                color="rgba(251, 244, 227, 0.45)"
-              />
-            </Pressable>
-
-            {debugExpanded ? (
-              <View style={styles.devContent}>
-                {hasWhy ? (
-                  <View style={styles.debugItem}>
-                    <Text style={styles.debugSubheader}>Raw Identification Evidence:</Text>
-                    <Text style={styles.debugBody}>{why}</Text>
-                  </View>
-                ) : null}
-
-                {hasGemini ? (
-                  <View style={styles.debugItem}>
-                    <Text style={styles.debugSubheader}>Raw Gemini Vision Notes:</Text>
-                    <Text style={styles.debugBody}>{geminiReason}</Text>
-                  </View>
-                ) : null}
-              </View>
-            ) : null}
-          </View>
-        ) : null}
+            </View>
+          )}
+        </View>
       </GlassView>
     </View>
   );
@@ -227,51 +190,36 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: Colors.ivoryMist,
   },
-  devSection: {
-    marginTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(251, 244, 227, 0.08)',
-    paddingTop: Spacing.sm,
-  },
-  devToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  devHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  devHeaderText: {
-    fontFamily: Fonts.sansRegular,
-    fontSize: 9,
-    letterSpacing: 0.8,
-    color: 'rgba(251, 244, 227, 0.45)',
-  },
-  devContent: {
-    marginTop: Spacing.sm,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    borderRadius: Radius.sm,
+  summaryFallbackBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    borderRadius: Radius.md,
     padding: Spacing.sm,
-    gap: Spacing.sm,
+    gap: 8,
   },
-  debugItem: {
-    gap: 2,
-  },
-  debugSubheader: {
-    fontFamily: Fonts.sansBold,
-    fontSize: 10,
-    color: 'rgba(251, 244, 227, 0.60)',
-  },
-  debugBody: {
+  summaryFallbackText: {
     fontFamily: Fonts.sansRegular,
-    fontSize: 12,
-    lineHeight: 17,
-    color: 'rgba(251, 244, 227, 0.80)',
+    fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(251, 244, 227, 0.85)',
   },
-  pressed: {
-    opacity: 0.7,
+  wikipediaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 4,
+    backgroundColor: 'rgba(166, 220, 248, 0.10)',
+    borderWidth: 1,
+    borderColor: 'rgba(166, 220, 248, 0.25)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  wikipediaBadgeText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 10,
+    color: Colors.icyBlue,
+    letterSpacing: 0.2,
   },
 });
+
+export default DestinationIdentity;

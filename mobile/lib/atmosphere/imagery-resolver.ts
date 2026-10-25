@@ -55,8 +55,9 @@ export function resolveDestinationImage(
     return matchedBundled.source;
   }
 
-  // 3. Fallback: only return fallbackImage if explicitly provided for this destination; never return stale previous image
-  return fallbackImage || null;
+  // 3. Fallback: on a destination screen, return ONLY null so a place-tinted gradient is rendered.
+  // Never show another place's photo or a random discovery image!
+  return null;
 }
 
 

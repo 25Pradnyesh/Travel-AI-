@@ -19,6 +19,7 @@ export interface DestinationOverview {
   main_city_landmark?: string | null;
   recognition?: string | null;
   climate?: string | null;
+  summary_fallback?: string | null;
 }
 
 export interface SeasonCard {
@@ -87,6 +88,7 @@ export interface BestGuess {
   gemini_reason: string;
   why: string;
   overview?: DestinationOverview | null;
+  editorial_summary?: string | null;
 }
 
 export interface NearbyPlace {

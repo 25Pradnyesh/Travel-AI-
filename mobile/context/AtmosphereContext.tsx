@@ -53,6 +53,7 @@ export interface AtmosphereContextType {
   adaptiveEnabled: boolean;
   slideshowEnabled: boolean;
   isDestinationActive: boolean;
+  destinationKey: string | null;
   activeDestinationImage: string | number | null;
   coldStartImage: string | number;
   setAdaptiveEnabled: (enabled: boolean) => Promise<void>;
@@ -74,6 +75,7 @@ export const AtmosphereContext = createContext<AtmosphereContextType>({
   adaptiveEnabled: true,
   slideshowEnabled: true,
   isDestinationActive: false,
+  destinationKey: null,
   activeDestinationImage: null,
   coldStartImage: DEFAULT_DISCOVERY_IMAGE,
   setAdaptiveEnabled: async () => {},
@@ -147,28 +149,49 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
   // Check if a destination photo is actively displayed
   const isDestinationActive = Boolean(adaptiveEnabled && activePlace);
 
+  // Destination key uniquely tying background photo to destination
+  const destinationKey = useMemo<string | null>(() => {
+    if (!activePlace) return null;
+    const pid = activePlace.place_id || '';
+    const coords =
+      activePlace.latitude != null && activePlace.longitude != null
+        ? `${Number(activePlace.latitude).toFixed(3)},${Number(activePlace.longitude).toFixed(3)}`
+        : '';
+    const name = (activePlace.name || activePlace.city || '').toLowerCase().trim();
+    return `${pid}|${coords}|${name}`;
+  }, [activePlace]);
+
+  // Destination photos cached strictly by destinationKey
+  const destinationPhotoCacheRef = useRef<Map<string, string | number>>(new Map());
+
   // Resolved destination photo (remote or matched bundled).
-  // Strictly per-destination: never carries over previous destination's photo.
+  // Strictly per-destination: rendered only if destinationKey matches displayed destination.
   const activeDestinationImage = useMemo<string | number | null>(() => {
-    if (!isDestinationActive || !activePlace) {
+    if (!isDestinationActive || !activePlace || !destinationKey) {
       return null;
     }
-    const currentId = activePlace.place_id || activePlace.name || null;
-    if (currentId !== currentPlaceIdRef.current) {
-      currentPlaceIdRef.current = currentId;
+
+    const cached = destinationPhotoCacheRef.current.get(destinationKey);
+    if (cached !== undefined) {
+      return cached;
     }
+
     const resolvedImg = resolveDestinationImage(activePlace, null);
-    return resolvedImg || null;
-  }, [isDestinationActive, activePlace]);
+    if (resolvedImg) {
+      destinationPhotoCacheRef.current.set(destinationKey, resolvedImg);
+      return resolvedImg;
+    }
 
+    return null;
+  }, [isDestinationActive, activePlace, destinationKey]);
 
-  // Overall activeImage: destination image if active, otherwise cold start image
+  // Overall activeImage: destination image if active (may be null if loading/none); only use coldStartImage on general discovery screens
   const activeImage = useMemo<string | number>(() => {
-    if (activeDestinationImage) {
-      return activeDestinationImage;
+    if (isDestinationActive) {
+      return activeDestinationImage || '';
     }
     return coldStartImage;
-  }, [activeDestinationImage, coldStartImage]);
+  }, [isDestinationActive, activeDestinationImage, coldStartImage]);
 
   // Attribution: ONLY for remote photos requiring attribution
   const activeAuthor = useMemo(() => {
@@ -224,6 +247,7 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
       adaptiveEnabled,
       slideshowEnabled,
       isDestinationActive,
+      destinationKey,
       activeDestinationImage,
       coldStartImage,
       setAdaptiveEnabled,
@@ -240,6 +264,7 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
       adaptiveEnabled,
       slideshowEnabled,
       isDestinationActive,
+      destinationKey,
       activeDestinationImage,
       coldStartImage,
       setAdaptiveEnabled,

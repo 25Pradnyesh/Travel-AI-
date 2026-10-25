@@ -98,7 +98,7 @@ export default function HistoryDetailScreen() {
             ? (a.travel_intelligence as Record<string, any>)
             : {};
 
-        const whyText = String(ti.why || `Verified destination identified from reel analysis.`);
+        const whyText = String(ti.why || `Verified destination.`);
 
         analysisStore.setAnalysisResult(
           {
@@ -370,12 +370,12 @@ export default function HistoryDetailScreen() {
           onShare={handleShare}
         />
 
-        {/* 2. Destination Evidence Panel */}
+        {/* 2. Destination Overview / Location Details */}
         <DestinationIdentity
           verificationStatus={verificationTier}
           category={ti.category as string | undefined}
-          why={((ti as Record<string, any>).why as string) || `Analyzed from saved Reel on ${new Date(analysis.created_at).toLocaleDateString()}.`}
-          geminiReason={(ti as Record<string, any>).gemini_reason as string | undefined}
+          overview={(ti as Record<string, any>).overview}
+          editorialSummary={(ti as Record<string, any>).editorial_summary}
         />
 
         {/* 3. Travel Intelligence Dossier */}

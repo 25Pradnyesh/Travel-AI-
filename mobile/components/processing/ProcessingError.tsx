@@ -14,7 +14,7 @@ export interface ProcessingErrorProps {
 
 export const ProcessingError: React.FC<ProcessingErrorProps> = ({
   title = "Couldn't identify this place.",
-  message = 'We analyzed the visual frames and caption context of this reel, but could not detect definitive geographic coordinates or confirmed landmarks. Try another reel with recognizable scenery.',
+  message = 'We analyzed this reel, but could not detect definitive geographic coordinates or confirmed landmarks. Try another reel with recognizable scenery.',
   onRetry,
   onCancel,
 }) => {
