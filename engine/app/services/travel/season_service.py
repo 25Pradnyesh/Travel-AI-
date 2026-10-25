@@ -51,16 +51,16 @@ class SeasonService:
         "Island": {
 
             "best_months": [
-                "November",
-                "December",
-                "January",
-                "February",
-                "March",
+                "April",
+                "May",
+                "June",
+                "September",
+                "October",
             ],
 
-            "peak_season": "Winter",
+            "peak_season": "Spring & Autumn",
 
-            "avoid": "Cyclone Season",
+            "avoid": "Typhoon / Extreme Cold Season",
 
         },
 
@@ -263,9 +263,9 @@ class SeasonService:
             "peak_season": season["peak_season"],
             "avoid_season": season["avoid"],
             "recommended": ", ".join(season["best_months"]),
-            "recommended_window": ", ".join(season["best_months"][:2]),
-            "recommended_reason": f"Favorable conditions during {season['peak_season']}.",
-            "temperature_range": None,
+            "recommended_window": f"{season['best_months'][0]}–{season['best_months'][-1]}",
+            "recommended_reason": f"Comfortable temperatures and lower rainfall during {season['peak_season']}.",
+            "temperature_range": "15°C–24°C",
             "season_cards": [],
             "weather_basis": "category heuristic",
         }

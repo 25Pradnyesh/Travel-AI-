@@ -148,6 +148,9 @@ class OsmProvider(PlacesProvider):
             place_name=place_name,
         )
 
+        if editorial_summary:
+            data["editorial_summary"] = editorial_summary
+
         wikidata_id = extratags.get("wikidata") or data.get("wikidata")
         wikipedia_tag = extratags.get("wikipedia") or data.get("wikipedia")
         overview = build_destination_overview(
@@ -156,6 +159,8 @@ class OsmProvider(PlacesProvider):
             place_data=data,
             climate_summary=data.get("climate_summary"),
         )
+        if not editorial_summary and data.get("editorial_summary"):
+            editorial_summary = data["editorial_summary"]
 
         details: dict[str, Any] = {
             "id": place_id,

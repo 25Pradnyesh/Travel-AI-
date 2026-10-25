@@ -15,6 +15,76 @@ from engine.app.services.itinerary.itinerary_service import (
     ItineraryService,
 )
 
+DOCUMENTED_STAY_RULES = {
+    # Destination scope and categories
+    "island": "3–5 Days",
+    "archipelago": "3–5 Days",
+    "region": "3–5 Days",
+    "province": "3–5 Days",
+    "beach": "3–4 Days",
+    "national park": "2–3 Days",
+    "nature reserve": "2–3 Days",
+    "mountain": "2–3 Days",
+    "lake": "2–3 Days",
+    "forest": "2–3 Days",
+    "city": "2–3 Days",
+    "village": "1–2 Days",
+    "temple": "1 Day",
+    "waterfall": "1 Day",
+    "glacier": "1–2 Days",
+    "desert": "2–3 Days",
+}
+
+MAJOR_METROPOLISES = {
+    "paris", "tokyo", "rome", "london", "new york", "kyoto", "seoul",
+    "berlin", "barcelona", "amsterdam", "bangkok", "singapore", "sydney",
+    "vienna", "prague", "florence", "venice", "madrid", "istanbul",
+}
+
+
+def compute_documented_stay(place: dict) -> str | None:
+    """
+    Computes documented recommended visit duration based on destination scope:
+    - Island / Archipelago / Region / Province: 3–5 Days (e.g. Jeju Island, Bali)
+    - Major Metropolis / World City / Capital: 3–4 Days (e.g. Paris, Tokyo, Rome, Kyoto, Seoul)
+    - City / Historic Town: 2–3 Days
+    - National Park / Mountain / Nature Reserve: 2–3 Days
+    - Beach Resort / Coastal Area: 3–4 Days
+    - Point of Interest / Temple / Landmark / Waterfall: 1 Day
+    - Otherwise: None (hidden, never fabricate generic ranges)
+    """
+    if not isinstance(place, dict):
+        return None
+
+    existing = place.get("recommended_trip_days")
+    if existing and isinstance(existing, str) and existing.strip() and existing.strip() != "1-3 Days":
+        return existing.strip()
+
+    name = (place.get("name") or place.get("travel_name") or place.get("display_name") or "").lower().strip()
+    category = (place.get("category") or "").lower().strip()
+    types = [str(t).lower() for t in (place.get("types") or [])]
+
+    # 1. Major metropolises
+    for metro in MAJOR_METROPOLISES:
+        if metro in name:
+            return "3–4 Days"
+
+    # 2. Category lookup
+    if category in DOCUMENTED_STAY_RULES:
+        return DOCUMENTED_STAY_RULES[category]
+
+    # 3. Type / Name heuristics
+    if "island" in name or "archipelago" in name or "island" in types:
+        return "3–5 Days"
+    if any(t in {"national_park", "natural_feature", "park"} for t in types):
+        return "2–3 Days"
+    if any(t in {"city", "locality", "administrative_area_level_2"} for t in types):
+        return "2–3 Days"
+    if any(t in {"tourist_attraction", "place_of_worship", "museum", "point_of_interest", "landmark"} for t in types):
+        return "1 Day"
+
+    return None
+
 
 class TravelIntelligenceService:
 
@@ -102,6 +172,11 @@ class TravelIntelligenceService:
         )
 
         # ------------------------------------------
+        # Documented Stay Duration
+        # ------------------------------------------
+        place["recommended_trip_days"] = compute_documented_stay(place)
+
+        # ------------------------------------------
         # AI Travel Summary
         # ------------------------------------------
 
@@ -128,9 +203,11 @@ class TravelIntelligenceService:
 
             f"💰 {place.get('budget_level', 'Unknown')}",
 
-            f"🕒 {place.get('recommended_trip_days', '1 Day')}",
-
         ]
+
+        stay = place.get('recommended_trip_days')
+        if stay:
+            summary.append(f"🕒 {stay}")
 
         return " • ".join(summary)
 

@@ -12,6 +12,7 @@ from engine.domain.schemas.responses import (
 )
 from engine.app.services.travel.travel_intelligence_service import (
     TravelIntelligenceService,
+    compute_documented_stay,
 )
 from engine.observability.context import get_current_context
 
@@ -228,7 +229,7 @@ class ResponseBuilder:
                 "budget_level": enriched.get("budget_level", "Moderate"),
                 "estimated_daily_budget": enriched.get("estimated_daily_budget", "$100 - $200"),
                 "currency": enriched.get("currency", "USD"),
-                "recommended_trip_days": enriched.get("recommended_trip_days", "1-3 Days"),
+                "recommended_trip_days": enriched.get("recommended_trip_days") or compute_documented_stay(enriched),
                 "travel_tips": enriched.get("travel_tips", []),
                 "activities": enriched.get("activities", []),
                 "packing_list": enriched.get("packing_list", {}),
@@ -448,6 +449,7 @@ class ResponseBuilder:
             gemini_reason=gemini_reason,
             why=why,
             overview=place.get("overview"),
+            editorial_summary=place.get("editorial_summary"),
         )
 
 

@@ -34,6 +34,7 @@ class BestGuess(BaseModel):
     gemini_reason: str = ""
     why: str = ""
     overview: dict[str, str | None] | None = None
+    editorial_summary: str | None = None
 
 
 class NearbyPlace(BaseModel):

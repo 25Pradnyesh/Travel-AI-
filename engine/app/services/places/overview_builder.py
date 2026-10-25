@@ -34,6 +34,7 @@ def build_destination_overview(
 
     # 1. Fetch Wikidata claims if wikidata_id provided
     clean_qid = (wikidata_id or "").strip()
+    sitelinks: dict[str, Any] = {}
     if clean_qid and re.match(r"^Q\d+$", clean_qid):
         url = f"https://www.wikidata.org/wiki/Special:EntityData/{clean_qid}.json"
         headers = {"User-Agent": get_wikimedia_user_agent()}
@@ -44,6 +45,7 @@ def build_destination_overview(
                 data = resp.json()
                 entity = data.get("entities", {}).get(clean_qid, {})
                 entity_claims = entity.get("claims", {})
+                sitelinks = entity.get("sitelinks", {})
         except Exception as exc:
             logger.warning("[OVERVIEW] Wikidata fetch failed for %s: %s", clean_qid, exc)
         finally:
@@ -109,6 +111,29 @@ def build_destination_overview(
                         labels[q] = lbl
         except Exception as exc:
             logger.warning("[OVERVIEW] Wikidata label resolution failed: %s", exc)
+
+    # -------------------------------------------------------------
+    # Editorial summary resolution (English preferred)
+    # -------------------------------------------------------------
+    editorial_summary = place_data.get("editorial_summary") or ""
+    enwiki_title = sitelinks.get("enwiki", {}).get("title")
+    if not editorial_summary:
+        tag_to_fetch = None
+        if enwiki_title:
+            tag_to_fetch = f"en:{enwiki_title}"
+        elif wikipedia_tag:
+            tag_to_fetch = wikipedia_tag
+
+        if tag_to_fetch:
+            try:
+                from engine.app.services.places.wikimedia_client import WikimediaClient
+                wiki_client = WikimediaClient()
+                summary_data = wiki_client.get_wikipedia_summary(tag_to_fetch)
+                if summary_data and summary_data.get("extract"):
+                    editorial_summary = summary_data["extract"]
+                    place_data["editorial_summary"] = editorial_summary
+            except Exception as exc:
+                logger.warning("[OVERVIEW] Wikipedia summary fetch failed: %s", exc)
 
     # -------------------------------------------------------------
     # 1. Line: Where (instance of + country)
@@ -202,13 +227,30 @@ def build_destination_overview(
 
     if recognition_items:
         overview["recognition"] = " • ".join(recognition_items[:2])
-    elif "world heritage" in (place_data.get("editorial_summary") or "").lower():
-        overview["recognition"] = "UNESCO World Heritage Site"
+    elif editorial_summary:
+        low_ed = editorial_summary.lower()
+        if "world heritage" in low_ed or "unesco" in low_ed:
+            # Look for year associated with designation
+            y_match = re.search(r"(?:heritage|unesco).*?(?:in|\(|since)\s*(\d{4})", editorial_summary, re.IGNORECASE)
+            if y_match:
+                overview["recognition"] = f"UNESCO World Heritage Site ({y_match.group(1)})"
+            else:
+                overview["recognition"] = "UNESCO World Heritage Site"
 
     # -------------------------------------------------------------
     # 5. Line: Climate (from Open-Meteo normals)
     # -------------------------------------------------------------
     if climate_summary:
         overview["climate"] = climate_summary.strip()
+
+    # -------------------------------------------------------------
+    # Fallback: First 1-2 sentences of Wikipedia summary if lines are empty
+    # -------------------------------------------------------------
+    if editorial_summary:
+        # Extract first 1-2 sentences cleanly
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", editorial_summary.strip()) if s.strip()]
+        first_two = " ".join(sentences[:2]).strip()
+        if first_two:
+            overview["summary_fallback"] = first_two
 
     return overview

@@ -353,6 +353,8 @@ class LocationResolver:
             d = None
             if place_id:
                 try:
+                    if hasattr(self.details, "_places_cache") and isinstance(self.details._places_cache, dict):
+                        self.details._places_cache[place_id] = place
                     d = self.details.get_details(place_id)
                 except Exception as exc:
                     self.log(f"⚠️ Place details enrichment failed: {type(exc).__name__}: {exc}")

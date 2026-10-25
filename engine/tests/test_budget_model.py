@@ -122,5 +122,17 @@ class TestBudgetModel(unittest.TestCase):
         self.assertTrue(len(model["rate_date"]) > 0)
 
 
+    def test_krw_rounding_no_false_precision(self):
+        """South Korea (KRW) figures must be rounded to nearest 1,000 KRW to avoid false precision."""
+        res = self.estimator.estimate({"country": "South Korea"})
+        self.assertIsNotNone(res)
+        tiers = res["budget_model"]["tiers"]
+        for tier_name in ["budget", "mid_range", "comfortable"]:
+            t = tiers[tier_name]
+            self.assertEqual(t["total_local"] % 1000, 0, f"{tier_name} total_local not multiple of 1,000")
+            for comp_name, val in t["breakdown_local"].items():
+                self.assertEqual(val % 1000, 0, f"{tier_name} {comp_name} not multiple of 1,000")
+
+
 if __name__ == "__main__":
     unittest.main()

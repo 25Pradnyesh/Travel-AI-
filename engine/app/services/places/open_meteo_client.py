@@ -209,10 +209,25 @@ class OpenMeteoClient:
                 "precip": total_precip_annual,
             }
 
-            # Score travel comfort: ideal temp ~18C-26C, penalty for extreme cold (<5C), heat (>32C), rain (>100mm)
-            temp_penalty = abs(mean_temp - 22.0)
-            rain_penalty = max(0.0, total_precip_annual - 60.0) / 10.0
-            score = 100.0 - (temp_penalty * 2.5) - (rain_penalty * 3.0)
+            # Score travel comfort: optimal temp 17°C–25°C, comfortable 13°C–28°C
+            # Heavy penalty for freezing / extreme cold (<10°C) and extreme heat (>32°C)
+            if 17.0 <= mean_temp <= 25.0:
+                temp_penalty = abs(mean_temp - 21.0) * 1.5
+            elif mean_temp > 25.0:
+                temp_penalty = 6.0 + (mean_temp - 25.0) * 3.0
+            elif 10.0 <= mean_temp < 17.0:
+                temp_penalty = (17.0 - mean_temp) * 3.5
+            elif 5.0 <= mean_temp < 10.0:
+                temp_penalty = 24.5 + (10.0 - mean_temp) * 6.0
+            else:  # < 5.0 C (freezing or near-freezing)
+                temp_penalty = 54.5 + (5.0 - mean_temp) * 10.0
+
+            # Rainfall penalty: mild penalty for >60mm, heavier for monsoon >180mm
+            rain_penalty = max(0.0, total_precip_annual - 60.0) / 10.0 * 2.0
+            if total_precip_annual > 180.0:
+                rain_penalty += (total_precip_annual - 180.0) / 10.0 * 2.0
+
+            score = 100.0 - temp_penalty - rain_penalty
             month_scores.append((m, m_name, score, mean_temp, total_precip_annual))
 
         # Sort months by comfort score descending
@@ -310,12 +325,14 @@ class OpenMeteoClient:
                 season_scores.append((s_name, avg_score, s_window, f"{s_t_min}°C–{s_t_max}°C", s_rain_avg, s_m_names))
 
                 # Descriptive weather statement from data only
-                if s_rain_avg < 60.0 and s_t_max <= 25:
-                    desc = f"Pleasant and dry with mild temperatures ({s_t_min}°C–{s_t_max}°C) and low rainfall ({s_rain_avg} mm/mo)."
+                if s_t_min < 2:
+                    desc = f"Crisp to freezing ({s_t_min}°C–{s_t_max}°C); warm winter clothing required."
+                elif s_t_min < 10:
+                    desc = f"Cool and crisp ({s_t_min}°C–{s_t_max}°C); light jacket or layers recommended."
                 elif s_t_max > 28:
                     desc = f"Warm and sunny ({s_t_min}°C–{s_t_max}°C) with higher seasonal rainfall ({s_rain_avg} mm/mo)."
-                elif s_t_min < 5:
-                    desc = f"Crisp and chilly ({s_t_min}°C–{s_t_max}°C); bundle up for outdoor activities."
+                elif s_rain_avg < 80.0:
+                    desc = f"Pleasant and dry with mild temperatures ({s_t_min}°C–{s_t_max}°C) and low rainfall ({s_rain_avg} mm/mo)."
                 else:
                     desc = f"Comfortable weather ({s_t_min}°C–{s_t_max}°C) with moderate precipitation ({s_rain_avg} mm/mo)."
 
@@ -332,7 +349,7 @@ class OpenMeteoClient:
             second_season = season_scores[1]
 
             # If top two seasons both have high comfort (e.g. Spring & Autumn), combine them
-            if second_season[1] >= 75.0 and top_season[1] >= 80.0:
+            if second_season[1] >= 65.0 and top_season[1] >= 70.0:
                 best_season_title = f"{top_season[0]} & {second_season[0]}"
                 recommended_window = f"{top_season[2]} & {second_season[2]}"
                 temp_range = f"{top_season[3]}"
@@ -343,7 +360,13 @@ class OpenMeteoClient:
                 best_season_title = f"{top_season[0]} ({top_season[2]})"
                 recommended_window = top_season[2]
                 temp_range = top_season[3]
-                recommended_reason = f"Comfortable temperatures ({top_season[3]}) and moderate precipitation ({top_season[4]} mm/mo)."
+                if top_season[1] < 40.0:
+                    temp_qualifier = "Seasonal temperatures"
+                elif "Winter" in top_season[0]:
+                    temp_qualifier = "Cool winter temperatures"
+                else:
+                    temp_qualifier = "Comfortable temperatures"
+                recommended_reason = f"{temp_qualifier} ({top_season[3]}) and favorable conditions ({top_season[4]} mm/mo rain), optimal for travel."
                 best_months = top_season[5]
 
             peak_months = best_months[:3]

@@ -192,6 +192,25 @@ FALLBACK_ECB_RATES: dict[str, float] = {
 }
 
 
+def round_by_currency(amount: float, currency: str) -> int:
+    """
+    Scales rounding by currency denomination to prevent false precision:
+    - KRW, VND, IDR: nearest 1,000
+    - JPY, ISK, HUF, CLP: nearest 100
+    - INR, THB, PHP, TWD: nearest 10
+    - USD, EUR, GBP, AUD, CAD, CHF, SGD, etc.: nearest 1
+    """
+    curr = currency.upper().strip()
+    if curr in {"KRW", "VND", "IDR"}:
+        return int(round(amount / 1000.0) * 1000)
+    elif curr in {"JPY", "ISK", "HUF", "CLP"}:
+        return int(round(amount / 100.0) * 100)
+    elif curr in {"INR", "THB", "PHP", "TWD"}:
+        return int(round(amount / 10.0) * 10)
+    else:
+        return int(round(amount))
+
+
 class BudgetEstimator:
     """
     Transparent travel budget estimation model based on World Bank ICP price levels
@@ -307,20 +326,20 @@ class BudgetEstimator:
             # Buffer absorbs rounding differences to guarantee exact equality
             buffer_usd = tier_total_usd - (stay_usd + food_usd + trans_usd + act_usd)
 
-            # Derive components in Local Currency, ensuring exact sum
-            tier_total_local = round(tier_total_usd * rate_local)
-            stay_local = round(stay_usd * rate_local)
-            food_local = round(food_usd * rate_local)
-            trans_local = round(trans_usd * rate_local)
-            act_local = round(act_usd * rate_local)
+            # Derive components in Local Currency scaled by currency denomination, ensuring exact sum
+            tier_total_local = round_by_currency(tier_total_usd * rate_local, local_currency)
+            stay_local = round_by_currency(stay_usd * rate_local, local_currency)
+            food_local = round_by_currency(food_usd * rate_local, local_currency)
+            trans_local = round_by_currency(trans_usd * rate_local, local_currency)
+            act_local = round_by_currency(act_usd * rate_local, local_currency)
             buffer_local = tier_total_local - (stay_local + food_local + trans_local + act_local)
 
-            # Derive components in INR, ensuring exact sum
-            tier_total_inr = round(tier_total_usd * rate_inr)
-            stay_inr = round(stay_usd * rate_inr)
-            food_inr = round(food_usd * rate_inr)
-            trans_inr = round(trans_usd * rate_inr)
-            act_inr = round(act_usd * rate_inr)
+            # Derive components in INR scaled to nearest 10, ensuring exact sum
+            tier_total_inr = round_by_currency(tier_total_usd * rate_inr, "INR")
+            stay_inr = round_by_currency(stay_usd * rate_inr, "INR")
+            food_inr = round_by_currency(food_usd * rate_inr, "INR")
+            trans_inr = round_by_currency(trans_usd * rate_inr, "INR")
+            act_inr = round_by_currency(act_usd * rate_inr, "INR")
             buffer_inr = tier_total_inr - (stay_inr + food_inr + trans_inr + act_inr)
 
             tiers_output[tier_key] = {
