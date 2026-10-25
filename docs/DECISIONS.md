@@ -751,6 +751,58 @@ To maintain strict epistemic honesty, every decision in this record is categoriz
 
 ---
 
+## 12b. Destination Results Experience and Precision Hardening
+
+### D-038 — Destination-Tied Photo Architecture and Relevance Guards
+
+- **Status:** Accepted
+- **Date:** 2026-10-25
+- **Decision:** All destination screen background imagery must be strictly tied to a unique `destinationKey` (`place_id|lat,lon|name`). Photos are only rendered when this key matches the active destination. The active photo is immediately purged on analysis start. A destination screen may only show photos verified for that destination; if none qualify or while loading, it renders a neutral place-tinted gradient (`[activePalette.top, activePalette.mid, activePalette.bottom]`). It must never display an unrelated place's photo or random slideshow frames. Furthermore, Wikimedia Commons retrieval enforces:
+  1. Geosearch radius capped at $\le 25\text{ km}$ from coordinates.
+  2. Entity validation against Wikipedia lead image and Wikidata P18 image.
+  3. Text search token matching against destination name.
+  4. Automatic rejection of SVGs, portrait orientations (`height > width`), images $< 1200\text{px}$ wide, and non-scenic imagery (diagrams, maps, flags, logos, coats of arms).
+- **Context:** Jeju Island previously displayed a Roman Colosseum image due to cold-start slideshow fallback leak and stale active photo state.
+- **Rationale:** Destination trust requires strict photographic accuracy; a neutral gradient is vastly superior to displaying an incorrect landmark.
+- **Evidence:** [`mobile/context/AtmosphereContext.tsx`](../mobile/context/AtmosphereContext.tsx), [`mobile/lib/atmosphere/imagery-resolver.ts`](../mobile/lib/atmosphere/imagery-resolver.ts), [`engine/app/services/places/wikimedia_client.py`](../engine/app/services/places/wikimedia_client.py).
+
+---
+
+### D-039 — Hero Visual Clarity and Backplate Elimination
+
+- **Status:** Accepted
+- **Date:** 2026-10-25
+- **Decision:** Eliminate all `BlurView`, dark gradient scrims (`bottomVignette`), and dark backplates behind the destination title and location line. Legibility is achieved exclusively through subtle text shadows (`shadowColor: '#000'`, `shadowRadius: 10`) combined with a uniform highlight tint capped at $\le 10\%$ (8% applied). The hero photo must look sharp and vibrant. The location pill is rendered only if it adds novel geographic hierarchy beyond the destination title (e.g., showing `"Jeju Province · South Korea"` for `"Jeju Island"`, but hiding redundant values like `"Kyoto · Kyoto"`).
+- **Context:** Excessive blur layers and aggressive dark gradients obscured hero photography and flattened the cinematic feel.
+- **Rationale:** Travel discovery is visual-first. Photos must remain crisp while keeping typography readable.
+- **Evidence:** [`mobile/components/results/ResultHero.tsx`](../mobile/components/results/ResultHero.tsx), [`mobile/components/ui/RootAtmosphereBackground.tsx`](../mobile/components/ui/RootAtmosphereBackground.tsx).
+
+---
+
+### D-040 — Location Details Panel and Removal of Internal Model/Evidence Details
+
+- **Status:** Accepted
+- **Date:** 2026-10-25
+- **Decision:** Delete the `__DEV__ DEBUG EVIDENCE` row and all user-facing mentions of pipeline extraction details (`caption`, `OCR`, `speech`, `transcript`, `Gemini`, `vision`, `candidate`, `evidence`, `"identified from"`) across all app screens, toasts, and accessibility labels. Replace the evidence card with an encyclopedic **Location Details** panel displaying up to 5 structured Wikidata/Wikipedia lines (Where, Size, Main city/landmark, Recognition with parsed year, Climate). If structured fields are absent, fall back to the first 1–2 sentences of the Wikipedia summary with a clear `"Wikipedia"` attribution badge. The panel must never render empty.
+- **Context:** Exposing internal geocoding logs and model thought traces looked unpolished and confusing to end users.
+- **Rationale:** Users want clear, authoritative destination information rather than engineering diagnostic telemetry.
+- **Evidence:** [`mobile/components/results/DestinationIdentity.tsx`](../mobile/components/results/DestinationIdentity.tsx), [`engine/app/services/places/overview_builder.py`](../engine/app/services/places/overview_builder.py).
+
+---
+
+### D-041 — Denomination-Scaled Currency Rounding and Documented Stay Durations
+
+- **Status:** Accepted
+- **Date:** 2026-10-25
+- **Decision:**
+  1. **Currency-Scaled Rounding:** Budget estimations scale rounding according to currency denomination to prevent false precision (e.g. KRW, VND, IDR rounded to nearest 1,000; JPY/ISK/HUF to nearest 100; INR/THB/PHP to nearest 10; USD/EUR/GBP to nearest 1). Subcomponent amounts (`stay + food + local_transport + activities + buffer`) must always sum exactly to the rounded total.
+  2. **Documented Stay Heuristics:** Recommended stay durations must derive from documented destination scope rules (Islands/Regions: `3–5 Days`, Major Metropolises: `3–4 Days`, Standard Cities / National Parks: `2–3 Days`, Landmarks/POIs: `1 Day`) or be omitted (`None`). Generic ungrounded ranges (`1-3 Days`) are strictly prohibited.
+- **Context:** Displaying `"KRW 124,498"` gave a false sense of mathematical precision, and arbitrary trip durations diminished recommendations.
+- **Rationale:** Sensible rounding aligns with real-world currency conventions, and grounded heuristics maintain travel credibility.
+- **Evidence:** [`engine/app/services/travel/budget_estimator.py`](../engine/app/services/travel/budget_estimator.py), [`engine/app/services/travel/travel_intelligence_service.py`](../engine/app/services/travel/travel_intelligence_service.py), [`engine/tests/test_budget_model.py`](../engine/tests/test_budget_model.py).
+
+---
+
 ## 13. API Policy and External Data Sources Matrix
 
 The following matrix documents every external data source utilized across the VAMO architecture, its authorization requirements, operational constraints, and fallback behavior:
@@ -892,19 +944,23 @@ The following matrix documents every external data source utilized across the VA
 | **D-019** | Offline-First Storage Queue | [`mobile/lib/storage/saved-places.ts`](../mobile/lib/storage/saved-places.ts) | `mobile/scripts/test-network.ts` | Commits `e41cf50`, `be87e71` |
 | **D-020** | RequestContext Observability | [`engine/observability/context.py`](../engine/observability/context.py) | `engine/tests/test_stage10_observability.py` | Commit `f3449dc`, [`docs/observability.md`](observability.md) |
 | **D-021** | ML Singleton Lazy-Loading | [`engine/app/services/ocr/ocr_service.py`](../engine/app/services/ocr/ocr_service.py) | `engine/tests/test_stage11_performance.py` | Commit `b666af4`, [`docs/performance/phase-7-results.md`](performance/phase-7-results.md) |
-| **D-022** | Canonical Display Name Builder | [`engine/app/services/location/canonical_display_name.py`](../engine/app/services/location/canonical_display_name.py) | [`engine/tests/test_display_name_builder.py`](../engine/tests/test_display_name_builder.py) | Uncommitted working tree |
-| **D-023** | Jeju Golden Regression Fixture | [`mobile/lib/fixtures/results-fixtures.ts`](../mobile/lib/fixtures/results-fixtures.ts) | `engine/tests/test_accuracy_regression_fixtures.py` | Uncommitted working tree |
-| **D-024** | Six-Tier Photo Resolution Chain | [`engine/app/services/places/wikimedia_client.py`](../engine/app/services/places/wikimedia_client.py) | `engine/tests/test_master_execution_regression.py` | Uncommitted working tree |
-| **D-025** | Photo Attribution Credit Policy | [`mobile/lib/atmosphere/imagery-resolver.ts`](../mobile/lib/atmosphere/imagery-resolver.ts) | Mobile results render inspection | Commit `686016e`, Uncommitted working tree |
-| **D-026** | Factual 5-Line Destination Overview | [`engine/app/services/places/overview_builder.py`](../engine/app/services/places/overview_builder.py) | `mobile/app/dev/results-fixtures.tsx` | Uncommitted working tree |
-| **D-027** | Open-Meteo 5-Year Weather Normals | [`engine/app/services/places/open_meteo_client.py`](../engine/app/services/places/open_meteo_client.py) | `test_destination_resolution_accuracy_eval.py` | Uncommitted working tree |
-| **D-028** | Tropical vs. Temperate Season Logic | [`engine/app/services/places/open_meteo_client.py`](../engine/app/services/places/open_meteo_client.py) | Bali fixture in `results-fixtures.ts` | Uncommitted working tree |
-| **D-029** | Removal of Generic Safety Boilerplate | [`engine/app/services/travel/travel_tips_service.py`](../engine/app/services/travel/travel_tips_service.py) | `mobile/components/results/DestinationBriefing.tsx` | Uncommitted working tree |
-| **D-030** | World Bank ICP Transparent Budget Model | [`engine/app/services/travel/budget_estimator.py`](../engine/app/services/travel/budget_estimator.py) | [`engine/tests/test_budget_model.py`](../engine/tests/test_budget_model.py) | Uncommitted working tree |
-| **D-031** | Parallel Enrichment & 4.0s Caps | [`engine/app/services/location/location_resolver.py`](../engine/app/services/location/location_resolver.py) | Stage timing telemetry in `RequestContext` | Commit `2a11d14`, Uncommitted working tree |
-| **D-032** | Backward-Compatible Response Schema | [`engine/domain/schemas/responses.py`](../engine/domain/schemas/responses.py) | `mobile/scripts/test-mobile-contract.js` | Uncommitted working tree |
+| **D-022** | Canonical Display Name Builder | [`engine/app/services/location/canonical_display_name.py`](../engine/app/services/location/canonical_display_name.py) | [`engine/tests/test_display_name_builder.py`](../engine/tests/test_display_name_builder.py) | Commit `200f55b` |
+| **D-023** | Jeju Golden Regression Fixture | [`mobile/lib/fixtures/results-fixtures.ts`](../mobile/lib/fixtures/results-fixtures.ts) | `engine/tests/test_accuracy_regression_fixtures.py` | Commit `e95f176` |
+| **D-024** | Six-Tier Photo Resolution Chain | [`engine/app/services/places/wikimedia_client.py`](../engine/app/services/places/wikimedia_client.py) | `engine/tests/test_master_execution_regression.py` | Commit `200f55b` |
+| **D-025** | Photo Attribution Credit Policy | [`mobile/lib/atmosphere/imagery-resolver.ts`](../mobile/lib/atmosphere/imagery-resolver.ts) | Mobile results render inspection | Commits `686016e`, `e95f176` |
+| **D-026** | Factual 5-Line Destination Overview | [`engine/app/services/places/overview_builder.py`](../engine/app/services/places/overview_builder.py) | `mobile/app/dev/results-fixtures.tsx` | Commits `200f55b`, `e95f176` |
+| **D-027** | Open-Meteo 5-Year Weather Normals | [`engine/app/services/places/open_meteo_client.py`](../engine/app/services/places/open_meteo_client.py) | `test_destination_resolution_accuracy_eval.py` | Commit `200f55b` |
+| **D-028** | Tropical vs. Temperate Season Logic | [`engine/app/services/places/open_meteo_client.py`](../engine/app/services/places/open_meteo_client.py) | Bali fixture in `results-fixtures.ts` | Commit `200f55b` |
+| **D-029** | Removal of Generic Safety Boilerplate | [`engine/app/services/travel/travel_tips_service.py`](../engine/app/services/travel/travel_tips_service.py) | `mobile/components/results/DestinationBriefing.tsx` | Commits `200f55b`, `e95f176` |
+| **D-030** | World Bank ICP Transparent Budget Model | [`engine/app/services/travel/budget_estimator.py`](../engine/app/services/travel/budget_estimator.py) | [`engine/tests/test_budget_model.py`](../engine/tests/test_budget_model.py) | Commit `200f55b` |
+| **D-031** | Parallel Enrichment & 4.0s Caps | [`engine/app/services/location/location_resolver.py`](../engine/app/services/location/location_resolver.py) | Stage timing telemetry in `RequestContext` | Commit `200f55b` |
+| **D-032** | Backward-Compatible Response Schema | [`engine/domain/schemas/responses.py`](../engine/domain/schemas/responses.py) | `mobile/scripts/test-mobile-contract.js` | Commits `200f55b`, `e95f176` |
 | **D-033** | Branch Topology & Staging Policy | Repository Git Workflow | `git status`, `git branch` | [`docs/AGENTS.md`](AGENTS.md) |
 | **D-034** | Small-Screen & Touch Ergonomics | [`mobile/constants/theme.ts`](../mobile/constants/theme.ts) | `mobile/components/ui/` inspection | [`docs/DESIGN_SYSTEM.md`](DESIGN_SYSTEM.md) |
 | **D-035** | Product Scope Boundaries | [`docs/PRD.md`](PRD.md) | PRD & Devlog verification | [`docs/DEVLOG.md`](DEVLOG.md) |
 | **D-036** | Standalone FastAPI Service Separation | [`engine/app/main.py`](../engine/app/main.py) | Engine health probes (`/health`) | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) |
 | **D-037** | Jeju Dark-Hero Investigation | [`mobile/lib/atmosphere/imagery-resolver.ts`](../mobile/lib/atmosphere/imagery-resolver.ts) | Physical Android device inspection | Commit `686016e` |
+| **D-038** | Destination-Tied Photo & Relevance Guards | [`mobile/context/AtmosphereContext.tsx`](../mobile/context/AtmosphereContext.tsx) | Live Commons verification & unit tests | Audited working tree |
+| **D-039** | Hero Visual Clarity & Backplate Removal | [`mobile/components/results/ResultHero.tsx`](../mobile/components/results/ResultHero.tsx) | `npm run test:contrast` | Audited working tree |
+| **D-040** | Location Details Panel & Evidence Ban | [`mobile/components/results/DestinationIdentity.tsx`](../mobile/components/results/DestinationIdentity.tsx) | `node ./scripts/test-mobile-contract.js` | Audited working tree |
+| **D-041** | Denomination-Scaled Budget & Stay Rules | [`engine/app/services/travel/budget_estimator.py`](../engine/app/services/travel/budget_estimator.py) | `test_krw_rounding_no_false_precision` | Audited working tree |
