@@ -1,0 +1,27 @@
+import type { MetadataRoute } from 'next';
+
+export const dynamic = 'force-static';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'VAMO',
+    short_name: 'VAMO',
+    description: 'Drop a reel. Find the place. AI destination detection for travel reels.',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#0C0C0C',
+    theme_color: '#0C0C0C',
+    icons: [
+      {
+        src: '/favicon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+      },
+      {
+        src: '/favicon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+      },
+    ],
+  };
+}

@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/InstrumentSerif-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/InstrumentSerif-Italic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Inter-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/Inter-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/Inter-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/Inter-Bold.ttf') format('truetype');
+}
+
+@theme {
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  
+  --color-obsidian: #070d12;
+  --color-night: #0a1118;
+  --color-dusk: #101c27;
+  --color-ivory: #fbf4e3;
+  --color-ivory-dim: #cfc8b8;
+  --color-accent-blue: #a6dcf8;
+  --color-accent-amber: #e8a838;
+  --color-accent-red: #e53935;
+}
+
+:root {
+  color-scheme: dark;
+  background-color: #070d12;
+  color: #fbf4e3;
+  font-family: var(--font-sans);
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-sans);
+}
+
+/* Accessible focus outline */
+*:focus-visible {
+  outline: 2px solid #a6dcf8;
+  outline-offset: 3px;
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: rgba(10, 17, 24, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(251, 244, 227, 0.12);
+}
+
+.glass-panel-elevated {
+  background: rgba(16, 28, 39, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(251, 244, 227, 0.18);
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #fbf4e3 0%, #e0c896 60%, #b89758 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
