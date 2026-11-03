@@ -11,16 +11,6 @@ export interface HeroPhoto {
 
 export const HERO_PHOTOS: HeroPhoto[] = [
   {
-    id: 'colosseum-sunset',
-    name: 'Colosseum at Sunset',
-    location: 'Rome, Italy',
-    src: '/photos/rome-colosseum.webp',
-    alt: 'Golden hour sunlight warming the ancient stone arches of the Colosseum in Rome',
-    width: 735,
-    height: 412,
-    objectPosition: 'center 45%',
-  },
-  {
     id: 'giza-pyramids',
     name: 'Great Pyramids of Giza',
     location: 'Cairo, Egypt',
@@ -101,23 +91,13 @@ export const HERO_PHOTOS: HeroPhoto[] = [
     objectPosition: 'center 30%',
   },
   {
-    id: 'city-skyline',
-    name: 'Metropolitan Twilight Skyline',
-    location: 'Urban Center',
-    src: '/photos/city-skyline.webp',
-    alt: 'Illuminated modern skyscraper skyline glowing against a vibrant twilight gradient sky',
-    width: 675,
-    height: 1200,
-    objectPosition: 'center 50%',
-  },
-  {
     id: 'swiss-alps',
     name: 'Swiss Alpine Summits',
     location: 'Bernese Oberland, Switzerland',
     src: '/photos/swiss-alps.webp',
     alt: 'Majestic snow-capped alpine peaks and ridges towering over alpine valleys in Switzerland',
-    width: 736,
-    height: 414,
+    width: 735,
+    height: 490,
     objectPosition: 'center 40%',
   },
   {
