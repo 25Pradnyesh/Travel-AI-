@@ -108,7 +108,8 @@ export function HeroSlideshow() {
               alt={photo.alt}
               fill
               priority={index === 0}
-              className="object-cover object-center scale-100 transform-gpu brightness-[1.02] contrast-[1.05]"
+              style={{ objectPosition: photo.objectPosition || 'center center' }}
+              className="object-cover scale-100 transform-gpu brightness-[1.02] contrast-[1.05]"
               sizes="100vw"
             />
           </div>
@@ -119,23 +120,24 @@ export function HeroSlideshow() {
       <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
-          background: 'linear-gradient(180deg, rgba(7, 13, 18, 0.28) 0%, rgba(7, 13, 18, 0.20) 45%, rgba(7, 13, 18, 0.62) 85%, rgba(7, 13, 18, 0.95) 100%)',
+          background:
+            'linear-gradient(180deg, rgba(7, 13, 18, 0.28) 0%, rgba(7, 13, 18, 0.20) 45%, rgba(7, 13, 18, 0.62) 85%, rgba(7, 13, 18, 0.95) 100%)',
         }}
       />
 
       {/* Accessible Photo Caption & Controls in bottom right */}
-      <div className="absolute bottom-6 right-6 z-30 pointer-events-auto hidden sm:flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-[#0a1118]/80 border border-[#fbf4e3]/20 backdrop-blur-md text-xs text-[#cfc8b8] shadow-lg">
-        <div className="w-2 h-2 rounded-full bg-[#a6dcf8] animate-pulse" />
-        <span className="font-medium text-[#fbf4e3]">
+      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-30 pointer-events-auto flex items-center gap-2 sm:gap-3 px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-[#0a1118]/85 border border-[#fbf4e3]/20 backdrop-blur-md text-[11px] sm:text-xs text-[#cfc8b8] shadow-lg max-w-[calc(100vw-32px)]">
+        <div className="w-2 h-2 rounded-full bg-[#a6dcf8] animate-pulse shrink-0" />
+        <span className="font-medium text-[#fbf4e3] truncate">
           {currentPhoto.name}
         </span>
-        <span className="text-[#cfc8b8]/75">· {currentPhoto.location}</span>
-        <span className="text-[#cfc8b8]/50">
+        <span className="text-[#cfc8b8]/75 hidden xs:inline shrink-0">· {currentPhoto.location}</span>
+        <span className="text-[#cfc8b8]/50 shrink-0">
           ({currentIndex + 1}/{HERO_PHOTOS.length})
         </span>
 
         {!isReducedMotion && (
-          <div className="flex items-center gap-1.5 pl-2 border-l border-[#fbf4e3]/15">
+          <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 border-l border-[#fbf4e3]/15 shrink-0">
             <button
               type="button"
               onClick={handlePrev}
