@@ -69,8 +69,7 @@ export function DemoVideoSection() {
                   preload="metadata"
                   poster="/videos/vamo-app-poster.webp"
                 >
-                  <source src="/videos/vamo-app-walkthrough.mp4" type="video/mp4" />
-                  <source src="/demo.mp4" type="video/mp4" />
+                  <source src="/videos/vamo-app-preview.mp4" type="video/mp4" />
                   Your browser does not support HTML5 video.
                 </video>
               ) : (
