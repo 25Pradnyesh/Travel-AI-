@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { Header } from '../../components/Header';
+import { Footer } from '../../components/Footer';
 
 export function WaitlistClient() {
   const [email, setEmail] = useState('');
@@ -96,45 +98,9 @@ export function WaitlistClient() {
       />
 
       {/* -------------------------------------------------------------
-          Top Navigation Bar
+          Top Navigation Bar (Seamless Dark Integration)
          ------------------------------------------------------------- */}
-      <header className="sticky top-0 z-50 w-full backdrop-blur-xl bg-[#070d12]/70 border-b border-[#fbf4e3]/10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group"
-            aria-label="VAMO Home"
-          >
-            <Image
-              src="/logo.png"
-              alt="VAMO Logo"
-              width={24}
-              height={24}
-              className="w-6 h-6 object-contain transition-transform duration-200 group-hover:scale-105"
-            />
-            <span className="font-sans font-bold text-lg tracking-[0.22em] text-[#fbf4e3] group-hover:text-white transition-colors">
-              VAMO
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#e53935]" />
-          </Link>
-
-          <nav className="flex items-center gap-6 text-xs font-medium text-[#cfc8b8]">
-            <Link
-              href="/"
-              className="hover:text-[#fbf4e3] transition-colors flex items-center gap-1.5"
-            >
-              <span>&larr;</span>
-              <span>Back to Overview</span>
-            </Link>
-            <Link
-              href="/qr"
-              className="hidden sm:inline-block hover:text-[#a6dcf8] transition-colors"
-            >
-              Mobile QR
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <Header variant="solid" />
 
       {/* -------------------------------------------------------------
           Main Full-Page Waitlist Experience
