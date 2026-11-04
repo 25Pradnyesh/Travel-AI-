@@ -12,13 +12,13 @@ export interface HeroPhoto {
 export const HERO_PHOTOS: HeroPhoto[] = [
   {
     id: 'giza-pyramids',
-    name: 'Great Pyramids of Giza',
-    location: 'Cairo, Egypt',
+    name: 'Elephants in the River',
+    location: 'Wildlife Sanctuary',
     src: '/photos/giza-pyramids.webp',
-    alt: 'Ancient limestone pyramid silhouettes rising above golden Sahara desert sands',
+    alt: 'Elephants bathing peacefully in a flowing river surrounded by lush tropical greenery',
     width: 734,
     height: 413,
-    objectPosition: 'center 55%',
+    objectPosition: 'center 50%',
   },
   {
     id: 'norwegian-fjords',
@@ -55,9 +55,9 @@ export const HERO_PHOTOS: HeroPhoto[] = [
     name: 'Himalayan Pass & Stupa',
     location: 'Ladakh, India',
     src: '/photos/ladakh-himalayas.webp',
-    alt: 'Winding high-altitude Himalayan mountain road leading to a Buddhist stupa under deep blue sky in Ladakh',
-    width: 736,
-    height: 1308,
+    alt: 'Panoramic vista of a high-altitude Himalayan mountain road leading to a Buddhist stupa under deep blue sky in Ladakh',
+    width: 1308,
+    height: 736,
     objectPosition: 'center 50%',
   },
   {

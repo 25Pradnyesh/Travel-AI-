@@ -4,20 +4,32 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { generateQrMatrix, matrixToSvg } from '../../lib/qr';
 
+const PRODUCTION_URL = 'https://vamo-xi.vercel.app';
+
 export default function QrPage() {
-  const [url, setUrl] = useState('https://vamo.travel');
+  const [url, setUrl] = useState(PRODUCTION_URL);
   const [copied, setCopied] = useState(false);
   const [svgContent, setSvgContent] = useState('');
 
   useEffect(() => {
-    // Read from env or current window location
+    // Read from env or current window location (fallback to verified production HTTPS URL on localhost)
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.endsWith('.local'));
+
     const target =
       process.env.NEXT_PUBLIC_APP_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : 'https://vamo.travel');
+      (typeof window !== 'undefined' && !isLocalhost
+        ? window.location.origin
+        : PRODUCTION_URL);
+
     setUrl(target);
     try {
       const matrix = generateQrMatrix(target);
-      const svg = matrixToSvg(matrix, 12, 4);
+      // High-contrast dark navy modules (#081218) on pure white background (#ffffff) with 4-module quiet zone
+      const svg = matrixToSvg(matrix, 10, 4, '#081218', '#ffffff');
       setSvgContent(svg);
     } catch {
       // Quiet fallback
@@ -76,15 +88,15 @@ export default function QrPage() {
           Point your phone camera to open the showcase prototype or waitlist.
         </p>
 
-        {/* QR container */}
-        <div className="p-6 rounded-3xl bg-[#0a1118]/90 border border-[#fbf4e3]/15 shadow-2xl backdrop-blur-xl mb-6">
+        {/* QR container with crisp high-contrast white card for instant camera recognition */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white shadow-2xl shadow-black/80 mb-6 flex items-center justify-center">
           {svgContent ? (
             <div
               className="w-64 h-64 [&>svg]:w-full [&>svg]:h-full rounded-2xl overflow-hidden"
               dangerouslySetInnerHTML={{ __html: svgContent }}
             />
           ) : (
-            <div className="w-64 h-64 bg-[#081218] rounded-2xl flex items-center justify-center text-sm text-[#cfc8b8]">
+            <div className="w-64 h-64 bg-white rounded-2xl flex items-center justify-center text-sm text-[#081218] font-medium">
               Generating QR...
             </div>
           )}
@@ -122,4 +134,3 @@ export default function QrPage() {
     </main>
   );
 }
-

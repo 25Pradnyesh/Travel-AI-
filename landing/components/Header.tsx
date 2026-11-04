@@ -71,20 +71,17 @@ export function Header({ variant = 'hero' }: HeaderProps) {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 sm:gap-2.5 group"
+            className="flex items-center group shrink-0"
             aria-label="VAMO Home"
           >
             <Image
-              src="/logo.png"
+              src="/brand/vamo-airplane-trail-logo.png"
               alt="VAMO Logo"
-              width={24}
-              height={24}
-              className="w-5 h-5 sm:w-6 sm:h-6 object-contain transition-transform duration-200 group-hover:scale-105"
+              width={2172}
+              height={724}
+              priority
+              className="h-8 sm:h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
             />
-            <span className="font-sans font-bold text-[18px] sm:text-[20px] tracking-[0.22em] text-[#fbf4e3] group-hover:text-white transition-colors">
-              VAMO
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#e53935]" />
           </Link>
 
           <nav className="flex items-center gap-4 sm:gap-6 text-[13px] sm:text-[14px] font-medium text-[#cfc8b8]">
@@ -110,31 +107,27 @@ export function Header({ variant = 'hero' }: HeaderProps) {
   // Variant 'hero' seamlessly overlaid above the photographic hero
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out ${
-        isScrolled || isMobileMenuOpen
+      className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-in-out ${isScrolled || isMobileMenuOpen
           ? 'backdrop-blur-md bg-[#070d12]/85'
           : 'bg-gradient-to-b from-black/75 via-black/35 to-transparent'
-      }`}
+        }`}
     >
       <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 sm:h-20 flex items-center justify-between">
         {/* Brand Logo */}
         <Link
           href="/"
           onClick={closeMobileMenu}
-          className="flex items-center gap-2 sm:gap-2.5 group shrink-0"
+          className="flex items-center group shrink-0"
           aria-label="VAMO Home"
         >
           <Image
-            src="/logo.png"
+            src="/brand/vamo-airplane-trail-logo.png"
             alt="VAMO Logo"
-            width={24}
-            height={24}
-            className="w-5 h-5 sm:w-6 sm:h-6 object-contain transition-transform duration-200 group-hover:scale-105"
+            width={2172}
+            height={724}
+            priority
+            className="h-8 sm:h-10 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
-          <span className="font-sans font-bold text-[18px] sm:text-[20px] tracking-[0.22em] text-[#fbf4e3] group-hover:text-white transition-colors">
-            VAMO
-          </span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#e53935]" />
         </Link>
 
         {/* Desktop Navigation (Preserved exactly as-is) */}
@@ -175,19 +168,16 @@ export function Header({ variant = 'hero' }: HeaderProps) {
           >
             <div className="w-5 h-3.5 relative flex flex-col justify-between" aria-hidden="true">
               <span
-                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-300 ease-in-out transform origin-center ${
-                  isMobileMenuOpen ? 'translate-y-[6px] rotate-45' : ''
-                }`}
+                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-300 ease-in-out transform origin-center ${isMobileMenuOpen ? 'translate-y-[6px] rotate-45' : ''
+                  }`}
               />
               <span
-                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-200 ease-in-out ${
-                  isMobileMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
-                }`}
+                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-200 ease-in-out ${isMobileMenuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
+                  }`}
               />
               <span
-                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-300 ease-in-out transform origin-center ${
-                  isMobileMenuOpen ? '-translate-y-[6px] -rotate-45' : ''
-                }`}
+                className={`block h-0.5 w-full bg-[#fbf4e3] rounded-full transition-all duration-300 ease-in-out transform origin-center ${isMobileMenuOpen ? '-translate-y-[6px] -rotate-45' : ''
+                  }`}
               />
             </div>
           </button>
