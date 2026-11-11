@@ -84,6 +84,76 @@ def is_rejected_image(
     return False
 
 
+def passes_relevance_check(
+    file_title: str,
+    categories: list[str] | None = None,
+    image_coords: tuple[float, float] | None = None,
+    destination_coords: tuple[float, float] | None = None,
+    place_name: str | None = None,
+    wikidata_id: str | None = None,
+) -> bool:
+    """
+    Relevance check for destination photography:
+    - If a Commons file is geotagged (prop=coordinates) and destination coordinates are known:
+      Must be within ~100 km of destination (haversine_km <= 100.0).
+      If geotagged > 100 km away, STRICTLY REJECT (e.g. Colosseum for Jeju).
+    - If geotags are absent:
+      Title or categories must match the place name or Wikidata id.
+    - Reject anything else.
+    """
+    categories = categories or []
+    clean_title = (file_title or "").lower()
+    clean_cats = [c.lower() for c in categories]
+    combined_meta = f"{clean_title} {' '.join(clean_cats)}"
+
+    # 1. Geographic check: If image has coordinates and destination coordinates are provided
+    if image_coords and destination_coords:
+        dist = haversine_km(
+            destination_coords[0], destination_coords[1],
+            image_coords[0], image_coords[1],
+        )
+        if dist <= 100.0:
+            return True
+        # Geotagged too far (>100 km) -> reject
+        return False
+
+    # 2. Textual / Wikidata match if coordinates are absent on file or destination
+    if wikidata_id:
+        clean_qid = wikidata_id.strip().lower()
+        if clean_qid and clean_qid in combined_meta:
+            return True
+
+    if place_name:
+        clean_name = place_name.strip().lower()
+        # Direct substring match
+        if clean_name and (clean_name in clean_title or any(clean_name in cat for cat in clean_cats)):
+            return True
+
+        # Check significant tokens (e.g. "jeju" from "Jeju Island")
+        stopwords = {
+            "the", "and", "or", "of", "in", "at", "is", "republic", "south", "north",
+            "province", "city", "island", "islands", "state", "region", "district",
+            "town", "village", "county", "prefecture", "area", "destination",
+        }
+        tokens = [
+            t.lower() for t in re.findall(r"[A-Za-z0-9]+", clean_name)
+            if len(t) >= 3 and t.lower() not in stopwords
+        ]
+        if not tokens:
+            tokens = [t.lower() for t in re.findall(r"[A-Za-z0-9]+", clean_name) if len(t) >= 3]
+
+        if tokens:
+            for tok in tokens:
+                pattern = rf"(^|[^a-z0-9]){re.escape(tok)}([^a-z0-9]|$)"
+                if re.search(pattern, combined_meta):
+                    return True
+
+    if not destination_coords and not place_name and not wikidata_id:
+        return True
+
+    return False
+
+
 def is_allowed_license(license_str: str | None) -> bool:
     """
     Accepts ONLY CC0, public domain, CC BY, and CC BY-SA licenses.
@@ -170,10 +240,17 @@ class WikimediaClient:
     # Wikimedia Commons Imageinfo
     # ==================================================
 
-    def get_image_info(self, file_title: str) -> dict[str, Any] | None:
+    def get_image_info(
+        self,
+        file_title: str,
+        destination_coords: tuple[float, float] | None = None,
+        place_name: str | None = None,
+        wikidata_id: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Queries Wikimedia Commons imageinfo for URL (~1600px thumb), Artist, License, and source page.
         Validates license against CC whitelist and relevance guard (no svg, maps, logos, portraits, <1200px).
+        Enforces relevance check: coordinates within ~100 km or title/categories match place_name/wikidata_id.
         """
         if not file_title:
             return None
@@ -185,9 +262,10 @@ class WikimediaClient:
         params = {
             "action": "query",
             "titles": file_title,
-            "prop": "imageinfo",
+            "prop": "imageinfo|coordinates|categories",
             "iiprop": "url|extmetadata|size|mime",
             "iiurlwidth": "1600",
+            "cllimit": "20",
             "format": "json",
         }
         headers = {"User-Agent": get_wikimedia_user_agent()}
@@ -217,7 +295,7 @@ class WikimediaClient:
             # Extract license and check whitelist
             license_short = extmeta.get("LicenseShortName", {}).get("value", "")
             if not is_allowed_license(license_short):
-                logger.info("[WIKIMEDIA] Disallowed license '%s' for '%s'", license_short, file_title)
+                logger.debug("[WIKIMEDIA] Disallowed license '%s' for '%s'", license_short, file_title)
                 return None
 
             artist_raw = extmeta.get("Artist", {}).get("value", "")
@@ -235,8 +313,37 @@ class WikimediaClient:
 
             desc = extmeta.get("ObjectName", {}).get("value") or extmeta.get("ImageDescription", {}).get("value") or ""
             if is_rejected_image(file_title, description=desc, width=orig_width, height=orig_height, mime=mime):
-                logger.info("[WIKIMEDIA] Rejected non-qualifying image '%s' (w=%s, h=%s, mime=%s)", file_title, orig_width, orig_height, mime)
+                logger.debug("[WIKIMEDIA] Rejected non-qualifying image '%s' (w=%s, h=%s, mime=%s)", file_title, orig_width, orig_height, mime)
                 return None
+
+            # Relevance check: distance <= 100km or title/categories match place
+            coords = page.get("coordinates", [])
+            p_lat = coords[0].get("lat") if coords else None
+            p_lon = coords[0].get("lon") if coords else None
+            img_coords = (p_lat, p_lon) if (p_lat is not None and p_lon is not None) else None
+            dist_km = (
+                haversine_km(destination_coords[0], destination_coords[1], p_lat, p_lon)
+                if (destination_coords and img_coords)
+                else 0.0
+            )
+
+            cats = [c.get("title", "") for c in page.get("categories", [])]
+            if destination_coords or place_name or wikidata_id:
+                if not passes_relevance_check(
+                    file_title=file_title,
+                    categories=cats,
+                    image_coords=img_coords,
+                    destination_coords=destination_coords,
+                    place_name=place_name,
+                    wikidata_id=wikidata_id,
+                ):
+                    logger.debug(
+                        "[WIKIMEDIA] Image '%s' failed relevance check for place='%s' (coords=%s)",
+                        file_title,
+                        place_name,
+                        destination_coords,
+                    )
+                    return None
 
             return {
                 "file_title": file_title,
@@ -247,7 +354,7 @@ class WikimediaClient:
                 "license": license_short,
                 "license_url": license_url,
                 "source_url": source_url,
-                "distance_km": 0.0,
+                "distance_km": round(dist_km, 2),
             }
 
         return None
@@ -387,7 +494,12 @@ class WikimediaClient:
             if ctx:
                 ctx.record_external_call("wikidata_entity", time.perf_counter() - t_start)
 
-    def get_wikidata_p18_image(self, wikidata_id: str) -> dict[str, Any] | None:
+    def get_wikidata_p18_image(
+        self,
+        wikidata_id: str,
+        destination_coords: tuple[float, float] | None = None,
+        place_name: str | None = None,
+    ) -> dict[str, Any] | None:
         """
         Tier 2: Queries Wikidata entity for P18 (image) property and retrieves Commons photo info.
         Relevance guard: the entity matches the resolved place.
@@ -404,7 +516,12 @@ class WikimediaClient:
         if not filename or not isinstance(filename, str):
             return None
 
-        return self.get_image_info(filename)
+        return self.get_image_info(
+            filename,
+            destination_coords=destination_coords,
+            place_name=place_name,
+            wikidata_id=wikidata_id,
+        )
 
     # ==================================================
     # Commons Text Search Fallback
@@ -415,10 +532,11 @@ class WikimediaClient:
         query: str,
         limit: int = 4,
         destination_coords: tuple[float, float] | None = None,
+        wikidata_id: str | None = None,
     ) -> list[dict[str, Any]]:
         """
         Tier 4: Searches Wikimedia Commons by place name text for CC-licensed photography.
-        Relevance guard: title/description must contain the place name.
+        Relevance guard: geotagged within ~100 km, or title/categories match place name or Wikidata id.
         Rejects portraits, maps, logos, flags, diagrams, svg, images < 1200px wide.
         """
         if not query or len(query.strip()) < 2:
@@ -431,9 +549,10 @@ class WikimediaClient:
             "gsrsearch": clean_query,
             "gsrnamespace": "6",  # File namespace
             "gsrlimit": str(limit * 3),
-            "prop": "imageinfo|coordinates",
+            "prop": "imageinfo|coordinates|categories",
             "iiprop": "url|extmetadata|size|mime",
             "iiurlwidth": "1600",
+            "cllimit": "20",
             "format": "json",
         }
         headers = {"User-Agent": get_wikimedia_user_agent()}
@@ -454,12 +573,6 @@ class WikimediaClient:
         pages = data.get("query", {}).get("pages", {})
         photos = []
 
-        # Extract tokens for relevance verification
-        stopwords = {"the", "and", "or", "of", "in", "at", "is", "republic", "south", "north", "province", "city", "island"}
-        tokens = [t.lower() for t in re.findall(r"[A-Za-z0-9]+", clean_query) if len(t) >= 3 and t.lower() not in stopwords]
-        if not tokens:
-            tokens = [t.lower() for t in re.findall(r"[A-Za-z0-9]+", clean_query) if len(t) >= 3]
-
         for _, page in pages.items():
             imageinfo = page.get("imageinfo", [])
             if not imageinfo:
@@ -479,22 +592,33 @@ class WikimediaClient:
             orig_height = info.get("height") or height
             mime = info.get("mime", "")
 
-            # Relevance guard: title or description MUST contain place name token
-            combined_text = f"{title.lower()} {desc.lower()}"
-            if tokens and not any(tok in combined_text for tok in tokens):
-                continue
-
             # Quality and type filter
             if is_rejected_image(title, description=desc, width=orig_width, height=orig_height, mime=mime):
                 continue
 
-            dist_km = 0.0
-            if destination_coords and page.get("coordinates"):
-                coords = page["coordinates"]
-                p_lat = coords[0].get("lat")
-                p_lon = coords[0].get("lon")
-                if p_lat is not None and p_lon is not None:
-                    dist_km = haversine_km(destination_coords[0], destination_coords[1], p_lat, p_lon)
+            coords = page.get("coordinates", [])
+            p_lat = coords[0].get("lat") if coords else None
+            p_lon = coords[0].get("lon") if coords else None
+            img_coords = (p_lat, p_lon) if (p_lat is not None and p_lon is not None) else None
+            dist_km = (
+                haversine_km(destination_coords[0], destination_coords[1], p_lat, p_lon)
+                if (destination_coords and img_coords)
+                else 0.0
+            )
+
+            cats = [c.get("title", "") for c in page.get("categories", [])]
+
+            # Strict relevance check: must be <= 100km or title/categories match place_name/wikidata_id
+            if destination_coords or clean_query or wikidata_id:
+                if not passes_relevance_check(
+                    file_title=title,
+                    categories=cats,
+                    image_coords=img_coords,
+                    destination_coords=destination_coords,
+                    place_name=clean_query,
+                    wikidata_id=wikidata_id,
+                ):
+                    continue
 
             artist_raw = extmeta.get("Artist", {}).get("value", "")
             author = strip_html_tags(artist_raw) or "Wikimedia Commons contributor"
@@ -530,24 +654,27 @@ class WikimediaClient:
         latitude: float | None = None,
         longitude: float | None = None,
         place_name: str | None = None,
+        wikidata_id: str | None = None,
+        wikipedia_tag: str | None = None,
     ) -> tuple[list[dict[str, Any]], str | None]:
         """
         Engine photo chain:
         1. Wikipedia lead image -> Commons imageinfo.
         2. Wikidata P18 -> Commons imageinfo.
         3. Commons geosearch near coordinates (<= 25 km).
-        4. Commons text search by place name (title/desc matching).
+        4. Commons text search by place name (title/desc matching, <= 100 km relevance guard).
 
-        Logs: tier that answered, chosen file title, source URL, license, distance from destination coordinates.
+        Logs: tier that answered, chosen file title, source URL, license, distance from destination coordinates (debug logs only).
         Returns: (photos, editorial_summary)
         """
         photos: list[dict[str, Any]] = []
         editorial_summary: str | None = None
         answering_tier: str | None = None
 
-        wikipedia_tag = extratags.get("wikipedia")
-        wikidata_tag = extratags.get("wikidata")
+        wikipedia_tag = extratags.get("wikipedia") or wikipedia_tag
+        wikidata_tag = extratags.get("wikidata") or wikidata_id
         commons_tag = extratags.get("wikimedia_commons")
+        dest_coords = (latitude, longitude) if (latitude is not None and longitude is not None) else None
 
         # Check if we can get English Wikipedia article from Wikidata sitelinks
         enwiki_tag: str | None = None
@@ -574,10 +701,14 @@ class WikimediaClient:
                     if re.match(r"^\d+px-", file_name):
                         file_name = file_name.split("-", 1)[1]
                     file_name = urllib.parse.unquote(file_name)
-                    photo_info = self.get_image_info(file_name)
+                    photo_info = self.get_image_info(
+                        file_name,
+                        destination_coords=dest_coords,
+                        place_name=place_name or (tag_to_try.split(":", 1)[-1] if ":" in tag_to_try else tag_to_try),
+                        wikidata_id=wikidata_tag,
+                    )
                     if photo_info:
                         photo_info["photo_tier"] = "wikipedia_lead_image"
-                        photo_info["distance_km"] = 0.0
                         photos.append(photo_info)
                         answering_tier = "wikipedia_lead_image"
 
@@ -595,19 +726,27 @@ class WikimediaClient:
                     if re.match(r"^\d+px-", file_name):
                         file_name = file_name.split("-", 1)[1]
                     file_name = urllib.parse.unquote(file_name)
-                    photo_info = self.get_image_info(file_name)
+                    photo_info = self.get_image_info(
+                        file_name,
+                        destination_coords=dest_coords,
+                        place_name=place_name or (wikipedia_tag.split(":", 1)[-1] if ":" in wikipedia_tag else wikipedia_tag),
+                        wikidata_id=wikidata_tag,
+                    )
                     if photo_info:
                         photo_info["photo_tier"] = "wikipedia_lead_image"
-                        photo_info["distance_km"] = 0.0
                         photos.append(photo_info)
                         answering_tier = "wikipedia_lead_image"
 
         # Check explicit wikimedia_commons tag on OSM node if any
         if not photos and commons_tag:
-            photo_info = self.get_image_info(commons_tag)
+            photo_info = self.get_image_info(
+                commons_tag,
+                destination_coords=dest_coords,
+                place_name=place_name,
+                wikidata_id=wikidata_tag,
+            )
             if photo_info:
                 photo_info["photo_tier"] = "wikimedia_commons_tag"
-                photo_info["distance_km"] = 0.0
                 photos.append(photo_info)
                 answering_tier = "wikimedia_commons_tag"
 
@@ -615,10 +754,13 @@ class WikimediaClient:
         # Tier 2: Wikidata P18
         # --------------------------------------------------
         if not photos and wikidata_tag:
-            p18_info = self.get_wikidata_p18_image(wikidata_tag)
+            p18_info = self.get_wikidata_p18_image(
+                wikidata_tag,
+                destination_coords=dest_coords,
+                place_name=place_name,
+            )
             if p18_info:
                 p18_info["photo_tier"] = "wikidata_p18"
-                p18_info["distance_km"] = 0.0
                 photos.append(p18_info)
                 answering_tier = "wikidata_p18"
 
@@ -634,21 +776,25 @@ class WikimediaClient:
                 answering_tier = "commons_geosearch"
 
         # --------------------------------------------------
-        # Tier 4: Commons text search by place_name
+        # Tier 4: Commons text search by place_name (<= 100 km relevance guard)
         # --------------------------------------------------
         if not photos and place_name:
-            dest_coords = (latitude, longitude) if (latitude is not None and longitude is not None) else None
-            text_photos = self.search_commons_text(place_name, limit=4, destination_coords=dest_coords)
+            text_photos = self.search_commons_text(
+                place_name,
+                limit=4,
+                destination_coords=dest_coords,
+                wikidata_id=wikidata_tag,
+            )
             if text_photos:
                 for p in text_photos:
                     p["photo_tier"] = "commons_text_search"
                 photos.extend(text_photos)
                 answering_tier = "commons_text_search"
 
-        # Mandatory per-analysis logging
+        # Mandatory per-analysis logging in debug logs only
         if photos:
             chosen = photos[0]
-            logger.info(
+            logger.debug(
                 "[PHOTO_CHAIN] Tier '%s' answered for place '%s': file_title='%s', source_url='%s', license='%s', distance_km=%.2f",
                 chosen.get("photo_tier", answering_tier),
                 place_name or wikipedia_tag or wikidata_tag or "unknown",
@@ -658,7 +804,7 @@ class WikimediaClient:
                 chosen.get("distance_km", 0.0),
             )
         else:
-            logger.info(
+            logger.debug(
                 "[PHOTO_CHAIN] No tier found qualifying photos for place '%s'; falling back to bundled/neutral gradient",
                 place_name or wikipedia_tag or wikidata_tag or "unknown",
             )

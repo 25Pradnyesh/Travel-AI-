@@ -24,10 +24,12 @@ from engine.app.services.places.nominatim_client import (
 from engine.app.services.places.open_meteo_client import OpenMeteoClient
 from engine.app.services.places.osm_provider import OsmProvider
 from engine.app.services.places.overpass_client import OverpassClient
+from engine.app.services.places.overview_builder import resolve_wikipedia_wikidata
 from engine.app.services.places.wikimedia_client import (
     WikimediaClient,
     get_wikimedia_user_agent,
     is_allowed_license,
+    passes_relevance_check,
 )
 
 
@@ -226,6 +228,45 @@ class TestOsmPlacesProvider(unittest.TestCase):
         self.assertFalse(is_allowed_license("Copyrighted"))
         self.assertFalse(is_allowed_license("Fair Use"))
         self.assertFalse(is_allowed_license(None))
+
+    def test_relevance_rejects_geotagged_image_far_from_destination(self):
+        self.assertFalse(
+            passes_relevance_check(
+                file_title="File:Colosseum.jpg",
+                image_coords=(41.8902, 12.4922),
+                destination_coords=(33.4996, 126.5312),
+                place_name="Jeju Island",
+            )
+        )
+
+    def test_relevance_accepts_matching_destination_name(self):
+        self.assertTrue(
+            passes_relevance_check(
+                file_title="File:Jeju Island coastline.jpg",
+                place_name="Jeju Island",
+            )
+        )
+
+    def test_relevance_rejects_unrelated_untagged_image(self):
+        self.assertFalse(
+            passes_relevance_check(
+                file_title="File:Colosseum panorama.jpg",
+                categories=["Ancient Rome"],
+                place_name="Jeju Island",
+            )
+        )
+
+    def test_relevance_currently_accepts_unrelated_nearby_image(self):
+        # Characterizes the current behavior. This should become a rejection
+        # once the relevance rule requires more than geographic proximity.
+        self.assertTrue(
+            passes_relevance_check(
+                file_title="File:Unrelated local building.jpg",
+                image_coords=(33.6, 126.6),
+                destination_coords=(33.4996, 126.5312),
+                place_name="Jeju Island",
+            )
+        )
 
     def test_wikimedia_photo_resolution_and_credit(self):
         """Resolves Wikipedia summary lead image and extracts verified CC author attribution."""
@@ -648,6 +689,112 @@ class TestOsmPlacesProvider(unittest.TestCase):
         with patch.dict(os.environ, {"PLACES_PROVIDER": "osm", "APP_CONTACT": ""}):
             provider = get_places_provider()
             self.assertFalse(provider.is_available)
+
+    # ==================================================
+    # Wikipedia and Wikidata Identifier Resolution Tests
+    # ==================================================
+
+    @patch("engine.app.services.places.overview_builder.requests.get")
+    def test_resolve_wikipedia_wikidata_normal_search_with_pageprops(self, mock_get):
+        """Normal search match parses Wikipedia title and pageprops.wikibase_item QID."""
+        search_resp = MagicMock()
+        search_resp.status_code = 200
+        search_resp.json.return_value = {
+            "query": {
+                "search": [{"title": "Jeju Island", "pageid": 12345}]
+            }
+        }
+
+        prop_resp = MagicMock()
+        prop_resp.status_code = 200
+        prop_resp.json.return_value = {
+            "query": {
+                "pages": {
+                    "12345": {
+                        "title": "Jeju Island",
+                        "pageprops": {"wikibase_item": "Q29298"}
+                    }
+                }
+            }
+        }
+        mock_get.side_effect = [search_resp, prop_resp]
+
+        title, qid = resolve_wikipedia_wikidata(name="Jeju Island", latitude=33.4996, longitude=126.5312)
+        self.assertEqual(title, "Jeju Island")
+        self.assertEqual(qid, "Q29298")
+        self.assertEqual(mock_get.call_count, 2)
+
+    @patch("engine.app.services.places.overview_builder.requests.get")
+    def test_resolve_wikipedia_wikidata_geosearch_fallback(self, mock_get):
+        """Falls back to geosearch when text search returns empty, parsing wikibase_item."""
+        search_resp = MagicMock()
+        search_resp.status_code = 200
+        search_resp.json.return_value = {"query": {"search": []}}
+
+        geo_resp = MagicMock()
+        geo_resp.status_code = 200
+        geo_resp.json.return_value = {
+            "query": {
+                "geosearch": [{"title": "Colosseum", "pageid": 67890}]
+            }
+        }
+
+        prop_resp = MagicMock()
+        prop_resp.status_code = 200
+        prop_resp.json.return_value = {
+            "query": {
+                "pages": {
+                    "67890": {
+                        "title": "Colosseum",
+                        "pageprops": {"wikibase_item": "Q4812"}
+                    }
+                }
+            }
+        }
+        mock_get.side_effect = [search_resp, geo_resp, prop_resp]
+
+        title, qid = resolve_wikipedia_wikidata(name="Unmatched Name", latitude=41.8902, longitude=12.4922)
+        self.assertEqual(title, "Colosseum")
+        self.assertEqual(qid, "Q4812")
+        self.assertEqual(mock_get.call_count, 3)
+
+    @patch("engine.app.services.places.overview_builder.requests.get")
+    def test_resolve_wikipedia_wikidata_empty_search_and_geosearch(self, mock_get):
+        """Returns (None, None) when both text search and geosearch find zero results."""
+        search_resp = MagicMock()
+        search_resp.status_code = 200
+        search_resp.json.return_value = {"query": {"search": []}}
+
+        geo_resp = MagicMock()
+        geo_resp.status_code = 200
+        geo_resp.json.return_value = {"query": {"geosearch": []}}
+
+        mock_get.side_effect = [search_resp, geo_resp]
+
+        title, qid = resolve_wikipedia_wikidata(name="Nonexistent Place 999", latitude=0.0, longitude=0.0)
+        self.assertIsNone(title)
+        self.assertIsNone(qid)
+
+    @patch("engine.app.services.places.overview_builder.requests.get")
+    def test_resolve_wikipedia_wikidata_http_404_response(self, mock_get):
+        """HTTP 404 response degrades gracefully to (None, None) without raising."""
+        resp_404 = MagicMock()
+        resp_404.status_code = 404
+        resp_404.json.return_value = {}
+        mock_get.return_value = resp_404
+
+        title, qid = resolve_wikipedia_wikidata(name="Some Place", latitude=10.0, longitude=20.0)
+        self.assertIsNone(title)
+        self.assertIsNone(qid)
+
+    @patch("engine.app.services.places.overview_builder.requests.get")
+    def test_resolve_wikipedia_wikidata_timeout_handling(self, mock_get):
+        """Network timeout degrades gracefully to (None, None) without raising."""
+        mock_get.side_effect = requests.exceptions.Timeout("Connection timed out")
+
+        title, qid = resolve_wikipedia_wikidata(name="Slow Place", latitude=10.0, longitude=20.0)
+        self.assertIsNone(title)
+        self.assertIsNone(qid)
 
 
 if __name__ == "__main__":

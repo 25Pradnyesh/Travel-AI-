@@ -12,6 +12,91 @@ from engine.observability.context import get_current_context
 logger = logging.getLogger(__name__)
 
 
+def resolve_wikipedia_wikidata(
+    name: str | None = None,
+    latitude: float | None = None,
+    longitude: float | None = None,
+) -> tuple[str | None, str | None]:
+    """
+    Zero-cost lookup of English Wikipedia title and Wikidata QID when missing from geocoder extratags:
+    1. Search Wikipedia by place name -> extract pageprops.wikibase_item (Wikidata QID).
+    2. Fallback: Wikipedia geosearch near (lat, lon) -> extract pageprops.wikibase_item.
+    Returns (wikipedia_title, wikidata_id).
+    """
+    headers = {"User-Agent": get_wikimedia_user_agent()}
+
+    # 1. Text search by name on English Wikipedia
+    if name and len(name.strip()) >= 2:
+        search_url = "https://en.wikipedia.org/w/api.php"
+        search_params = {
+            "action": "query",
+            "list": "search",
+            "srsearch": name.strip(),
+            "srlimit": "2",
+            "format": "json",
+        }
+        try:
+            resp = requests.get(search_url, params=search_params, headers=headers, timeout=3.5)
+            if resp.status_code == 200:
+                results = resp.json().get("query", {}).get("search", [])
+                if results:
+                    best_title = results[0].get("title")
+                    if best_title:
+                        prop_params = {
+                            "action": "query",
+                            "titles": best_title,
+                            "prop": "pageprops",
+                            "ppprop": "wikibase_item",
+                            "format": "json",
+                        }
+                        prop_resp = requests.get(search_url, params=prop_params, headers=headers, timeout=3.0)
+                        if prop_resp.status_code == 200:
+                            pages = prop_resp.json().get("query", {}).get("pages", {})
+                            for _, page in pages.items():
+                                qid = page.get("pageprops", {}).get("wikibase_item")
+                                return best_title, qid
+                        return best_title, None
+        except Exception as exc:
+            logger.warning("[OVERVIEW] Wikipedia search lookup failed for '%s': %s", name, exc)
+
+    # 2. Geosearch fallback if coordinates are available
+    if latitude is not None and longitude is not None:
+        geo_url = "https://en.wikipedia.org/w/api.php"
+        geo_params = {
+            "action": "query",
+            "list": "geosearch",
+            "gscoord": f"{latitude}|{longitude}",
+            "gsradius": "10000",
+            "gslimit": "3",
+            "format": "json",
+        }
+        try:
+            resp = requests.get(geo_url, params=geo_params, headers=headers, timeout=3.5)
+            if resp.status_code == 200:
+                geo_results = resp.json().get("query", {}).get("geosearch", [])
+                if geo_results:
+                    best_title = geo_results[0].get("title")
+                    if best_title:
+                        prop_params = {
+                            "action": "query",
+                            "titles": best_title,
+                            "prop": "pageprops",
+                            "ppprop": "wikibase_item",
+                            "format": "json",
+                        }
+                        prop_resp = requests.get(geo_url, params=prop_params, headers=headers, timeout=3.0)
+                        if prop_resp.status_code == 200:
+                            pages = prop_resp.json().get("query", {}).get("pages", {})
+                            for _, page in pages.items():
+                                qid = page.get("pageprops", {}).get("wikibase_item")
+                                return best_title, qid
+                        return best_title, None
+        except Exception as exc:
+            logger.warning("[OVERVIEW] Wikipedia geosearch lookup failed for (%f, %f): %s", latitude, longitude, exc)
+
+    return None, None
+
+
 def build_destination_overview(
     wikidata_id: str | None = None,
     wikipedia_tag: str | None = None,
@@ -32,8 +117,26 @@ def build_destination_overview(
     entity_claims: dict[str, Any] = {}
     labels: dict[str, str] = {}
 
-    # 1. Fetch Wikidata claims if wikidata_id provided
     clean_qid = (wikidata_id or "").strip()
+
+    # 0. If wikidata_id and wikipedia_tag are missing, attempt lookup via place_data (name & coordinates)
+    if (not clean_qid or not re.match(r"^Q\d+$", clean_qid)) and not wikipedia_tag and place_data:
+        p_name = place_data.get("name") or place_data.get("travel_name") or place_data.get("display_name")
+        p_lat = place_data.get("latitude") or place_data.get("lat")
+        p_lon = place_data.get("longitude") or place_data.get("lon")
+        try:
+            p_lat = float(p_lat) if p_lat is not None else None
+            p_lon = float(p_lon) if p_lon is not None else None
+        except (ValueError, TypeError):
+            p_lat, p_lon = None, None
+
+        res_title, res_qid = resolve_wikipedia_wikidata(p_name, p_lat, p_lon)
+        if res_qid and not clean_qid:
+            clean_qid = res_qid
+        if res_title and not wikipedia_tag:
+            wikipedia_tag = f"en:{res_title}"
+
+    # 1. Fetch Wikidata claims if wikidata_id provided
     sitelinks: dict[str, Any] = {}
     if clean_qid and re.match(r"^Q\d+$", clean_qid):
         url = f"https://www.wikidata.org/wiki/Special:EntityData/{clean_qid}.json"

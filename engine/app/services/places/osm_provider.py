@@ -1,12 +1,13 @@
 import logging
 import os
+import re
 from typing import Any
 
 from engine.app.services.places.base import PlacesProvider
 from engine.app.services.places.nominatim_client import NominatimClient
 from engine.app.services.places.open_meteo_client import OpenMeteoClient
 from engine.app.services.places.overpass_client import OverpassClient
-from engine.app.services.places.overview_builder import build_destination_overview
+from engine.app.services.places.overview_builder import build_destination_overview, resolve_wikipedia_wikidata
 from engine.app.services.places.wikimedia_client import WikimediaClient
 
 logger = logging.getLogger(__name__)
@@ -141,18 +142,28 @@ class OsmProvider(PlacesProvider):
                 lon = None
 
         place_name = data.get("name") or data.get("travel_name") or data.get("display_name")
+        wikidata_id = extratags.get("wikidata") or data.get("wikidata")
+        wikipedia_tag = extratags.get("wikipedia") or data.get("wikipedia")
+
+        # Zero-cost lookup of English Wikipedia title and Wikidata QID when missing from geocoder extratags
+        if (not wikidata_id or not re.match(r"^Q\d+$", str(wikidata_id).strip())) and not wikipedia_tag:
+            res_title, res_qid = resolve_wikipedia_wikidata(name=place_name, latitude=lat, longitude=lon)
+            if res_qid and not wikidata_id:
+                wikidata_id = res_qid
+            if res_title and not wikipedia_tag:
+                wikipedia_tag = f"en:{res_title}"
+
         photos, editorial_summary = self.wikimedia.resolve_destination_photos(
             extratags=extratags,
             latitude=lat,
             longitude=lon,
             place_name=place_name,
+            wikidata_id=wikidata_id,
+            wikipedia_tag=wikipedia_tag,
         )
 
         if editorial_summary:
             data["editorial_summary"] = editorial_summary
-
-        wikidata_id = extratags.get("wikidata") or data.get("wikidata")
-        wikipedia_tag = extratags.get("wikipedia") or data.get("wikipedia")
         overview = build_destination_overview(
             wikidata_id=wikidata_id,
             wikipedia_tag=wikipedia_tag,
