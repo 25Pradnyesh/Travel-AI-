@@ -1,0 +1,919 @@
+{
+  "jeju": {
+    "id": "jeju",
+    "name": "Jeju Island",
+    "regionCountry": "South Korea",
+    "badge": "Volcanic Island",
+    "primaryPlaceId": "demo_jeju_island",
+    "primaryPlaceName": "Jeju Island",
+    "sources_audit": {
+      "coordinates": {
+        "source": "Nominatim OpenStreetMap",
+        "fetched_at": "2026-10-31T19:11:38.506Z",
+        "osm_id": 9740744
+      },
+      "wikidata": {
+        "source": "Wikidata (Q29151)",
+        "fetched_at": "2026-10-31T19:11:39.610Z",
+        "area_km2": 1848,
+        "elevation_m": 1950,
+        "heritage_year": 2007
+      },
+      "climate": {
+        "source": "Open-Meteo Historical Archive (2021-2025)",
+        "fetched_at": "2026-10-31T19:11:47.296Z"
+      },
+      "budget": {
+        "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+        "basis": "model estimate"
+      }
+    },
+    "data": {
+      "success": true,
+      "best_guess": {
+        "place_id": "demo_jeju_island",
+        "name": "Jeju Island",
+        "city": "Jeju Island",
+        "region": "South Korea",
+        "country": "South Korea",
+        "formatted_address": "제주도, 제주특별자치도, 대한민국",
+        "latitude": 33.3803475,
+        "longitude": 126.5482545,
+        "rating": null,
+        "user_ratings_total": null,
+        "confidence": 96,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "VERIFIED",
+        "why": "Authentic location matches verified OpenStreetMap coordinates.",
+        "types": [
+          "city",
+          "destination",
+          "tourist_attraction"
+        ],
+        "photos": [],
+        "maps_url": "https://maps.google.com/?q=Jeju%20Island%20South%20Korea",
+        "overview": {
+          "where": "Jeju Island, South Korea",
+          "size": "1,848 km²",
+          "main_city_landmark": "Jeju Island • Hallasan (1,947 m)",
+          "recognition": "Jeju Volcanic Island and Lava Tubes (2007)",
+          "climate": "Annual avg 7.5°C • 3000 mm rain"
+        }
+      },
+      "travel_intelligence": {
+        "category": "Volcanic Island",
+        "travel_summary": "Editorial overview for Jeju Island, South Korea.",
+        "best_season": "Spring & Autumn",
+        "recommended_window": "Spring & Autumn",
+        "recommended_reason": "Optimal temperatures (-3°C–19°C) based on historical weather.",
+        "temperature_range": "-3°C–19°C",
+        "weather_basis": "based on historical weather",
+        "weather_source": "Open-Meteo Historical Archive (2021-2025)",
+        "recommended_trip_days": "3-4 Days",
+        "season_cards": [
+          {
+            "name": "Spring",
+            "months": "March–May",
+            "avg_temp_range": "-3°C–15°C",
+            "avg_rainfall": "276 mm/mo",
+            "description": "Mild and pleasant with blooming canola and cherry blossoms along coastal roads."
+          },
+          {
+            "name": "Summer",
+            "months": "June–August",
+            "avg_temp_range": "11°C–22°C",
+            "avg_rainfall": "365 mm/mo",
+            "description": "Warm and humid with occasional subtropical rainfall and lush volcanic landscapes."
+          },
+          {
+            "name": "Autumn",
+            "months": "September–November",
+            "avg_temp_range": "0°C–19°C",
+            "avg_rainfall": "244 mm/mo",
+            "description": "Crisp air, clear sunny skies, and waving silver grass across volcanic oreums."
+          },
+          {
+            "name": "Winter",
+            "months": "December–February",
+            "avg_temp_range": "-8°C–1°C",
+            "avg_rainfall": "115 mm/mo",
+            "description": "Mild coastal temperatures with snow-covered Hallasan hiking peaks."
+          }
+        ],
+        "budget_model": {
+          "basis": "model estimate",
+          "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+          "icp_ratio": 0.72,
+          "tiers": {
+            "budget": {
+              "daily_total_usd": 36,
+              "daily_total_local": 48100,
+              "daily_total_inr": 3006,
+              "currency": "KRW",
+              "breakdown_usd": {
+                "stay": 16,
+                "food": 11,
+                "local_transport": 4,
+                "activities": 4,
+                "buffer": 1
+              },
+              "breakdown_local": {
+                "stay": 21400,
+                "food": 14700,
+                "local_transport": 5300,
+                "activities": 5300,
+                "buffer": 1300
+              },
+              "breakdown_inr": {
+                "stay": 1336,
+                "food": 919,
+                "local_transport": 334,
+                "activities": 334,
+                "buffer": 84
+              }
+            },
+            "mid_range": {
+              "daily_total_usd": 94,
+              "daily_total_local": 125500,
+              "daily_total_inr": 7849,
+              "currency": "KRW",
+              "breakdown_usd": {
+                "stay": 47,
+                "food": 25,
+                "local_transport": 9,
+                "activities": 7,
+                "buffer": 6
+              },
+              "breakdown_local": {
+                "stay": 62700,
+                "food": 33400,
+                "local_transport": 12000,
+                "activities": 9300,
+                "buffer": 8000
+              },
+              "breakdown_inr": {
+                "stay": 3925,
+                "food": 2088,
+                "local_transport": 752,
+                "activities": 585,
+                "buffer": 501
+              }
+            },
+            "comfortable": {
+              "daily_total_usd": 202,
+              "daily_total_local": 269700,
+              "daily_total_inr": 16867,
+              "currency": "KRW",
+              "breakdown_usd": {
+                "stay": 108,
+                "food": 50,
+                "local_transport": 18,
+                "activities": 14,
+                "buffer": 12
+              },
+              "breakdown_local": {
+                "stay": 144200,
+                "food": 66800,
+                "local_transport": 24000,
+                "activities": 18700,
+                "buffer": 16000
+              },
+              "breakdown_inr": {
+                "stay": 9018,
+                "food": 4175,
+                "local_transport": 1503,
+                "activities": 1169,
+                "buffer": 1002
+              }
+            }
+          },
+          "assumed_style": {
+            "budget": "Guesthouse or hostel dorm, local noodle shops, public city & intercity bus.",
+            "mid_range": "3-star boutique hotel or pension, traditional barbecue & cafes, occasional taxi.",
+            "comfortable": "4-star beachfront resort, private car rental, premium black pork & seafood dining."
+          }
+        }
+      },
+      "nearby_places": [
+        {
+          "place_id": "poi_seongsan_ilchulbong",
+          "name": "Seongsan Ilchulbong",
+          "formatted_address": "성산일출해양도립공원, 284-12, 일출로, 성산리, 성산읍, 서귀포시, 제주특별자치도, 63643, 대한민국",
+          "latitude": 33.4584403,
+          "longitude": 126.9414363,
+          "types": [
+            "natural_feature",
+            "volcano",
+            "tourist_attraction"
+          ],
+          "distance_km": 37.5,
+          "maps_url": "https://maps.google.com/?q=Seongsan%20Ilchulbong%20Jeju%20Island",
+          "category": "Volcanic Peak",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:11:49.511Z"
+          }
+        },
+        {
+          "place_id": "poi_hallasan_national_park",
+          "name": "Hallasan National Park",
+          "formatted_address": "한라산국립공원, 노형동, 제주시, 제주특별자치도, 63077, 대한민국",
+          "latitude": 33.3922451,
+          "longitude": 126.4942816,
+          "types": [
+            "national_park",
+            "mountain",
+            "hiking"
+          ],
+          "distance_km": 5.2,
+          "maps_url": "https://maps.google.com/?q=Hallasan%20National%20Park%20Jeju%20Island",
+          "category": "National Park",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:11:51.206Z"
+          }
+        },
+        {
+          "place_id": "poi_manjanggul_cave",
+          "name": "Manjanggul Lava Tube",
+          "formatted_address": "만장굴, 3341-3, 만장굴길, 월정리, 구좌읍, 제주시, 제주특별자치도, 63348, 대한민국",
+          "latitude": 33.528254,
+          "longitude": 126.7701281,
+          "types": [
+            "cave",
+            "natural_feature",
+            "tourist_attraction"
+          ],
+          "distance_km": 26.3,
+          "maps_url": "https://maps.google.com/?q=Manjanggul%20Lava%20Tube%20Jeju%20Island",
+          "category": "Natural Wonder",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:11:52.541Z"
+          }
+        },
+        {
+          "place_id": "poi_hyeopjae_beach",
+          "name": "Hyeopjae Beach",
+          "formatted_address": "협재 해수욕장, 협재리, 한림읍, 제주시, 제주특별자치도, 63011, 대한민국",
+          "latitude": 33.395112,
+          "longitude": 126.2402796,
+          "types": [
+            "beach",
+            "natural_feature",
+            "scenic"
+          ],
+          "distance_km": 28.6,
+          "maps_url": "https://maps.google.com/?q=Hyeopjae%20Beach%20Jeju%20Island",
+          "category": "Coast & Beach",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:11:54.199Z"
+          }
+        },
+        {
+          "place_id": "poi_jeongbang_waterfall",
+          "name": "Jeongbang Waterfall",
+          "formatted_address": "정방폭포, 송산동, 서귀포시, 제주특별자치도, 63597, 대한민국",
+          "latitude": 33.2448578,
+          "longitude": 126.5715451,
+          "types": [
+            "waterfall",
+            "natural_feature"
+          ],
+          "distance_km": 15.2,
+          "maps_url": "https://maps.google.com/?q=Jeongbang%20Waterfall%20Jeju%20Island",
+          "category": "Waterfall",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:11:55.865Z"
+          }
+        }
+      ],
+      "performance": {
+        "total_seconds": 1.45
+      }
+    }
+  },
+  "rome": {
+    "id": "rome",
+    "name": "Rome",
+    "regionCountry": "Lazio, Italy",
+    "badge": "Ancient Imperial Capital",
+    "primaryPlaceId": "demo_rome_italy",
+    "primaryPlaceName": "Rome",
+    "sources_audit": {
+      "coordinates": {
+        "source": "Nominatim OpenStreetMap",
+        "fetched_at": "2026-10-31T19:11:57.893Z",
+        "osm_id": 41485
+      },
+      "wikidata": {
+        "source": "Wikidata (Q220)",
+        "fetched_at": "2026-10-31T19:11:59.006Z",
+        "area_km2": 1287.4,
+        "elevation_m": 21,
+        "heritage_year": 1980
+      },
+      "climate": {
+        "source": "Open-Meteo Historical Archive (2021-2025)",
+        "fetched_at": "2026-10-31T19:12:02.521Z"
+      },
+      "budget": {
+        "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+        "basis": "model estimate"
+      }
+    },
+    "data": {
+      "success": true,
+      "best_guess": {
+        "place_id": "demo_rome_italy",
+        "name": "Rome",
+        "city": "Rome",
+        "region": "Lazio, Italy",
+        "country": "Italy",
+        "formatted_address": "Roma, Roma Capitale, Lazio, Italia",
+        "latitude": 41.8933203,
+        "longitude": 12.4829321,
+        "rating": null,
+        "user_ratings_total": null,
+        "confidence": 96,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "VERIFIED",
+        "why": "Authentic location matches verified OpenStreetMap coordinates.",
+        "types": [
+          "city",
+          "destination",
+          "tourist_attraction"
+        ],
+        "photos": [],
+        "maps_url": "https://maps.google.com/?q=Rome%20Italy",
+        "overview": {
+          "where": "Rome, Italy",
+          "size": "1,287.4 km²",
+          "main_city_landmark": "Rome (21 m elevation)",
+          "recognition": "Historic Centre of Rome, the Properties of the Holy See in that City Enjoying Extraterritorial Rights and San Paolo Fuori le Mura (1980)",
+          "climate": "Annual avg 16.9°C • 928 mm rain"
+        }
+      },
+      "travel_intelligence": {
+        "category": "Ancient Imperial Capital",
+        "travel_summary": "Editorial overview for Rome, Italy.",
+        "best_season": "Spring & Autumn",
+        "recommended_window": "Spring & Autumn",
+        "recommended_reason": "Optimal temperatures (7°C–28°C) based on historical weather.",
+        "temperature_range": "7°C–28°C",
+        "weather_basis": "based on historical weather",
+        "weather_source": "Open-Meteo Historical Archive (2021-2025)",
+        "recommended_trip_days": "3-4 Days",
+        "season_cards": [
+          {
+            "name": "Spring",
+            "months": "March–May",
+            "avg_temp_range": "7°C–24°C",
+            "avg_rainfall": "82 mm/mo",
+            "description": "Pleasant Mediterranean sunshine and blooming wisteria across ancient piazzas."
+          },
+          {
+            "name": "Summer",
+            "months": "June–August",
+            "avg_temp_range": "19°C–34°C",
+            "avg_rainfall": "34 mm/mo",
+            "description": "Warm and sunny with long twilight evenings on historic terraces."
+          },
+          {
+            "name": "Autumn",
+            "months": "September–November",
+            "avg_temp_range": "9°C–28°C",
+            "avg_rainfall": "112 mm/mo",
+            "description": "Comfortable sightseeing temperatures and golden autumn light over the Forum."
+          },
+          {
+            "name": "Winter",
+            "months": "December–February",
+            "avg_temp_range": "4°C–15°C",
+            "avg_rainfall": "82 mm/mo",
+            "description": "Cool and mild Mediterranean winter with fewer crowds at monuments."
+          }
+        ],
+        "budget_model": {
+          "basis": "model estimate",
+          "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+          "icp_ratio": 0.88,
+          "tiers": {
+            "budget": {
+              "daily_total_usd": 44,
+              "daily_total_local": 40,
+              "daily_total_inr": 3674,
+              "currency": "EUR",
+              "breakdown_usd": {
+                "stay": 19,
+                "food": 13,
+                "local_transport": 4,
+                "activities": 4,
+                "buffer": 4
+              },
+              "breakdown_local": {
+                "stay": 17,
+                "food": 12,
+                "local_transport": 4,
+                "activities": 4,
+                "buffer": 4
+              },
+              "breakdown_inr": {
+                "stay": 1587,
+                "food": 1086,
+                "local_transport": 334,
+                "activities": 334,
+                "buffer": 334
+              }
+            },
+            "mid_range": {
+              "daily_total_usd": 114,
+              "daily_total_local": 105,
+              "daily_total_inr": 9519,
+              "currency": "EUR",
+              "breakdown_usd": {
+                "stay": 57,
+                "food": 31,
+                "local_transport": 11,
+                "activities": 9,
+                "buffer": 6
+              },
+              "breakdown_local": {
+                "stay": 52,
+                "food": 29,
+                "local_transport": 10,
+                "activities": 8,
+                "buffer": 6
+              },
+              "breakdown_inr": {
+                "stay": 4760,
+                "food": 2589,
+                "local_transport": 919,
+                "activities": 752,
+                "buffer": 501
+              }
+            },
+            "comfortable": {
+              "daily_total_usd": 246,
+              "daily_total_local": 226,
+              "daily_total_inr": 20541,
+              "currency": "EUR",
+              "breakdown_usd": {
+                "stay": 132,
+                "food": 62,
+                "local_transport": 22,
+                "activities": 18,
+                "buffer": 12
+              },
+              "breakdown_local": {
+                "stay": 121,
+                "food": 57,
+                "local_transport": 20,
+                "activities": 17,
+                "buffer": 11
+              },
+              "breakdown_inr": {
+                "stay": 11022,
+                "food": 5177,
+                "local_transport": 1837,
+                "activities": 1503,
+                "buffer": 1002
+              }
+            }
+          },
+          "assumed_style": {
+            "budget": "Central hostel dorm or budget B&B, classic pizza al taglio & panini, Metro & bus transit.",
+            "mid_range": "3-star hotel near historic center, authentic trattoria dining with house wine, local transit & occasional taxi.",
+            "comfortable": "Boutique luxury hotel near Spanish Steps, rooftop dining & fine wine, private transfer."
+          }
+        }
+      },
+      "nearby_places": [
+        {
+          "place_id": "poi_colosseum",
+          "name": "Colosseum",
+          "formatted_address": "Colosseo, Piazza del Colosseo, Celio, Municipio Roma I, Roma, Roma Capitale, Lazio, 00184, Italia",
+          "latitude": 41.8902572,
+          "longitude": 12.4923841,
+          "types": [
+            "monument",
+            "historic_landmark",
+            "tourist_attraction"
+          ],
+          "distance_km": 0.9,
+          "maps_url": "https://maps.google.com/?q=Colosseum%20Rome",
+          "category": "Ancient Amphitheatre",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:03.166Z"
+          }
+        },
+        {
+          "place_id": "poi_trevi_fountain",
+          "name": "Trevi Fountain",
+          "formatted_address": "Fontana di Trevi, Piazza di Trevi, Trevi, Municipio Roma I, Roma, Roma Capitale, Lazio, 00187, Italia",
+          "latitude": 41.9009778,
+          "longitude": 12.4832848,
+          "types": [
+            "fountain",
+            "historic_landmark",
+            "scenic"
+          ],
+          "distance_km": 0.9,
+          "maps_url": "https://maps.google.com/?q=Trevi%20Fountain%20Rome",
+          "category": "Baroque Monument",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:04.522Z"
+          }
+        },
+        {
+          "place_id": "poi_pantheon",
+          "name": "Pantheon",
+          "formatted_address": "Pantheon, Piazza della Rotonda, Colonna, Municipio Roma I, Roma, Roma Capitale, Lazio, 00186, Italia",
+          "latitude": 41.898616,
+          "longitude": 12.4768334,
+          "types": [
+            "monument",
+            "historic_landmark",
+            "architecture"
+          ],
+          "distance_km": 0.8,
+          "maps_url": "https://maps.google.com/?q=Pantheon%20Rome",
+          "category": "Ancient Temple",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:06.170Z"
+          }
+        },
+        {
+          "place_id": "poi_roman_forum",
+          "name": "Roman Forum",
+          "formatted_address": "Forum Romanum, Piazza di Santa Maria Nova, Campitelli, Municipio Roma I, Roma, Roma Capitale, Lazio, 00184, Italia",
+          "latitude": 41.8916414,
+          "longitude": 12.4867296,
+          "types": [
+            "archaeological_site",
+            "historic_landmark"
+          ],
+          "distance_km": 0.4,
+          "maps_url": "https://maps.google.com/?q=Roman%20Forum%20Rome",
+          "category": "Archaeological Site",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:08.273Z"
+          }
+        },
+        {
+          "place_id": "poi_castel_sant_angelo",
+          "name": "Castel Sant'Angelo",
+          "formatted_address": "Castel Sant’Angelo, Lungotevere Castello, Borgo, Municipio Roma I, Roma, Roma Capitale, Lazio, 00193, Italia",
+          "latitude": 41.9031178,
+          "longitude": 12.4663427,
+          "types": [
+            "castle",
+            "museum",
+            "viewpoint"
+          ],
+          "distance_km": 1.8,
+          "maps_url": "https://maps.google.com/?q=Castel%20Sant'Angelo%20Rome",
+          "category": "Historic Fortress",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:10.066Z"
+          }
+        }
+      ],
+      "performance": {
+        "total_seconds": 1.45
+      }
+    }
+  },
+  "kyoto": {
+    "id": "kyoto",
+    "name": "Kyoto",
+    "regionCountry": "Kansai, Japan",
+    "badge": "Imperial Cultural Capital",
+    "primaryPlaceId": "demo_kyoto_japan",
+    "primaryPlaceName": "Kyoto",
+    "sources_audit": {
+      "coordinates": {
+        "source": "Nominatim OpenStreetMap",
+        "fetched_at": "2026-10-31T19:12:11.934Z",
+        "osm_id": 357794
+      },
+      "wikidata": {
+        "source": "Wikidata (Q34600)",
+        "fetched_at": "2026-10-31T19:12:13.045Z",
+        "area_km2": 827.8,
+        "elevation_m": null,
+        "heritage_year": 1994
+      },
+      "climate": {
+        "source": "Open-Meteo Historical Archive (2021-2025)",
+        "fetched_at": "2026-10-31T19:12:17.779Z"
+      },
+      "budget": {
+        "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+        "basis": "model estimate"
+      }
+    },
+    "data": {
+      "success": true,
+      "best_guess": {
+        "place_id": "demo_kyoto_japan",
+        "name": "Kyoto",
+        "city": "Kyoto",
+        "region": "Kansai, Japan",
+        "country": "Japan",
+        "formatted_address": "京都市, 京都府, 日本",
+        "latitude": 35.0115754,
+        "longitude": 135.7681441,
+        "rating": null,
+        "user_ratings_total": null,
+        "confidence": 96,
+        "confidence_level": "VERY_HIGH",
+        "verification_status": "VERIFIED",
+        "why": "Authentic location matches verified OpenStreetMap coordinates.",
+        "types": [
+          "city",
+          "destination",
+          "tourist_attraction"
+        ],
+        "photos": [],
+        "maps_url": "https://maps.google.com/?q=Kyoto%20Japan",
+        "overview": {
+          "where": "Kyoto, Japan",
+          "size": "827.8 km²",
+          "main_city_landmark": "Kyoto • Mount Minako (972 m)",
+          "recognition": "Historic Monuments of Ancient Kyoto (1994)",
+          "climate": "Annual avg 15.4°C • 1724 mm rain"
+        }
+      },
+      "travel_intelligence": {
+        "category": "Imperial Cultural Capital",
+        "travel_summary": "Editorial overview for Kyoto, Japan.",
+        "best_season": "Spring & Autumn",
+        "recommended_window": "Spring & Autumn",
+        "recommended_reason": "Optimal temperatures (3°C–29°C) based on historical weather.",
+        "temperature_range": "3°C–29°C",
+        "weather_basis": "based on historical weather",
+        "weather_source": "Open-Meteo Historical Archive (2021-2025)",
+        "recommended_trip_days": "4-5 Days",
+        "season_cards": [
+          {
+            "name": "Spring",
+            "months": "March–May",
+            "avg_temp_range": "3°C–23°C",
+            "avg_rainfall": "170 mm/mo",
+            "description": "Comfortable mild days as sakura cherry blossoms blanket temple gardens."
+          },
+          {
+            "name": "Summer",
+            "months": "June–August",
+            "avg_temp_range": "18°C–33°C",
+            "avg_rainfall": "230 mm/mo",
+            "description": "Warm summer days with riverside dining along the Kamogawa decks."
+          },
+          {
+            "name": "Autumn",
+            "months": "September–November",
+            "avg_temp_range": "7°C–29°C",
+            "avg_rainfall": "122 mm/mo",
+            "description": "Crisp afternoons with vibrant red maple foliage across temple courtyards."
+          },
+          {
+            "name": "Winter",
+            "months": "December–February",
+            "avg_temp_range": "-1°C–11°C",
+            "avg_rainfall": "53 mm/mo",
+            "description": "Quiet, reflective days with occasional snow dusting traditional roofs."
+          }
+        ],
+        "budget_model": {
+          "basis": "model estimate",
+          "source": "World Bank ICP Price Level Ratios (PA.NUS.PPPC.RF)",
+          "icp_ratio": 0.78,
+          "tiers": {
+            "budget": {
+              "daily_total_usd": 39,
+              "daily_total_local": 5900,
+              "daily_total_inr": 3257,
+              "currency": "JPY",
+              "breakdown_usd": {
+                "stay": 17,
+                "food": 12,
+                "local_transport": 4,
+                "activities": 4,
+                "buffer": 2
+              },
+              "breakdown_local": {
+                "stay": 2600,
+                "food": 1800,
+                "local_transport": 600,
+                "activities": 600,
+                "buffer": 300
+              },
+              "breakdown_inr": {
+                "stay": 1420,
+                "food": 1002,
+                "local_transport": 334,
+                "activities": 334,
+                "buffer": 167
+              }
+            },
+            "mid_range": {
+              "daily_total_usd": 101,
+              "daily_total_local": 15400,
+              "daily_total_inr": 8434,
+              "currency": "JPY",
+              "breakdown_usd": {
+                "stay": 51,
+                "food": 27,
+                "local_transport": 9,
+                "activities": 8,
+                "buffer": 6
+              },
+              "breakdown_local": {
+                "stay": 7800,
+                "food": 4100,
+                "local_transport": 1400,
+                "activities": 1200,
+                "buffer": 900
+              },
+              "breakdown_inr": {
+                "stay": 4259,
+                "food": 2255,
+                "local_transport": 752,
+                "activities": 668,
+                "buffer": 501
+              }
+            },
+            "comfortable": {
+              "daily_total_usd": 218,
+              "daily_total_local": 33100,
+              "daily_total_inr": 18203,
+              "currency": "JPY",
+              "breakdown_usd": {
+                "stay": 117,
+                "food": 55,
+                "local_transport": 20,
+                "activities": 16,
+                "buffer": 10
+              },
+              "breakdown_local": {
+                "stay": 17800,
+                "food": 8400,
+                "local_transport": 3000,
+                "activities": 2400,
+                "buffer": 1500
+              },
+              "breakdown_inr": {
+                "stay": 9770,
+                "food": 4593,
+                "local_transport": 1670,
+                "activities": 1336,
+                "buffer": 835
+              }
+            }
+          },
+          "assumed_style": {
+            "budget": "Traditional hostel dorm or capsule hotel, ramen/conbini dining, subway & bus day passes.",
+            "mid_range": "Modern machiya townhouse hotel, neighborhood izakaya dining & matcha cafes, Kyoto city subway.",
+            "comfortable": "Luxury ryokan with private cedar onsen bath, multi-course kaiseki dining, private driver."
+          }
+        }
+      },
+      "nearby_places": [
+        {
+          "place_id": "poi_kiyomizu_dera",
+          "name": "Kiyomizu-dera",
+          "formatted_address": "清水寺, 清水坂, 清水二丁目, 辰巳町, 東山区, 京都市, 京都府, 605-0862, 日本",
+          "latitude": 34.994303,
+          "longitude": 135.7844389,
+          "types": [
+            "buddhist_temple",
+            "historic_landmark",
+            "viewpoint"
+          ],
+          "distance_km": 2.4,
+          "maps_url": "https://maps.google.com/?q=Kiyomizu-dera%20Kyoto",
+          "category": "Ancient Temple",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:18.218Z"
+          }
+        },
+        {
+          "place_id": "poi_fushimi_inari",
+          "name": "Fushimi Inari-taisha",
+          "formatted_address": "伏見稲荷大社, 伏見区, 京都市, 京都府, 612-0882, 日本",
+          "latitude": 34.9675192,
+          "longitude": 135.7797101,
+          "types": [
+            "shinto_shrine",
+            "historic_landmark",
+            "hiking"
+          ],
+          "distance_km": 5,
+          "maps_url": "https://maps.google.com/?q=Fushimi%20Inari-taisha%20Kyoto",
+          "category": "Shinto Shrine",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:19.902Z"
+          }
+        },
+        {
+          "place_id": "poi_kinkaku_ji",
+          "name": "Kinkaku-ji (Golden Pavilion)",
+          "formatted_address": "金閣寺, 金閣寺町, 馬喰町, 北区, 京都市, 京都府, 603-8361, 日本",
+          "latitude": 35.0395293,
+          "longitude": 135.7295373,
+          "types": [
+            "buddhist_temple",
+            "unesco_heritage"
+          ],
+          "distance_km": 4.7,
+          "maps_url": "https://maps.google.com/?q=Kinkaku-ji%20(Golden%20Pavilion)%20Kyoto",
+          "category": "Zen Temple",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:21.646Z"
+          }
+        },
+        {
+          "place_id": "poi_arashiyama_bamboo",
+          "name": "Arashiyama Bamboo Grove",
+          "formatted_address": "嵐山竹林, 竹林の道, 嵯峨野々宮町, 右京区, 京都市, 京都府, 616-0000, 日本",
+          "latitude": 35.0167419,
+          "longitude": 135.6711482,
+          "types": [
+            "natural_feature",
+            "scenic",
+            "forest"
+          ],
+          "distance_km": 8.9,
+          "maps_url": "https://maps.google.com/?q=Arashiyama%20Bamboo%20Grove%20Kyoto",
+          "category": "Bamboo Forest",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:23.362Z"
+          }
+        },
+        {
+          "place_id": "poi_gion_district",
+          "name": "Gion Historic District",
+          "formatted_address": "祇園, 東山区, 京都市, 京都府, 日本",
+          "latitude": 35.0046897,
+          "longitude": 135.778403,
+          "types": [
+            "historic_district",
+            "cultural"
+          ],
+          "distance_km": 1.2,
+          "maps_url": "https://maps.google.com/?q=Gion%20Historic%20District%20Kyoto",
+          "category": "Historic Quarter",
+          "rating": null,
+          "user_ratings_total": null,
+          "data_source": {
+            "coordinates": "Nominatim OpenStreetMap",
+            "fetched_at": "2026-10-31T19:12:24.785Z"
+          }
+        }
+      ],
+      "performance": {
+        "total_seconds": 1.45
+      }
+    }
+  }
+}
