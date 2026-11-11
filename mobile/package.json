@@ -53,7 +53,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test:contrast": "tsx scripts/validate-atmosphere-contrast.ts"
+    "test:contrast": "tsx scripts/validate-atmosphere-contrast.ts",
+    "test:contract": "node ./scripts/test-mobile-contract.js",
+    "test:storage": "node ./scripts/test-saved-places-contract.js"
   },
   "private": true
 }
