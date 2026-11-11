@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: Colors.racingRed, // Primary brand action color #EB2627
     minHeight: 54, // Generous touch target
-    borderRadius: Radius.lg + 4, // 14px refined radius matching ReelInput
+    borderRadius: Radius.lg + 4, // 14px refined radius
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
