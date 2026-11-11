@@ -110,6 +110,29 @@ class TestWaitlistSupabaseSchema(unittest.TestCase):
         self.assertIn("REVOKE ALL ON public.waitlist_signups FROM anon, authenticated;", schema_content)
         self.assertIn("GRANT ALL ON public.waitlist_signups TO service_role;", schema_content)
 
+    def test_migration_sql_syntax_cleanliness(self):
+        """Verify migration file contains clean, terminating SQL without stray tokens."""
+        content = self.migration_file.read_text(encoding="utf-8").strip()
+        self.assertTrue(content.endswith(";"), "Migration must terminate with a valid SQL statement ending in ';'")
+        self.assertNotIn("`", content, "Migration must not contain stray Markdown backticks")
+
+    def test_waitlist_api_route_contract(self):
+        """Verify waitlist API route handler implements RLS service role isolation and 23505 duplicate handling."""
+        route_file = self.repo_root / "landing" / "app" / "api" / "waitlist" / "route.ts"
+        self.assertTrue(route_file.exists(), f"Route file missing: {route_file}")
+        route_content = route_file.read_text(encoding="utf-8")
+        
+        # Must catch Postgres 23505 unique_violation
+        self.assertIn("23505", route_content)
+        self.assertIn("idx_waitlist_signups_email_lower", route_content)
+        
+        # Must use getSupabaseServerClient with service role
+        self.assertIn("getSupabaseServerClient", route_content)
+        
+        # Must enforce rate limiting and consent
+        self.assertIn("isRateLimited", route_content)
+        self.assertIn("consent !== true", route_content)
+
 
 if __name__ == "__main__":
     unittest.main()

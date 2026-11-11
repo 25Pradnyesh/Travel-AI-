@@ -50,5 +50,3 @@ REVOKE ALL ON public.waitlist_signups FROM anon, authenticated;
 
 -- Grant full management permissions strictly to service_role (backend API)
 GRANT ALL ON public.waitlist_signups TO service_role;
-
- `
