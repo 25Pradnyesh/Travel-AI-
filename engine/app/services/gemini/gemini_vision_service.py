@@ -25,7 +25,7 @@ class GeminiVisionService:
             Path(__file__).resolve().parents[3]
             / ".env"
         )
-        load_dotenv(env_path, override=True)
+        load_dotenv(env_path, override=False)
 
         self.api_key = os.getenv("GEMINI_API_KEY")
         self.model = None
@@ -182,4 +182,4 @@ Vegetation: {scene_info.get('vegetation', 'None')}
             result = self.parser.empty("Unverified (vision skipped)")
             result["status"] = "Unverified (vision skipped)"
             result["scene"] = scene_info
-            return result
+            return result

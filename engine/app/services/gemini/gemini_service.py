@@ -19,7 +19,7 @@ class GeminiService:
 
         load_dotenv(
             env_path,
-            override=True,
+            override=False,
         )
 
         self.api_key = os.getenv(
@@ -203,4 +203,4 @@ class GeminiService:
             )
 
         except Exception:
-            return False
+            return False
