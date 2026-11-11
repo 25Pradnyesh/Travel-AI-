@@ -12,10 +12,13 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Shadows, Spacing, TouchTarget } from '@/constants/theme';
+import { GlassView } from './GlassView';
 import { openInExternalMaps } from '@/lib/maps';
 import { formatCoordinates, formatDistance } from '@/lib/utils';
+import { isDemoModeActive } from '@/lib/demo/demo-mode';
 import { NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface PlaceBottomSheetProps {
   place: NearbyPlace | null;
@@ -78,6 +81,7 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
 
   const toggleExpand = () => {
     const nextState = !isExpanded;
+    logTap('PlaceBottomSheet:ToggleExpand', { nextState });
     setIsExpanded(nextState);
     if (nextState) {
       hapticFeedback.selection();
@@ -93,6 +97,7 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
   };
 
   const handleCollapse = () => {
+    logTap('PlaceBottomSheet:Collapse');
     setIsExpanded(false);
     hapticFeedback.light();
     Animated.spring(animatedTranslateY, {
@@ -151,7 +156,7 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
 
   const formattedDist = formatDistance(place.distance_km);
   const formattedCoords = formatCoordinates(place.latitude, place.longitude);
-  const hasRating = place.rating != null && place.rating > 0;
+  const hasRating = !isDemoModeActive() && place.rating != null && place.rating > 0;
   const categoryLabel = isPrimary ? 'DESTINATION' : (place.category || 'POINT OF INTEREST').toUpperCase();
 
   const handleOpenMaps = async () => {
@@ -167,6 +172,7 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
 
   return (
     <Animated.View
+      pointerEvents={place ? 'auto' : 'none'}
       style={[
         styles.sheetContainer,
         {
@@ -176,6 +182,14 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
         },
       ]}
     >
+      <GlassView
+        variant="sheet"
+        borderRadius={Radius.xxl}
+        hasBorder={true}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
+
       {/* Drag handle area */}
       <View {...panResponder.panHandlers} style={styles.handleWrapper}>
         <Pressable onPress={toggleExpand} style={styles.handlePressable} hitSlop={12}>
@@ -187,7 +201,6 @@ export const PlaceBottomSheet: React.FC<PlaceBottomSheetProps> = React.memo(({
       <View style={styles.metaHeader}>
         <View style={styles.badgeRow}>
           <View style={[styles.categoryPill, isPrimary && styles.primaryCategoryPill]}>
-            <View style={[styles.categoryDot, isPrimary && styles.primaryCategoryDot]} />
             <Text style={styles.categoryText}>{categoryLabel}</Text>
           </View>
 
@@ -407,11 +420,10 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(10, 20, 28, 0.94)',
+    backgroundColor: 'transparent',
     borderTopLeftRadius: Radius.xxl,
     borderTopRightRadius: Radius.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.16)',
+    overflow: 'hidden',
     ...Shadows.lg,
     zIndex: 1000,
     paddingHorizontal: Spacing.base,
@@ -455,15 +467,6 @@ const styles = StyleSheet.create({
   primaryCategoryPill: {
     backgroundColor: 'rgba(235, 38, 39, 0.15)',
     borderColor: 'rgba(235, 38, 39, 0.40)',
-  },
-  categoryDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.icyBlue,
-  },
-  primaryCategoryDot: {
-    backgroundColor: Colors.racingRed,
   },
   categoryText: {
     fontFamily: Fonts.sansBold,

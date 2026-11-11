@@ -5,9 +5,11 @@ import {
   ScrollView,
   Share,
   StyleSheet,
+  Text,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { useBackNavigation } from '@/lib/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -20,7 +22,7 @@ import {
   SurroundingPlacesSection,
 } from '@/components/results';
 import { AtmosphereBackground, EmptyState } from '@/components/ui';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { resolvePalette } from '@/lib/atmosphere/palette-resolver';
 import { PlaceAtmosphereInput } from '@/types/atmosphere';
@@ -31,13 +33,28 @@ import { NearbyPlace, TravelIntelligence } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
 
 import { buildLocationSubtitle } from '@/lib/location/display-name';
+import { useDemoMode } from '@/lib/demo/demo-mode';
 
 export default function ResultsScreen() {
   const insets = useSafeAreaInsets();
-  const { data, sourceUrl } = analysisStore.getAnalysisResult();
+  const { isDemoMode, activeScenario } = useDemoMode();
+  const storeResult = analysisStore.getAnalysisResult();
+  const data = isDemoMode ? activeScenario.data : storeResult.data;
+  const sourceUrl = isDemoMode ? activeScenario.sourceUrl : storeResult.sourceUrl;
   const { isSaved, toggleSave } = useSavedPlaces();
   const { setActivePlace } = useAtmosphere();
   const entranceFade = useRef(new Animated.Value(0)).current;
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // When active scenario changes in demo mode, scroll to top immediately
+  useEffect(() => {
+    if (isDemoMode) {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: false });
+      }
+      setPhotoIndex(0);
+    }
+  }, [isDemoMode, activeScenario.id]);
 
   useEffect(() => {
     Animated.timing(entranceFade, {
@@ -102,11 +119,14 @@ export default function ResultsScreen() {
 
   const placePalette = useMemo(() => resolvePalette(placeAtmosphereInput), [placeAtmosphereInput]);
 
-  useEffect(() => {
-    if (placeAtmosphereInput) {
-      setActivePlace(placeAtmosphereInput, photoAuthor);
-    }
-  }, [placeAtmosphereInput, photoAuthor, setActivePlace]);
+  // Restore destination atmosphere on focus when returning from map or place detail
+  useFocusEffect(
+    useCallback(() => {
+      if (placeAtmosphereInput) {
+        setActivePlace(placeAtmosphereInput, photoAuthor);
+      }
+    }, [placeAtmosphereInput, photoAuthor, setActivePlace])
+  );
 
   // Curated travel advice tips
   const tipsList = useMemo(() => {
@@ -129,9 +149,7 @@ export default function ResultsScreen() {
     return list;
   }, [ti.travel_tips]);
 
-  const handleBack = React.useCallback(() => {
-    router.replace('/');
-  }, []);
+  const handleBack = useBackNavigation('/(tabs)');
 
   const handleOpenMap = React.useCallback(() => {
     router.push('/analyze/map');
@@ -252,6 +270,7 @@ export default function ResultsScreen() {
       >
         <Animated.View style={[styles.flex, { opacity: entranceFade }]}>
           <ScrollView
+            ref={scrollViewRef}
             contentContainerStyle={[
               styles.scrollContent,
               { paddingBottom: scrollBottomPadding },
@@ -260,6 +279,7 @@ export default function ResultsScreen() {
           >
             {/* 1. Full-Bleed Destination Hero Viewport */}
             <ResultHero
+              imageUrl={isDemoMode ? activeScenario.bundledPhotoAsset : heroImageUrl}
               destinationName={bestGuess.name}
               locationSubtitle={locationSubtitle}
               photoCount={photosList.length}
@@ -271,6 +291,15 @@ export default function ResultsScreen() {
               onBack={handleBack}
               onShare={handleShare}
             />
+
+            {/* Demo data badge */}
+            {isDemoMode && (
+              <View style={styles.demoBanner}>
+                <Text style={styles.demoBannerText}>Demo data · Sample output</Text>
+              </View>
+            )}
+
+
 
             {/* 2. Location Details Panel (ConfidenceBadge & Factual 5-line Overview / Editorial Summary) */}
             <DestinationIdentity
@@ -320,6 +349,43 @@ export default function ResultsScreen() {
 }
 
 const styles = StyleSheet.create({
+
+  demoBanner: {
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    alignSelf: 'center',
+
+    backgroundColor: 'rgba(16, 25, 34, 0.85)',
+
+    borderWidth: 1,
+
+    borderColor: 'rgba(232, 168, 56, 0.40)',
+
+    borderRadius: Radius.pill,
+
+    paddingHorizontal: Spacing.base,
+
+    paddingVertical: 6,
+
+    gap: 6,
+
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  demoBannerText: {
+
+    fontFamily: Fonts.sansMedium,
+
+    fontSize: 12,
+
+    color: '#f6d365',
+
+    letterSpacing: 0.3,
+
+  },
   screen: {
     flex: 1,
     backgroundColor: 'transparent',

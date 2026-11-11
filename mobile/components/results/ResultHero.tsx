@@ -10,8 +10,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
-import { ConfidenceBadge, GlassView } from '@/components/ui';
+import { ConfidenceBadge } from '@/components/ui';
 import { hapticFeedback } from '@/lib/haptics';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface ResultHeroProps {
   imageUrl?: string | number | null;
@@ -90,6 +91,7 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
         {/* Floating frosted Back pill */}
         <Pressable
           onPress={() => {
+            logTap('ResultHero:Back');
             hapticFeedback.light();
             onBack();
           }}
@@ -99,20 +101,17 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           accessibilityLabel="Back to Analyze"
           style={({ pressed }) => [styles.pillButton, pressed && styles.pressed]}
         >
-          <GlassView
-            variant="dark"
-            borderRadius={Radius.pill}
-            style={styles.pillGlass}
-          >
+          <View style={styles.pillGlass}>
             <Ionicons name="arrow-back" size={16} color={Colors.ivoryMist} />
             <Text style={styles.pillText}>Back</Text>
-          </GlassView>
+          </View>
         </Pressable>
 
         {/* Floating dark Share pill (if share handler present) */}
         {onShare ? (
           <Pressable
             onPress={() => {
+              logTap('ResultHero:Share');
               hapticFeedback.light();
               onShare();
             }}
@@ -122,14 +121,10 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
             accessibilityLabel="Share destination dossier"
             style={({ pressed }) => [styles.pillButton, pressed && styles.pressed]}
           >
-            <GlassView
-              variant="dark"
-              borderRadius={Radius.pill}
-              style={styles.pillGlass}
-            >
+            <View style={styles.pillGlass}>
               <Ionicons name="share-outline" size={16} color={Colors.ivoryMist} />
               <Text style={styles.pillText}>Share</Text>
-            </GlassView>
+            </View>
           </Pressable>
         ) : null}
       </View>
@@ -189,9 +184,9 @@ export const ResultHero: React.FC<ResultHeroProps> = React.memo(({
           {destinationName}
         </Text>
 
-        {/* Location Hierarchy Pill — only rendered if it adds information beyond the title */}
+        {/* Location Hierarchy Line — no pill, legibility via text shadow only */}
         {isLocationPillInformative(destinationName, locationSubtitle) ? (
-          <View style={styles.locationPill}>
+          <View style={styles.locationLine}>
             <Ionicons name="location-sharp" size={13} color={Colors.icyBlue} />
             <Text
               style={styles.locationSubtitle}
@@ -311,26 +306,23 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-  locationPill: {
+  locationLine: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(8, 18, 24, 0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
-    borderRadius: Radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     gap: 6,
     marginTop: 8,
     maxWidth: '96%',
   },
   locationSubtitle: {
     fontFamily: Fonts.sansMedium,
-    fontSize: 13,
-    lineHeight: 17,
+    fontSize: 14,
+    lineHeight: 18,
     color: Colors.ivoryMist,
     letterSpacing: -0.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 6,
   },
   pressed: {
     opacity: 0.8,

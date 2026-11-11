@@ -18,6 +18,14 @@ import { hapticFeedback } from '@/lib/haptics';
 import { saveAnalysisToCloudHistory } from '@/lib/supabase';
 
 import { useAtmosphere } from '@/context/AtmosphereContext';
+import { useBackNavigation } from '@/lib/navigation';
+import {
+  useDemoMode,
+  getActiveDemoScenario,
+  isDemoModeActive,
+  setActiveDemoScenario,
+  DemoScenarioId,
+} from '@/lib/demo/demo-mode';
 
 function shortenReelUrl(fullUrl?: string): string {
   if (!fullUrl) return '';
@@ -34,8 +42,8 @@ function shortenReelUrl(fullUrl?: string): string {
 
 export default function ProcessingScreen() {
   const insets = useSafeAreaInsets();
-  const { resetActivePlace } = useAtmosphere();
-  const { url } = useLocalSearchParams<{ url?: string }>();
+  const { resetActivePlace, setActivePlace } = useAtmosphere();
+  const { url, scenarioId } = useLocalSearchParams<{ url?: string; scenarioId?: string }>();
   const [stageIndex, setStageIndex] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +52,7 @@ export default function ProcessingScreen() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const isAnalyzingRef = useRef(false);
+  const { isDemoMode } = useDemoMode();
 
   const runAnalysis = useCallback(async (targetUrl: string) => {
     if (isAnalyzingRef.current) return;
@@ -64,6 +73,44 @@ export default function ProcessingScreen() {
     abortControllerRef.current = controller;
 
     try {
+      if (isDemoModeActive()) {
+        if (scenarioId === 'jeju' || scenarioId === 'rome' || scenarioId === 'kyoto') {
+          await setActiveDemoScenario(scenarioId as DemoScenarioId);
+        }
+        const scenario = getActiveDemoScenario();
+
+        // Run ~6s authentic processing animation
+        await new Promise((r) => setTimeout(r, 1500));
+        setStageIndex(1);
+        await new Promise((r) => setTimeout(r, 1700));
+        setStageIndex(2);
+        await new Promise((r) => setTimeout(r, 1600));
+        setStageIndex(3);
+        await new Promise((r) => setTimeout(r, 1200));
+
+        // Crossfade background to the scenario photo as analysis completes
+        if (scenario.data?.best_guess) {
+          setActivePlace({
+            place_id: scenario.primaryPlaceId,
+            name: scenario.data.best_guess.name,
+            city: scenario.data.best_guess.city,
+            region: scenario.data.best_guess.region,
+            country: scenario.data.best_guess.country,
+            heroPhotoUrl: null,
+          });
+        }
+
+        hapticFeedback.success();
+        setIsLoading(false);
+        analysisStore.setAnalysisResult(scenario.data, targetUrl);
+
+        router.replace({
+          pathname: '/analyze/results',
+          params: { url: targetUrl, isDemo: 'true' },
+        });
+        return;
+      }
+
       const response = await travelAiApi.analyzeReel(targetUrl, {
         signal: controller.signal,
       });
@@ -174,7 +221,7 @@ export default function ProcessingScreen() {
     };
   }, [isLoading]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     isAnalyzingRef.current = false;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -183,9 +230,14 @@ export default function ProcessingScreen() {
     if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/');
+      router.replace({
+        pathname: '/(tabs)',
+        params: url ? { preserveUrl: url } : undefined,
+      });
     }
-  };
+  }, [url]);
+
+  useBackNavigation('/(tabs)', handleCancel);
 
   const handleRetry = () => {
     if (url) {
@@ -193,7 +245,7 @@ export default function ProcessingScreen() {
     } else if (router.canGoBack()) {
       router.back();
     } else {
-      router.replace('/');
+      router.replace('/(tabs)');
     }
   };
 
@@ -216,6 +268,11 @@ export default function ProcessingScreen() {
           <>
             {/* Status Line: Instrument Serif Italic "Finding your place." */}
             <ProcessingHero isLongRunning={isLongRunning} />
+            {isDemoMode && (
+              <View style={styles.demoBadgeRow}>
+                <Text style={styles.demoBadgeText}>Demo data</Text>
+              </View>
+            )}
 
             {/* Centered Large Reticle with Ivory strokes, Icy Blue sweep, and Racing Red center dot */}
             <ProcessingIndicator />
@@ -259,6 +316,26 @@ export default function ProcessingScreen() {
 }
 
 const styles = StyleSheet.create({
+  demoBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    backgroundColor: 'rgba(16, 25, 34, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 168, 56, 0.45)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
+    gap: 6,
+    marginTop: -8,
+    marginBottom: Spacing.sm,
+  },
+  demoBadgeText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 12,
+    color: '#f6d365',
+    letterSpacing: 0.3,
+  },
   scrollContent: {
     flexGrow: 1,
     paddingBottom: 130,

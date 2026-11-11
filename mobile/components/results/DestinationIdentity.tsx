@@ -13,6 +13,7 @@ export interface DestinationIdentityProps {
   editorialSummary?: string | null;
   why?: string;
   geminiReason?: string;
+  children?: React.ReactNode;
 }
 
 export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
@@ -21,6 +22,7 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
   category,
   overview,
   editorialSummary,
+  children,
 }) => {
   const hasStatus = Boolean(verificationStatus || (confidence !== undefined && confidence !== null));
 
@@ -65,7 +67,6 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
 
           {category ? (
             <View style={styles.categoryPill}>
-              <View style={styles.categoryDot} />
               <Text style={styles.categoryText}>{category.toUpperCase()}</Text>
             </View>
           ) : null}
@@ -100,6 +101,9 @@ export const DestinationIdentity: React.FC<DestinationIdentityProps> = ({
             </View>
           )}
         </View>
+
+        {/* Children (e.g. Travel Dossier rows sharing this single blurred glass panel) */}
+        {children}
       </GlassView>
     </View>
   );
@@ -133,12 +137,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     gap: 5,
-  },
-  categoryDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.icyBlue,
   },
   categoryText: {
     fontFamily: Fonts.sansBold,

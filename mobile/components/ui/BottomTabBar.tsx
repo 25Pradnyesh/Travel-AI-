@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { GlassView } from './GlassView';
 import { hapticFeedback } from '@/lib/haptics';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface BottomTabBarProps {
   state: any;
@@ -76,8 +77,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
     >
       <GlassView
         borderRadius={Radius.pill}
-        intensity={75}
-        variant="dark"
+        variant="tabBar"
         style={styles.glassPill}
       >
         <View style={styles.tabRow}>
@@ -91,6 +91,7 @@ export const BottomTabBar: React.FC<BottomTabBarProps> = ({
             const { options } = descriptors[route.key];
 
             const onPress = () => {
+              logTap('BottomTabBar:TabPress', { tab: tab.name, isFocused });
               if (!isFocused) {
                 hapticFeedback.selection();
               }
@@ -156,9 +157,6 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     height: 56,
     justifyContent: 'center',
-    backgroundColor: 'rgba(8, 14, 18, 0.90)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.16)',
   },
   tabRow: {
     flexDirection: 'row',

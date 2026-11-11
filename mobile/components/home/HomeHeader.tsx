@@ -5,6 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
+import { DemoModePill } from '@/components/ui/DemoModePill';
+import { useDemoMode } from '@/lib/demo/demo-mode';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface HomeHeaderProps {
   onPressHistory?: () => void;
@@ -18,23 +21,27 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   userName,
 }) => {
   const insets = useSafeAreaInsets();
+  const { isRecordingMode } = useDemoMode();
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top, Spacing.base) }]}>
       <View style={styles.contentRow}>
-        {/* Brand Wordmark in dark frosted pill for 100% readability over sky atmosphere */}
-        <View style={styles.brandPill}>
-          <Text style={styles.brandText}>VAMO</Text>
-          <View style={styles.brandDot} />
+        {/* Brand Wordmark & Demo Mode Pill */}
+        <View style={styles.leftRow}>
+          <View style={styles.brandPill}>
+            <Text style={styles.brandText}>VAMO</Text>
+          </View>
+          <DemoModePill />
         </View>
 
         {/* Right Actions: DEV Sink, History toggle, Avatar */}
         <View style={styles.actionsRow}>
           {/* Dev-only shortcuts */}
-          {__DEV__ && (
+          {Boolean(__DEV__ && !isRecordingMode) && (
             <>
               <Pressable
                 onPress={() => {
+                  logTap('HomeHeader:Photos');
                   hapticFeedback.selection();
                   router.push('/dev/backgrounds' as any);
                 }}
@@ -50,6 +57,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
               <Pressable
                 onPress={() => {
+                  logTap('HomeHeader:UISink');
                   hapticFeedback.selection();
                   router.push('/dev/kitchen-sink' as any);
                 }}
@@ -69,6 +77,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
           {onPressProfile && (
             <Pressable
               onPress={() => {
+                logTap('HomeHeader:ProfileAvatar');
                 hapticFeedback.light();
                 onPressProfile();
               }}
@@ -99,6 +108,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     minHeight: 44,
   },
+  leftRow: {
+
+    flexDirection: 'row',
+
+    alignItems: 'center',
+
+    gap: Spacing.sm,
+
+  },
+
   brandPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -115,12 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     letterSpacing: 2.2,
     color: Colors.ivoryMist,
-  },
-  brandDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.racingRed,
   },
   actionsRow: {
     flexDirection: 'row',

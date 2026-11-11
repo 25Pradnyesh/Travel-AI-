@@ -1,3 +1,5 @@
+import { isRecordingModeActive } from './demo/demo-mode';
+
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
 export interface ToastItem {
@@ -14,8 +16,12 @@ let toastCounter = 0;
 
 /**
  * Dispatch a toast notification to the global toast queue.
+ * In recording mode, warning toasts are suppressed.
  */
 export const showToast = (message: string, type: ToastType = 'info', duration?: number) => {
+  if (type === 'warning' && isRecordingModeActive()) {
+    return;
+  }
   const item: ToastItem = {
     id: `toast_${Date.now()}_${++toastCounter}`,
     message,

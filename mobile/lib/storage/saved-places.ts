@@ -21,6 +21,7 @@ import {
 } from '../supabase/saved-places';
 import { SavedPlaceRow } from '../supabase/types';
 import { useAuth, registerSignOutCallback } from '../supabase/AuthContext';
+import { isDemoModeActive, DEMO_TAG, isDemoPlace } from '@/lib/demo/demo-mode';
 
 const STORAGE_KEY = '@travel_ai_saved_places_v1';
 
@@ -38,6 +39,7 @@ export interface SavedPlace {
   maps_url?: string;
   tags?: string[];
   saved_at: number;
+  is_demo?: boolean;
 }
 
 export type SaveablePlaceInput =
@@ -151,6 +153,11 @@ export function normalizeToSavedPlace(
     ? (input as any).tags.filter((t: any): t is string => typeof t === 'string')
     : [];
 
+  const isDemo = isDemoModeActive() || (input as any).is_demo === true;
+  if (isDemo && !tags.includes(DEMO_TAG)) {
+    tags.push(DEMO_TAG);
+  }
+
   const rawSavedAt = (input as SavedPlace).saved_at;
   const savedAt = isExistingSaved && typeof rawSavedAt === 'number' ? rawSavedAt : Date.now();
 
@@ -168,6 +175,7 @@ export function normalizeToSavedPlace(
     maps_url: mapsUrl,
     tags,
     saved_at: savedAt,
+    is_demo: isDemo ? true : undefined,
   };
 }
 
@@ -473,6 +481,17 @@ export function useSavedPlaces() {
     async (place: SaveablePlaceInput, photoUrl?: string): Promise<boolean> => {
       const normalized = normalizeToSavedPlace(place, photoUrl);
 
+      // DEMO MODE FLOW: Local-only, zero network, zero auth modal required
+      if (isDemoModeActive()) {
+        if (isPlaceSavedSync(normalized.id)) {
+          await removeSavedPlace(normalized.id);
+          return false;
+        } else {
+          await savePlace(place, photoUrl);
+          return true;
+        }
+      }
+
       // GUEST FLOW: Retain pending action in memory and open OAuth modal
       if (!isAuthenticated) {
         setPendingSaveAction(place, photoUrl);
@@ -530,9 +549,15 @@ export function useSavedPlaces() {
     [isAuthenticated]
   );
 
+  // Filter out demo entries when demo mode is OFF
+  const visiblePlaces = useMemo(() => {
+    if (isDemoModeActive()) return places;
+    return places.filter((p) => !isDemoPlace(p));
+  }, [places]);
+
   return {
-    savedPlaces: places,
-    savedCount: places.length,
+    savedPlaces: visiblePlaces,
+    savedCount: visiblePlaces.length,
     isLoading: loading,
     isSyncing,
     isSaved,

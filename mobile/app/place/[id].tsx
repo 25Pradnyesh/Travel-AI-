@@ -7,7 +7,8 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useBackNavigation } from '@/lib/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,8 +24,11 @@ import { PlaceAtmosphereInput } from '@/types/atmosphere';
 import { analysisStore } from '@/lib/api/analysis-store';
 import { openInExternalMaps } from '@/lib/maps';
 import { formatCoordinates, formatDistance } from '@/lib/utils';
+import { isDemoModeActive } from '@/lib/demo/demo-mode';
+import { DemoModePill } from '@/components/ui/DemoModePill';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 import { hapticFeedback } from '@/lib/haptics';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export default function PlaceDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -86,29 +90,28 @@ export default function PlaceDetailScreen() {
     return resolvePalette(placeAtmosphereInput);
   }, [placeAtmosphereInput]);
 
-  React.useEffect(() => {
-    if (placeAtmosphereInput) {
-      setActivePlace(placeAtmosphereInput);
-    }
-  }, [placeAtmosphereInput, setActivePlace]);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (placeAtmosphereInput) {
+        setActivePlace(placeAtmosphereInput);
+      }
+    }, [placeAtmosphereInput, setActivePlace])
+  );
 
-  const handleDismiss = React.useCallback(() => {
-    hapticFeedback.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/analyze/results');
-    }
-  }, []);
+  const hasAnalysis = Boolean(analysisStore.getAnalysisResult().data);
+  const fallbackRoute = hasAnalysis ? '/analyze/results' : '/(tabs)/saved';
+  const handleDismiss = useBackNavigation(fallbackRoute);
 
   const handleToggleSave = React.useCallback(async () => {
     if (!place) return;
+    logTap('PlaceDetail:ToggleSave', { placeId: place.place_id });
     hapticFeedback.light();
     await toggleSave(place, photoUrl);
   }, [place, photoUrl, toggleSave]);
 
   const handleOpenMaps = React.useCallback(async () => {
     if (!place) return;
+    logTap('PlaceDetail:OpenMaps', { name: displayName });
     hapticFeedback.light();
     await openInExternalMaps({
       latitude: place.latitude,
@@ -120,6 +123,7 @@ export default function PlaceDetailScreen() {
   }, [place, displayName]);
 
   const handleViewOnMap = React.useCallback(() => {
+    logTap('PlaceDetail:ViewOnMap');
     hapticFeedback.light();
     router.push('/analyze/map');
   }, []);
@@ -149,7 +153,7 @@ export default function PlaceDetailScreen() {
 
   const coordinatesFormatted = formatCoordinates(place.latitude, place.longitude);
   const distanceFormatted = formatDistance(place.distance_km);
-  const hasRating = place.rating != null && place.rating > 0;
+  const hasRating = !isDemoModeActive() && place.rating != null && place.rating > 0;
   const isPrimary = place.category === 'Primary Destination';
   const categoryLabel = isPrimary ? 'DESTINATION' : (place.category || 'POINT OF INTEREST').toUpperCase();
 
@@ -181,14 +185,6 @@ export default function PlaceDetailScreen() {
               pointerEvents="none"
             />
 
-            {/* Local Bottom Vignette Scrim behind text */}
-            <LinearGradient
-              colors={['transparent', 'rgba(5, 11, 14, 0.25)', 'rgba(6, 12, 16, 0.55)']}
-              locations={[0, 0.45, 1]}
-              style={styles.bottomVignette}
-              pointerEvents="none"
-            />
-
             {/* Floating Top Bar (Back and Category Pill) */}
             <View
               style={[
@@ -204,19 +200,21 @@ export default function PlaceDetailScreen() {
                 accessibilityLabel="Back"
                 style={({ pressed }) => [styles.pillBackBtn, pressed && styles.pressed]}
               >
-                <GlassView variant="frosted" borderRadius={Radius.pill} style={styles.pillBackGlass}>
+                <View style={styles.pillBackGlass}>
                   <Ionicons name="arrow-back" size={16} color={Colors.ivoryMist} />
                   <Text style={styles.pillBackText}>Back</Text>
-                </GlassView>
+                </View>
               </Pressable>
 
-              <View style={[styles.categoryBadge, isPrimary && styles.primaryCategoryBadge]}>
-                <View style={[styles.categoryDot, isPrimary && styles.primaryCategoryDot]} />
-                <Text style={styles.categoryBadgeText}>{categoryLabel}</Text>
+              <View style={styles.topBarRight}>
+                <DemoModePill compact />
+                <View style={[styles.categoryBadge, isPrimary && styles.primaryCategoryBadge]}>
+                  <Text style={styles.categoryBadgeText}>{categoryLabel}</Text>
+                </View>
               </View>
             </View>
 
-            {/* Bottom Hero Content: Title & Location Pill */}
+            {/* Bottom Hero Content: Title & Location Line (text shadow only, no pill) */}
             <View style={styles.heroBottomContent}>
               <Text
                 style={styles.heroTitle}
@@ -228,10 +226,10 @@ export default function PlaceDetailScreen() {
               </Text>
 
               {place.formatted_address ? (
-                <View style={styles.locationPill}>
+                <View style={styles.locationLine}>
                   <Ionicons name="location-sharp" size={13} color={Colors.icyBlue} />
                   <Text
-                    style={styles.locationPillText}
+                    style={styles.locationLineText}
                     numberOfLines={1}
                     adjustsFontSizeToFit={true}
                     minimumFontScale={0.85}
@@ -319,7 +317,6 @@ export default function PlaceDetailScreen() {
           <GlassView
             variant="dark"
             borderRadius={Radius.pill}
-            intensity={85}
             style={styles.floatingBar}
           >
             {/* Save Toggle */}
@@ -439,6 +436,11 @@ const styles = StyleSheet.create({
     color: Colors.ivoryMist,
     letterSpacing: -0.2,
   },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
   categoryBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -453,15 +455,6 @@ const styles = StyleSheet.create({
   primaryCategoryBadge: {
     backgroundColor: 'rgba(235, 38, 39, 0.16)',
     borderColor: 'rgba(235, 38, 39, 0.40)',
-  },
-  categoryDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.icyBlue,
-  },
-  primaryCategoryDot: {
-    backgroundColor: Colors.racingRed,
   },
   categoryBadgeText: {
     fontFamily: Fonts.sansBold,
@@ -484,26 +477,23 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 8,
   },
-  locationPill: {
+  locationLine: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(8, 18, 24, 0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
-    borderRadius: Radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
     gap: 6,
     marginTop: 8,
     maxWidth: '96%',
   },
-  locationPillText: {
+  locationLineText: {
     fontFamily: Fonts.sansMedium,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 17,
     color: Colors.ivoryMist,
     letterSpacing: -0.1,
+    textShadowColor: 'rgba(0, 0, 0, 0.90)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 6,
   },
   metaSection: {
     paddingHorizontal: Spacing.xl,
@@ -614,9 +604,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: Spacing.sm,
-    backgroundColor: 'rgba(10, 20, 28, 0.90)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,

@@ -52,9 +52,21 @@ import {
   useAuth,
 } from '@/lib/supabase';
 import { hapticFeedback } from '@/lib/haptics';
+import { useDemoMode, isDemoAnalysis } from '@/lib/demo/demo-mode';
+import { DemoModePill } from '@/components/ui/DemoModePill';
+import { logTap } from '@/lib/dev/tap-logger';
+import { useAtmosphere } from '@/context/AtmosphereContext';
 
 export default function SavedScreen() {
   const insets = useSafeAreaInsets();
+  const { resetActivePlace } = useAtmosphere();
+
+  // Reset destination atmosphere on focus so general discovery slideshow resumes
+  useFocusEffect(
+    useCallback(() => {
+      resetActivePlace();
+    }, [resetActivePlace])
+  );
   const { tab } = useLocalSearchParams<{ tab?: string }>();
   const [activeTab, setActiveTab] = useState<'saved' | 'history'>(
     tab === 'history' ? 'history' : 'saved'
@@ -72,6 +84,9 @@ export default function SavedScreen() {
   // Saved Places store hook
   const { savedPlaces, toggleSave, isLoading: isSavedLoading, isSyncing, refreshCloudPlaces } =
     useSavedPlaces();
+
+  // Demo mode hook
+  const { isDemoMode } = useDemoMode();
 
   // Auth context
   const { isAuthenticated, user } = useAuth();
@@ -331,6 +346,7 @@ export default function SavedScreen() {
         <GlassView variant="dark" borderRadius={Radius.pill} style={styles.segmentPill}>
           <Pressable
             onPress={() => {
+              logTap('SavedScreen:SelectTab', { tab: 'saved' });
               hapticFeedback.selection();
               setActiveTab('saved');
             }}
@@ -355,6 +371,7 @@ export default function SavedScreen() {
 
           <Pressable
             onPress={() => {
+              logTap('SavedScreen:SelectTab', { tab: 'history' });
               hapticFeedback.selection();
               setActiveTab('history');
             }}
@@ -378,8 +395,9 @@ export default function SavedScreen() {
           </Pressable>
         </GlassView>
 
-        {/* Header Right Actions: Sync Status Pill + Avatar */}
+        {/* Header Right Actions: Demo Pill + Sync Status Pill + Avatar */}
         <View style={styles.headerRightActions}>
+          <DemoModePill compact />
           <View style={styles.syncStatusPill}>
             {isSyncing ? (
               <View style={styles.syncRow}>
@@ -484,6 +502,7 @@ export default function SavedScreen() {
         <GlassView variant="dark" borderRadius={Radius.pill} style={styles.segmentPill}>
           <Pressable
             onPress={() => {
+              logTap('SavedScreen:SelectTab', { tab: 'saved' });
               hapticFeedback.selection();
               setActiveTab('saved');
             }}
@@ -508,6 +527,7 @@ export default function SavedScreen() {
 
           <Pressable
             onPress={() => {
+              logTap('SavedScreen:SelectTab', { tab: 'history' });
               hapticFeedback.selection();
               setActiveTab('history');
             }}

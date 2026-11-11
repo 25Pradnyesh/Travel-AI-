@@ -23,11 +23,13 @@ export interface DestinationBriefingProps {
   summary?: string;
   intelligence?: TravelIntelligence;
   tips?: string[];
+  embedded?: boolean;
 }
 
 export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
   intelligence = {},
   tips = [],
+  embedded = false,
 }) => {
   const [seasonExpanded, setSeasonExpanded] = useState(false);
   const [selectedBudgetTier, setSelectedBudgetTier] = useState<'budget' | 'mid_range' | 'comfortable'>('mid_range');
@@ -86,285 +88,298 @@ export const DestinationBriefing: React.FC<DestinationBriefingProps> = ({
 
   const currentTierData: BudgetTier | undefined = budgetModel?.tiers ? budgetModel.tiers[selectedBudgetTier] : undefined;
 
-  return (
-    <View style={styles.container}>
-      {/* Travel Dossier Section Header */}
-      <View style={styles.dossierSection}>
-        <Text style={styles.dossierTitle}>
-          Travel <Text style={styles.dossierTitleItalic}>Dossier</Text>
-        </Text>
+  const dossierContent = (
+    <View style={styles.dossierSection}>
+      <Text style={styles.dossierTitle}>
+        Travel <Text style={styles.dossierTitleItalic}>Dossier</Text>
+      </Text>
 
-        <View style={styles.rowsStack}>
-          {/* Row 1: Best Season (Based on historical weather, with expandable cards) */}
-          {hasSeason ? (
-            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.cardContainer}>
-              <Pressable
-                onPress={handleToggleSeason}
-                disabled={!hasSeasonCards}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Toggle historical weather seasons"
-                style={({ pressed }) => [styles.headerPressable, pressed && hasSeasonCards && styles.pressed]}
-              >
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="calendar-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <View style={styles.labelBadgeRow}>
-                      <Text style={styles.rowLabel}>BEST TIME TO VISIT</Text>
-                      <Text style={styles.basisTag}>based on historical weather</Text>
-                    </View>
-                    <Text style={styles.rowValue}>{bestSeasonTitle}</Text>
-                    {intelligence.recommended_reason ? (
-                      <Text style={styles.rowSubtext}>{intelligence.recommended_reason}</Text>
-                    ) : intelligence.temperature_range ? (
-                      <Text style={styles.rowSubtext}>Typical temperatures: {intelligence.temperature_range}</Text>
-                    ) : null}
-                  </View>
-                </View>
-
-                {hasSeasonCards ? (
-                  <View style={styles.circularArrowButton}>
-                    <Ionicons
-                      name={seasonExpanded ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={Colors.ivoryMist}
-                    />
-                  </View>
-                ) : null}
-              </Pressable>
-
-              {/* Expandable Season Cards */}
-              {seasonExpanded && hasSeasonCards ? (
-                <View style={styles.seasonCardsList}>
-                  {seasonCards.map((sc, index) => (
-                    <View key={index} style={styles.seasonCardItem}>
-                      <View style={styles.seasonCardHeader}>
-                        <Text style={styles.seasonCardName}>{sc.name}</Text>
-                        <Text style={styles.seasonCardMonths}>{sc.months}</Text>
-                      </View>
-                      <View style={styles.weatherMetricsRow}>
-                        <View style={styles.metricPill}>
-                          <Ionicons name="thermometer-outline" size={11} color={Colors.icyBlue} />
-                          <Text style={styles.metricText}>{sc.avg_temp_range}</Text>
-                        </View>
-                        <View style={styles.metricPill}>
-                          <Ionicons name="rainy-outline" size={11} color={Colors.icyBlue} />
-                          <Text style={styles.metricText}>{sc.avg_rainfall}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.seasonCardDesc}>{sc.description}</Text>
-                    </View>
-                  ))}
-                </View>
-              ) : null}
-            </GlassView>
-          ) : null}
-
-          {/* Row 2: Daily Budget (Transparent Model with components & INR conversion) */}
-          {hasBudget ? (
-            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.cardContainer}>
-              <Pressable
-                onPress={handleToggleBudget}
-                disabled={!hasBudgetModel}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Toggle daily budget details"
-                style={({ pressed }) => [styles.headerPressable, pressed && hasBudgetModel && styles.pressed]}
-              >
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="wallet-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <View style={styles.labelBadgeRow}>
-                      <Text style={styles.rowLabel}>DAILY BUDGET</Text>
-                      <Text style={styles.basisTag}>model estimate</Text>
-                    </View>
-
-                    {budgetModel && currentTierData ? (
-                      <View>
-                        <Text style={styles.rowValue}>
-                          {budgetModel.local_currency} {currentTierData.total_local.toLocaleString()}
-                          {'  '}
-                          <Text style={styles.secondaryCurrency}>
-                            (≈ ₹{currentTierData.total_inr.toLocaleString()})
-                          </Text>
-                        </Text>
-                        <Text style={styles.rowSubtext}>
-                          {currentTierData.name} tier • {currentTierData.style}
-                        </Text>
-                      </View>
-                    ) : (
-                      <View>
-                        <Text style={styles.rowValue}>
-                          {formattedBudget || intelligence.budget_level || 'Moderate'}
-                        </Text>
-                        {intelligence.budget_level && formattedBudget ? (
-                          <Text style={styles.rowSubtext}>{intelligence.budget_level} tier</Text>
-                        ) : null}
-                      </View>
-                    )}
-                  </View>
-                </View>
-
-                {hasBudgetModel ? (
-                  <View style={styles.circularArrowButton}>
-                    <Ionicons
-                      name={budgetExpanded ? 'chevron-up' : 'chevron-down'}
-                      size={16}
-                      color={Colors.ivoryMist}
-                    />
-                  </View>
-                ) : null}
-              </Pressable>
-
-              {/* Expandable Transparent Budget Breakdown */}
-              {budgetExpanded && budgetModel && currentTierData ? (
-                <View style={styles.budgetExpandedContent}>
-                  {/* Tier Segmented Tabs */}
-                  <View style={styles.tierTabsRow}>
-                    {(['budget', 'mid_range', 'comfortable'] as const).map((tierKey) => {
-                      const isSelected = selectedBudgetTier === tierKey;
-                      const label = budgetModel.tiers[tierKey]?.name || tierKey;
-                      return (
-                        <Pressable
-                          key={tierKey}
-                          onPress={() => {
-                            hapticFeedback.selection();
-                            setSelectedBudgetTier(tierKey);
-                          }}
-                          style={[styles.tierTab, isSelected && styles.tierTabSelected]}
-                        >
-                          <Text style={[styles.tierTabText, isSelected && styles.tierTabTextSelected]}>
-                            {label}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
-                  </View>
-
-                  {/* Component Breakdown Table */}
-                  <View style={styles.breakdownTable}>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>Accommodation (stay)</Text>
-                      <Text style={styles.breakdownValue}>
-                        {budgetModel.local_currency} {currentTierData.breakdown_local.stay.toLocaleString()}
-                        {' '}(₹{currentTierData.breakdown_inr.stay.toLocaleString()})
-                      </Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>Food & Dining</Text>
-                      <Text style={styles.breakdownValue}>
-                        {budgetModel.local_currency} {currentTierData.breakdown_local.food.toLocaleString()}
-                        {' '}(₹{currentTierData.breakdown_inr.food.toLocaleString()})
-                      </Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>Local Transport</Text>
-                      <Text style={styles.breakdownValue}>
-                        {budgetModel.local_currency} {currentTierData.breakdown_local.local_transport.toLocaleString()}
-                        {' '}(₹{currentTierData.breakdown_inr.local_transport.toLocaleString()})
-                      </Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>Activities & Sights</Text>
-                      <Text style={styles.breakdownValue}>
-                        {budgetModel.local_currency} {currentTierData.breakdown_local.activities.toLocaleString()}
-                        {' '}(₹{currentTierData.breakdown_inr.activities.toLocaleString()})
-                      </Text>
-                    </View>
-                    <View style={styles.breakdownRow}>
-                      <Text style={styles.breakdownLabel}>Buffer & Incidentals</Text>
-                      <Text style={styles.breakdownValue}>
-                        {budgetModel.local_currency} {currentTierData.breakdown_local.buffer.toLocaleString()}
-                        {' '}(₹{currentTierData.breakdown_inr.buffer.toLocaleString()})
-                      </Text>
-                    </View>
-                    <View style={[styles.breakdownRow, styles.breakdownTotalRow]}>
-                      <Text style={styles.breakdownTotalLabel}>Total Daily Estimate</Text>
-                      <Text style={styles.breakdownTotalValue}>
-                        {budgetModel.local_currency} {currentTierData.total_local.toLocaleString()}
-                        {' '}(₹{currentTierData.total_inr.toLocaleString()})
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Required Transparency Metadata */}
-                  <View style={styles.budgetMetaNotes}>
-                    <Text style={styles.metaNoteText}>• Per person • Accommodation included</Text>
-                    <Text style={styles.metaNoteText}>• Excludes: Flights, Visas, Travel insurance</Text>
-                    <Text style={styles.metaNoteText}>• Reference exchange rate date: {budgetModel.rate_date}</Text>
-                    <Text style={styles.disclaimerText}>{budgetModel.disclaimer}</Text>
-                  </View>
-                </View>
-              ) : null}
-            </GlassView>
-          ) : null}
-
-          {/* Row 3: Ideal Stay Duration */}
-          {hasStay ? (
-            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.dossierRow}>
+      <View style={styles.rowsStack}>
+        {/* Row 1: Best Season (Based on historical weather, with expandable cards) */}
+        {hasSeason ? (
+          <View style={styles.cardContainer}>
+            <Pressable
+              onPress={handleToggleSeason}
+              disabled={!hasSeasonCards}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle historical weather seasons"
+              style={({ pressed }) => [styles.headerPressable, pressed && hasSeasonCards && styles.pressed]}
+            >
               <View style={styles.rowLeft}>
                 <View style={styles.iconCircle}>
-                  <Ionicons name="time-outline" size={16} color={Colors.icyBlue} />
+                  <Ionicons name="calendar-outline" size={16} color={Colors.icyBlue} />
                 </View>
                 <View style={styles.rowTextCol}>
-                  <Text style={styles.rowLabel}>IDEAL STAY</Text>
-                  <Text style={styles.rowValue}>{intelligence.recommended_trip_days}</Text>
-                  <Text style={styles.rowSubtext}>Recommended visit duration</Text>
+                  <View style={styles.labelBadgeRow}>
+                    <Text style={styles.rowLabel}>BEST TIME TO VISIT</Text>
+                    <Text style={styles.basisTag}>based on historical weather</Text>
+                  </View>
+                  <Text style={styles.rowValue}>{bestSeasonTitle}</Text>
+                  {intelligence.recommended_reason ? (
+                    <Text style={styles.rowSubtext}>{intelligence.recommended_reason}</Text>
+                  ) : intelligence.temperature_range ? (
+                    <Text style={styles.rowSubtext}>Typical temperatures: {intelligence.temperature_range}</Text>
+                  ) : null}
                 </View>
               </View>
-            </GlassView>
-          ) : null}
 
-          {/* Row 4: Sourced Destination Tips (Hidden if none) */}
-          {hasTips ? (
-            <GlassView variant="dark" borderRadius={Radius.lg} style={styles.cardContainer}>
-              <Pressable
-                onPress={handleToggleTips}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={tipsExpanded ? 'Collapse local tips' : 'Expand local tips'}
-                style={({ pressed }) => [styles.headerPressable, pressed && styles.pressed]}
-              >
-                <View style={styles.rowLeft}>
-                  <View style={styles.iconCircle}>
-                    <Ionicons name="bulb-outline" size={16} color={Colors.icyBlue} />
-                  </View>
-                  <View style={styles.rowTextCol}>
-                    <Text style={styles.rowLabel}>DESTINATION TIPS</Text>
-                    <Text style={styles.rowValue}>{tips.length} Sourced Insights</Text>
-                    <Text style={styles.rowSubtext}>
-                      {tipsExpanded ? 'Tap to collapse' : 'Tap to expand advice'}
-                    </Text>
-                  </View>
-                </View>
+              {hasSeasonCards ? (
                 <View style={styles.circularArrowButton}>
                   <Ionicons
-                    name={tipsExpanded ? 'chevron-up' : 'chevron-down'}
+                    name={seasonExpanded ? 'chevron-up' : 'chevron-down'}
                     size={16}
                     color={Colors.ivoryMist}
                   />
                 </View>
-              </Pressable>
+              ) : null}
+            </Pressable>
 
-              {/* Inline Expanded Tips List */}
-              {tipsExpanded ? (
-                <View style={styles.expandedTipsList}>
-                  {tips.map((tip, index) => (
-                    <View key={index} style={styles.tipItem}>
-                      <View style={styles.tipDot} />
-                      <Text style={styles.tipText}>{tip}</Text>
+            {/* Expandable Season Cards */}
+            {seasonExpanded && hasSeasonCards ? (
+              <View style={styles.seasonCardsList}>
+                {seasonCards.map((sc, index) => (
+                  <View key={index} style={styles.seasonCardItem}>
+                    <View style={styles.seasonCardHeader}>
+                      <Text style={styles.seasonCardName}>{sc.name}</Text>
+                      <Text style={styles.seasonCardMonths}>{sc.months}</Text>
                     </View>
-                  ))}
+                    <View style={styles.weatherMetricsRow}>
+                      <View style={styles.metricPill}>
+                        <Ionicons name="thermometer-outline" size={11} color={Colors.icyBlue} />
+                        <Text style={styles.metricText}>{sc.avg_temp_range}</Text>
+                      </View>
+                      <View style={styles.metricPill}>
+                        <Ionicons name="rainy-outline" size={11} color={Colors.icyBlue} />
+                        <Text style={styles.metricText}>{sc.avg_rainfall}</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.seasonCardDesc}>{sc.description}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* Row 2: Daily Budget (Transparent Model with components & INR conversion) */}
+        {hasBudget ? (
+          <View style={styles.cardContainer}>
+            <Pressable
+              onPress={handleToggleBudget}
+              disabled={!hasBudgetModel}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Toggle daily budget details"
+              style={({ pressed }) => [styles.headerPressable, pressed && hasBudgetModel && styles.pressed]}
+            >
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="wallet-outline" size={16} color={Colors.icyBlue} />
+                </View>
+                <View style={styles.rowTextCol}>
+                  <View style={styles.labelBadgeRow}>
+                    <Text style={styles.rowLabel}>DAILY BUDGET</Text>
+                    <Text style={styles.basisTag}>model estimate</Text>
+                  </View>
+
+                  {budgetModel && currentTierData ? (
+                    <View>
+                      <Text style={styles.rowValue}>
+                        {budgetModel.local_currency} {currentTierData.total_local.toLocaleString()}
+                        {'  '}
+                        <Text style={styles.secondaryCurrency}>
+                          (≈ ₹{currentTierData.total_inr.toLocaleString()})
+                        </Text>
+                      </Text>
+                      <Text style={styles.rowSubtext}>
+                        {currentTierData.name} tier • {currentTierData.style}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View>
+                      <Text style={styles.rowValue}>
+                        {formattedBudget || intelligence.budget_level || 'Moderate'}
+                      </Text>
+                      {intelligence.budget_level && formattedBudget ? (
+                        <Text style={styles.rowSubtext}>{intelligence.budget_level} tier</Text>
+                      ) : null}
+                    </View>
+                  )}
+                </View>
+              </View>
+
+              {hasBudgetModel ? (
+                <View style={styles.circularArrowButton}>
+                  <Ionicons
+                    name={budgetExpanded ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    color={Colors.ivoryMist}
+                  />
                 </View>
               ) : null}
-            </GlassView>
-          ) : null}
-        </View>
+            </Pressable>
+
+            {/* Expandable Transparent Budget Breakdown */}
+            {budgetExpanded && budgetModel && currentTierData ? (
+              <View style={styles.budgetExpandedContent}>
+                {/* Tier Segmented Tabs */}
+                <View style={styles.tierTabsRow}>
+                  {(['budget', 'mid_range', 'comfortable'] as const).map((tierKey) => {
+                    const isSelected = selectedBudgetTier === tierKey;
+                    const label = budgetModel.tiers[tierKey]?.name || tierKey;
+                    return (
+                      <Pressable
+                        key={tierKey}
+                        onPress={() => {
+                          hapticFeedback.selection();
+                          setSelectedBudgetTier(tierKey);
+                        }}
+                        style={[styles.tierTab, isSelected && styles.tierTabSelected]}
+                      >
+                        <Text style={[styles.tierTabText, isSelected && styles.tierTabTextSelected]}>
+                          {label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {/* Component Breakdown Table */}
+                <View style={styles.breakdownTable}>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>Accommodation (stay)</Text>
+                    <Text style={styles.breakdownValue}>
+                      {budgetModel.local_currency} {currentTierData.breakdown_local.stay.toLocaleString()}
+                      {' '}(₹{currentTierData.breakdown_inr.stay.toLocaleString()})
+                    </Text>
+                  </View>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>Food & Dining</Text>
+                    <Text style={styles.breakdownValue}>
+                      {budgetModel.local_currency} {currentTierData.breakdown_local.food.toLocaleString()}
+                      {' '}(₹{currentTierData.breakdown_inr.food.toLocaleString()})
+                    </Text>
+                  </View>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>Local Transport</Text>
+                    <Text style={styles.breakdownValue}>
+                      {budgetModel.local_currency} {currentTierData.breakdown_local.local_transport.toLocaleString()}
+                      {' '}(₹{currentTierData.breakdown_inr.local_transport.toLocaleString()})
+                    </Text>
+                  </View>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>Activities & Sights</Text>
+                    <Text style={styles.breakdownValue}>
+                      {budgetModel.local_currency} {currentTierData.breakdown_local.activities.toLocaleString()}
+                      {' '}(₹{currentTierData.breakdown_inr.activities.toLocaleString()})
+                    </Text>
+                  </View>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownLabel}>Buffer & Incidentals</Text>
+                    <Text style={styles.breakdownValue}>
+                      {budgetModel.local_currency} {currentTierData.breakdown_local.buffer.toLocaleString()}
+                      {' '}(₹{currentTierData.breakdown_inr.buffer.toLocaleString()})
+                    </Text>
+                  </View>
+                  <View style={[styles.breakdownRow, styles.breakdownTotalRow]}>
+                    <Text style={styles.breakdownTotalLabel}>Total Daily Estimate</Text>
+                    <Text style={styles.breakdownTotalValue}>
+                      {budgetModel.local_currency} {currentTierData.total_local.toLocaleString()}
+                      {' '}(₹{currentTierData.total_inr.toLocaleString()})
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Required Transparency Metadata */}
+                <View style={styles.budgetMetaNotes}>
+                  <Text style={styles.metaNoteText}>• Per person • Accommodation included</Text>
+                  <Text style={styles.metaNoteText}>• Excludes: Flights, Visas, Travel insurance</Text>
+                  <Text style={styles.metaNoteText}>• Reference exchange rate date: {budgetModel.rate_date}</Text>
+                  <Text style={styles.disclaimerText}>{budgetModel.disclaimer}</Text>
+                </View>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        {/* Row 3: Ideal Stay Duration */}
+        {hasStay ? (
+          <View style={styles.dossierRow}>
+            <View style={styles.rowLeft}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="time-outline" size={16} color={Colors.icyBlue} />
+              </View>
+              <View style={styles.rowTextCol}>
+                <Text style={styles.rowLabel}>IDEAL STAY</Text>
+                <Text style={styles.rowValue}>{intelligence.recommended_trip_days}</Text>
+                <Text style={styles.rowSubtext}>Recommended visit duration</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Row 4: Sourced Destination Tips (Hidden if none) */}
+        {hasTips ? (
+          <View style={styles.cardContainer}>
+            <Pressable
+              onPress={handleToggleTips}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={tipsExpanded ? 'Collapse local tips' : 'Expand local tips'}
+              style={({ pressed }) => [styles.headerPressable, pressed && styles.pressed]}
+            >
+              <View style={styles.rowLeft}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="bulb-outline" size={16} color={Colors.icyBlue} />
+                </View>
+                <View style={styles.rowTextCol}>
+                  <Text style={styles.rowLabel}>DESTINATION TIPS</Text>
+                  <Text style={styles.rowValue}>{tips.length} Sourced Insights</Text>
+                  <Text style={styles.rowSubtext}>
+                    {tipsExpanded ? 'Tap to collapse' : 'Tap to expand advice'}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.circularArrowButton}>
+                <Ionicons
+                  name={tipsExpanded ? 'chevron-up' : 'chevron-down'}
+                  size={16}
+                  color={Colors.ivoryMist}
+                />
+              </View>
+            </Pressable>
+
+            {/* Inline Expanded Tips List */}
+            {tipsExpanded ? (
+              <View style={styles.expandedTipsList}>
+                {tips.map((tip, index) => (
+                  <View key={index} style={styles.tipItem}>
+                    <View style={styles.tipDot} />
+                    <Text style={styles.tipText}>{tip}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+          </View>
+        ) : null}
       </View>
+    </View>
+  );
+
+  if (embedded) {
+    return (
+      <View style={styles.containerEmbedded}>
+        {dossierContent}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <GlassView variant="dark" borderRadius={Radius.xl} style={styles.standaloneCard}>
+        {dossierContent}
+      </GlassView>
     </View>
   );
 };
@@ -373,6 +388,15 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: Spacing.xl,
     marginBottom: Spacing.xl,
+  },
+  containerEmbedded: {
+    paddingHorizontal: 0,
+    marginBottom: Spacing.md,
+  },
+  standaloneCard: {
+    padding: Spacing.base,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 244, 227, 0.12)',
   },
   dossierSection: {
     marginTop: Spacing.xs,

@@ -1,415 +1,286 @@
 <div align="center">
 
-# Travel AI
+<img src="landing/public/logo.png" alt="VAMO Logo" width="80" height="80" />
 
-### AI-powered travel discovery from Instagram Reels.
+# VAMO · Travel AI
 
-Turn short-form travel video inspiration into verified real-world destinations, interactive cartography, and offline bookmarks.
+### AI-powered travel discovery from social media video.
+
+Turn short-form travel inspiration into verified real-world destinations, climate normals, transparent budget estimates, and interactive cartography.
 
 <br />
 
+[![Status](https://img.shields.io/badge/Status-Prototype%20(Waitlist)-amber.svg?style=for-the-badge)](https://github.com/pradnesh-deshmukh/travel-ai)
 [![React Native](https://img.shields.io/badge/React%20Native-0.86-18181B?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactnative.dev)
 [![Expo](https://img.shields.io/badge/Expo-SDK%2057-18181B?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-18181B?style=for-the-badge&logo=typescript&logoColor=3178C6)](https://www.typescriptlang.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-18181B?style=for-the-badge&logo=fastapi&logoColor=009688)](https://fastapi.tiangolo.com)
-[![Python](https://img.shields.io/badge/Python-3.11+-18181B?style=for-the-badge&logo=python&logoColor=3776AB)](https://www.python.org)
-[![Google Places](https://img.shields.io/badge/Google%20Places-API-18181B?style=for-the-badge&logo=googlemaps&logoColor=EA4335)](https://developers.google.com/maps)
-[![Google Gemini](https://img.shields.io/badge/Gemini%202.5-Flash%20Vision-18181B?style=for-the-badge&logo=googlegemini&logoColor=8E75B2)](https://ai.google.dev)
+[![Next.js](https://img.shields.io/badge/Next.js-16%20Static-18181B?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Strict-18181B?style=for-the-badge&logo=typescript&logoColor=3178C6)](https://www.typescriptlang.org)
+[![OpenStreetMap](https://img.shields.io/badge/Cartography-OpenStreetMap-18181B?style=for-the-badge&logo=openstreetmap&logoColor=7EBC6F)](https://www.openstreetmap.org)
 
 </div>
 
 ---
 
-## What is Travel AI?
-
-Travelers discover extraordinary destinations through short-form social video every day: a secluded cove in Mallorca, a cliffside cafe in Amalfi, or an alpine refuge in the Dolomites. However, these videos are geographically opaque: creators omit coordinates, location tags are vague, and audio tracks rarely provide standardized addresses.
-
-**Travel AI bridges social media inspiration and real-world travel.**
-
-The primary product is a native mobile application (**React Native · Expo SDK 57 · TypeScript**) backed by a multimodal Python intelligence engine (**FastAPI**). The system reverse-engineers public Instagram Reels by extracting audio speech, on-screen text (OCR), video frames, and caption clues, resolving candidates against the Google Places directory, verifying visual landmark features using Google Gemini, and presenting actionable travel dossiers on an interactive native map.
+> [!NOTE]
+> **Project Status: Active Working Prototype**  
+> VAMO is an open-source prototype in active development. It is **not** currently published on the Apple App Store or Google Play Store. The showcase waitlist is open for early preview testing. All claims, data sources, and system capabilities below reflect the actual repository implementation.
 
 ---
 
-## What Travel AI Does
+## What is VAMO?
 
-```text
-1. Paste an Instagram Reel URL
-      ↓
-2. Travel AI analyzes the Reel
-      ↓
-3. Extracts location evidence (Whisper audio, OCR frames, caption entities)
-      ↓
-4. Resolves the destination (Google Places candidate matching & ranking)
-      ↓
-5. Verifies and enriches the result (Gemini multimodal vision verification)
-      ↓
-6. Shows travel intelligence (Seasonality, budget tier, recommended duration, tips)
-      ↓
-7. Finds nearby places (Clustered attractions, dining, cafes, hotels)
-      ↓
-8. Displays them on an interactive map (Native cartography with bottom sheet preview)
-      ↓
-9. Lets the user save places (Resilient offline travel locker)
+Travelers discover incredible destinations through short-form social video every day: a hidden cove in the Mediterranean, a quiet ramen shop in Kyoto, or an ancient alleyway in Rome. However, these videos are geographically opaque: creators omit coordinates, tag vague generic regions, and overlay background music that masks local audio clues.
+
+**VAMO bridges social video inspiration and real-world travel.**
+
+The project consists of three core components:
+1. **Mobile Application (`mobile/`):** A high-performance native iOS & Android client built with **React Native (Expo SDK 57)** and TypeScript, featuring dark atmospheric glass aesthetics, gesture-driven bottom sheets, interactive OpenStreetMap cartography, and a 100% offline demo mode.
+2. **Intelligence Engine (`engine/`):** A modular **FastAPI** backend that reverse-engineers public travel video links via audio speech transcription (Whisper), frame optical character recognition (OCR), geocoding candidate resolution (OpenStreetMap / Google Places), and multimodal landmark verification (Google Gemini).
+3. **Showcase Landing Page (`landing/`):** A static **Next.js + Tailwind CSS** export built for free hosting on Vercel, featuring a 22-photo hero slideshow, embedded demo video, and a zero-backend waitlist.
+
+---
+
+## Product Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="20%">
+        <img src="landing/public/shots/1-analyze.webp" alt="Analyze Screen" width="180" /><br />
+        <b>1. Analyze</b><br />
+        <sub>Reel URL input & demo scenario chooser</sub>
+      </td>
+      <td align="center" width="20%">
+        <img src="landing/public/shots/2-processing.webp" alt="Processing Animation" width="180" /><br />
+        <b>2. Processing</b><br />
+        <sub>Multimodal extraction stages</sub>
+      </td>
+      <td align="center" width="20%">
+        <img src="landing/public/shots/3-results.webp" alt="Results Dossier" width="180" /><br />
+        <b>3. Results Dossier</b><br />
+        <sub>Climate, budget & editorial overview</sub>
+      </td>
+      <td align="center" width="20%">
+        <img src="landing/public/shots/4-map.webp" alt="OpenStreetMap Screen" width="180" /><br />
+        <b>4. Cartography</b><br />
+        <sub>OpenStreetMap tiles & POI peek sheet</sub>
+      </td>
+      <td align="center" width="20%">
+        <img src="landing/public/shots/5-place.webp" alt="Place Detail Modal" width="180" /><br />
+        <b>5. Place Detail</b><br />
+        <sub>Verified facts, elevation & directions</sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## System Architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Client Layer"]
+        A["Instagram Reel URL"] --> B["Mobile Client\n(React Native / Expo SDK 57)"]
+        L["Showcase Landing\n(Next.js Static / Vercel)"]
+    end
+
+    subgraph MobileFeatures["Mobile Native Architecture"]
+        B --> B1["Glass UI & Atmosphere Context"]
+        B --> B2["Offline Demo Engine\n(Bundled JSON & Photos)"]
+        B --> B3["Interactive Cartography\n(react-native-maps + OSM Tiles)"]
+        B --> B4["Local Storage & Bookmarks\n(AsyncStorage Locker)"]
+    end
+
+    subgraph Backend["Engine Layer (FastAPI Service)"]
+        B -->|POST /analyze| C["FastAPI Router\n(/analyze)"]
+        C --> D["ProviderManager\n(yt-dlp Ingestion)"]
+        D --> E["Media Extraction\n(Audio Track & Video Keyframes)"]
+        
+        subgraph Pipeline["Multimodal Location Pipeline"]
+            E --> F1["Whisper Audio Transcription"]
+            E --> F2["EasyOCR Frame Text Extraction"]
+            E --> F3["Caption & Hashtag Mining"]
+            
+            F1 & F2 & F3 --> G["Candidate Matcher & Scorer"]
+            G --> H1["OpenStreetMap Nominatim\n(Default Free Provider)"]
+            G --> H2["Google Places API\n(Optional Cloud Provider)"]
+            
+            H1 & H2 --> I["Multimodal Vision Verification\n(Google Gemini 2.5 Flash)"]
+            I --> J["Travel Synthesis\n(Open-Meteo Climate + World Bank Budget)"]
+        end
+        
+        J --> K["Structured Dossier\n(AnalysisResponse JSON)"]
+    end
+
+    K -->|HTTP Response| B
 ```
 
 ---
 
-## Product Flow
+## Running on Free Providers (Zero-Cost Setup)
 
-```text
-Instagram Reel URL
-        │
-        ▼
-   Mobile App (mobile/app/(tabs)/index.tsx)
-        │  POST /analyze { reel_url }
-        ▼
-   FastAPI Engine (engine/app/api/analyze.py)
-        │
-        ▼
-Location Intelligence Pipeline (engine/app/pipelines/location_pipeline.py)
-[ProviderManager → Media Extraction → Whisper / OCR → Google Places → Gemini Vision]
-        │
-        ▼
-Structured Travel Result (AnalysisResponse)
-        │
-        ▼
-Mobile Presentation & Persistence
-[Results Dossier → Interactive Map → Surrounding Places → Offline Saved Locker]
+The entire VAMO stack can run locally or on free cloud tiers without mandatory paid subscriptions.
+
+### 1. Intelligence Engine (`engine/`)
+
+You can run the backend engine with **zero paid API keys** by using the OpenStreetMap (OSM) provider:
+
+#### Local Execution:
+```bash
+# 1. Enter the engine directory
+cd engine
+
+# 2. Create and activate a Python 3.11+ virtual environment
+python -m venv .venv
+# Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# macOS / Linux:
+source .venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Create engine/.env with free provider configuration
+# Note: APP_CONTACT must be a valid email for OSM Acceptable Use Policy compliance
+echo "PLACES_PROVIDER=osm" >> .env
+echo "APP_CONTACT=yourname@yourdomain.com" >> .env
+
+# 5. Start the FastAPI engine
+python -m uvicorn engine.app.main:app --reload --port 8000
 ```
+- API health check: `http://127.0.0.1:8000/health`
+- Interactive Swagger docs: `http://127.0.0.1:8000/docs`
+
+#### Free Cloud Hosting Options:
+- **Render / Fly.io / Railway / Hugging Face Spaces:** Deploy `engine/` as a Docker container or Python web service on their free tiers. Set environment variables `PLACES_PROVIDER=osm` and `APP_CONTACT=your-email@domain.com`.
+- **Optional Cloud AI:** To enable Gemini vision verification, add `GEMINI_API_KEY` (available with free rate-limited tier from Google AI Studio).
 
 ---
 
-## Current Features
+### 2. Mobile Client (`mobile/`)
 
-* **Instagram Reel Analysis:** Client-side URL validation, protocol normalization, and clipboard auto-detection for public Reels.
-* **Evidence-Based Identification:** Multimodal extraction combining OpenAI Whisper speech transcription, frame OCR text extraction, and caption entity mining.
-* **Destination Verification:** Truthful verification tiers (`VERIFIED`, `PARTIAL`, `SKIPPED`) backed by Google Gemini 2.5 Flash multimodal vision.
-* **Travel Intelligence:** Practical metrics including optimal visit season, daily budget tier, recommended stay duration, and curated local guidance tips.
-* **Nearby Places Discovery:** Automatically clusters surrounding points of interest categorized into Attractions, Dining, Cafes, and Hotels with ratings and distances.
-* **Interactive Cartography:** Native map canvas powered by `react-native-maps` featuring custom markers, zero-delta camera protection, and gesture-driven place bottom sheets.
-* **Place Detail Inspection:** Dedicated inspection modal (`/place/[id]`) with dual resolution across active session memory and offline storage.
-* **Explore Surface:** Aggregated discovery feed with real-time search filtering, dynamic category chips, and virtualized `<FlatList>` rendering.
-* **Supabase Cloud Authentication:** Seamless Google and Apple OAuth via `expo-web-browser` and `travelai://auth/callback` deep linking with automatic session restoration.
-* **Guest Mode Preservation:** Unauthenticated users can analyze Reels and browse discoveries with zero login wall; authentication is strictly opt-in.
-* **Guest → Auth Pending Action Preservation:** Guests who tap Bookmark are prompted to authenticate without losing their selection or re-analyzing the Reel.
-* **Cloud Analysis History:** Historical analysis dossiers persisted to Supabase with parent-child cascade deletion and strict Row Level Security.
-* **Cloud Saved Places Locker:** Cloud-synchronized bookmarking backed by `public.saved_places` with database unique constraint enforcement.
-* **Two-Device Synchronization:** Focus-based auto-refresh (`useFocusEffect`) and pull-to-refresh keep Saved Places and History synchronized across devices.
-* **Account Isolation:** Strict multi-tenant isolation via PostgreSQL RLS and automatic memory/AsyncStorage cache purging upon sign-out.
-* **Production-Safe API Configuration:** Automated release guards reject loopback, private LAN IPs, and insecure HTTP in production release builds.
-* **Native Mobile Ergonomics:** Single-thumb mobile layout, platform-aware external navigation handoffs (Apple Maps vs. Google Maps), and native tactile haptics.
-
----
-
-## Mobile Application
-
-The native mobile client in `mobile/` is the primary application surface for Travel AI.
-
-### Navigation Architecture
-
-The mobile app implements a persistent 4-tab thumb navigation shell combined with focused stack, modal, and OAuth callback screens:
-
-```text
-Travel AI App Shell
-├── Tabs (Bottom Navigation)
-│   ├── Analyze    — Reel URL input, clipboard detection, pipeline trigger
-│   ├── Explore    — Aggregated discoveries feed with search & category filtering
-│   ├── Saved      — Cloud-backed travel locker with category chips & pull-to-refresh
-│   └── Profile    — Account management, OAuth sign-in/out, History link, diagnostics
-│
-└── Stack & Modal Screens
-    ├── /analyze/processing — Multi-stage pipeline status & elapsed timer
-    ├── /analyze/results    — Editorial destination dossier & travel intelligence
-    ├── /analyze/map        — Full-screen interactive cartography canvas
-    ├── /place/[id]         — Place detail inspection modal
-    ├── /history            — User analysis history list with pull-to-refresh
-    ├── /history/[id]       — Historical analysis detail dossier & POI links
-    ├── /(auth)/login       — Google & Apple OAuth sign-in modal with guest continue
-    └── /auth/callback      — Deep-link OAuth redirect handler (travelai://auth/callback)
-```
-
-### Key Technologies
-* **Framework:** React Native (`0.86.x`), Expo (SDK 57)
-* **Routing:** Expo Router (`~57.0.x`, file-based typed routing)
-* **Language:** TypeScript (`~6.0.x`, strict mode)
-* **Cloud & Auth:** `@supabase/supabase-js` (`2.117.x`), Supabase Auth (Google & Apple OAuth)
-* **Cartography:** `react-native-maps` (`1.27.x`, Apple MapKit on iOS, Google Play Services on Android)
-* **Storage:** `@react-native-async-storage/async-storage` (`2.2.x`)
-* **Gestures & Motion:** `react-native-safe-area-context`, `react-native-gesture-handler`, `react-native-reanimated`
-* **Device Capabilities:** `expo-clipboard`, `expo-haptics`, `expo-image`, `expo-web-browser`, `expo-linking`
-
-For visual specifications and component tokens, see [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
-
----
-
-## Architecture Overview
-
-```text
-Mobile App (React Native · Expo SDK 57)
-        │
-        ▼ HTTP REST (POST /analyze, GET /health)
-FastAPI Backend (Python 3.11+)
-        │
-        ▼ Orchestration
-Intelligence Pipeline (ProviderManager → Whisper → OCR → Google Places → Gemini Vision)
-        │
-        ▼ Upstream Services
-External Providers (yt-dlp, Google Places API, Gemini 2.5 Flash)
-```
-
-The system strictly isolates responsibilities across architectural boundaries:
-* **Mobile Client (`mobile/`):** Owns UI rendering, touch ergonomics, native cartography, and offline bookmark persistence. It holds **zero** third-party API credentials.
-* **FastAPI Engine (`engine/`):** Manages video ingestion, media extraction, transcription, optical character recognition, places resolution, and multimodal verification.
-* **External Services:** Google Places API and Gemini Vision are proxied exclusively through FastAPI.
-
-For comprehensive technical specifications and dataflow models, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and the interactive Archify specifications in [docs/architecture/](docs/architecture/).
-
----
-
-## Repository Structure
-
-```text
-Travel-AI/
-├── mobile/                  # React Native + Expo mobile application (primary client)
-│   ├── app/                 # Expo Router navigation routes
-│   │   ├── (tabs)/          # Persistent 4-tab bottom navigation shell
-│   │   ├── analyze/         # Processing, results, and full-screen map screens
-│   │   └── place/[id].tsx   # Place detail inspection modal
-│   ├── components/          # Production UI & map components (buttons, badges, cards)
-│   ├── constants/           # Design tokens (theme.ts) & API configuration (config.ts)
-│   ├── lib/                 # HTTP client, analysis store, saved storage, maps handoff
-│   ├── types/               # TypeScript interfaces mirroring backend schemas
-│   ├── app.json             # Expo native manifest & application identifiers
-│   ├── eas.json             # EAS cloud build profiles (development, preview, production)
-│   └── package.json         # Mobile dependencies and npm scripts
-│
-├── web/                     # Next.js web application (desktop prototype)
-│   ├── app/                 # App Router pages and API routes
-│   ├── components/          # Web React components (destination, landing, analysis)
-│   ├── lib/                 # Web client API and context utilities
-│   ├── types/               # Web TypeScript definitions
-│   ├── public/              # Static SVG and web icons
-│   ├── next.config.ts       # Next.js compiler and build configuration
-│   └── package.json         # Web dependencies and scripts
-│
-├── engine/                  # FastAPI intelligence engine & pipelines (backend service)
-│   ├── app/                 # FastAPI application, API routes (/analyze, /health), pipelines
-│   │   ├── api/             # HTTP route handlers
-│   │   ├── pipelines/       # LocationPipeline execution controller
-│   │   └── services/        # Google Places, Gemini verifier, OCR, Whisper services
-│   ├── providers/           # Video metadata & extraction abstraction (ProviderManager)
-│   ├── tests/               # Pytest automated test suites
-│   └── requirements.txt     # Python dependencies
-│
-├── pipelines/               # Processing pipelines & pipeline prototypes
-│   └── analysis_pipeline.py # Baseline location analysis pipeline
-│
-├── docs/                    # Authoritative engineering & product documentation
-│   ├── PRD.md               # Product Requirements Document & MVP Acceptance Criteria
-│   ├── AGENTS.md            # Operating guide for AI coding agents
-│   ├── DESIGN_SYSTEM.md     # Authoritative Mobile Design System Specification
-│   ├── ARCHITECTURE.md      # Core architecture overview
-│   ├── SECURITY.md          # Security policy and secrets handling guide
-│   ├── CODE_STYLE.md        # Coding standards and style guide
-│   ├── DATABASE.md          # Data architecture and management guide
-│   ├── API.md               # API & integration communication guide
-│   ├── architecture/        # Source-grounded Archify architecture & dataflow specifications
-│   └── mobile/              # Mobile UX roadmap and screen specifications
-│
-├── assets/                  # Project static assets
-│   └── frames/              # Sample extraction video frames
-│
-├── .gitignore               # Repository-wide ignore rules
-├── .env.example             # Template environment variables
-├── LICENSE                  # Repository license
-├── package.json             # Root monorepo workspace configuration
-└── README.md                # Public overview and developer entry point
-```
-
----
-
-## Local Development
-
-### Prerequisites
-* **Node.js**: 18.0 or newer
-* **Python**: 3.11 or newer
-* **Google Places API Key**: Required for candidate resolution and nearby highlights
-* **Gemini API Key**: Required for multimodal verification
-
----
-
-### 1. Backend Setup (FastAPI Engine)
-
-1. Navigate to the `engine` directory and create a virtual environment:
-   ```bash
-   cd engine
-   python -m venv .venv
-   ```
-
-2. Activate the virtual environment:
-   * **Windows (PowerShell):**
-     ```powershell
-     .\.venv\Scripts\Activate.ps1
-     ```
-   * **macOS / Linux:**
-     ```bash
-     source .venv/bin/activate
-     ```
-
-3. Install Python dependencies:
-   ```bash
-   python -m pip install -r requirements.txt
-   ```
-
-4. Configure environment secrets in `engine/.env` (or root `.env`):
-   ```env
-   GOOGLE_PLACES_API_KEY=your_google_places_api_key
-   GEMINI_API_KEY=your_gemini_api_key
-   ```
-
-5. Start the FastAPI engine from the repository root:
-   ```bash
-   python -m uvicorn engine.app.main:app --reload --port 8000
-   ```
-   * Engine runs at `http://127.0.0.1:8000`
-   * Health status: `http://127.0.0.1:8000/health`
-   * Interactive API docs: `http://127.0.0.1:8000/docs`
-
----
-
-### 2. Mobile Setup (React Native + Expo)
-
-1. Navigate to the `mobile` directory and install dependencies:
-   ```bash
-   cd mobile
-   npm install
-   ```
-
-2. Configure environment settings in `mobile/.env` (optional in development):
-   ```env
-   EXPO_PUBLIC_API_URL=http://localhost:8000
-   ```
-   *(Defaults to `http://localhost:8000` on iOS Simulator/Web and `http://10.0.2.2:8000` on Android Emulator).*
-
-3. Start the Expo development server:
-   ```bash
-   # From mobile/ directory:
-   npm start
-   # or: npx expo start
-
-   # Or from the repository root:
-   npm run mobile:start
-   # or: npm --workspace mobile exec expo start
-   ```
-
-4. Run on your desired target:
-   * Press `i` to launch in the **iOS Simulator** (or `npm run ios`)
-   * Press `a` to launch in the **Android Emulator** (or `npm run android`)
-   * Press `w` to preview on the **Web** (or `npm run web`)
-
-5. Validate mobile health and types:
-   ```bash
-   # Run TypeScript strict typecheck
-   npx tsc --noEmit
-
-   # Check Expo project configuration & dependencies
-   npx expo-doctor
-   ```
-
----
-
-## Environment Configuration
-
-API endpoints and credentials follow a strict separation of concerns:
-
-| Variable | Scope | Target | Purpose |
-| :--- | :--- | :--- | :--- |
-| `EXPO_PUBLIC_API_URL` | Mobile (`mobile/.env`) | Client | Base URL pointing to the FastAPI engine. Required for production release builds. |
-| `GOOGLE_PLACES_API_KEY` | Backend (`engine/.env`) | Server | Google Places API (New & Legacy) for location candidate resolution and nearby highlights. |
-| `GEMINI_API_KEY` | Backend (`engine/.env`) | Server | Google Gemini API for multimodal vision verification and travel synthesis. |
-
-> [!IMPORTANT]
-> Third-party credentials (`GOOGLE_PLACES_API_KEY`, `GEMINI_API_KEY`) remain strictly server-side. The mobile application never owns or transmits third-party API keys.
->
-> In production builds (`__DEV__ = false`), silent loopback fallbacks are disabled. You must provide an explicit HTTPS `EXPO_PUBLIC_API_URL` pointing to your hosted FastAPI deployment.
-
----
-
-## Production Builds
-
-The mobile application is configured for cloud compilation via **Expo Application Services (EAS)**:
-
-* **Bundle Identifier (iOS):** `com.travelai.mobile`
-* **Package Identifier (Android):** `com.travelai.mobile`
-* **Configuration:** Centralized in [mobile/app.json](mobile/app.json) and [mobile/eas.json](mobile/eas.json)
-
-### EAS Build Profiles (`mobile/eas.json`)
-
-* **`development`:** Standalone debug build with Expo Dev Client embedded.
-* **`preview`:** Internal distribution build (`.apk` / ad-hoc `.ipa`) for testing on physical devices.
-* **`production`:** Store-ready `.aab` (Android App Bundle) and `.ipa` (iOS Archive) with automated version increments.
-
-### Build Commands
+Run the mobile app on your own physical smartphone or desktop simulator via **Expo Go** (zero Apple/Google developer fees):
 
 ```bash
-# Install EAS CLI globally
-npm install -g eas-cli
+# 1. Enter the mobile directory
+cd mobile
 
-# Trigger a preview build for physical device testing
-eas build --profile preview --platform all
+# 2. Install dependencies
+npm install
 
-# Trigger production release artifacts
-eas build --profile production --platform all
+# 3. Start the Expo development server
+npm start
+```
+- **Physical Phone (iOS or Android):** Install the free **Expo Go** app from the App Store / Google Play, and scan the terminal QR code.
+- **Simulator:** Press `i` for iOS Simulator or `a` for Android Emulator.
+
+#### 100% Offline Demo Mode (Zero Network Required)
+The mobile app includes a built-in offline demonstration engine:
+1. Open the app and navigate to **Profile > About**.
+2. Tap the **Version** row **5 times**.
+3. A **Demo mode** status pill appears in the top navigation header.
+4. On the **Analyze** tab, tap any of the 3 scenario chips (**Jeju Island**, **Rome**, **Kyoto**).
+5. The app executes the full 6.0s multimodal processing animation and renders complete destination dossiers, OpenStreetMap cartography, and place details completely offline (works in airplane mode).
+6. Enable **Recording Mode** in **Profile > Preferences** to suppress dev badges, logs, and toasts for clean presentations.
+
+---
+
+### 3. Showcase Landing Page (`landing/`)
+
+The landing page is statically pre-rendered and deployable on the **Vercel Free Tier**:
+
+```bash
+# 1. Enter the landing directory
+cd landing
+
+# 2. Install dependencies
+npm install
+
+# 3. Run production asset verification and static build
+npm run build
 ```
 
-*Note: Production store releases require an active HTTPS FastAPI engine deployment and registered developer accounts with Apple and Google. The application is not yet published on the App Store or Google Play Store.*
+#### Deploy to Vercel (Free):
+1. Import the repository at [vercel.com/new](https://vercel.com/new).
+2. Set **Root Directory** to `landing`.
+3. Set **Framework Preset** to `Next.js`.
+4. Configure optional waitlist environment variables:
+   - Formspree: `NEXT_PUBLIC_FORMSPREE_URL=https://formspree.io/f/your-form-id`
+   - Or Google Forms: `NEXT_PUBLIC_GOOGLE_FORMS_URL` and `NEXT_PUBLIC_GOOGLE_FORMS_ENTRY_ID`
+5. Click **Deploy**. Vercel will host the static export with global CDN distribution at zero cost.
 
 ---
 
-## Documentation Map
+## Data Sources & Licensing
 
-Detailed engineering, architecture, and release readiness specifications are maintained in dedicated reference documents:
+VAMO strictly utilizes verified, open-access, and truthfully attributed data sources. No user ratings or review counts are fabricated.
 
-* **[docs/RELEASE_READINESS.md](docs/RELEASE_READINESS.md):** Production readiness audit report and phase-by-phase release checklist.
-* **[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md):** Android release verification checklist and pre-submission gates.
-* **[docs/AUTHENTICATION.md](docs/AUTHENTICATION.md):** Google and Apple OAuth external setup, deep linking, and session architecture guide.
-* **[docs/PRODUCTION.md](docs/PRODUCTION.md):** Production backend deployment, containerization, and release configuration guide.
-* **[docs/TESTING.md](docs/TESTING.md):** Comprehensive test suites documentation (Pytest, Supabase TSX, Auth parser, TypeScript).
-* **[docs/BETA_TESTING.md](docs/BETA_TESTING.md):** Beta testing distribution, defect classification, and quality monitoring plan.
-* **[docs/PRD.md](docs/PRD.md):** Authoritative Product Requirements Document and MVP Definition of Done.
-* **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):** Core architecture overview, system flows, and Mermaid diagrams.
-* **[docs/DATABASE.md](docs/DATABASE.md):** Authoritative data architecture, Supabase schema, and RLS policies guide.
-* **[docs/SECURITY.md](docs/SECURITY.md):** Authoritative security, privacy, and secrets-handling guide.
-* **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md):** Mobile Design System, Swiss editorial styling, typography, and tokens.
-* **[docs/CODE_STYLE.md](docs/CODE_STYLE.md):** Authoritative coding standards and maintainability guide.
-* **[docs/API.md](docs/API.md):** Authoritative API and integration communication guide.
+| Dataset / Service | Provider | License / Terms | Application Usage |
+| :--- | :--- | :--- | :--- |
+| **Geocoding & POIs** | [OpenStreetMap](https://www.openstreetmap.org) via Nominatim & Overpass | [Open Data Commons Open Database License (ODbL)](https://opendatacommons.org/licenses/odbl/) | Landmark coordinates, boundary matching, nearby attractions, dining, and cafes. Attribution: `© OpenStreetMap contributors`. |
+| **Map Tiles** | [OpenStreetMap Standard Tile Layer](https://operations.osmfoundation.org/policies/tiles/) | [ODbL](https://opendatacommons.org/licenses/odbl/) | Native slippy map tiles in mobile interactive cartography. |
+| **Historical Climate Normals** | [Open-Meteo](https://open-meteo.com) Historical Weather API | [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) | 30-year monthly temperature normals, peak highs/lows, and precipitation days for seasonality guidance. |
+| **Encyclopedic Facts** | [Wikidata](https://www.wikidata.org) Entity API | [Creative Commons CC0 1.0 Universal Public Domain Dedication](https://creativecommons.org/publicdomain/zero/1.0/) | Designated heritage status, official area, and verified elevation metrics. |
+| **Price Ratios & Purchasing Power** | [World Bank](https://data.worldbank.org) International Comparison Program (ICP) | [World Bank Open Data Terms](https://www.worldbank.org/en/about/legal/terms-of-use-for-datasets) | Destination price level indices relative to US baseline used to calculate daily budget tiers. |
+| **Place Imagery (Runtime)** | [Wikimedia Commons](https://commons.wikimedia.org) | Per-file Creative Commons licenses (CC BY-SA 4.0 / CC BY 3.0 / Public Domain) | Dynamic candidate illustration with author credit and license URI preservation. |
+| **Demo Photography** | Original Photography | Proprietary bundle for demonstration | 22 authentic travel photographs bundled in mobile demo mode and landing hero slideshow. No synthetic Wikimedia credits applied. |
 
 ---
 
-## Development Principles
+## Known Limitations
 
-* **Source-Grounded Implementation:** Active source code and verified repository evidence are the ultimate ground truth.
-* **Mobile-First Priority:** The React Native mobile client is the primary application surface for all user-facing product features.
-* **Truthful System State:** No simulated AI progress percentages or fabricated thinking counters. Processing shows actual elapsed timers and rotating status milestones.
-* **Zero Fabricated Data:** Locations must resolve to real geographic coordinates verified against the Google Places directory.
-* **Server-Side Secrets:** Third-party credentials remain strictly isolated on the backend server.
-* **Disciplined Design Tokens:** UI components strictly consume tokens from [mobile/constants/theme.ts](mobile/constants/theme.ts) without ad-hoc styling.
-* **Minimal Change Surface:** Edits are focused, atomic, and verified before completion.
-* **Architecture Before Abstraction:** Speculative microservices, databases, or state-management frameworks are rejected in favor of simple, working native patterns.
+We believe in engineering honesty. The current prototype has the following documented constraints:
+
+1. **No Fabricated Reviews:** Third-party review counts and numerical star ratings (e.g. "4.8 ★ (1,240 reviews)") are **hidden** in open-provider and demo modes because no compliant, zero-cost API offers them freely.
+2. **Budget Estimates are Statistical:** Daily expenditure figures (Budget, Mid-Range, Luxury) are calculated estimates based on World Bank ICP purchasing-power ratios adjusted for local currency exchange rates. They are not live quotes from hotel reservation engines.
+3. **OSM Nominatim Rate Limits:** In compliance with the OSM Foundation Acceptable Use Policy, geocoding requests are strictly throttled to 1 request per second with a valid contact User-Agent header. Bulk batch resolution requires an enterprise geocoding instance.
+4. **Public Video Ingestion:** Social reel analysis depends on public availability of video URLs and `yt-dlp` extractor compatibility. Private accounts, DRM-protected media, and stories are unsupported.
+5. **Offline Demo Scope:** 100% offline functionality is available for the 3 bundled reference destinations (Jeju Island, Rome, Kyoto). Analyzing arbitrary new reel URLs requires network connectivity and an active backend engine.
 
 ---
 
-## Current Status
+## Project Roadmap
 
-* **Mobile MVP Implementation:** Substantially complete across all 10 core screens (Analyze, Processing, Results, Map, Place Detail, Explore, Saved, Profile).
-* **Native Configuration:** Expo manifest (`app.json`) and EAS profiles (`eas.json`) are configured with canonical bundle identifiers and zero-permission footprints.
-* **Backend Intelligence Engine:** Fully functional FastAPI service with multimodal media ingestion, transcription, OCR, Places resolution, and Gemini vision verification.
-* **Deployment Readiness:** Requires a publicly accessible HTTPS backend deployment before production store release. App Store and Google Play Store submissions are pending backend hosting and developer account credentials.
+- [x] **Phase 1: Core Multimodal Engine** — yt-dlp media extraction, Whisper speech transcription, EasyOCR frame text mining.
+- [x] **Phase 2: Hybrid Provider Architecture** — OpenStreetMap Nominatim + Overpass provider alongside Google Places.
+- [x] **Phase 3: Scientific Travel Intelligence** — Open-Meteo 30-year climate normals and World Bank ICP budget modeling.
+- [x] **Phase 4: Mobile Glass UI & Cartography** — Dark editorial design tokens, interactive OSM tiles, peek sheets, and place detail modals.
+- [x] **Phase 5: Offline Demo Engine** — Airplane-mode demonstration mode with real pre-fetched Wikidata, OSM, and Open-Meteo datasets.
+- [x] **Phase 6: Showcase Landing & Asset Guard** — Next.js static landing page, 22-photo hero slideshow, asset verification guard, and waitlist integration.
+- [ ] **Phase 7: Additional Platforms** — Support for TikTok and YouTube Shorts video ingestion.
+- [ ] **Phase 8: Offline Vector Cartography** — Embedded MBTiles / MapLibre native vector tile rendering for fully offline regional map exploration.
+- [ ] **Phase 9: Multi-Stop Day Planner** — Automated itinerary generation sequencing nearby POIs with walking transit intervals.
+
+---
+
+## Development & Verification
+
+### Running Automated Test Suites
+
+```bash
+# 1. Engine Python Test Suite (Pytest)
+cd engine
+pytest tests/ -v
+
+# 2. Mobile TypeScript Strict Check
+cd mobile
+npx tsc --noEmit
+
+# 3. Landing Build & Static Export Check
+cd landing
+npm run build
+
+# 4. Demo Data Source Verification Script
+npx tsx scripts/verify-demo-scenarios.ts
+```
 
 ---
 
 <div align="center">
 
-**Travel AI** · *AI-native travel discovery from social media video.*
+**VAMO** · *Drop a reel. Find the place.*  
+Built with React Native, Expo, FastAPI, and OpenStreetMap.
 
 </div>

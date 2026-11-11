@@ -11,14 +11,17 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
+import { extractInstagramUrl } from '@/lib/utils';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface GlassInputProps {
   value: string;
   onChangeText: (text: string) => void;
   onSubmit: () => void;
   onClear?: () => void;
+  onError?: (error: string) => void;
   placeholder?: string;
   error?: string | null;
   loading?: boolean;
@@ -31,6 +34,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   onChangeText,
   onSubmit,
   onClear,
+  onError,
   placeholder = 'Paste Instagram Reel link',
   error,
   loading = false,
@@ -42,11 +46,18 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   const isError = Boolean(error);
 
   const handlePaste = async () => {
+    logTap('GlassInput:Paste');
     try {
       const text = await Clipboard.getStringAsync();
       if (text) {
         hapticFeedback.light();
-        onChangeText(text.trim());
+        const extracted = extractInstagramUrl(text);
+        if (extracted) {
+          onChangeText(extracted);
+        } else {
+          // Do NOT insert the junk, show inline error under the pill
+          onError?.('No valid Instagram link found in pasted text.');
+        }
       }
     } catch {
       // Clipboard access unavailable
@@ -54,12 +65,14 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   };
 
   const handleClear = () => {
+    logTap('GlassInput:Clear');
     hapticFeedback.light();
     onChangeText('');
     onClear?.();
   };
 
   const handleSubmit = () => {
+    logTap('GlassInput:Submit', { hasValue });
     if (disabled || loading) return;
     hapticFeedback.medium();
     onSubmit();
@@ -67,7 +80,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
 
   return (
     <View style={[styles.wrapper, style]}>
-      {/* Translucent Glass Pill Container */}
+      {/* Translucent Glass Pill Container — Fixed 58px height, borderRadius 29, no vertical growth */}
       <View
         style={[
           styles.container,
@@ -85,7 +98,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           />
         </View>
 
-        {/* Text Input Field */}
+        {/* Text Input Field — Single line, no vertical growth, text clipped with ellipsis */}
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -99,6 +112,9 @@ export const GlassInput: React.FC<GlassInputProps> = ({
           autoCorrect={false}
           keyboardType="url"
           returnKeyType="go"
+          multiline={false}
+          numberOfLines={1}
+          maxLength={300}
           selectTextOnFocus
           style={styles.input}
           accessible={true}
@@ -158,13 +174,17 @@ export const GlassInput: React.FC<GlassInputProps> = ({
         </View>
       </View>
 
-      {/* Inline Contextual Error Tooltip */}
-      {isError && (
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle-outline" size={14} color={Colors.racingRed} />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
+      {/* Inline Contextual Error Slot under the pill — Reserved 22px height to guarantee zero layout jump */}
+      <View style={styles.errorSlot}>
+        {isError && error ? (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={13} color={Colors.racingRed} />
+            <Text style={styles.errorText} numberOfLines={1} ellipsizeMode="tail">
+              {error}
+            </Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 };
@@ -177,18 +197,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.glassBg,
-    borderRadius: Radius.pill,
-    minHeight: 58,
+    borderRadius: 29, // Fixed 29, NEVER 999
+    height: 58, // Fixed 58px height, NO vertical growth
     borderWidth: 1,
     borderColor: Colors.glassBorder,
     paddingHorizontal: Spacing.base,
+    overflow: 'hidden',
   },
   containerFocused: {
     borderColor: 'rgba(251, 244, 227, 0.45)',
     backgroundColor: 'rgba(14, 26, 34, 0.85)',
   },
   containerError: {
-    borderColor: Colors.racingRed,
+    borderColor: Colors.racingRed, // Thin red border on the SAME pill
+    borderWidth: 1,
   },
   disabled: {
     opacity: 0.5,
@@ -203,7 +225,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sansRegular,
     fontSize: 14,
     color: Colors.ivoryMist,
-    paddingVertical: Spacing.sm,
+    paddingVertical: 0,
+    height: 58,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -249,12 +272,16 @@ const styles = StyleSheet.create({
     opacity: 0.75,
     transform: [{ scale: 0.96 }],
   },
+  errorSlot: {
+    height: 22,
+    marginTop: 4,
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.sm,
+  },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: Spacing.xs + 3,
-    paddingHorizontal: Spacing.sm,
   },
   errorText: {
     fontFamily: Fonts.sansMedium,

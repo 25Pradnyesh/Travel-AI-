@@ -27,6 +27,10 @@ import { Image } from 'expo-image';
 import { useAtmosphere } from '@/context/AtmosphereContext';
 import { DevAuthFixtures } from '@/components/dev/DevAuthFixtures';
 import { DevCloudCheck } from '@/components/dev/DevCloudCheck';
+import { useDemoMode, isDemoModeActive } from '@/lib/demo/demo-mode';
+import { DemoModePill } from '@/components/ui/DemoModePill';
+import { logTap } from '@/lib/dev/tap-logger';
+import { useBackNavigation } from '@/lib/navigation';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -49,6 +53,38 @@ export default function ProfileScreen() {
     setSlideshowEnabled,
   } = useAtmosphere();
   const [preferredMap, setPreferredMap] = useState<'apple' | 'google'>('google');
+  const {
+    isDemoMode,
+    toggleDemoMode: toggleDemo,
+    isRecordingMode,
+    toggleRecordingMode,
+  } = useDemoMode();
+  const versionTapCountRef = React.useRef(0);
+  const versionTapTimeoutRef = React.useRef<any>(null);
+
+  const handleVersionTap = async () => {
+    versionTapCountRef.current += 1;
+    logTap('Profile:VersionTap', { count: versionTapCountRef.current });
+    if (versionTapTimeoutRef.current) {
+      clearTimeout(versionTapTimeoutRef.current);
+    }
+
+    if (versionTapCountRef.current >= 5) {
+      versionTapCountRef.current = 0;
+      hapticFeedback.success();
+      const enabled = await toggleDemo();
+      if (enabled) {
+        toast.success('Demo mode enabled · Airplane mode ready');
+      } else {
+        toast.info('Demo mode disabled');
+      }
+      return;
+    }
+
+    versionTapTimeoutRef.current = setTimeout(() => {
+      versionTapCountRef.current = 0;
+    }, 2500);
+  };
   const [health, setHealth] = useState<EngineHealthResponse | null>(null);
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
@@ -83,14 +119,7 @@ export default function ProfileScreen() {
     checkEngineHealth();
   }, []);
 
-  const handleDismiss = () => {
-    hapticFeedback.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
+  const handleDismiss = useBackNavigation('/(tabs)');
 
   const handleSignInDetailsPress = () => {
     hapticFeedback.selection();
@@ -204,6 +233,7 @@ export default function ProfileScreen() {
         >
           <Ionicons name="chevron-back" size={20} color={Colors.ivoryMist} />
         </Pressable>
+        <DemoModePill />
       </View>
 
       <ScrollView
@@ -522,6 +552,48 @@ export default function ProfileScreen() {
                 />
               </Pressable>
             </View>
+
+            {isDemoMode && (
+              <>
+                <View style={styles.cardDivider} />
+                <View style={styles.preferenceRow}>
+                  <View style={styles.prefIconWrapper}>
+                    <Ionicons
+                      name="videocam-outline"
+                      size={18}
+                      color={isRecordingMode ? Colors.racingRed : Colors.icyBlue}
+                    />
+                  </View>
+                  <View style={styles.prefText}>
+                    <Text style={styles.prefTitle}>Recording Mode</Text>
+                    <Text style={styles.prefSubtitle}>
+                      {isRecordingMode ? 'Dev UI & warnings hidden for clean video' : 'Standard demo view'}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={async () => {
+                      hapticFeedback.selection();
+                      await toggleRecordingMode();
+                    }}
+                    hitSlop={8}
+                    style={[
+                      styles.toggleSwitch,
+                      isRecordingMode && styles.toggleSwitchActive,
+                    ]}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: isRecordingMode }}
+                    accessibilityLabel="Recording mode toggle"
+                  >
+                    <View
+                      style={[
+                        styles.toggleThumb,
+                        isRecordingMode && styles.toggleThumbActive,
+                      ]}
+                    />
+                  </Pressable>
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -682,11 +754,56 @@ export default function ProfileScreen() {
           <View style={styles.darkCard}>
             <View style={styles.aboutRow}>
               <View style={styles.brandWordmarkRow}>
+                <Image
+                  source={require('@/assets/images/logo-mark.png')}
+                  style={styles.aboutLogoMark}
+                  contentFit="contain"
+                  accessibilityLabel="VAMO Logo"
+                />
                 <Text style={styles.aboutBrandText}>VAMO</Text>
-                <View style={styles.brandDot} />
               </View>
-              <Text style={styles.aboutVersionText}>Version {appVersion}</Text>
+              <Pressable
+                onPress={handleVersionTap}
+                hitSlop={10}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={`App version ${appVersion}. Tap 5 times to toggle demo mode.`}
+              >
+                <Text style={styles.aboutVersionText}>Version {appVersion}</Text>
+              </Pressable>
             </View>
+            {isDemoMode && (
+              <>
+                <View style={styles.cardDivider} />
+                <View style={styles.demoReadyPanel}>
+                  <View style={styles.demoReadyHeader}>
+                    <Text style={styles.demoReadyTitle}>DEMO READY STATUS</Text>
+                  </View>
+                  <View style={styles.demoReadyGrid}>
+                    <View style={styles.demoReadyRow}>
+                      <Ionicons name="checkmark-circle" size={14} color={Colors.verified} />
+                      <Text style={styles.demoReadyLabel}>Demo mode</Text>
+                      <Text style={styles.demoReadyValue}>ON (Isolated)</Text>
+                    </View>
+                    <View style={styles.demoReadyRow}>
+                      <Ionicons name="layers-outline" size={14} color={Colors.verified} />
+                      <Text style={styles.demoReadyLabel}>3 Scenarios loaded</Text>
+                      <Text style={styles.demoReadyValue}>Jeju, Rome, Kyoto</Text>
+                    </View>
+                    <View style={styles.demoReadyRow}>
+                      <Ionicons name="images-outline" size={14} color={Colors.verified} />
+                      <Text style={styles.demoReadyLabel}>Images present</Text>
+                      <Text style={styles.demoReadyValue}>3/3 Bundled WebP</Text>
+                    </View>
+                    <View style={styles.demoReadyRow}>
+                      <Ionicons name="airplane" size={14} color={Colors.verified} />
+                      <Text style={styles.demoReadyLabel}>Offline status</Text>
+                      <Text style={styles.demoReadyValue}>OK (0 network required)</Text>
+                    </View>
+                  </View>
+                </View>
+              </>
+            )}
 
             <View style={styles.cardDivider} />
 
@@ -746,6 +863,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.xs,
     zIndex: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   frostedBackPill: {
     width: TouchTarget.minWidth,
@@ -1200,7 +1320,11 @@ const styles = StyleSheet.create({
   brandWordmarkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+  },
+  aboutLogoMark: {
+    width: 20,
+    height: 20,
   },
   aboutBrandText: {
     fontFamily: Fonts.sansBold,
@@ -1208,16 +1332,49 @@ const styles = StyleSheet.create({
     letterSpacing: 2.2,
     color: Colors.ivoryMist,
   },
-  brandDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.racingRed,
-  },
   aboutVersionText: {
     fontFamily: Fonts.sansRegular,
     fontSize: 12,
     color: Colors.textSecondary,
+  },
+  demoReadyPanel: {
+    backgroundColor: 'rgba(232, 168, 56, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 168, 56, 0.25)',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginVertical: Spacing.xs,
+  },
+  demoReadyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Spacing.sm,
+  },
+  demoReadyTitle: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 11,
+    color: '#f6d365',
+    letterSpacing: 0.8,
+  },
+  demoReadyGrid: {
+    gap: 8,
+  },
+  demoReadyRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  demoReadyLabel: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 12,
+    color: Colors.textSecondary,
+    flex: 1,
+  },
+  demoReadyValue: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 12,
+    color: Colors.ivoryMist,
   },
   infoRow: {
     flexDirection: 'row',

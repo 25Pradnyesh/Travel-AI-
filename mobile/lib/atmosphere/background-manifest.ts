@@ -192,7 +192,7 @@ export const BUNDLED_BACKGROUNDS: BundledBackground[] = [
     source: require('@/assets/backgrounds/cherry_blossom_pagoda.webp'),
     description: 'Tiered pagoda rising through blooming pink cherry blossoms overlooking a city at sunset.',
     focal: { x: 0.45, y: 0.50 },
-    place: null,
+    place: { city: 'Kyoto', country: 'Japan' },
   },
   {
     id: 'bg_aksu_zhabagly_canyon',

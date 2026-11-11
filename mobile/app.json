@@ -19,9 +19,8 @@
       "backgroundColor": "#0C0C0C",
       "adaptiveIcon": {
         "backgroundColor": "#0C0C0C",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/adaptive-icon-foreground.png",
+        "monochromeImage": "./assets/images/adaptive-icon-monochrome.png"
       },
       "permissions": [],
       "predictiveBackGestureEnabled": false
@@ -41,6 +40,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
     }
   }
 }

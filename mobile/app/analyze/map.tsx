@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -17,11 +17,17 @@ import { openInExternalMaps } from '@/lib/maps';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 import { NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+import { DemoModePill } from '@/components/ui/DemoModePill';
+import { useDemoMode } from '@/lib/demo/demo-mode';
+import { logTap } from '@/lib/dev/tap-logger';
+import { useBackNavigation } from '@/lib/navigation';
 
 export default function ExplorationMapScreen() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<TravelMapRef>(null);
-  const { data } = analysisStore.getAnalysisResult();
+  const { isDemoMode, activeScenario } = useDemoMode();
+  const storeResult = analysisStore.getAnalysisResult();
+  const data = isDemoMode ? activeScenario.data : storeResult.data;
   const { isSaved, toggleSave } = useSavedPlaces();
 
   const bestGuess = data?.best_guess;
@@ -30,6 +36,11 @@ export default function ExplorationMapScreen() {
   // Selected place ID state — default to primary destination if available
   const initialPlaceId = bestGuess?.place_id || 'primary_destination';
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialPlaceId);
+
+  // Sync selectedPlaceId if destination changes
+  useEffect(() => {
+    setSelectedPlaceId(bestGuess?.place_id || 'primary_destination');
+  }, [bestGuess?.place_id]);
 
   // Derive active selected place object
   const selectedPlace = useMemo<NearbyPlace | null>(() => {
@@ -52,20 +63,15 @@ export default function ExplorationMapScreen() {
     );
   }, [bestGuess, selectedPlace]);
 
-  const handleBack = () => {
-    hapticFeedback.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/analyze/results');
-    }
-  };
+  const handleBack = useBackNavigation('/analyze/results');
 
   const handleSelectPlace = (placeId: string) => {
+    logTap('MapScreen:SelectPlace', { placeId });
     setSelectedPlaceId(placeId);
   };
 
   const handleViewDetails = (place: NearbyPlace) => {
+    logTap('MapScreen:ViewDetails', { placeId: place.place_id, name: place.name });
     router.push({
       pathname: '/place/[id]',
       params: {
@@ -77,11 +83,13 @@ export default function ExplorationMapScreen() {
 
   const handleToggleSaveSelectedPlace = () => {
     if (!selectedPlace) return;
+    logTap('MapScreen:ToggleSave', { placeId: selectedPlace.place_id });
     toggleSave(selectedPlace, selectedPhotoUrl);
   };
 
   const handleOpenGlobalMaps = async () => {
     if (!bestGuess) return;
+    logTap('MapScreen:OpenGlobalMaps', { name: bestGuess.name });
     hapticFeedback.light();
     await openInExternalMaps({
       latitude: bestGuess.latitude,
@@ -159,8 +167,9 @@ export default function ExplorationMapScreen() {
             <Ionicons name="arrow-back" size={17} color={Colors.ivoryMist} />
           </Pressable>
 
-          {/* Destination Name Center */}
+          {/* Destination Name Center & Demo Pill */}
           <View style={styles.topPillTitleContainer}>
+            <DemoModePill compact />
             <Text
               style={styles.topPillTitle}
               numberOfLines={1}

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { hapticFeedback } from '@/lib/haptics';
+import { DemoModePill } from '@/components/ui/DemoModePill';
 
 export interface ResultHeaderProps {
   onBack: () => void;
@@ -37,9 +38,10 @@ export const ResultHeader: React.FC<ResultHeaderProps> = ({
           <Text style={styles.backText}>Analyze</Text>
         </Pressable>
 
-        {/* Editorial Section Label */}
+        {/* Editorial Section Label & Demo Pill */}
         <View style={styles.centerContainer}>
           <Text style={styles.headerLabel}>DESTINATION DOSSIER</Text>
+          <DemoModePill compact />
         </View>
 
         {/* Share Quick Action */}
@@ -94,6 +96,7 @@ const styles = StyleSheet.create({
   centerContainer: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
   },
   headerLabel: {
     fontFamily: Fonts.sansBold,

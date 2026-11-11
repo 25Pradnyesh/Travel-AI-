@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { GlassView } from '@/components/ui';
 import { hapticFeedback } from '@/lib/haptics';
+import { logTap } from '@/lib/dev/tap-logger';
 
 export interface ResultActionsProps {
   isSaved: boolean;
@@ -32,12 +33,12 @@ export const ResultActions: React.FC<ResultActionsProps> = ({
       <GlassView
         variant="dark"
         borderRadius={Radius.pill}
-        intensity={80}
         style={styles.floatingBar}
       >
         {/* 1. Save (Bookmark Toggle) */}
         <Pressable
           onPress={() => {
+            logTap('ResultActions:ToggleSave', { isSaved });
             hapticFeedback.light();
             onToggleSave();
           }}
@@ -70,6 +71,7 @@ export const ResultActions: React.FC<ResultActionsProps> = ({
         {/* 2. Map (Route to /analyze/map) */}
         <Pressable
           onPress={() => {
+            logTap('ResultActions:OpenMap');
             hapticFeedback.selection();
             onOpenMap();
           }}
@@ -87,6 +89,7 @@ export const ResultActions: React.FC<ResultActionsProps> = ({
         {/* 3. Directions (External Map Handoff) */}
         <Pressable
           onPress={() => {
+            logTap('ResultActions:OpenDirections');
             hapticFeedback.light();
             onOpenDirections();
           }}
@@ -119,9 +122,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: Spacing.sm,
-    backgroundColor: 'rgba(10, 20, 28, 0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(251, 244, 227, 0.18)',
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.35,

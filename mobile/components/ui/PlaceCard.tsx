@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius, Shadows, Spacing, TouchTarget, Typography } from '@/constants/theme';
 import { formatDistance } from '@/lib/utils';
+import { isDemoModeActive } from '@/lib/demo/demo-mode';
 
 export interface PlaceCardProps {
   name: string;
@@ -43,7 +44,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = React.memo(({
 }) => {
   const [imageError, setImageError] = useState(false);
   const formattedDist = formatDistance(distanceKm);
-  const hasRating = rating != null && rating > 0;
+  const hasRating = !isDemoModeActive() && rating != null && rating > 0;
 
   // Reset image error if URL changes
   React.useEffect(() => {

@@ -59,7 +59,6 @@ export const TopBar: React.FC<TopBarProps> = ({
           ) : brandTitle ? (
             <View style={styles.brandPill}>
               <Text style={styles.brandText}>{brandTitle}</Text>
-              <View style={styles.brandDot} />
             </View>
           ) : null}
         </View>
@@ -135,12 +134,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2,
     color: Colors.ivoryMist,
-  },
-  brandDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: Colors.racingRed,
   },
   titleText: {
     fontFamily: Fonts.sansSemiBold,

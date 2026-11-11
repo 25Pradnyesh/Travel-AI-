@@ -34,6 +34,7 @@ import {
   toast,
 } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { useBackNavigation } from '@/lib/navigation';
 import {
   useAuth,
   clearPendingSaveAction,
@@ -102,16 +103,10 @@ export default function LoginScreen() {
     }
   }, [isSignInUnavailable, hasShownUnavailableToast]);
 
-  const handleDismiss = () => {
-    hapticFeedback.light();
+  const handleDismiss = useBackNavigation('/(tabs)', () => {
     clearPendingSaveAction();
     clearError();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)');
-    }
-  };
+  });
 
   const handleAppleSignIn = async () => {
     if (isSignInUnavailable) {

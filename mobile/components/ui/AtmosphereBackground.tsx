@@ -17,6 +17,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { BlurTargetView } from 'expo-blur';
 import { Image } from 'expo-image';
 import { AtmospherePalette, PlaceAtmosphereInput } from '@/types/atmosphere';
 import { AtmosphereContext, useAtmosphere } from '@/context/AtmosphereContext';
@@ -44,6 +45,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
   imageUrl,
   style,
 }) => {
+  const { blurTargetRef } = useAtmosphere();
   const hasExplicitImage = Boolean(
     imageUrl !== undefined &&
       imageUrl !== null &&
@@ -58,7 +60,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
   return (
     <View style={[styles.container, style]}>
       {hasExplicitImage && imageSource && (
-        <View style={StyleSheet.absoluteFill}>
+        <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill} pointerEvents="none">
           <Image
             source={imageSource}
             style={StyleSheet.absoluteFill}
@@ -67,7 +69,7 @@ export const AtmosphereBackground: React.FC<AtmosphereBackgroundProps> = ({
             transition={300}
           />
           <View style={[StyleSheet.absoluteFill, styles.highlightTint]} pointerEvents="none" />
-        </View>
+        </BlurTargetView>
       )}
       {children}
     </View>

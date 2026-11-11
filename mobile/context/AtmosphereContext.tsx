@@ -22,7 +22,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { View } from 'react-native';
+import { AccessibilityInfo, View } from 'react-native';
+import * as Device from 'expo-device';
 import {
   AtmospherePalette,
   PlaceAtmosphereInput,
@@ -43,6 +44,11 @@ import {
   setAdaptiveBackgroundsPreference,
   setBackgroundSlideshowPreference,
 } from '@/lib/atmosphere/background-manifest';
+import {
+  GlassBlurPreset,
+  getStoredGlassBlurPreset,
+  setStoredGlassBlurPreset,
+} from '@/constants/glass';
 
 export interface AtmosphereContextType {
   activePlace: PlaceAtmosphereInput | null;
@@ -56,8 +62,13 @@ export interface AtmosphereContextType {
   destinationKey: string | null;
   activeDestinationImage: string | number | null;
   coldStartImage: string | number;
+  glassBlurPreset: GlassBlurPreset;
+  effectiveGlassPreset: GlassBlurPreset;
+  isReduceTransparency: boolean;
+  isLowEndDevice: boolean;
   setAdaptiveEnabled: (enabled: boolean) => Promise<void>;
   setSlideshowEnabled: (enabled: boolean) => Promise<void>;
+  setGlassBlurPreset: (preset: GlassBlurPreset) => Promise<void>;
   setActivePlace: (
     place: PlaceAtmosphereInput | null,
     photoAuthor?: string[] | string | null
@@ -78,10 +89,15 @@ export const AtmosphereContext = createContext<AtmosphereContextType>({
   destinationKey: null,
   activeDestinationImage: null,
   coldStartImage: DEFAULT_DISCOVERY_IMAGE,
-  setAdaptiveEnabled: async () => {},
-  setSlideshowEnabled: async () => {},
-  setActivePlace: () => {},
-  resetActivePlace: () => {},
+  glassBlurPreset: 'medium',
+  effectiveGlassPreset: 'medium',
+  isReduceTransparency: false,
+  isLowEndDevice: false,
+  setAdaptiveEnabled: async () => { },
+  setSlideshowEnabled: async () => { },
+  setGlassBlurPreset: async () => { },
+  setActivePlace: () => { },
+  resetActivePlace: () => { },
   blurTargetRef: { current: null },
 });
 
@@ -101,7 +117,43 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
   const [coldStartImage, setColdStartImage] = useState<string | number>(DEFAULT_DISCOVERY_IMAGE);
   const [adaptiveEnabled, setAdaptiveEnabledState] = useState<boolean>(true);
   const [slideshowEnabled, setSlideshowEnabledState] = useState<boolean>(true);
+  const [glassBlurPreset, setGlassBlurPresetState] = useState<GlassBlurPreset>('medium');
+  const [isReduceTransparency, setIsReduceTransparency] = useState<boolean>(false);
   const blurTargetRef = useRef<View>(null);
+
+  // Detect low-end devices (< 3GB RAM or legacy year class)
+  const isLowEndDevice = useMemo(() => {
+    try {
+      if (typeof Device?.totalMemory === 'number' && Device.totalMemory < 3 * 1024 * 1024 * 1024) {
+        return true;
+      }
+    } catch { }
+    return false;
+  }, []);
+
+  // Monitor system Accessibility Reduce Transparency preference
+  useEffect(() => {
+    if (typeof AccessibilityInfo?.isReduceTransparencyEnabled === 'function') {
+      AccessibilityInfo.isReduceTransparencyEnabled()
+        .then(setIsReduceTransparency)
+        .catch(() => { });
+    }
+
+    const sub = typeof AccessibilityInfo?.addEventListener === 'function'
+      ? AccessibilityInfo.addEventListener('reduceTransparencyChanged', setIsReduceTransparency)
+      : null;
+    return () => {
+      sub?.remove();
+    };
+  }, []);
+
+  // Effective glass preset: Low forced if reduce transparency or low-end device; otherwise user preference
+  const effectiveGlassPreset: GlassBlurPreset = useMemo(() => {
+    if (isReduceTransparency || isLowEndDevice) {
+      return 'low';
+    }
+    return glassBlurPreset;
+  }, [isReduceTransparency, isLowEndDevice, glassBlurPreset]);
 
   // Initialize random cold-start photo and load user preferences on launch
   useEffect(() => {
@@ -125,6 +177,12 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
       }
     });
 
+    getStoredGlassBlurPreset().then((preset) => {
+      if (mounted) {
+        setGlassBlurPresetState(preset);
+      }
+    });
+
     return () => {
       mounted = false;
     };
@@ -138,6 +196,11 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
   const setSlideshowEnabled = useCallback(async (enabled: boolean) => {
     setSlideshowEnabledState(enabled);
     await setBackgroundSlideshowPreference(enabled);
+  }, []);
+
+  const setGlassBlurPreset = useCallback(async (preset: GlassBlurPreset) => {
+    setGlassBlurPresetState(preset);
+    await setStoredGlassBlurPreset(preset);
   }, []);
 
   const currentPlaceIdRef = useRef<string | null>(null);
@@ -250,8 +313,13 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
       destinationKey,
       activeDestinationImage,
       coldStartImage,
+      glassBlurPreset,
+      effectiveGlassPreset,
+      isReduceTransparency,
+      isLowEndDevice,
       setAdaptiveEnabled,
       setSlideshowEnabled,
+      setGlassBlurPreset,
       setActivePlace,
       resetActivePlace,
       blurTargetRef,
@@ -267,8 +335,13 @@ export const AtmosphereProvider: React.FC<AtmosphereProviderProps> = ({
       destinationKey,
       activeDestinationImage,
       coldStartImage,
+      glassBlurPreset,
+      effectiveGlassPreset,
+      isReduceTransparency,
+      isLowEndDevice,
       setAdaptiveEnabled,
       setSlideshowEnabled,
+      setGlassBlurPreset,
       setActivePlace,
       resetActivePlace,
     ]

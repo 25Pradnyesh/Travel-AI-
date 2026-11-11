@@ -24,7 +24,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -38,6 +38,7 @@ import { analysisStore } from '@/lib/api/analysis-store';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
 import { NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+import { useAtmosphere } from '@/context/AtmosphereContext';
 
 export default function ExploreScreen() {
   const insets = useSafeAreaInsets();
@@ -46,6 +47,14 @@ export default function ExploreScreen() {
 
   const { data } = analysisStore.getAnalysisResult();
   const { isSaved, toggleSave } = useSavedPlaces();
+  const { resetActivePlace } = useAtmosphere();
+
+  // Reset destination atmosphere on focus so general discovery slideshow resumes
+  useFocusEffect(
+    useCallback(() => {
+      resetActivePlace();
+    }, [resetActivePlace])
+  );
 
   const bestGuess = data?.best_guess;
   const nearbyPlaces = useMemo(() => data?.nearby_places || [], [data?.nearby_places]);
@@ -200,7 +209,6 @@ export default function ExploreScreen() {
       <View style={styles.topBar}>
         <View style={styles.brandPill}>
           <Text style={styles.brandText}>EXPLORE</Text>
-          <View style={styles.brandDot} />
         </View>
 
         <Pressable
@@ -388,12 +396,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: 2,
     color: Colors.ivoryMist,
-  },
-  brandDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.racingRed,
   },
   avatarButton: {
     width: 38,

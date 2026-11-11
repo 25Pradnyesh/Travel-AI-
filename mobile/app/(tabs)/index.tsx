@@ -8,12 +8,11 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableWithoutFeedback,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   GlassInput,
@@ -22,7 +21,7 @@ import {
 } from '@/components/ui';
 import { HomeHeader } from '@/components/home/HomeHeader';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
-import { validateReelUrl } from '@/lib/utils';
+import { extractInstagramUrl, validateReelUrl } from '@/lib/utils';
 import { hapticFeedback } from '@/lib/haptics';
 import { analysisStore } from '@/lib/api/analysis-store';
 import {
@@ -32,6 +31,10 @@ import {
   useAuth,
 } from '@/lib/supabase';
 import { useSavedPlaces } from '@/lib/storage/saved-places';
+import { DemoScenarioId, useDemoMode } from '@/lib/demo/demo-mode';
+import { DEMO_SCENARIOS } from '@/lib/fixtures/demo-scenarios';
+import { logTap } from '@/lib/dev/tap-logger';
+import { useAtmosphere } from '@/context/AtmosphereContext';
 
 const SAMPLE_REEL = {
   label: 'Tokyo Street Reel',
@@ -48,14 +51,33 @@ const DISCOVERY_CHIPS = [
 
 export default function AnalyzeScreen() {
   const insets = useSafeAreaInsets();
+  const { preserveUrl } = useLocalSearchParams<{ preserveUrl?: string }>();
   const { width: screenWidth } = useWindowDimensions();
   const { isAuthenticated, user } = useAuth();
   const { savedPlaces, isSaved, toggleSave } = useSavedPlaces();
+  const { isDemoMode, activeScenario, setScenarioId } = useDemoMode();
+  const { resetActivePlace } = useAtmosphere();
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentAnalyses, setRecentAnalyses] = useState<AnalysisRow[]>([]);
   const [activeChip, setActiveChip] = useState<string>('Hidden Stays');
+
+  // Resume homepage discovery slideshow when focusing Analyze screen in normal mode
+  useFocusEffect(
+    useCallback(() => {
+      if (!isDemoMode) {
+        resetActivePlace();
+      }
+    }, [isDemoMode, resetActivePlace])
+  );
+
+  // Restore preserved input URL on fallback from cancel/error
+  useEffect(() => {
+    if (preserveUrl) {
+      setUrl(preserveUrl);
+    }
+  }, [preserveUrl]);
 
   // Carousel dimensions: card width ~72% so next card peeks in
   const cardWidth = Math.round(screenWidth * 0.72);
@@ -103,16 +125,61 @@ export default function AnalyzeScreen() {
   );
 
   const handleTextChange = (text: string) => {
-    setUrl(text);
+    // Clear inline error on edit
     if (error) setError('');
+
+    if (isDemoMode) {
+      const clean = text.replace(/\s+/g, ' ').slice(0, 300);
+      setUrl(clean);
+      return;
+    }
+
+    // If pasted text contains multiline content or an Instagram URL
+    if (text.includes('\n') || text.includes('instagram.com') || text.length > 80) {
+      const extracted = extractInstagramUrl(text);
+      if (extracted) {
+        setUrl(extracted);
+        return;
+      }
+      // If pasted text has newlines or is non-URL junk (e.g. stack trace):
+      if (text.includes('\n') || text.trim().length > 30) {
+        // Do NOT insert the junk into the input, show inline error under the pill
+        setError('No valid Instagram link found in pasted text.');
+        return;
+      }
+    }
+
+    // Collapse whitespace and cap at 300 chars
+    const clean = text.replace(/\s+/g, ' ').slice(0, 300);
+    setUrl(clean);
   };
 
+  const handleSelectDemoScenario = useCallback(
+    async (scenarioId: DemoScenarioId) => {
+      logTap('AnalyzeScreen:DemoScenarioChip', { scenarioId });
+      hapticFeedback.selection();
+      await setScenarioId(scenarioId);
+      const scenario = DEMO_SCENARIOS[scenarioId];
+      router.push({
+        pathname: '/analyze/processing',
+        params: {
+          url: scenario.sourceUrl,
+          scenarioId: scenario.id,
+          isDemo: 'true',
+        },
+      });
+    },
+    [setScenarioId]
+  );
+
   const handleClear = () => {
+    logTap('AnalyzeScreen:ClearInput');
     setUrl('');
     setError('');
   };
 
   const handleAnalyze = () => {
+    logTap('AnalyzeScreen:AnalyzeButton', { url });
     if (isSubmitting) return;
     Keyboard.dismiss();
 
@@ -123,15 +190,19 @@ export default function AnalyzeScreen() {
       return;
     }
 
-    const validation = validateReelUrl(trimmed);
+    let targetUrl = trimmed;
 
-    if (!validation.isValid) {
-      hapticFeedback.medium();
-      setError(validation.error || 'Enter a valid public Instagram Reel link.');
-      return;
+    if (!isDemoMode) {
+      const validation = validateReelUrl(trimmed);
+      if (!validation.isValid) {
+        hapticFeedback.medium();
+        setError(validation.error || 'Enter a valid public Instagram Reel link.');
+        return;
+      }
+      targetUrl = validation.normalizedUrl || trimmed;
+    } else {
+      targetUrl = trimmed.startsWith('http') ? trimmed : `https://instagram.com/reel/demo_${encodeURIComponent(trimmed)}`;
     }
-
-    const targetUrl = validation.normalizedUrl || trimmed;
     hapticFeedback.light();
     setError('');
     setIsSubmitting(true);
@@ -150,12 +221,14 @@ export default function AnalyzeScreen() {
   };
 
   const handleSelectExample = (exampleUrl: string) => {
+    logTap('AnalyzeScreen:SampleReelLink', { url: exampleUrl });
     hapticFeedback.selection();
     setUrl(exampleUrl);
     setError('');
   };
 
   const handleOpenAnalysis = (item: AnalysisRow) => {
+    logTap('AnalyzeScreen:OpenAnalysisCard', { id: item.id });
     router.push({
       pathname: '/history/[id]',
       params: { id: item.id },
@@ -163,6 +236,7 @@ export default function AnalyzeScreen() {
   };
 
   const handleOpenSavedPlace = (placeId: string) => {
+    logTap('AnalyzeScreen:OpenSavedPlace', { placeId });
     router.push({
       pathname: '/place/[id]',
       params: { id: placeId },
@@ -170,11 +244,13 @@ export default function AnalyzeScreen() {
   };
 
   const handleViewAllHistory = () => {
+    logTap('AnalyzeScreen:ViewAllHistory');
     hapticFeedback.light();
     router.push({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
   };
 
   const handleOpenProfile = () => {
+    logTap('AnalyzeScreen:OpenProfile');
     hapticFeedback.light();
     router.push('/profile');
   };
@@ -236,16 +312,15 @@ export default function AnalyzeScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={[
-              styles.scrollContent,
-              { paddingBottom: scrollBottomPadding },
-            ]}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-          >
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: scrollBottomPadding },
+          ]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
             {/* Editorial Greeting & Display Headline */}
             <View style={styles.heroSection}>
               {userGreetingName ? (
@@ -278,26 +353,66 @@ export default function AnalyzeScreen() {
                 onChangeText={handleTextChange}
                 onSubmit={handleAnalyze}
                 onClear={handleClear}
+                onError={setError}
                 error={error}
                 loading={isSubmitting}
                 disabled={isSubmitting}
-                placeholder="Paste Instagram Reel link"
+                placeholder={isDemoMode ? "Paste any link to replay demo..." : "Paste Instagram Reel link"}
               />
 
-              {/* Collapsed Secondary Sample Reel Link */}
-              <Pressable
-                onPress={() => handleSelectExample(SAMPLE_REEL.url)}
-                hitSlop={8}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Try sample reel link"
-                style={({ pressed }) => [styles.sampleLinkPill, pressed && styles.pressed]}
-              >
-                <Ionicons name="sparkles-outline" size={13} color={Colors.icyBlue} />
-                <Text style={styles.sampleLinkText}>
-                  Or try sample: <Text style={styles.sampleHighlight}>{SAMPLE_REEL.label}</Text>
-                </Text>
-              </Pressable>
+              {/* Demo Mode 3-Chip Chooser or Default Sample Reel Link */}
+              {isDemoMode ? (
+                <View style={styles.demoChipsSection}>
+                  <Text style={styles.demoChipsLabel}>DEMO DESTINATIONS (OFFLINE)</Text>
+                  <View style={styles.demoChipsRow}>
+                    {([
+                      { id: 'jeju' as const, label: 'Jeju Island' },
+                      { id: 'rome' as const, label: 'Rome' },
+                      { id: 'kyoto' as const, label: 'Kyoto' },
+                    ]).map((chip) => {
+                      const isSelected = activeScenario.id === chip.id;
+                      return (
+                        <Pressable
+                          key={chip.id}
+                          onPress={() => handleSelectDemoScenario(chip.id)}
+                          hitSlop={6}
+                          accessible={true}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Run demo scenario for ${chip.label}`}
+                          style={({ pressed }) => [
+                            styles.demoChip,
+                            isSelected && styles.demoChipSelected,
+                            pressed && styles.pressed,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.demoChipText,
+                              isSelected && styles.demoChipTextSelected,
+                            ]}
+                          >
+                            {chip.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => handleSelectExample(SAMPLE_REEL.url)}
+                  hitSlop={8}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel="Try sample reel link"
+                  style={({ pressed }) => [styles.sampleLinkPill, pressed && styles.pressed]}
+                >
+                  <Ionicons name="sparkles-outline" size={13} color={Colors.icyBlue} />
+                  <Text style={styles.sampleLinkText}>
+                    Or try sample: <Text style={styles.sampleHighlight}>{SAMPLE_REEL.label}</Text>
+                  </Text>
+                </Pressable>
+              )}
             </View>
 
             {/* Discovery Category Pill Chips */}
@@ -395,7 +510,6 @@ export default function AnalyzeScreen() {
               </View>
             ) : null}
           </ScrollView>
-        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );
@@ -494,6 +608,45 @@ const styles = StyleSheet.create({
   sampleHighlight: {
     color: Colors.ivoryMist,
     fontFamily: Fonts.sansSemiBold,
+  },
+  demoChipsSection: {
+    marginTop: Spacing.md,
+  },
+  demoChipsLabel: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 10,
+    letterSpacing: 0.8,
+    color: '#f6d365',
+    marginBottom: Spacing.xs,
+  },
+  demoChipsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  demoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 25, 34, 0.80)',
+    borderWidth: 1,
+    borderColor: 'rgba(232, 168, 56, 0.35)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 7,
+    gap: 6,
+  },
+  demoChipSelected: {
+    backgroundColor: 'rgba(232, 168, 56, 0.18)',
+    borderColor: '#e8a838',
+  },
+  demoChipText: {
+    fontFamily: Fonts.sansMedium,
+    fontSize: 12,
+    color: Colors.ivoryMist,
+  },
+  demoChipTextSelected: {
+    fontFamily: Fonts.sansBold,
+    color: '#f6d365',
   },
   chipsSection: {
     marginBottom: Spacing.xl,

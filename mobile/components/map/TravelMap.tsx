@@ -21,6 +21,7 @@ import MapView, {
   Marker,
   PROVIDER_DEFAULT,
   Region,
+  UrlTile,
 } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +31,7 @@ import { Colors, Fonts, Radius, Shadows, Spacing, TouchTarget, Typography } from
 import { isValidCoordinate } from '@/lib/maps';
 import { BestGuess, NearbyPlace } from '@/types/analysis';
 import { hapticFeedback } from '@/lib/haptics';
+import { isDemoModeActive } from '@/lib/demo/demo-mode';
 
 import { DARK_MUTED_MAP_STYLE, ENABLE_DARK_MAP_STYLE } from '@/constants/map-style';
 
@@ -77,6 +79,7 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
   ) => {
     const insets = useSafeAreaInsets();
     const mapRef = useRef<MapView>(null);
+    const isDemo = isDemoModeActive();
     const [isMapReady, setIsMapReady] = useState(false);
     const [isLayoutReady, setIsLayoutReady] = useState(false);
     const [tracksViewChanges, setTracksViewChanges] = useState(true);
@@ -311,10 +314,21 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
           pitchEnabled={true}
           scrollEnabled={true}
           zoomEnabled={true}
+          minZoomLevel={2}
+          maxZoomLevel={19}
           toolbarEnabled={false}
-          customMapStyle={ENABLE_DARK_MAP_STYLE && useDarkStyle ? DARK_MUTED_MAP_STYLE : undefined}
-          mapType="standard"
+          customMapStyle={ENABLE_DARK_MAP_STYLE && useDarkStyle && !isDemo ? DARK_MUTED_MAP_STYLE : undefined}
+          mapType={isDemo ? 'none' : 'standard'}
         >
+          {isDemo && (
+            <UrlTile
+              urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              maximumZ={19}
+              minimumZ={1}
+              shouldReplaceMapContent={true}
+              flipY={false}
+            />
+          )}
           {validMarkers.map((marker) => {
             const isSelected = selectedPlaceId === marker.id;
             return (
@@ -339,6 +353,12 @@ export const TravelMap = forwardRef<TravelMapRef, TravelMapProps>(
             );
           })}
         </MapView>
+
+        {isDemo && (
+          <View style={styles.osmAttributionPill} pointerEvents="none">
+            <Text style={styles.osmAttributionText}>© OpenStreetMap contributors</Text>
+          </View>
+        )}
 
         {/* Floating Controls Bar (Recenter button + pin counter badge) */}
         <View style={[styles.floatingControls, { top: resolvedFloatingTop }]}>
@@ -426,6 +446,24 @@ const styles = StyleSheet.create({
   recenterButtonPressed: {
     backgroundColor: 'rgba(14, 26, 34, 0.95)',
     transform: [{ scale: 0.94 }],
+  },
+  osmAttributionPill: {
+    position: 'absolute',
+    top: 72,
+    right: Spacing.md,
+    backgroundColor: 'rgba(5, 11, 14, 0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 10,
+  },
+  osmAttributionText: {
+    fontFamily: Fonts.sansRegular,
+    fontSize: 9,
+    color: Colors.textSecondary,
+    letterSpacing: 0.2,
   },
 });
 

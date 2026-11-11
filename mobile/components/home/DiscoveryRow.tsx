@@ -48,8 +48,6 @@ export const DiscoveryRow: React.FC<DiscoveryRowProps> = ({
       >
         {DISCOVERY_CATEGORIES.map((category) => (
           <View key={category} style={styles.categoryChip}>
-            {/* Controlled Icy Blue Accent Dot */}
-            <View style={styles.accentDot} />
             <Text style={styles.categoryText}>{category}</Text>
           </View>
         ))}
@@ -123,13 +121,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md + 4,
     paddingHorizontal: Spacing.md,
     paddingVertical: 7,
-  },
-  accentDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.icyBlue, // Icy Blue #A6DCF8 controlled accent
-    marginRight: 6,
   },
   categoryText: {
     fontSize: 12,

@@ -173,7 +173,6 @@ export const TravelOceanError: React.FC<TravelOceanErrorProps> = ({
         <View style={styles.topBar}>
           <View style={styles.brandPill}>
             <Text style={styles.brandText}>VAMO</Text>
-            <View style={styles.brandDot} />
           </View>
 
           <View
@@ -182,14 +181,6 @@ export const TravelOceanError: React.FC<TravelOceanErrorProps> = ({
               isOfflineMode ? styles.statusOfflinePill : styles.statusNotFoundPill,
             ]}
           >
-            <View
-              style={[
-                styles.statusDot,
-                {
-                  backgroundColor: isOfflineMode ? Colors.icyBlue : '#E5A866',
-                },
-              ]}
-            />
             <Text style={styles.statusLabelText}>{displayStatusLabel}</Text>
           </View>
         </View>
@@ -341,19 +332,12 @@ const styles = StyleSheet.create({
     letterSpacing: 2.2,
     color: Colors.ivoryMist,
   },
-  brandDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: Colors.racingRed,
-  },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Radius.pill,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
-    gap: 6,
     borderWidth: 1,
   },
   statusOfflinePill: {
@@ -363,11 +347,6 @@ const styles = StyleSheet.create({
   statusNotFoundPill: {
     backgroundColor: 'rgba(8, 18, 24, 0.72)',
     borderColor: 'rgba(229, 168, 102, 0.35)',
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
   },
   statusLabelText: {
     fontFamily: Fonts.sansBold,

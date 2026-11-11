@@ -22,7 +22,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useBackNavigation } from '@/lib/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -159,11 +160,14 @@ export default function HistoryDetailScreen() {
 
   const placePalette = useMemo(() => resolvePalette(placeAtmosphereInput), [placeAtmosphereInput]);
 
-  useEffect(() => {
-    if (placeAtmosphereInput) {
-      setActivePlace(placeAtmosphereInput);
-    }
-  }, [placeAtmosphereInput, setActivePlace]);
+  // Restore destination atmosphere on focus when viewing history dossier
+  useFocusEffect(
+    useCallback(() => {
+      if (placeAtmosphereInput) {
+        setActivePlace(placeAtmosphereInput);
+      }
+    }, [placeAtmosphereInput, setActivePlace])
+  );
 
   // Parse structured travel intelligence safely
   const ti = useMemo<TravelIntelligence>(() => {
@@ -213,14 +217,7 @@ export default function HistoryDetailScreen() {
     }));
   }, [places]);
 
-  const handleBack = () => {
-    hapticFeedback.light();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace({ pathname: '/(tabs)/saved', params: { tab: 'history' } });
-    }
-  };
+  const handleBack = useBackNavigation('/(tabs)/saved');
 
   const handleDelete = useCallback(() => {
     if (!analysis) return;

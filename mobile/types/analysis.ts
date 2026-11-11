@@ -84,8 +84,8 @@ export interface BestGuess {
   confidence: number;
   confidence_level: 'VERY_HIGH' | 'HIGH' | 'MEDIUM' | 'LOW' | string;
   verification_status: 'VERIFIED' | 'PARTIAL' | 'SKIPPED' | 'FAILED' | string;
-  gemini_confidence: number;
-  gemini_reason: string;
+  gemini_confidence?: number;
+  gemini_reason?: string;
   why: string;
   overview?: DestinationOverview | null;
   editorial_summary?: string | null;
