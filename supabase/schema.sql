@@ -1,9 +1,9 @@
 -- ==============================================================================
--- Travel AI V2 — Supabase Consolidated Schema (Stages 1 & 2)
+-- Travel AI V2 — Supabase Consolidated Schema (Stages 1, 2 & 3)
 -- File: supabase/schema.sql
 -- Description: Core cloud tables, performance indexes, and Row Level Security
 --              (RLS) access control policies for profiles, analyses,
---              analysis_places, and saved_places.
+--              analysis_places, saved_places, and waitlist_signups.
 -- ==============================================================================
 
 -- Enable UUID extension if not already enabled
@@ -79,6 +79,21 @@ CREATE TABLE IF NOT EXISTS public.saved_places (
 );
 
 -- ==============================================================================
+-- 5. Waitlist Signups Table (Stage 3)
+-- Stores verified waitlist signups with consent tracking and uniqueness.
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.waitlist_signups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    source TEXT NOT NULL DEFAULT 'website',
+    consent BOOLEAN NOT NULL DEFAULT true,
+    consent_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed')),
+    unsubscribed_at TIMESTAMPTZ
+);
+
+-- ==============================================================================
 -- Indexes for Performance & Query Optimization
 -- ==============================================================================
 CREATE INDEX IF NOT EXISTS idx_analyses_user_id ON public.analyses(user_id);
@@ -87,15 +102,24 @@ CREATE INDEX IF NOT EXISTS idx_analysis_places_analysis_id ON public.analysis_pl
 CREATE INDEX IF NOT EXISTS idx_analysis_places_place_id ON public.analysis_places(place_id);
 CREATE INDEX IF NOT EXISTS idx_saved_places_user_id ON public.saved_places(user_id);
 CREATE INDEX IF NOT EXISTS idx_saved_places_place_id ON public.saved_places(place_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_waitlist_signups_email_lower ON public.waitlist_signups (LOWER(BTRIM(email)));
+CREATE INDEX IF NOT EXISTS idx_waitlist_signups_created_at ON public.waitlist_signups (created_at DESC);
 
 -- ==============================================================================
--- Row Level Security (RLS) Enablement (Stage 2)
+-- Row Level Security (RLS) Enablement
 -- All tables are private by default. Unauthenticated (anon) requests have zero access.
 -- ==============================================================================
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analyses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analysis_places ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saved_places ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.waitlist_signups ENABLE ROW LEVEL SECURITY;
+
+-- Revoke all direct permissions from anon and authenticated client roles on waitlist
+REVOKE ALL ON public.waitlist_signups FROM anon, authenticated;
+
+-- Grant full management permissions strictly to service_role (backend API)
+GRANT ALL ON public.waitlist_signups TO service_role;
 
 -- ==============================================================================
 -- Row Level Security (RLS) Policies
