@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "web",
-    "mobile"
+    "mobile",
+    "landing"
   ],
   "scripts": {
     "dev": "npm run dev --prefix web",
@@ -14,6 +15,9 @@
     "web:dev": "npm run dev --prefix web",
     "web:build": "npm run build --prefix web",
     "web:lint": "npm run lint --prefix web",
+    "landing:dev": "npm run dev --prefix landing",
+    "landing:build": "npm run build --prefix landing",
+    "landing:qr": "npm run qr --prefix landing",
     "mobile": "npm --workspace mobile run start",
     "mobile:start": "npm --workspace mobile run start",
     "mobile:android": "npm --workspace mobile run android",

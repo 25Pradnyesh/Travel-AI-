@@ -14,9 +14,6 @@ export function WaitlistClient() {
   const [isDuplicate, setIsDuplicate] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const githubUrl = process.env.NEXT_PUBLIC_GITHUB_URL || 'https://github.com/pradnesh-deshmukh/travel-ai';
-  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'inquiries@vamo.travel';
-
   const validateEmail = (value: string): boolean => {
     const trimmed = value.trim();
     if (!trimmed) return false;
@@ -290,43 +287,7 @@ export function WaitlistClient() {
       {/* -------------------------------------------------------------
           Footer
          ------------------------------------------------------------- */}
-      <footer className="w-full border-t border-[#fbf4e3]/10 bg-[#070d12] text-[#cfc8b8] text-xs py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-sans font-bold tracking-[0.2em] text-[#fbf4e3]">
-              VAMO
-            </span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#e53935]" />
-            <span className="text-[11px] text-[#cfc8b8]/60">Early Access Waitlist</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[11px]">
-            <Link href="/" className="hover:text-[#fbf4e3] transition-colors">
-              Home
-            </Link>
-            <span>·</span>
-            <Link href="/qr" className="hover:text-[#fbf4e3] transition-colors">
-              Mobile QR
-            </Link>
-            <span>·</span>
-            <a
-              href={githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-[#fbf4e3] transition-colors"
-            >
-              GitHub
-            </a>
-            <span>·</span>
-            <a
-              href={`mailto:${contactEmail}`}
-              className="hover:text-[#fbf4e3] transition-colors"
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

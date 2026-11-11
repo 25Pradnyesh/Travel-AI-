@@ -10,8 +10,11 @@ const rootDir = path.resolve(__dirname, '..');
 
 console.log('Testing Hero & Waitlist Navigation Implementation...\n');
 
-// 1. Inspect landing/app/page.tsx
+// 1. Inspect landing/app/page.tsx and Header component
 const pageContent = fs.readFileSync(path.join(rootDir, 'app/page.tsx'), 'utf-8');
+const headerPath = path.join(rootDir, 'components/Header.tsx');
+const headerContent = fs.existsSync(headerPath) ? fs.readFileSync(headerPath, 'utf-8') : '';
+const fullNavContent = pageContent + '\n' + headerContent;
 
 // Assert prototype badge is completely removed
 assert.strictEqual(
@@ -33,7 +36,7 @@ console.log('✓ 1. Prototype badge and its styling are completely removed from 
 
 // Assert Navbar CTA
 assert(
-  pageContent.includes('href="/waitlist"') && pageContent.includes('Join Waitlist'),
+  fullNavContent.includes('href="/waitlist"') && fullNavContent.includes('Join Waitlist'),
   'Navbar must contain Link to /waitlist with "Join Waitlist"'
 );
 console.log('✓ 2. Navbar CTA links directly to /waitlist with next/link.');

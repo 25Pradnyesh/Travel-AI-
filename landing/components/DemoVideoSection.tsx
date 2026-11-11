@@ -52,33 +52,32 @@ export function DemoVideoSection() {
 
         {/* Smartphone Bezel Enclosure (Native 9:20 Aspect Ratio, Zero UI Cropping) */}
         <div className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-[9/20] rounded-[44px] p-3 bg-gradient-to-b from-[#2a3848] via-[#121c27] to-[#0a1118] shadow-2xl shadow-black/90 border border-[#fbf4e3]/20 group transition-transform duration-300 hover:scale-[1.01]">
-          {/* Outer Screen Border */}
-          <div className="relative w-full h-full rounded-[34px] overflow-hidden bg-[#070d12] border border-black flex flex-col">
+          {/* Inner Screen Display (Overflow hidden clips video to screen radius) */}
+          <div className="relative w-full h-full rounded-[34px] overflow-hidden bg-[#070d12] border border-black">
             {/* Dynamic Island Pill */}
             <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-20 h-4 bg-black rounded-full z-20 flex items-center justify-end pr-2 pointer-events-none">
               <div className="w-2 h-2 rounded-full bg-[#0a1118] border border-white/10" />
             </div>
 
-            {/* Video Container */}
-            <div className="relative flex-1 w-full h-full bg-[#070d12]">
-              {isVisible ? (
-                <video
-                  className="w-full h-full object-contain bg-[#070d12]"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  poster="/videos/vamo-app-poster.webp"
-                >
-                  <source src="/videos/vamo-app-walkthrough.mp4" type="video/mp4" />
-                  <source src="/demo.mp4" type="video/mp4" />
-                  Your browser does not support HTML5 video.
-                </video>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#070d12] text-xs text-[#cfc8b8] font-mono">
-                  Loading walkthrough...
-                </div>
-              )}
-            </div>
+            {/* Video filling 100% of display area edge-to-edge */}
+            {isVisible ? (
+              <video
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                poster="/videos/vamo-app-poster.webp"
+              >
+                <source src="/videos/vamo-app-preview.mp4" type="video/mp4" />
+                Your browser does not support HTML5 video.
+              </video>
+            ) : (
+              <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-[#070d12] text-xs text-[#cfc8b8] font-mono">
+                Loading walkthrough...
+              </div>
+            )}
           </div>
         </div>
 
